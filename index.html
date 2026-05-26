@@ -1,0 +1,1774 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>MULTIVERSE BOOKS</title>
+
+<!-- FONT AWESOME -->
+<link rel="stylesheet"
+href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css"/>
+
+<!-- GOOGLE FONT -->
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700;800&display=swap" rel="stylesheet">
+
+<!-- PARTICLES JS -->
+<script src="https://cdn.jsdelivr.net/npm/particles.js@2.0.0/particles.min.js"></script>
+
+<style>
+
+*{
+margin:0;
+padding:0;
+box-sizing:border-box;
+font-family:'Poppins',sans-serif;
+}
+
+body{
+background:#050505;
+color:white;
+overflow-x:hidden;
+}
+
+/* ================= PARTICLES BG ================= */
+
+#particles-js{
+
+position:fixed;
+width:100%;
+height:100vh;
+
+background:
+linear-gradient(
+135deg,
+#000000,
+#050816,
+#000000
+);
+
+z-index:1;
+
+}
+
+/* ================= LOADER ================= */
+
+.loader-screen{
+
+position:fixed;
+top:0;
+left:0;
+
+width:100%;
+height:100vh;
+
+display:flex;
+justify-content:center;
+align-items:center;
+flex-direction:column;
+
+z-index:999999999;
+
+transition:0.6s;
+
+}
+
+.loader-logo{
+
+width:130px;
+height:130px;
+
+border-radius:35px;
+
+overflow:hidden;
+
+padding:4px;
+
+background:
+linear-gradient(
+135deg,
+#6d6dff,
+#00e5ff
+);
+
+box-shadow:
+0 0 35px rgba(109,109,255,0.6);
+
+animation:pulse 2s infinite;
+
+}
+
+.loader-logo img{
+
+width:100%;
+height:100%;
+object-fit:cover;
+border-radius:30px;
+
+}
+
+@keyframes pulse{
+
+0%{transform:scale(1);}
+50%{transform:scale(1.06);}
+100%{transform:scale(1);}
+
+}
+
+.loader-title{
+
+margin-top:25px;
+font-size:42px;
+font-weight:900;
+color:white;
+letter-spacing:2px;
+text-align:center;
+
+}
+
+.premium-tags{
+
+margin-top:20px;
+
+display:flex;
+justify-content:center;
+align-items:center;
+
+gap:14px;
+flex-wrap:wrap;
+
+}
+
+.tag{
+
+padding:10px 16px;
+
+border-radius:16px;
+
+background:
+rgba(255,255,255,0.05);
+
+backdrop-filter:blur(12px);
+
+border:
+1px solid rgba(255,255,255,0.08);
+
+display:flex;
+align-items:center;
+gap:8px;
+
+color:white;
+
+font-size:13px;
+font-weight:600;
+
+}
+
+.tag i{
+
+color:#6d6dff;
+
+font-size:14px;
+
+}
+
+.loader-bar{
+
+width:240px;
+height:8px;
+
+background:
+rgba(255,255,255,0.08);
+
+border-radius:30px;
+
+overflow:hidden;
+
+margin-top:45px;
+
+}
+
+.loader-fill{
+
+width:0%;
+height:100%;
+
+background:
+linear-gradient(
+90deg,
+#6d6dff,
+#00e5ff
+);
+
+border-radius:30px;
+
+animation:load 3s linear forwards;
+
+}
+
+@keyframes load{
+
+0%{width:0%;}
+100%{width:100%;}
+
+}
+
+.loader-footer{
+
+position:absolute;
+bottom:35px;
+
+font-size:14px;
+font-weight:600;
+
+letter-spacing:2px;
+
+color:#888;
+
+}
+
+/* ================= MAIN WEBSITE ================= */
+
+.main-site{
+display:none;
+position:relative;
+z-index:5;
+}
+
+/* ================= HEADER ================= */
+
+.header{
+
+width:100%;
+height:72px;
+
+background:#0d0d0d;
+
+display:flex;
+justify-content:space-between;
+align-items:center;
+
+padding:0 15px;
+
+border-bottom:
+1px solid rgba(255,255,255,0.08);
+
+position:sticky;
+top:0;
+
+z-index:1000;
+
+}
+
+.left{
+display:flex;
+align-items:center;
+gap:14px;
+}
+
+.menu{
+width:30px;
+cursor:pointer;
+}
+
+.menu div{
+height:3px;
+background:white;
+margin:5px 0;
+border-radius:10px;
+}
+
+.logo{
+font-size:18px;
+font-weight:900;
+letter-spacing:1px;
+color:white;
+}
+
+.logo-space{
+
+width:45px;
+height:45px;
+
+border-radius:50%;
+
+overflow:hidden;
+
+border:
+2px solid rgba(255,255,255,0.15);
+
+background:#111;
+
+display:flex;
+justify-content:center;
+align-items:center;
+
+}
+
+.logo-space img{
+
+width:100%;
+height:100%;
+object-fit:cover;
+
+}
+
+/* ================= SEARCH ================= */
+
+.search-box{
+
+width:92%;
+margin:18px auto;
+position:relative;
+
+}
+
+.search-box i{
+
+position:absolute;
+
+left:18px;
+top:50%;
+
+transform:translateY(-50%);
+
+font-size:18px;
+color:#888;
+
+}
+
+.search-box input{
+
+width:100%;
+height:52px;
+
+border:none;
+outline:none;
+
+border-radius:16px;
+
+background:#1a1a1a;
+
+color:white;
+
+padding-left:50px;
+padding-right:15px;
+
+font-size:16px;
+
+border:
+1px solid rgba(255,255,255,0.12);
+
+}
+
+/* ================= BOOK GRID ================= */
+
+.book-container{
+
+display:grid;
+
+grid-template-columns:
+repeat(2,1fr);
+
+gap:15px;
+
+padding:12px;
+
+}
+
+/* ================= CARD ================= */
+
+.book-card{
+
+background:#151515;
+
+border-radius:22px;
+
+overflow:hidden;
+
+border:
+1px solid rgba(255,255,255,0.08);
+
+transition:0.3s;
+
+}
+
+.book-card:hover{
+transform:translateY(-5px);
+}
+
+.book-image{
+
+width:100%;
+height:240px;
+
+object-fit:cover;
+
+}
+
+.book-details{
+padding:12px;
+}
+
+.book-title{
+
+font-size:16px;
+
+font-weight:bold;
+
+line-height:24px;
+
+margin-bottom:12px;
+
+}
+
+/* ================= BUTTON ================= */
+
+.download-btn{
+
+width:100%;
+height:48px;
+
+border:none;
+
+border-radius:14px;
+
+background:
+linear-gradient(
+135deg,
+#222,
+#303030
+);
+
+color:white;
+
+font-size:15px;
+font-weight:bold;
+
+display:flex;
+justify-content:center;
+align-items:center;
+gap:10px;
+
+cursor:pointer;
+
+border:
+1px solid rgba(255,255,255,0.08);
+
+}
+
+.download-btn i{
+font-size:18px;
+}
+
+/* ================= MENU OVERLAY ================= */
+
+.menu-overlay{
+
+position:fixed;
+
+top:0;
+left:0;
+
+width:100%;
+height:100vh;
+
+background:rgba(0,0,0,0.45);
+
+backdrop-filter:blur(2px);
+
+z-index:999998;
+
+display:none;
+
+}
+
+/* ================= SIDE MENU ================= */
+
+.side-menu{
+
+position:fixed;
+
+top:0;
+left:-100%;
+
+width:78%;
+height:100vh;
+
+background:
+linear-gradient(
+to bottom,
+#0b0b0b,
+#111,
+#0b0b0b
+);
+
+z-index:999999;
+
+padding:20px;
+
+transition:0.4s;
+
+border-right:
+1px solid rgba(255,255,255,0.08);
+
+overflow-y:auto;
+
+}
+
+.side-menu.active{
+left:0;
+}
+
+.menu-top{
+
+display:flex;
+align-items:center;
+
+margin-bottom:30px;
+
+}
+
+.menu-logo{
+
+font-size:20px;
+font-weight:900;
+
+margin-bottom:30px;
+
+display:flex;
+align-items:center;
+gap:10px;
+
+}
+
+.menu-logo-img{
+
+width:38px;
+height:38px;
+
+border-radius:50%;
+
+object-fit:cover;
+
+border:
+2px solid rgba(255,255,255,0.15);
+
+}
+
+.menu-item{
+
+width:100%;
+
+min-height:62px;
+
+margin-top:14px;
+
+border-radius:18px;
+
+background:#151515;
+
+border:
+1px solid rgba(255,255,255,0.08);
+
+display:flex;
+
+align-items:center;
+
+gap:15px;
+
+padding:0 18px;
+
+color:white;
+
+text-decoration:none;
+
+font-size:16px;
+
+font-weight:bold;
+
+cursor:pointer;
+
+transition:0.3s;
+
+}
+
+.menu-item:hover{
+
+background:#1d1d1d;
+
+transform:translateX(5px);
+
+}
+
+.menu-item i{
+
+font-size:22px;
+
+width:24px;
+
+text-align:center;
+
+}
+
+.menu-footer{
+
+position:absolute;
+
+bottom:25px;
+left:0;
+
+width:100%;
+
+text-align:center;
+
+font-size:14px;
+
+color:#9a9a9a;
+
+font-weight:600;
+
+}
+
+/* ================= DOWNLOAD PAGE ================= */
+
+.download-page{
+
+position:fixed;
+
+top:0;
+left:0;
+
+width:100%;
+height:100vh;
+
+background:
+linear-gradient(
+to bottom,
+#050505,
+#101010,
+#050505
+);
+
+z-index:99999;
+
+overflow-y:auto;
+
+padding:20px;
+
+display:none;
+
+}
+
+.download-top{
+
+display:flex;
+
+align-items:center;
+
+gap:16px;
+
+margin-bottom:20px;
+
+}
+
+.close-btn{
+
+width:45px;
+height:45px;
+
+border:none;
+
+border-radius:50%;
+
+background:#1b1b1b;
+
+color:white;
+
+font-size:25px;
+
+cursor:pointer;
+
+border:
+1px solid rgba(255,255,255,0.08);
+
+}
+
+.download-logo{
+
+font-size:22px;
+
+font-weight:900;
+
+color:white;
+
+}
+
+.preview-image{
+
+width:100%;
+height:420px;
+
+object-fit:cover;
+
+border-radius:30px;
+
+border:
+1px solid rgba(255,255,255,0.08);
+
+}
+
+.preview-title{
+
+margin-top:20px;
+
+font-size:27px;
+
+line-height:38px;
+
+}
+
+.main-download{
+
+width:100%;
+height:70px;
+
+border:none;
+
+border-radius:24px;
+
+margin-top:22px;
+
+background:
+linear-gradient(
+90deg,
+#00c853,
+#00e676
+);
+
+color:white;
+
+font-size:19px;
+font-weight:bold;
+
+display:flex;
+justify-content:center;
+align-items:center;
+gap:14px;
+
+cursor:pointer;
+
+}
+
+.box{
+
+width:100%;
+
+min-height:82px;
+
+margin-top:18px;
+
+padding:18px;
+
+border-radius:24px;
+
+display:flex;
+align-items:center;
+gap:16px;
+
+background:#151515;
+
+border:
+1px solid rgba(255,255,255,0.08);
+
+cursor:pointer;
+
+}
+
+.box i{
+font-size:28px;
+}
+
+.box-title{
+
+font-size:18px;
+font-weight:bold;
+
+}
+
+.box-sub{
+
+color:#ccc;
+
+margin-top:5px;
+
+font-size:14px;
+
+}
+
+.file-size{
+
+font-size:20px;
+font-weight:bold;
+
+margin-left:auto;
+
+}
+
+/* ================= ABOUT PAGE ================= */
+
+.about-page{
+
+position:fixed;
+
+top:0;
+left:100%;
+
+width:100%;
+height:100vh;
+
+overflow-y:auto;
+
+background:
+linear-gradient(
+135deg,
+#0f172a,
+#020617
+);
+
+z-index:99999999;
+
+transition:0.4s;
+
+padding:20px;
+
+}
+
+.about-page.active{
+left:0;
+}
+
+.about-top{
+
+display:flex;
+align-items:center;
+gap:15px;
+
+margin-bottom:30px;
+
+}
+
+.container {
+max-width: 900px;
+margin: auto;
+}
+
+.profile {
+display: flex;
+justify-content: center;
+margin-bottom: 25px;
+}
+
+.profile-box {
+position: relative;
+border-radius: 22px;
+padding: 3px;
+background: linear-gradient(270deg,#22c55e,#8b5cf6,#22c55e);
+background-size: 400% 400%;
+animation: glowMove 9s ease infinite;
+}
+
+@keyframes glowMove {
+0% {background-position: 0% 50%;}
+50% {background-position: 100% 50%;}
+100% {background-position: 0% 50%;}
+}
+
+.profile-box img {
+display: block;
+width: 330px;
+height: 280px;
+object-fit: cover;
+border-radius: 20px;
+}
+
+.name {
+text-align: center;
+font-size: 20px;
+font-weight: 800;
+margin-bottom: 8px;
+}
+
+.quote {
+text-align: center;
+font-style: italic;
+color: #cbd5f5;
+margin-bottom: 30px;
+}
+
+.card {
+background: rgba(30, 41, 59, 0.6);
+backdrop-filter: blur(12px);
+padding: 16px;
+border-radius: 14px;
+margin-bottom: 15px;
+display: flex;
+align-items: flex-start;
+gap: 15px;
+transition: 0.3s;
+border: 1px solid rgba(255,255,255,0.05);
+text-decoration: none;
+color: white;
+}
+
+.card:hover {
+transform: translateY(-5px);
+box-shadow: 0 0 20px rgba(139,92,246,0.4);
+}
+
+.icon {
+width: 45px;
+height: 45px;
+background: linear-gradient(45deg,#22c55e,#8b5cf6);
+border-radius: 12px;
+display: flex;
+align-items: center;
+justify-content: center;
+flex-shrink:0;
+}
+
+.icon i {
+font-size: 18px;
+color: white;
+}
+
+.text-box {
+display: flex;
+flex-direction: column;
+}
+
+.heading {
+font-weight: 700;
+font-size: 16px;
+margin-bottom: 3px;
+}
+
+.detail {
+font-size: 14px;
+color: #cbd5f5;
+line-height:24px;
+}
+
+@media(max-width:600px){
+
+.loader-title{
+font-size:28px;
+}
+
+.loader-logo{
+width:105px;
+height:105px;
+}
+
+
+
+
+
+
+.premium-tags{
+gap:10px;
+}
+
+.tag{
+font-size:11px;
+padding:8px 12px;
+}
+
+.loader-bar{
+width:180px;
+}
+
+}
+
+</style>
+</head>
+
+<body>
+
+<!-- PARTICLES -->
+
+<div id="particles-js"></div>
+
+<!-- LOADER -->
+
+<div class="loader-screen" id="loaderScreen">
+
+<div class="loader-logo">
+
+<img src="https://i.postimg.cc/cJdGqYHG/IMG-20260524-WA0004.jpg">
+
+</div>
+
+<div class="loader-title">
+MULTIVERSE BOOKS
+</div>
+
+<div class="premium-tags">
+
+<div class="tag">
+<i class="fa-solid fa-file-pdf"></i>
+PDF
+</div>
+
+<div class="tag">
+<i class="fa-solid fa-note-sticky"></i>
+NOTES
+</div>
+
+<div class="tag">
+<i class="fa-solid fa-square-root-variable"></i>
+FORMULA
+</div>
+
+<div class="tag">
+<i class="fa-solid fa-layer-group"></i>
+MORE
+</div>
+
+</div>
+
+<div class="loader-bar">
+<div class="loader-fill"></div>
+</div>
+
+<div class="loader-footer">
+POWERED BY MADxPRINCE
+</div>
+
+</div>
+
+<!-- MAIN SITE -->
+
+<div class="main-site" id="mainSite">
+
+<!-- HEADER -->
+
+<div class="header">
+
+<div class="left">
+
+<div class="menu"
+onclick="openMenu()">
+
+<div></div>
+<div></div>
+<div></div>
+
+</div>
+
+<div class="logo">
+MULTIVERSE BOOKS
+</div>
+
+</div>
+
+<div class="logo-space">
+
+<img src="https://i.postimg.cc/cJdGqYHG/IMG-20260524-WA0004.jpg">
+
+</div>
+
+</div>
+
+<!-- SEARCH -->
+
+<div class="search-box">
+
+<i class="fa-solid fa-magnifying-glass"></i>
+
+<input type="text"
+placeholder="Search Books...">
+
+</div>
+
+<!-- BOOKS -->
+
+<div class="book-container">
+
+<!-- BOOK 1 -->
+
+<div class="book-card">
+
+<img src="https://i.postimg.cc/j2dbzTzD/6300764848152842146.jpg"
+class="book-image">
+
+<div class="book-details">
+
+<div class="book-title">
+Geography Class 6-12
+</div>
+
+<button class="download-btn"
+
+onclick="openDownloadPage(
+'NCERT Geography Class 6-12',
+'https://i.postimg.cc/j2dbzTzD/6300764848152842146.jpg',
+'247 MB',
+'https://example.com/book1.pdf',
+'https://youtube.com/'
+)">
+
+<i class="fa-solid fa-download"></i>
+
+Download
+
+</button>
+
+</div>
+</div>
+
+<!-- BOOK 2 -->
+
+<div class="book-card">
+
+<img src="https://i.postimg.cc/vZjZb453/6316773020193722106.jpg"
+class="book-image">
+
+<div class="book-details">
+
+<div class="book-title">
+Educational Management
+</div>
+
+<button class="download-btn"
+
+onclick="openDownloadPage(
+'Educational Management',
+'https://i.postimg.cc/vZjZb453/6316773020193722106.jpg',
+'180 MB',
+'https://example.com/book2.pdf',
+'https://youtube.com/'
+)">
+
+<i class="fa-solid fa-download"></i>
+
+Download
+
+</button>
+
+</div>
+</div>
+<!-- BOOK 1 -->
+
+<div class="book-card">
+
+<img src="https://i.postimg.cc/j2dbzTzD/6300764848152842146.jpg"
+class="book-image">
+
+<div class="book-details">
+
+<div class="book-title">
+Geography Class 6-12
+</div>
+
+<button class="download-btn"
+
+onclick="openDownloadPage(
+'NCERT Geography Class 6-12',
+'https://i.postimg.cc/j2dbzTzD/6300764848152842146.jpg',
+'247 MB',
+'https://example.com/book1.pdf',
+'https://youtube.com/'
+)">
+
+<i class="fa-solid fa-download"></i>
+
+Download
+
+</button>
+
+</div>
+</div>
+<!-- BOOK 2 -->
+
+<div class="book-card">
+
+<img src="https://i.postimg.cc/vZjZb453/6316773020193722106.jpg"
+class="book-image">
+
+<div class="book-details">
+
+<div class="book-title">
+Educational Management
+</div>
+
+<button class="download-btn"
+
+onclick="openDownloadPage(
+'Educational Management',
+'https://i.postimg.cc/vZjZb453/6316773020193722106.jpg',
+'180 MB',
+'https://example.com/book2.pdf',
+'https://youtube.com/'
+)">
+
+<i class="fa-solid fa-download"></i>
+
+Download
+
+</button>
+
+</div>
+</div>
+
+</div>
+
+<!-- MENU OVERLAY -->
+
+<div class="menu-overlay"
+id="menuOverlay"
+onclick="closeMenu()"></div>
+
+<!-- SIDE MENU -->
+
+<div class="side-menu"
+id="sideMenu">
+
+<div class="menu-top">
+
+<div class="menu-logo">
+
+<img src="https://i.postimg.cc/cJdGqYHG/IMG-20260524-WA0004.jpg"
+class="menu-logo-img">
+
+MULTIVERSE BOOKS
+
+</div>
+
+</div>
+
+<a href="#home"
+class="menu-item">
+
+<i class="fa-solid fa-house"></i>
+
+Home
+
+</a>
+
+<div class="menu-item"
+onclick="openAboutPage()">
+
+<i class="fa-solid fa-screwdriver-wrench"></i>
+
+About Developer
+
+</div>
+
+<a href="#"
+class="menu-item">
+
+<i class="fa-solid fa-address-book"></i>
+
+Contact
+
+</a>
+
+<a href="https://whatsapp.com/channel/0029Vb6NBZx1yT2GByTTVf2A"
+class="menu-item">
+
+<i class="fa-brands fa-whatsapp"></i>
+
+WhatsApp Channel
+
+</a>
+
+<a href="#"
+class="menu-item">
+
+<i class="fa-brands fa-telegram"></i>
+
+Telegram Channel
+
+</a>
+
+<div class="menu-footer">
+Made with ❤️ MADxPRINCE
+</div>
+
+</div>
+
+<!-- DOWNLOAD PAGE -->
+
+<div class="download-page"
+id="downloadPage">
+
+<div class="download-top">
+
+<button class="close-btn"
+onclick="closeDownloadPage()">
+×
+</button>
+
+<div class="download-logo">
+MULTIVERSE BOOKS
+</div>
+
+</div>
+
+<img id="previewImage"
+class="preview-image">
+
+<h2 class="preview-title"
+id="bookTitle">
+</h2>
+
+<a id="pdfLink"
+href=""
+target="_blank">
+
+<button class="main-download">
+
+<i class="fa-solid fa-download"></i>
+
+Download PDF
+
+</button>
+
+</a>
+
+<a id="tutorialLink"
+href=""
+target="_blank"
+style="text-decoration:none;color:white;">
+
+<div class="box">
+
+<i class="fa-brands fa-youtube"></i>
+
+<div>
+
+<div class="box-title">
+Watch tutorial on YouTube
+</div>
+
+<div class="box-sub">
+Learn how to download this book
+</div>
+
+</div>
+
+</div>
+
+</a>
+
+<div class="box"
+onclick="shareBook()">
+
+<i class="fa-solid fa-share-nodes"></i>
+
+<div>
+
+<div class="box-title">
+Share this book
+</div>
+
+<div class="box-sub">
+Send this book to friends
+</div>
+
+</div>
+
+</div>
+
+<div class="box">
+
+<i class="fa-solid fa-file"></i>
+
+<div class="box-title">
+File Size
+</div>
+
+<div class="file-size"
+id="fileSize">
+</div>
+
+</div>
+
+</div>
+
+<!-- ABOUT PAGE -->
+
+<div class="about-page"
+id="aboutPage">
+
+<div class="about-top">
+
+<button class="close-btn"
+onclick="closeAboutPage()">
+
+<i class="fa-solid fa-arrow-left"></i>
+
+</button>
+
+</div>
+
+<div class="container">
+
+<div class="profile">
+
+<div class="profile-box">
+
+<img src="https://i.postimg.cc/4d9BC43s/IMG-20260402-135548-652.jpg">
+
+</div>
+
+</div>
+
+<div class="name">
+Hey there! I'm Prince Kumar
+</div>
+
+<div class="quote">
+"Dream Big, Hustle Hard, and Never Stop Exploring!"
+</div>
+
+<div class="card">
+
+<div class="icon">
+<i class="fa-solid fa-graduation-cap"></i>
+</div>
+
+<div class="text-box">
+
+<div class="heading">
+Education
+</div>
+
+<div class="detail">
+𝐂ʟᴀss 𝟏𝟏𝐭𝐡 (PCMB) | 𝐁ᴀᴛᴄʜ: 𝟐𝟎𝟐𝟔-𝟐𝟖
+</div>
+
+</div>
+
+</div>
+
+<div class="card">
+
+<div class="icon">
+<i class="fa-solid fa-location-dot"></i>
+</div>
+
+<div class="text-box">
+
+<div class="heading">
+Location
+</div>
+
+<div class="detail">
+ʙɪʜᴀʀ , 𝐈ɴᴅɪᴀ 🚩
+</div>
+
+</div>
+
+</div>
+
+<div class="card">
+
+<div class="icon">
+<i class="fa-solid fa-cake-candles"></i>
+</div>
+
+<div class="text-box">
+
+<div class="heading">
+Birthday
+</div>
+
+<div class="detail">
+𝟲 ᴅᴇᴄᴇᴍʙᴇʀ 💐❤️‍🩹
+</div>
+
+</div>
+
+</div>
+
+<div class="card">
+
+<div class="icon">
+<i class="fa-solid fa-screwdriver-wrench"></i>
+</div>
+
+<div class="text-box">
+
+<div class="heading">
+Skills
+</div>
+
+<div class="detail">
+𝐇𝐞𝐡𝐞... 𝐍𝐨𝐭𝐡𝐢𝐧𝐠 ☠️
+</div>
+
+</div>
+
+</div>
+
+</div>
+
+</div>
+
+<script>
+
+/* PARTICLES */
+
+particlesJS("particles-js", {
+
+particles: {
+number: {
+value: 70
+},
+color: {
+value: "#6d6dff"
+},
+shape: {
+type: "circle"
+},
+opacity: {
+value: 0.5
+},
+size: {
+value: 3,
+random: true
+},
+line_linked: {
+enable: true,
+distance: 150,
+color: "#6d6dff",
+opacity: 0.3,
+width: 1
+},
+move: {
+enable: true,
+speed: 9
+}
+},
+
+interactivity: {
+events: {
+onhover: {
+enable: true,
+mode: "grab"
+},
+onclick: {
+enable: true,
+mode: "push"
+}
+}
+},
+
+retina_detect: true
+
+});
+
+/* LOADER */
+
+window.addEventListener("load",()=>{
+
+setTimeout(()=>{
+
+document.getElementById(
+"loaderScreen"
+).style.opacity="0";
+
+document.getElementById(
+"loaderScreen"
+).style.visibility="hidden";
+
+document.getElementById(
+"mainSite"
+).style.display="block";
+
+},3000);
+
+});
+
+/* SEARCH */
+
+const searchInput =
+document.querySelector(
+".search-box input"
+);
+
+const cards =
+document.querySelectorAll(
+".book-card"
+);
+
+searchInput.addEventListener(
+"keyup",
+function(){
+
+let value =
+searchInput.value.toLowerCase();
+
+cards.forEach(card=>{
+
+let title =
+card.querySelector(
+".book-title"
+).innerText.toLowerCase();
+
+if(title.includes(value)){
+
+card.style.display="block";
+
+}else{
+
+card.style.display="none";
+
+}
+
+});
+
+});
+
+/* DOWNLOAD */
+
+let currentBookTitle="";
+let currentPdfLink="";
+
+function openDownloadPage(
+title,
+image,
+size,
+pdf,
+youtube
+){
+
+document.getElementById(
+"downloadPage"
+).style.display="block";
+
+document.getElementById(
+"bookTitle"
+).innerText=title;
+
+document.getElementById(
+"previewImage"
+).src=image;
+
+document.getElementById(
+"fileSize"
+).innerText=size;
+
+document.getElementById(
+"pdfLink"
+).href=pdf;
+
+document.getElementById(
+"tutorialLink"
+).href=youtube;
+
+currentBookTitle=title;
+currentPdfLink=pdf;
+
+}
+
+function closeDownloadPage(){
+
+document.getElementById(
+"downloadPage"
+).style.display="none";
+
+}
+
+/* SHARE */
+
+function shareBook(){
+
+if(navigator.share){
+
+navigator.share({
+
+title:currentBookTitle,
+
+text:
+"Download this book: "+
+currentBookTitle,
+
+url:currentPdfLink
+
+});
+
+}else{
+
+alert(
+"Sharing not supported"
+);
+
+}
+
+}
+
+/* MENU */
+
+function openMenu(){
+
+document.getElementById(
+"sideMenu"
+).classList.add("active");
+
+document.getElementById(
+"menuOverlay"
+).style.display="block";
+
+}
+
+function closeMenu(){
+
+document.getElementById(
+"sideMenu"
+).classList.remove("active");
+
+document.getElementById(
+"menuOverlay"
+).style.display="none";
+
+}
+
+/* ABOUT PAGE */
+
+function openAboutPage(){
+
+document.getElementById(
+"aboutPage"
+).classList.add("active");
+
+closeMenu();
+
+}
+
+function closeAboutPage(){
+
+document.getElementById(
+"aboutPage"
+).classList.remove("active");
+
+}
+
+</script>
+<script>
+// For Firebase JS SDK v7.20.0 and later, measurementId is optional
+const firebaseConfig = {
+  apiKey: "AIzaSyDjM627Nn3GfxJFWjhArYeeNT3kIBg4tjA",
+  authDomain: "multiverse-books.firebaseapp.com",
+  projectId: "multiverse-books",
+  storageBucket: "multiverse-books.firebasestorage.app",
+  messagingSenderId: "320394333954",
+  appId: "1:320394333954:web:1721d972bd6d3db8e3bc1b",
+  measurementId: "G-WBQKEWK94C"
+};
+</script>
+</body>
+</html>
