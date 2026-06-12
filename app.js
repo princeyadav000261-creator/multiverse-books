@@ -20,7 +20,10 @@ const db = getFirestore(app);
 
 window.booksData = [];
 let loadedCount = 0; 
-const initialLoad = 8;
+
+// FIX: Yahan screen size check karke PC/Desktop ke liye shuru me zyada books load ki jayengi
+const initialLoad = window.innerWidth >= 768 ? 24 : 8;
+
 let isLoadingMore = false;
 let activeBookSlug = ""; let activeBookTitle = "";
 
@@ -368,3 +371,4 @@ const todayDays = Math.floor(Date.now() / (1000 * 60 * 60 * 24));
 const currentQuoteIndex = todayDays % quotes.length;
 document.getElementById('daily-quote-text').innerHTML = `<i class="fas fa-quote-left" style="color: rgba(255,255,255,0.3); margin-right:5px;"></i> ${quotes[currentQuoteIndex].text}`;
 document.getElementById('daily-quote-author').innerText = `— ${quotes[currentQuoteIndex].author}`;
+
