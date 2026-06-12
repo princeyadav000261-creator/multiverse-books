@@ -6,380 +6,12 @@
     <title>MULTIVERSE BOOKS</title>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" rel="stylesheet">
-    <style>
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Poppins:ital,wght@0,400;0,600;1,500;0,700;0,800;0,900&display=swap');
-
-        :root {
-            --bg-main: #0c111d;
-            --bg-card: #141a29;
-            --text-primary: #ffffff;
-            --text-secondary: #8c97ac;
-            --accent-purple: #6a5acD;
-            --border-color: rgba(255, 255, 255, 0.12);
-
-            --spidy-sidebar-bg: #111216;
-            --spidy-text-muted: #8b8d96;
-            --spidy-text-small: #5d5f66;
-            --spidy-accent-blue: #7b8aff;
-            --spidy-accent-blue-bg: rgba(43, 48, 86, 0.6);
-            --whatsapp-green: #25D366;
-            --whatsapp-bg: rgba(37, 211, 102, 0.08);
-            --telegram-blue: #0088cc;
-            --telegram-bg: rgba(0, 136, 204, 0.08);
-            --insta-pink: #E1306C;
-            --insta-bg: rgba(225, 48, 108, 0.08);
-            --youtube-red: #FF0000;
-            --youtube-bg: rgba(255, 0, 0, 0.08);
-
-            --dev-bg-main: #09090b;
-            --dev-bg-card: #1c1c1e;
-            --dev-bg-button: #1f1f22;
-            --dev-text-secondary: #a1a1aa;
-            --dev-icon-gradient: linear-gradient(135deg, #60a5fa, #2563eb);
-        }
-
-        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Inter', 'Poppins', sans-serif; -webkit-tap-highlight-color: transparent; }
-        body { background-color: #000; color: #ffffff; display: flex; justify-content: center; height: 100vh; height: 100dvh; position: relative; overflow: hidden; }
-
-        .app-container {
-            width: 100%; max-width: 414px; height: 100%; background-color: var(--bg-main);
-            position: relative; overflow: hidden; display: flex; flex-direction: column;
-            box-shadow: 0 0 20px rgba(0,0,0,0.5);
-        }
-
-        /* --- Header Premium Layout --- */
-        header { display: flex; align-items: center; justify-content: space-between; padding: 20px; background-color: var(--bg-main); z-index: 10; gap: 10px; position: relative; }
-        .header-left { display: flex; align-items: center; gap: 12px; min-width: 0; flex: 1; }
-        .header-title { font-weight: 800; font-size: 1.1rem; color: var(--text-primary); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; letter-spacing: 0.5px; }
-        .icon-box { width: 40px; height: 40px; border: 1.5px solid var(--border-color); border-radius: 12px; display: flex; align-items: center; justify-content: center; cursor: pointer; transition: all 0.3s ease; color: var(--text-primary); flex-shrink: 0; background-color: transparent; }
-        .icon-box:hover { background-color: rgba(255,255,255,0.08); transform: scale(1.05); }
-        .header-icons { display: flex; gap: 10px; align-items: center; }
-        .bell-wrapper { position: relative; }
-        .blink-dot { position: absolute; top: 6px; right: 8px; width: 8px; height: 8px; background-color: #ff3b30; border-radius: 50%; animation: blink 1.5s infinite; border: 2px solid var(--bg-main); }
-        @keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0; } }
-
-        /* --- Search Overlay --- */
-        .search-box-expanded { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background-color: #0c111d; display: flex; align-items: center; padding: 0 20px; gap: 10px; transform: translateY(-100%); transition: transform 0.3s ease; z-index: 999; }
-        .search-box-expanded.active { transform: translateY(0); }
-        .search-input-wrapper { flex: 1; position: relative; display: flex; align-items: center; }
-        .search-input-wrapper .fa-search { position: absolute; left: 15px; color: var(--text-secondary); font-size: 0.9rem; }
-        .search-input { width: 100%; background-color: var(--bg-card); border: 1px solid var(--border-color); color: var(--text-primary); padding: 12px 15px 12px 40px; border-radius: 12px; outline: none; }
-        .search-input:focus { border-color: var(--accent-purple); }
-
-        /* --- SIDEBAR MENU --- */
-        .sidebar-overlay { position: absolute; inset: 0; background: rgba(0,0,0,0.5); backdrop-filter: blur(2px); z-index: 25; opacity: 0; pointer-events: none; transition: opacity 0.3s ease; }
-        .sidebar-overlay.active { opacity: 1; pointer-events: all; }
-        .sidebar { position: absolute; top: 0; left: 0; width: 85%; max-width: 330px; height: 100%; background-color: var(--spidy-sidebar-bg); z-index: 30; transform: translateX(-100%); transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1); display: flex; flex-direction: column; box-shadow: 5px 0 15px rgba(0,0,0,0.5); overflow-y: auto; border-right: 1px solid var(--border-color); }
-        .sidebar::-webkit-scrollbar { display: none; }
-        .sidebar.active { transform: translateX(0); }
-        .sidebar-header-new { display: flex; align-items: center; padding: 24px 20px; border-bottom: 1px solid var(--border-color); }
-        .profile-img { width: 50px; height: 50px; border-radius: 12px; object-fit: cover; box-shadow: 0 0 15px rgba(123, 138, 255, 0.4); flex-shrink: 0; }
-        
-        .profile-info { margin-left: 15px; flex-grow: 1; min-width: 0; display: flex; flex-direction: column; justify-content: center; }
-        .profile-name { color: var(--text-primary); font-size: 20px; font-weight: 1000; letter-spacing: 0.5px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-        .profile-sub { color: var(--spidy-accent-blue); font-size: 11px; font-weight: 600; letter-spacing: 2px; text-transform: uppercase; margin-top: 2px; }
-        
-        .menu-section { padding: 20px 20px 10px; }
-        .section-title { color: var(--spidy-text-small); font-size: 11px; font-weight: 700; letter-spacing: 1px; margin-bottom: 15px; }
-        .menu-item { display: flex; align-items: center; padding: 14px 18px; border-radius: 12px; text-decoration: none; margin-bottom: 8px; cursor: pointer; transition: all 0.3s ease; }
-        .menu-item i { font-size: 18px; width: 30px; color: var(--spidy-text-muted); transition: 0.3s; }
-        .menu-item span { font-size: 15px; font-weight: 600; color: var(--spidy-text-muted); transition: 0.3s; }
-        .menu-item.normal:hover { background-color: rgba(255, 255, 255, 0.03); }
-        .menu-item.normal:hover span, .menu-item.normal:hover i { color: var(--text-primary); }
-        .menu-item.active { background-color: var(--spidy-accent-blue-bg); box-shadow: inset 0 0 0 1px rgba(123, 138, 255, 0.1); }
-        .menu-item.active i, .menu-item.active span { color: var(--spidy-accent-blue); }
-        .card-link i.external { margin-left: auto; font-size: 12px; width: auto; opacity: 0.7; }
-        
-        .card-whatsapp { background-color: var(--whatsapp-bg); box-shadow: inset 0 0 0 1px rgba(37, 211, 102, 0.1); } .card-whatsapp i, .card-whatsapp span { color: var(--whatsapp-green); }
-        .card-telegram { background-color: var(--telegram-bg); box-shadow: inset 0 0 0 1px rgba(0, 136, 204, 0.1); } .card-telegram i, .card-telegram span { color: var(--telegram-blue); }
-        .card-insta { background-color: var(--insta-bg); box-shadow: inset 0 0 0 1px rgba(225, 48, 108, 0.1); } .card-insta i, .card-insta span { color: var(--insta-pink); }
-        .card-youtube { background-color: var(--youtube-bg); box-shadow: inset 0 0 0 1px rgba(255, 0, 0, 0.1); } .card-youtube i, .card-youtube span { color: var(--youtube-red); }
-
-        .sidebar-footer { margin-top: auto; padding: 20px; text-align: center; border-top: 1px solid var(--border-color); }
-        .system-status { display: flex; align-items: center; justify-content: center; gap: 8px; color: var(--text-primary); font-size: 11px; font-weight: 700; letter-spacing: 1px; margin-bottom: 8px; }
-        .dot { width: 6px; height: 6px; background-color: #00ff66; border-radius: 50%; box-shadow: 0 0 8px #00ff66; animation: pulse 2s infinite; }
-        .credits { color: var(--spidy-text-small); font-size: 10px; font-weight: 600; letter-spacing: 1px; }
-        @keyframes pulse { 0% { box-shadow: 0 0 0 0 rgba(0, 255, 102, 0.4); } 70% { box-shadow: 0 0 0 6px rgba(0, 255, 102, 0); } 100% { box-shadow: 0 0 0 0 rgba(0, 255, 102, 0); } }
-
-        /* Premium Copyright */
-        .premium-copyright {
-            margin-top: auto;
-            padding: 18px 10px;
-            text-align: center;
-            font-size: 9px;
-            font-weight: 700;
-            color: #ffffff; 
-            letter-spacing: 0.8px;
-            text-transform: uppercase;
-            white-space: nowrap; 
-            overflow: hidden;
-            text-overflow: ellipsis;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.06), transparent);
-            border-top: 1px solid var(--border-color);
-            width: 100%;
-            flex-shrink: 0;
-            text-shadow: 0px 0px 8px rgba(255, 255, 255, 0.3);
-        }
-        main .premium-copyright,
-        .dl-content-wrapper .premium-copyright {
-            width: calc(100% + 40px);
-            margin-left: -20px;
-            margin-right: -20px;
-        }
-
-        /* --- Main Content --- */
-        main { flex: 1; overflow-y: auto; padding: 15px 20px 0px; display: flex; flex-direction: column; }
-        main::-webkit-scrollbar { display: none; }
-
-        .quote-card { background: linear-gradient(135deg, #2a1b4d 0%, #4a2b66 100%); border-radius: 16px; padding: 20px; margin-bottom: 25px; position: relative; overflow: hidden; box-shadow: 0 5px 15px rgba(0,0,0,0.3); flex-shrink: 0; }
-        .welcome-badge { display: inline-flex; align-items: center; gap: 5px; background-color: rgba(255,255,255,0.15); color: #d1b3ff; font-size: 0.7rem; font-weight: 600; padding: 5px 10px; border-radius: 12px; margin-bottom: 15px; text-transform: uppercase; }
-        .quote-text { font-size: 1.1rem; font-style: italic; font-weight: 600; line-height: 1.5; color: #ffffff; margin-bottom: 12px; }
-        .quote-author { font-size: 0.85rem; color: rgba(255,255,255,0.8); text-align: right; font-weight: 500; }
-        .section-header-title { font-size: 1.1rem; font-weight: 800; color: #fff; letter-spacing: 0.5px; text-transform: uppercase; margin-bottom: 15px; display: flex; align-items: center; gap: 8px; }
-
-        /* --- BOOK CARDS DESIGN --- */
-        .book-container { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; margin-bottom: 25px; }
-        .book-card { background-color: var(--bg-card); border: 1px solid var(--border-color); border-radius: 16px; overflow: hidden; cursor: pointer; transition: transform 0.2s; display: flex; flex-direction: column; box-shadow: 0 4px 12px rgba(0,0,0,0.2); }
-        .book-card:active { transform: scale(0.98); }
-        .card-img-wrapper { position: relative; width: 100%; height: 180px; background: #fff; }
-        .book-image { width: 100%; height: 100%; object-fit: contain; display: block; }
-        .badge-free { position: absolute; top: 8px; left: 8px; background-color: #10b981; color: white; font-size: 10px; font-weight: 700; padding: 4px 8px; border-radius: 12px; letter-spacing: 0.5px; z-index: 2; }
-        .book-details { padding: 12px; display: flex; flex-direction: column; flex-grow: 1; }
-        .book-title { font-size: 13px; font-weight: 700; line-height: 1.3; color: var(--text-primary); margin-bottom: 4px; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
-        .book-author { font-size: 10px; color: var(--text-secondary); margin-bottom: 8px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-        .tags-container { display: flex; flex-wrap: wrap; gap: 5px; margin-top: auto; }
-        .book-tag { font-size: 9px; font-weight: 600; padding: 3px 6px; border-radius: 6px; }
-        .tag-year { border: 1px solid #d97706; color: #fbbf24; }
-        .tag-lang-hindi { background-color: rgba(109, 40, 217, 0.2); color: #c4b5fd; border: 1px solid rgba(109, 40, 217, 0.4); }
-        .tag-lang-english { background-color: rgba(37, 99, 235, 0.2); color: #93c5fd; border: 1px solid rgba(37, 99, 235, 0.4); }
-
-        .bottom-spinner-container { display: flex; align-items: center; justify-content: center; gap: 10px; padding: 10px 20px 30px; display: none; }
-        .bottom-spinner { width: 22px; height: 22px; border: 3px solid var(--bg-card); border-top: 3px solid var(--spidy-accent-blue); border-radius: 50%; animation: spinLoader 1s linear infinite; }
-        @keyframes spinLoader { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
-
-        /* "BOOK NOT FOUND" UI DESIGN & REUSABLE BADGE */
-        #no-results-msg { display: none; padding: 10px 0 30px; width: 100%; }
-        .no-results-card { 
-            background-color: var(--bg-card); border-radius: 16px; padding: 25px 15px; 
-            text-align: center; border: 1px solid var(--border-color); box-shadow: 0 4px 12px rgba(0,0,0,0.2);
-            display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 180px;
-        }
-        .no-results-icon { font-size: 40px; margin-bottom: 12px; display: inline-block; background: linear-gradient(135deg, #00d2ff 0%, #3a7bd5 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; filter: drop-shadow(0 5px 15px rgba(58, 123, 213, 0.4)); }
-        .no-results-card h2 { font-size: 16px; font-weight: 800; color: #ffffff; margin-bottom: 8px; letter-spacing: 0.5px; }
-        .no-results-card p { font-size: 12px; color: var(--text-secondary); line-height: 1.5; margin-bottom: 20px; padding: 0 10px; }
-        .powered-badge { display: inline-flex; align-items: center; justify-content: center; background: linear-gradient(90deg, rgba(255,255,255,0.05), rgba(255,255,255,0.08), rgba(255,255,255,0.05)); border: 1px solid rgba(255,255,255,0.1); padding: 8px 18px; border-radius: 30px; font-size: 10px; font-weight: 800; color: #f1f5f9; letter-spacing: 1px; text-transform: uppercase; box-shadow: inset 0 0 10px rgba(255,255,255,0.02); backdrop-filter: blur(5px); }
-
-
-        /* 🔥 UNIFIED, STICKY & FIXED MODAL HEADERS (Download, Dev, DMCA) 🔥 */
-        .modal-header-fixed {
-            display: flex;
-            align-items: center;
-            gap: 15px;
-            padding: 8px;
-            position: sticky;
-            top: 0;
-            z-index: 999;
-            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
-        }
-        
-        .download-modal .modal-header-fixed { background-color: var(--bg-main); }
-        .overlay-panel .modal-header-fixed { background-color: var(--dev-bg-main); }
-
-        /* ADAPTIVE BACK BUTTON WITH GLASSMORPHISM */
-        .modal-header-fixed .back-btn {
-            width: 42px;
-            height: 42px;
-            border: none;
-            border-radius: 12px;
-            background-color: rgba(255, 255, 255, 0.08); /* Transparent to blend everywhere */
-            border: 1px solid rgba(255, 255, 255, 0.15);
-            color: #ffffff;
-            font-size: 18px;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            cursor: pointer;
-            flex-shrink: 0;
-            outline: none;
-            transition: 0.2s ease;
-        }
-        
-        .modal-header-fixed .back-btn:active { transform: scale(0.95); }
-
-        .modal-header-fixed .modal-title {
-            font-family: 'Poppins', sans-serif;
-            font-size: 17px;
-            font-weight: 800;
-            color: var(--text-primary);
-            text-transform: uppercase;
-            letter-spacing: 0px;
-            margin: 0;
-        }
-
-
-        /* --- DOWNLOAD MODAL CONTENT --- */
-        .download-modal { position: absolute; inset: 0; background-color: var(--bg-main); z-index: 99999; overflow-y: auto; display: none; flex-direction: column; }
-        .download-modal::-webkit-scrollbar { display: none; }
-        .dl-content-wrapper { padding: 5px 20px 0; display: flex; flex-direction: column; min-height: 100%; }
-        
-        .dl-img-container { position: relative; width: 100%; margin-bottom: 15px; } /* Wrapper for badge overlap */
-        .dl-preview-image { width: 100%; height: 260px; object-fit: contain; border-radius: 18px; background: #fff; padding: 10px; border: 1px solid var(--border-color); display: block; }
-        .dl-powered-badge { position: absolute; bottom: -15px; left: 50%; transform: translateX(-50%); z-index: 10; white-space: nowrap; box-shadow: 0 4px 10px rgba(0,0,0,0.5); background-color: var(--bg-main); } /* Badge overlapping styling */
-        
-        .dl-title { margin-top: 15px; font-size: 18px; font-weight: 800; line-height: 1.3; color: #fff; }
-        .dl-author { font-size: 13px; color: var(--text-secondary); margin-top: 4px; }
-        .dl-main-btn { width: 100%; height: 55px; border: none; border-radius: 14px; margin-top: 20px; background: #10b981; color: #fff; font-size: 16px; font-weight: 800; display: flex; justify-content: center; align-items: center; gap: 10px; cursor: pointer; box-shadow: 0 4px 15px rgba(16, 185, 129, 0.3); }
-        .dl-box { width: 100%; margin-top: 12px; padding: 14px 16px; border-radius: 16px; display: flex; align-items: center; gap: 14px; background: var(--bg-card); text-decoration: none; color: #fff; cursor: pointer; border: 1px solid var(--border-color); }
-        .dl-box i.icon { font-size: 20px; width: 42px; height: 42px; display: flex; justify-content: center; align-items: center; border-radius: 12px; background: rgba(255,255,255,0.04); flex-shrink: 0; }
-        .dl-box-title { font-size: 14px; font-weight: 600; }
-        .dl-box-sub { font-size: 12px; color: var(--text-secondary); margin-top: 2px; }
-        .exam-rel-box { margin-top: 20px; background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 16px; padding: 18px; }
-        .exam-header { display: flex; align-items: center; gap: 10px; font-size: 14px; font-weight: 800; margin-bottom: 15px; color: #fff; }
-        .exam-tags { display: flex; flex-wrap: wrap; gap: 8px; }
-        .dl-modal-tag { background: transparent; border: 1px solid rgba(59, 130, 246, 0.4); color: #93c5fd; font-size: 12px; font-weight: 500; padding: 6px 12px; border-radius: 16px; }
-        .social-icons { display: flex; justify-content: center; gap: 15px; margin-top: 30px; margin-bottom: 30px; }
-        .soc-btn { width: 46px; height: 46px; border-radius: 50%; display: flex; justify-content: center; align-items: center; font-size: 20px; color: #fff; text-decoration: none; background: #222; }
-        .btn-yt { background: #ff0000; } .btn-tg { background: #0088cc; } .btn-wa { background: #25D366; } .btn-ig { background: linear-gradient(45deg, #f09433, #e6683c, #dc2743, #cc2366, #bc1888); }
-
-
-        /* --- OVERLAY PANELS (Noti, Dev, DMCA) --- */
-        .notifications-panel { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background-color: #0c111d; z-index: 999; display: flex; flex-direction: column; transform: translateX(100%); transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1); }
-        .notifications-panel.active { transform: translateX(0); }
-        .noti-header { display: flex; justify-content: space-between; align-items: center; padding: 20px; border-bottom: 1px solid var(--border-color); background-color: #0c111d; }
-        .noti-title-area { display: flex; align-items: center; gap: 15px; }
-        .noti-icon { width: 40px; height: 40px; background-color: rgba(106, 90, 205, 0.1); color: var(--accent-purple); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 1.2rem; }
-        .noti-text h2 { font-size: 1.1rem; color: var(--text-primary); }
-        .noti-text p { font-size: 0.7rem; color: var(--accent-purple); font-weight: 600; text-transform: uppercase; }
-        .noti-body { flex: 1; padding: 20px; overflow-y: auto; display: flex; flex-direction: column; gap: 15px; }
-        
-        .noti-card-dynamic { display: flex; gap: 15px; background-color: var(--bg-card); border-radius: 16px; padding: 15px; align-items: center; border: 1px solid var(--border-color); }
-        .noti-card-img { width: 45px; height: 60px; border-radius: 6px; object-fit: contain; background: #fff; flex-shrink: 0; }
-        .noti-card-content { display: flex; flex-direction: column; gap: 4px; flex: 1; }
-        .noti-card-title { font-size: 0.95rem; color: var(--text-primary); font-weight: 700; line-height: 1.3;}
-        .noti-card-desc { font-size: 0.8rem; color: var(--text-secondary); }
-        .noti-date { font-size: 0.65rem; color: var(--text-secondary); font-weight: 600; text-transform: uppercase; margin-top: 4px; }
-
-        .overlay-panel { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background-color: var(--dev-bg-main); z-index: 1000; display: flex; flex-direction: column; overflow-y: auto; transform: translateX(100%); transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1); }
-        .overlay-panel::-webkit-scrollbar { display: none; }
-        .overlay-panel.active { transform: translateX(0); }
-
-        .dev-profile-section { padding: 20px 20px 30px; display: flex; flex-direction: column; align-items: center; }
-        
-        /* 🔥 ANIMATED GLOWING BORDER WRAPPER 🔥 */
-        .dev-profile-img-wrapper { 
-            position: relative;
-            width: 295px; 
-            height: 295px; 
-            border-radius: 26px; 
-            margin-bottom: 25px; 
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            overflow: hidden;
-            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.4); 
-        }
-        
-        .dev-profile-img-wrapper::before {
-            content: "";
-            position: absolute;
-            width: 150%;
-            height: 150%;
-            background: conic-gradient(#00ff87, #60efff, #0061ff, #8a2be2, #00ff87);
-            animation: spinBorder 2s linear infinite;
-        }
-
-        .dev-profile-img { 
-            width: calc(100% - 6px); /* Border thickness basically */
-            height: calc(100% - 6px); 
-            object-fit: cover; 
-            border-radius: 44px; /* Slightly smaller than wrapper */
-            background-color: #111; 
-            z-index: 1;
-            position: relative;
-        }
-
-        @keyframes spinBorder {
-            100% { transform: rotate(360deg); }
-        }
-        
-        .dev-greeting { font-size: 1.35rem; font-weight: 800; color: var(--text-primary); margin-bottom: 12px; text-align: center; }
-        .dev-quote { font-family: 'Poppins', sans-serif; font-size: 0.95rem; font-style: italic; font-weight: 500; color: #d4d4d8; text-align: center; line-height: 1.4; padding: 0 15px; }
-        .dev-cards-container { padding: 0 10px 25px; display: flex; flex-direction: column; gap: 15px; }
-        
-        /* INNER WHITE GLOW TO CARDS */
-        .dev-info-card { background-color: var(--dev-bg-card); border-radius: 22px; padding: 18px 20px; display: flex; align-items: center; gap: 18px; transition: 0.2s; border: 1px solid var(--border-color); box-shadow: inset 0 0 12px rgba(255, 255, 255, 0.05); }
-        
-        .dev-icon-box { width: 52px; height: 52px; border-radius: 16px; background: var(--dev-icon-gradient); display: flex; justify-content: center; align-items: center; color: var(--text-primary); font-size: 1.4rem; flex-shrink: 0; box-shadow: 0 4px 15px rgba(37, 99, 235, 0.2); }
-        .dev-card-content { display: flex; flex-direction: column; gap: 4px; }
-        .dev-card-title { font-size: 1.05rem; font-weight: 700; color: var(--text-primary); }
-        .dev-card-desc { font-size: 0.85rem; font-weight: 500; color: var(--dev-text-secondary); }
-        .dev-small-caps { font-variant: small-caps; font-size: 0.95rem; font-weight: 600; }
-
-        .dmca-content { padding: 15px 20px 40px; }
-        .dmca-hero { text-align: center; margin-bottom: 25px; }
-        .dmca-hero-title { font-size: 24px; font-weight: 900; letter-spacing: 1px; text-transform: uppercase; background: linear-gradient(90deg, #ffffff, #d1d5db, #9ca3af); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
-        .dmca-hero-subtitle { display: flex; justify-content: center; gap: 8px; flex-wrap: wrap; margin-top: 15px; }
-        .dmca-badge { padding: 6px 12px; border-radius: 999px; background: rgba(255,255,255,.05); border: 1px solid rgba(255,255,255,.08); font-size: 10px; font-weight: 700; color: #ffffff; }
-        .dmca-section { text-align: center; margin-bottom: 25px; background: var(--dev-bg-card); padding: 20px; border-radius: 20px; border: 1px solid var(--border-color); }
-        .dmca-section-title { display: flex; justify-content: center; align-items: center; gap: 10px; font-size: 18px; font-weight: 800; margin-bottom: 12px; color: #ffffff; }
-        .dmca-section p { line-height: 1.7; color: #cbd5e1; font-size: 0.85rem; }
-        .dmca-mini-icon { width: 34px; height: 34px; display: flex; justify-content: center; align-items: center; border-radius: 10px; color: #fff; font-size: 0.9rem; }
-        
-        .icon-book { background: linear-gradient(135deg, #3b82f6, #2563eb); }
-        .icon-copyright { background: linear-gradient(135deg, #8b5cf6, #7c3aed); }
-        .icon-shield { background: linear-gradient(135deg, #f59e0b, #ea580c); }
-        .icon-contact { background: linear-gradient(135deg, #10b981, #059669); }
-        
-        .dmca-contact-link { display: inline-block; color: #60a5fa; font-weight: 700; text-decoration: none; margin-top: 10px; padding: 10px 15px; background: rgba(96, 165, 250, 0.1); border-radius: 12px; }
-
-        /* =========================
-           LOADER STYLES
-        ========================= */
-        .loader-screen { position: fixed; inset: 0; display: flex; justify-content: center; align-items: center; flex-direction: column; background: radial-gradient(circle at top, #111827, #050505 70%); z-index: 99999999; overflow: hidden; transition: .6s; }
-        .loader-hex-bg { position: absolute; inset: 0; overflow: hidden; pointer-events: none; }
-        .hex-grid { position: absolute; top: -40px; left: -40px; display: flex; flex-wrap: wrap; width: 120%; }
-        .hex { position: relative; width: 100px; height: 57.74px; margin: 28.87px 2px; border-left: 1px solid rgba(255,255,255,.05); border-right: 1px solid rgba(255,255,255,.05); overflow: hidden; }
-        .hex::before, .hex::after { content: ""; position: absolute; width: 70.71px; height: 70.71px; left: 13px; transform: scaleY(.5774) rotate(-45deg); border-top: 1px solid rgba(255,255,255,.05); border-right: 1px solid rgba(255,255,255,.05); }
-        .hex::before { top: -35px; } .hex::after { bottom: -35px; }
-        .hex:nth-child(20n + 11), .hex:nth-child(20n + 12), .hex:nth-child(20n + 13), .hex:nth-child(20n + 14), .hex:nth-child(20n + 15), .hex:nth-child(20n + 16), .hex:nth-child(20n + 17), .hex:nth-child(20n + 18), .hex:nth-child(20n + 19), .hex:nth-child(20n + 20) { transform: translateX(52px); }
-        .hex span { position: absolute; width: 2px; height: 160px; left: 50%; bottom: -180px; transform: translateX(-50%); background: linear-gradient(to top, transparent, rgba(255,255,255,.2), #fff, rgba(255,255,255,.2), transparent); box-shadow: 0 0 10px #fff; animation: moveUp 4s linear infinite; opacity: 0; }
-        @keyframes moveUp { 0% { bottom: -180px; opacity: 0; } 15% { opacity: 1; } 100% { bottom: 180px; opacity: 0; } }
-        .loader-logo { width: 115px; height: 115px; border-radius: 30px; overflow: hidden; padding: 4px; background: linear-gradient(135deg, #ffffff, #f1f5f9); box-shadow: 0 0 18px rgba(255,255,255,.55), 0 0 35px rgba(255,255,255,.45), 0 0 60px rgba(255,255,255,.25); animation: pulseLogo 2s infinite; z-index: 5; position: relative; }
-        .loader-logo img { width: 100%; height: 100%; object-fit: cover; border-radius: 26px; }
-        @keyframes pulseLogo { 0% { transform: scale(1); } 50% { transform: scale(1.05); } 100% { transform: scale(1); } }
-        .loader-title { margin-top: 20px; font-size: 24px; font-weight: 900; letter-spacing: 1px; z-index: 5; font-family: 'Poppins', sans-serif;}
-        .premium-tags { margin-top: 18px; display: flex; gap: 10px; flex-wrap: wrap; justify-content: center; z-index: 5; padding: 0 10px; }
-        .tag { padding: 8px 14px; border-radius: 14px; background: rgba(255,255,255,.05); border: 1px solid rgba(255,255,255,.08); display: flex; align-items: center; gap: 7px; font-size: 10px; font-weight: 700; color: #ffffff; backdrop-filter: blur(12px); font-family: 'Poppins', sans-serif; }
-        .tag i { color: #ffffff; filter: drop-shadow(0 0 6px rgba(255,255,255,.8)) drop-shadow(0 0 12px rgba(255,255,255,.5)); }
-        .loader-bar { width: 200px; height: 7px; border-radius: 30px; overflow: hidden; background: rgba(255,255,255,.08); border: 1px solid rgba(255,255,255,.12); box-shadow: inset 0 0 8px rgba(255,255,255,.08), 0 0 12px rgba(255,255,255,.08); margin-top: 28px; z-index: 5; }
-        .loader-fill { width: 0%; height: 100%; background: linear-gradient(90deg, #ffffff, #f8fafc, #ffffff); box-shadow: 0 0 10px rgba(255,255,255,.8), 0 0 20px rgba(255,255,255,.55), 0 0 35px rgba(255,255,255,.3); animation: loadBar 3s linear forwards; position: relative; overflow: hidden; }
-        .loader-fill::before { content: ""; position: absolute; top: 0; left: -40%; width: 40%; height: 100%; background: linear-gradient(90deg, transparent, rgba(255,255,255,.95), transparent); animation: shineMove 1.2s linear infinite; }
-        @keyframes shineMove { 0% { left: -40%; } 100% { left: 120%; } }
-        @keyframes loadBar { 0% { width: 0%; } 100% { width: 100%; } }
-
-        /* =========================
-           POPUP STYLES
-        ========================= */
-        .popup-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.85); backdrop-filter: blur(5px); display: none; justify-content: center; align-items: center; z-index: 9999999; padding: 20px; }
-        .popup { width: 100%; max-width: 380px; padding: 30px 20px 25px; border-radius: 32px; background: linear-gradient(180deg, rgba(0,255,85,.14), rgba(0,0,0,.98)); border: 1px solid rgba(255,255,255,.14); text-align: center; animation: popupAnim .35s ease; }
-        @keyframes popupAnim { from { transform: scale(.82); opacity: 0; } to { transform: scale(1); opacity: 1; } }
-        .popup-logo { width: 88px; height: 88px; margin: auto; border-radius: 28px; background: linear-gradient(145deg, #1a1a1a, #050505); display: flex; justify-content: center; align-items: center; }
-        .popup-logo img { width: 52px; }
-        .popup h1 { color: #fff; font-size: 24px; font-weight: 800; margin-top: 24px; letter-spacing: .5px; font-family: 'Poppins', sans-serif;}
-        .popup p { color: #b8b8b8; font-size: 15px; line-height: 1.6; margin-top: 14px; }
-        .join-btn { width: 100%; height: 68px; margin-top: 30px; border: none; border-radius: 24px; background: linear-gradient(135deg, #6dff9c 0%, #32ff7e 25%, #14d85c 55%, #08b848 100%); color: #fff; font-size: 20px; font-weight: 700; display: flex; align-items: center; justify-content: center; gap: 12px; cursor: pointer; position: relative; overflow: hidden; transition: .35s ease; box-shadow: 0 7px 0 #06792f, 0 12px 24px rgba(0,255,115,.28); }
-        .join-btn img { width: 26px; filter: brightness(125%) drop-shadow(0 0 6px rgba(255,255,255,.45)); }
-        .later { margin-top: 18px; color: #888; font-size: 11px; font-weight: 700; letter-spacing: 2px; cursor: pointer; transition: .3s; font-family: 'Poppins', sans-serif;}
-        .later:hover { color: #fff; }
-    </style>
+    <link rel="stylesheet" href="style.css">
 </head>
 <body>
 
     <div class="loader-screen" id="loaderScreen">
-        <div class="loader-hex-bg"><div class="hex-grid" id="hexGrid"></div></div>
+        <canvas id="networkCanvas"></canvas>
         <div class="loader-logo"><img src="https://i.postimg.cc/cJdGqYHG/IMG-20260524-WA0004.jpg" alt="Logo"></div>
         <div class="loader-title">MULTIVERSE BOOKS</div>
         <div class="premium-tags">
@@ -389,13 +21,14 @@
             <div class="tag"><i class="fa-solid fa-layer-group"></i> MORE</div>
         </div>
         <div class="loader-bar"><div class="loader-fill"></div></div>
+        <div class="loader-powered-text">POWERED BY MADxPRINCE</div>
     </div>
 
     <div class="popup-overlay" id="popupOverlay">
         <div class="popup">
             <div class="popup-logo"><img src="https://upload.wikimedia.org/wikipedia/commons/6/6b/WhatsApp.svg" alt="WhatsApp"></div>
-            <h1>JOIN COMMUNITY</h1>
-            <p>Stay updated with latest books, updates, and get instant notifications.</p>
+            <h1> JOIN COMMUNITY</h1>
+            <p> 𝐒𝐭𝐮𝐝𝐲 𝐦𝐚𝐭𝐞𝐫𝐢𝐚𝐥 𝐤𝐞 𝐥𝐢𝐲𝐞 𝐢𝐝𝐡𝐚𝐫-𝐮𝐝𝐡𝐚𝐫 𝐛𝐡𝐚𝐭𝐚𝐤𝐧𝐚 𝐜𝐡𝐡𝐨𝐝𝐨! 📚 𝐀𝐛 𝐦𝐢𝐥𝐞𝐠𝐚 𝐬𝐚𝐚𝐫𝐚 𝐜𝐨𝐧𝐭𝐞𝐧𝐭 𝐛𝐢𝐥𝐤𝐮𝐥 𝐅𝐑𝐄𝐄. 𝐈𝐧𝐬𝐭𝐚𝐧𝐭 𝐮𝐩𝐝𝐚𝐭𝐞𝐬 𝐚𝐮𝐫 𝐛𝐞𝐬𝐭 𝐛𝐨𝐨𝐤𝐬 𝐩𝐚𝐚𝐧𝐞 𝐤𝐞 𝐥𝐢𝐲𝐞 𝐚𝐚𝐣 𝐡𝐢 𝐡𝐮𝐦𝐚𝐫𝐚 𝐖𝐡𝐚𝐭𝐬𝐀𝐩𝐩 𝐜𝐡𝐚𝐧𝐧𝐞𝐥 𝐣𝐨𝐢𝐧 𝐤𝐚𝐫𝐨.☟☟ </p>
             <button class="join-btn" onclick="joinChannel()"><img src="https://upload.wikimedia.org/wikipedia/commons/6/6b/WhatsApp.svg" alt="WhatsApp">WhatsApp Channel</button>
             <div class="later" onclick="closePopup()">MAYBE LATER</div>
         </div>
@@ -430,7 +63,7 @@
                 <div class="profile-info">
                     <div class="profile-name">MULTIVERSE BOOKS</div>
                 </div>
-                </div>
+            </div>
 
             <div class="menu-section">
                 <div class="section-title">MAIN MENU</div>
@@ -481,7 +114,7 @@
                 <div style="color:#a1a1aa; font-size:13px; font-weight:600;">Loading more...</div>
             </div>
 
-            <div class="premium-copyright">© MULTIVERSE BOOKS | DESIGNED & DEVELOPED BY MADxPRINCE</div>
+            <div class="premium-copyright">© 2026 MULTIVERSE BOOKS <span style="margin: 0 5px;">|</span> CRAFTED WITH <i class="fas fa-heart" style="color: #ff4757; margin: 0 3px; filter: drop-shadow(0 0 5px rgba(255,71,87,0.8));"></i> BY MADxPRINCE</div>
         </main>
 
         <div class="download-modal" id="downloadModal">
@@ -521,7 +154,7 @@
                     <a href="#" target="_blank" class="soc-btn btn-wa"><i class="fab fa-whatsapp"></i></a>
                     <a href="#" target="_blank" class="soc-btn btn-ig"><i class="fab fa-instagram"></i></a>
                 </div>
-                <div class="premium-copyright">© MULTIVERSE BOOKS | DESIGNED & DEVELOPED BY MADxPRINCE</div>
+                <div class="premium-copyright">© 2026 MULTIVERSE BOOKS <span style="margin: 0 5px;">|</span> CRAFTED WITH <i class="fas fa-heart" style="color: #ff4757; margin: 0 3px; filter: drop-shadow(0 0 5px rgba(255,71,87,0.8));"></i> BY MADxPRINCE</div>
             </div>
         </div>
 
@@ -532,22 +165,75 @@
 
         <div class="overlay-panel" id="about-dev-panel">
             <div class="modal-header-fixed">
-                <button class="back-btn" id="close-dev-btn"><i class="fas fa-arrow-left"></i></button>
-                <h1 class="modal-title">ABOUT DEVELOPER</h1>
+                <div class="header-content-wrapper">
+                    <button class="back-btn" id="close-dev-btn"><i class="fas fa-arrow-left"></i></button>
+                    <h1 class="modal-title">ABOUT DEVELOPER</h1>
+                </div>
+                <div class="header-active-badge"><span class="dot"></span> Active</div>
             </div>
             
             <div class="dev-profile-section">
-                <div class="dev-profile-img-wrapper"><img src="https://i.postimg.cc/D0BF1b77/file-000000000e847207a64f6711d825a859.png" class="dev-profile-img"></div>
+                <div class="profile-avatar-container">
+                    <div class="dev-profile-img-wrapper">
+                        <img src="https://i.postimg.cc/D0BF1b77/file-000000000e847207a64f6711d825a859.png" class="dev-profile-img">
+                    </div>
+                    <div class="profile-shield"><i class="fas fa-shield-alt"></i></div>
+                </div>
                 <h2 class="dev-greeting">Hey there! I'm MADxPRINCE</h2>
                 <p class="dev-quote">"Dream Big, Hustle Hard, and Never Stop Exploring!"</p>
             </div>
+            
             <div class="dev-cards-container">
                 <div class="dev-info-card"><div class="dev-icon-box"><i class="fas fa-graduation-cap"></i></div><div class="dev-card-content"><div class="dev-card-title">Education</div><div class="dev-card-desc"><span class="dev-small-caps">Class</span> 11th (PCMB) | <span class="dev-small-caps">Batch:</span> 2026-28</div></div></div>
                 <div class="dev-info-card"><div class="dev-icon-box"><i class="fas fa-map-marker-alt"></i></div><div class="dev-card-content"><div class="dev-card-title">Location</div><div class="dev-card-desc"><span class="dev-small-caps">Bihar , India</span> 🚩</div></div></div>
                 <div class="dev-info-card"><div class="dev-icon-box"><i class="fas fa-birthday-cake"></i></div><div class="dev-card-content"><div class="dev-card-title">Birthday</div><div class="dev-card-desc"><span class="dev-small-caps">6 December</span> 💐💖</div></div></div>
                 <div class="dev-info-card"><div class="dev-icon-box"><i class="fas fa-tools"></i></div><div class="dev-card-content"><div class="dev-card-title">Skills</div><div class="dev-card-desc" style="font-family: serif; font-style: italic; font-size: 0.95rem; font-weight: 600;">Hehe... Nothing ☠️</div></div></div>
             </div>
-            <div class="premium-copyright">© MULTIVERSE BOOKS | DESIGNED & DEVELOPED BY MADxPRINCE</div>
+
+            <div class="find-online-section">
+                <div class="section-title-online">
+                    <svg class="custom-sparkle" width="22" height="22" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M11.9998 1.5L13.8824 8.11765L20.4998 10L13.8824 11.8824L11.9998 18.5L10.1174 11.8824L3.49982 10L10.1174 8.11765L11.9998 1.5Z" fill="#a5b4fc"/>
+                        <path d="M19.4998 13.5L20.4411 16.8088L23.7498 17.75L20.4411 18.6912L19.4998 22L18.5586 18.6912L15.2498 17.75L18.5586 16.8088L19.4998 13.5Z" fill="#a5b4fc"/>
+                    </svg>
+                    FIND MADxPRINCE ONLINE
+                </div>
+                
+                <a href="#" class="social-card sc-youtube">
+                    <div class="sc-icon"><i class="fab fa-youtube"></i></div>
+                    <div class="sc-text">
+                        <h3>YouTube</h3>
+                        <p>Watch free lectures, tutorials & tech videos</p>
+                    </div>
+                    <i class="fas fa-external-link-square-alt sc-out-icon"></i>
+                </a>
+                
+                <a href="#" class="social-card sc-instagram">
+                    <div class="sc-icon"><i class="fab fa-instagram"></i></div>
+                    <div class="sc-text">
+                        <h3>Instagram</h3>
+                        <p>Dev life, behind-the-scenes & updates</p>
+                    </div>
+                </a>
+                
+                <a href="#" class="social-card sc-telegram">
+                    <div class="sc-icon"><i class="fab fa-telegram-plane"></i></div>
+                    <div class="sc-text">
+                        <h3>Telegram Channel</h3>
+                        <p>Free resources, study material & instant updates</p>
+                    </div>
+                </a>
+                
+                <a href="#" class="social-card sc-whatsapp">
+                    <div class="sc-icon"><i class="fab fa-whatsapp"></i></div>
+                    <div class="sc-text">
+                        <h3>WhatsApp Channel</h3>
+                        <p>Daily free apps, websites & tools — join now</p>
+                    </div>
+                </a>
+            </div>
+
+            <div class="premium-copyright">© 2026 MULTIVERSE BOOKS <span style="margin: 0 5px;">|</span> CRAFTED WITH <i class="fas fa-heart" style="color: #ff4757; margin: 0 3px; filter: drop-shadow(0 0 5px rgba(255,71,87,0.8));"></i> BY MADxPRINCE</div>
         </div>
 
         <div class="overlay-panel" id="dmca-panel">
@@ -585,302 +271,13 @@
                     <p>Users are solely responsible for how they access, download, share or use any content available through this platform. This website and its administrators cannot be held responsible for any misuse or unauthorized use of the materials.</p>
                 </div>
             </div>
-            <div class="premium-copyright">© MULTIVERSE BOOKS | DESIGNED & DEVELOPED BY MADxPRINCE</div>
+            <div class="premium-copyright">© 2026 MULTIVERSE BOOKS <span style="margin: 0 5px;">|</span> CRAFTED WITH <i class="fas fa-heart" style="color: #ff4757; margin: 0 3px; filter: drop-shadow(0 0 5px rgba(255,71,87,0.8));"></i> BY MADxPRINCE</div>
         </div>
 
     </div>
 
-    <script type="module">
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
-        import { getFirestore, collection, getDocs, query, orderBy, onSnapshot } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
+    <script type="module" src="app.js"></script>
 
-        // 🔥 YAHAN APNI FIREBASE CONFIGURATION DAALEIN 🔥
-        const firebaseConfig = {
-          apiKey: "AIzaSyAXBSGCZFdkSbk-Ireoo7sRY4mLzS25nyk",
-          authDomain: "multiverse-books-2.firebaseapp.com",
-          projectId: "multiverse-books-2",
-          storageBucket: "multiverse-books-2.firebasestorage.app",
-          messagingSenderId: "59280260709",
-          appId: "1:59280260709:web:ef05fbe489ce2ee41e108c"
-        };
-
-        const app = initializeApp(firebaseConfig);
-        const db = getFirestore(app);
-
-        // Global properties needed for script outside module
-        window.booksData = [];
-        let loadedCount = 0; 
-        const initialLoad = 8;
-        let isLoadingMore = false;
-        let activeBookSlug = ""; let activeBookTitle = "";
-
-        const q = query(collection(db, "books"), orderBy("createdAt", "desc"));
-        onSnapshot(q, (snapshot) => {
-            window.booksData = [];
-            snapshot.forEach((doc) => {
-                let data = doc.data();
-                data.id = doc.id;
-                data.slug = data.title.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)+/g, '');
-                window.booksData.push(data);
-            });
-            
-            document.getElementById("bookContainer").innerHTML = "";
-            loadedCount = 0;
-            window.renderBooksUI(0, initialLoad);
-            window.generateNotifications();
-            
-            const sBook = new URLSearchParams(window.location.search).get('book');
-            if(sBook) window.openDownloadPage(sBook, true);
-        });
-
-        window.renderBooksUI = function(startIndex, count) {
-            const container = document.getElementById("bookContainer");
-            let endIndex = Math.min(startIndex + count, window.booksData.length);
-
-            for(let i = startIndex; i < endIndex; i++) {
-                let book = window.booksData[i];
-                let langClass = book.lang.toLowerCase() === 'hindi' ? 'tag-lang-hindi' : 'tag-lang-english';
-                
-                container.innerHTML += `
-                <div class="book-card" onclick="openDownloadPage('${book.slug}')">
-                    <div class="card-img-wrapper">
-                        <div class="badge-free">FREE</div>
-                        <img src="${book.image}" class="book-image">
-                    </div>
-                    <div class="book-details">
-                        <div class="book-title">${book.title}</div>
-                        <div class="book-author">${book.author}</div>
-                        <div class="tags-container">
-                            <span class="book-tag tag-year">${book.year}</span>
-                            <span class="book-tag ${langClass}">${book.lang}</span>
-                        </div>
-                    </div>
-                </div>`;
-            }
-            loadedCount = endIndex;
-        }
-
-        window.generateNotifications = function() {
-            const notiContainer = document.getElementById('dynamic-noti-container');
-            notiContainer.innerHTML = ''; 
-            const recentBooks = window.booksData.slice(0, 4);
-            
-            recentBooks.forEach((book) => {
-                notiContainer.innerHTML += `
-                <div class="noti-card-dynamic">
-                    <img src="${book.image}" class="noti-card-img" alt="Book Logo">
-                    <div class="noti-card-content">
-                        <div class="noti-card-title">${book.title} Book Added ✅</div>
-                        <div class="noti-card-desc">New book is now available in library for download.</div>
-                        <div class="noti-date">${book.dateAdded || 'Recently'}</div> </div>
-                </div>`;
-            });
-        }
-
-        window.openDownloadPage = function(slug, skipPushState = false) {
-            const book = window.booksData.find(b => b.slug === slug);
-            if(!book) return;
-            document.getElementById("downloadModal").style.display = "flex";
-            document.getElementById("dlPreviewImage").src = book.image;
-            document.getElementById("dlBookTitle").innerText = book.title;
-            document.getElementById("dlBookAuthor").innerText = book.author;
-            document.getElementById("dlPdfLink").href = book.pdfLink;
-            document.getElementById("dlYoutubeLink").href = book.ytLink || "#";
-
-            let examsArray = book.exams.split(',').map(item => item.trim());
-            document.getElementById("dlModalTags").innerHTML = examsArray.map(exam => `<div class="dl-modal-tag">${exam}</div>`).join('');
-            
-            activeBookSlug = book.slug;
-            activeBookTitle = book.title;
-            
-            if (!skipPushState) { history.pushState({ popup: 'book' }, '', '?book=' + book.slug); }
-        }
-
-        window.closeDownloadPage = function() {
-            if (history.state && history.state.popup === 'book') { history.back(); } 
-            else { document.getElementById("downloadModal").style.display = "none"; window.history.replaceState({}, '', window.location.pathname); }
-        }
-
-        window.shareBook = function() {
-            const shareUrl = window.location.origin + window.location.pathname + "?book=" + activeBookSlug;
-            if (navigator.share) navigator.share({ title: activeBookTitle, text: "Download free book", url: shareUrl });
-            else { navigator.clipboard.writeText(shareUrl); alert("Link Copied!"); }
-        }
-
-        const mainElement = document.getElementById('mainContentArea');
-        mainElement.addEventListener('scroll', () => {
-            if (mainElement.scrollTop + mainElement.clientHeight >= mainElement.scrollHeight - 50) {
-                const noResultsMsg = document.getElementById('no-results-msg');
-                if (loadedCount < window.booksData.length && !isLoadingMore && noResultsMsg.style.display !== 'flex') {
-                    isLoadingMore = true;
-                    document.getElementById("bottomSpinner").style.display = "flex";
-                    setTimeout(() => {
-                        window.renderBooksUI(loadedCount, 8);
-                        document.getElementById("bottomSpinner").style.display = "none";
-                        isLoadingMore = false;
-                    }, 1500); 
-                }
-            }
-        });
-
-        document.getElementById('app-search-input').addEventListener('input', (e) => {
-            const searchText = e.target.value.toLowerCase();
-            let foundMatch = false;
-            document.querySelectorAll('.book-card').forEach(card => {
-                if (card.querySelector('.book-title').innerText.toLowerCase().includes(searchText)) {
-                    card.style.display = 'flex'; foundMatch = true;
-                } else { card.style.display = 'none'; }
-            });
-            document.getElementById('no-results-msg').style.display = foundMatch ? 'none' : 'flex';
-        });
-    </script>
-
-    <script>
-        const hexGrid = document.getElementById("hexGrid");
-        for(let i=0; i<150; i++){
-            const hex = document.createElement("div");
-            hex.classList.add("hex");
-            const light = document.createElement("span");
-            hex.appendChild(light);
-            hexGrid.appendChild(hex);
-        }
-
-        window.addEventListener("load", () => {
-            setTimeout(() => {
-                const loader = document.getElementById("loaderScreen");
-                document.getElementById("popupOverlay").style.display = "flex";
-                loader.style.opacity = "0";
-                loader.style.visibility = "hidden";
-                setTimeout(() => { loader.remove(); }, 600); 
-            }, 3000); 
-        });
-
-        function closePopup(){ document.getElementById("popupOverlay").style.display = "none"; }
-        function joinChannel(){ window.open('https://whatsapp.com/channel/0029Vb6NBZx1yT2GByTTVf2A', '_blank'); }
-
-        function closeActiveModals() {
-            document.getElementById('search-box').classList.remove('active');
-            document.getElementById('noti-panel').classList.remove('active');
-            document.getElementById('sidebar').classList.remove('active');
-            document.getElementById('sidebar-overlay').classList.remove('active');
-            document.getElementById('about-dev-panel').classList.remove('active');
-            document.getElementById('dmca-panel').classList.remove('active');
-            document.getElementById("downloadModal").style.display = "none";
-            document.getElementById("popupOverlay").style.display = "none";
-            document.getElementById("no-results-msg").style.display = "none";
-        }
-
-        window.addEventListener('popstate', (e) => {
-            closeActiveModals();
-            const sBook = new URLSearchParams(window.location.search).get('book');
-            if(sBook) {
-                if(window.openDownloadPage) window.openDownloadPage(sBook, true); 
-            } else {
-                updateActiveMenuState('menu-home');
-                document.getElementById('app-search-input').value = '';
-                document.querySelectorAll('.book-card').forEach(card => card.style.display = 'flex');
-            }
-        });
-
-        function goBack() {
-            if (history.state && history.state.popup) { history.back(); } else { closeActiveModals(); }
-        }
-
-        const searchBtn = document.getElementById('open-search');
-        const closeSearchBtn = document.getElementById('close-search');
-        const searchBox = document.getElementById('search-box');
-        const liveSearchInput = document.getElementById('app-search-input');
-        const noResultsMsg = document.getElementById('no-results-msg');
-
-        searchBtn.addEventListener('click', () => {
-            history.pushState({ popup: 'search' }, ''); 
-            searchBox.classList.add('active');
-            setTimeout(() => { liveSearchInput.focus(); }, 300);
-        });
-
-        closeSearchBtn.addEventListener('click', () => {
-            liveSearchInput.value = '';
-            document.querySelectorAll('.book-card').forEach(card => card.style.display = 'flex');
-            noResultsMsg.style.display = 'none';
-            goBack();
-        });
-
-        const notiBtn = document.getElementById('open-noti');
-        const closeNotiBtn = document.getElementById('close-noti');
-        const notiPanel = document.getElementById('noti-panel');
-
-        notiBtn.addEventListener('click', () => {
-            history.pushState({ popup: 'noti' }, '');
-            notiPanel.classList.add('active');
-            document.querySelector('.blink-dot').style.display = 'none'; 
-        });
-        closeNotiBtn.addEventListener('click', goBack);
-
-        const menuBtn = document.getElementById('open-menu');
-        const sidebar = document.getElementById('sidebar');
-        const sidebarOverlay = document.getElementById('sidebar-overlay');
-
-        menuBtn.addEventListener('click', () => { 
-            history.pushState({ popup: 'sidebar' }, '');
-            sidebar.classList.add('active'); 
-            sidebarOverlay.classList.add('active'); 
-        });
-        sidebarOverlay.addEventListener('click', goBack);
-
-        const mainMenuIDs = ['menu-home', 'menu-about-dev', 'menu-contact', 'menu-dmca'];
-        function updateActiveMenuState(clickedId) {
-            mainMenuIDs.forEach(id => {
-                const el = document.getElementById(id);
-                if (el) { el.classList.remove('active'); el.classList.add('normal'); }
-            });
-            const activeEl = document.getElementById(clickedId);
-            if (activeEl) { activeEl.classList.remove('normal'); activeEl.classList.add('active'); }
-        }
-
-        const aboutDevPanel = document.getElementById('about-dev-panel');
-        const dmcaPanel = document.getElementById('dmca-panel');
-        
-        document.getElementById('menu-home').addEventListener('click', (e) => { e.preventDefault(); goBack(); });
-
-        document.getElementById('menu-about-dev').addEventListener('click', (e) => {
-            e.preventDefault();
-            updateActiveMenuState('menu-about-dev');
-            history.replaceState({ popup: 'dev' }, ''); 
-            aboutDevPanel.classList.add('active');
-            dmcaPanel.classList.remove('active');
-            sidebar.classList.remove('active');
-            sidebarOverlay.classList.remove('active');
-        });
-
-        document.getElementById('menu-dmca').addEventListener('click', (e) => {
-            e.preventDefault();
-            updateActiveMenuState('menu-dmca');
-            history.replaceState({ popup: 'dmca' }, ''); 
-            dmcaPanel.classList.add('active');
-            aboutDevPanel.classList.remove('active');
-            sidebar.classList.remove('active');
-            sidebarOverlay.classList.remove('active');
-        });
-
-        const urls = { contact: "#", whatsapp: "https://whatsapp.com/channel/0029Vb6NBZx1yT2GByTTVf2A", telegram: "https://t.me/Multiverse_Contact_Bot", instagram: "#", youtube: "#" };
-        document.getElementById('menu-contact').addEventListener('click', (e) => { e.preventDefault(); updateActiveMenuState('menu-contact'); window.open(urls.contact, '_blank'); goBack(); });
-        document.getElementById('link-whatsapp').addEventListener('click', () => { window.open(urls.whatsapp, '_blank'); });
-        document.getElementById('link-telegram').addEventListener('click', () => { window.open(urls.telegram, '_blank'); });
-        document.getElementById('link-insta').addEventListener('click', () => { window.open(urls.instagram, '_blank'); });
-        document.getElementById('link-youtube').addEventListener('click', () => { window.open(urls.youtube, '_blank'); });
-
-        document.getElementById('close-dev-btn').addEventListener('click', goBack);
-        document.getElementById('close-dmca-btn').addEventListener('click', goBack);
-
-        const quotes = [
-            { text: "All that I am, or hope to be, I owe to my angel mother.", author: "Abraham Lincoln" },
-            { text: "The future belongs to those who believe in the beauty of their dreams.", author: "Eleanor Roosevelt" },
-            { text: "Success is not final, failure is not fatal: it is the courage to continue that counts.", author: "Winston Churchill" }
-        ];
-        const todayDays = Math.floor(Date.now() / (1000 * 60 * 60 * 24));
-        const currentQuoteIndex = todayDays % quotes.length;
-        document.getElementById('daily-quote-text').innerHTML = `<i class="fas fa-quote-left" style="color: rgba(255,255,255,0.3); margin-right:5px;"></i> ${quotes[currentQuoteIndex].text}`;
-        document.getElementById('daily-quote-author').innerText = `— ${quotes[currentQuoteIndex].author}`;
-    </script>
 </body>
 </html>
+
