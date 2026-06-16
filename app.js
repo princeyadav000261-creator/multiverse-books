@@ -87,7 +87,7 @@ window.renderBooksUI = function(startIndex, count, customData = null) {
 window.generateNotifications = function() {
     const notiContainer = document.getElementById('dynamic-noti-container');
     notiContainer.innerHTML = ''; 
-    const recentBooks = window.booksData.slice(0, 4);
+    const recentBooks = window.booksData.slice(0, 30);
     
     recentBooks.forEach((book) => {
         notiContainer.innerHTML += `
