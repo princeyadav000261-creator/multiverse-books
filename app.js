@@ -1,7 +1,6 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
 import { getFirestore, collection, getDocs, query, orderBy, onSnapshot } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
 
-// GitHub warning se bachne ke liye humne key ko 3 hisso me tod diya hai
 const p1 = "AIzaSyAXB";
 const p2 = "SGCZFdkSbk-Ireoo7";
 const p3 = "sRY4mLzS25nyk";
@@ -21,13 +20,13 @@ const db = getFirestore(app);
 window.booksData = [];
 let loadedCount = 0; 
 
-// FIX: Yahan screen size check karke PC/Desktop ke liye shuru me zyada books load ki jayengi
 const initialLoad = window.innerWidth >= 768 ? 24 : 8;
-
 let isLoadingMore = false;
-let activeBookSlug = ""; let activeBookTitle = "";
+let activeBookSlug = ""; 
+let activeBookTitle = "";
 
 const q = query(collection(db, "books"), orderBy("createdAt", "desc"));
+
 onSnapshot(q, (snapshot) => {
     window.booksData = [];
     snapshot.forEach((doc) => {
@@ -39,26 +38,38 @@ onSnapshot(q, (snapshot) => {
     
     document.getElementById("bookContainer").innerHTML = "";
     loadedCount = 0;
-    window.renderBooksUI(0, initialLoad);
+    
+    // Check if we are searching something while data loads
+    const searchInput = document.getElementById('app-search-input').value;
+    if(searchInput.trim() === "") {
+        window.renderBooksUI(0, initialLoad);
+    } else {
+        performSearch(searchInput);
+    }
+    
     window.generateNotifications();
     
     const sBook = new URLSearchParams(window.location.search).get('book');
     if(sBook) window.openDownloadPage(sBook, true);
 });
 
-window.renderBooksUI = function(startIndex, count) {
+window.renderBooksUI = function(startIndex, count, customData = null) {
     const container = document.getElementById("bookContainer");
-    let endIndex = Math.min(startIndex + count, window.booksData.length);
+    let dataToRender = customData ? customData : window.booksData;
+    let endIndex = Math.min(startIndex + count, dataToRender.length);
+
+    // If starting fresh, clear container
+    if(startIndex === 0) container.innerHTML = "";
 
     for(let i = startIndex; i < endIndex; i++) {
-        let book = window.booksData[i];
+        let book = dataToRender[i];
         let langClass = book.lang.toLowerCase() === 'hindi' ? 'tag-lang-hindi' : 'tag-lang-english';
         
         container.innerHTML += `
         <div class="book-card" onclick="openDownloadPage('${book.slug}')">
             <div class="card-img-wrapper">
                 <div class="badge-free">FREE</div>
-                <img src="${book.image}" class="book-image">
+                <img src="${book.image}" class="book-image" oncontextmenu="return false;" draggable="false">
             </div>
             <div class="book-details">
                 <div class="book-title">${book.title}</div>
@@ -80,12 +91,13 @@ window.generateNotifications = function() {
     
     recentBooks.forEach((book) => {
         notiContainer.innerHTML += `
-        <div class="noti-card-dynamic">
+        <div class="noti-card-dynamic" onclick="openDownloadPage('${book.slug}')" style="cursor:pointer;">
             <img src="${book.image}" class="noti-card-img" alt="Book Logo">
             <div class="noti-card-content">
                 <div class="noti-card-title">${book.title} Book Added ✅</div>
                 <div class="noti-card-desc">New book is now available in library for download.</div>
-                <div class="noti-date">${book.dateAdded || 'Recently'}</div> </div>
+                <div class="noti-date">${book.dateAdded || 'Recently'}</div> 
+            </div>
         </div>`;
     });
 }
@@ -100,7 +112,7 @@ window.openDownloadPage = function(slug, skipPushState = false) {
     document.getElementById("dlPdfLink").href = book.pdfLink;
     document.getElementById("dlYoutubeLink").href = book.ytLink || "#";
 
-    let examsArray = book.exams.split(',').map(item => item.trim());
+    let examsArray = (book.exams || "General").split(',').map(item => item.trim());
     document.getElementById("dlModalTags").innerHTML = examsArray.map(exam => `<div class="dl-modal-tag">${exam}</div>`).join('');
     
     activeBookSlug = book.slug;
@@ -120,8 +132,38 @@ window.shareBook = function() {
     else { navigator.clipboard.writeText(shareUrl); alert("Link Copied!"); }
 }
 
+// Optimized Search Function
+function performSearch(searchText) {
+    const term = searchText.toLowerCase();
+    const filteredData = window.booksData.filter(book => 
+        book.title.toLowerCase().includes(term) || 
+        book.author.toLowerCase().includes(term)
+    );
+    
+    if(filteredData.length > 0) {
+        window.renderBooksUI(0, filteredData.length, filteredData); // Render all matches
+        document.getElementById('no-results-msg').style.display = 'none';
+    } else {
+        document.getElementById("bookContainer").innerHTML = "";
+        document.getElementById('no-results-msg').style.display = 'flex';
+    }
+}
+
+document.getElementById('app-search-input').addEventListener('input', (e) => {
+    const searchText = e.target.value;
+    if(searchText.trim() === "") {
+        document.getElementById('no-results-msg').style.display = 'none';
+        window.renderBooksUI(0, initialLoad); // Reset to default load
+    } else {
+        performSearch(searchText);
+    }
+});
+
 const mainElement = document.getElementById('mainContentArea');
 mainElement.addEventListener('scroll', () => {
+    // Only load more if search is empty
+    if(document.getElementById('app-search-input').value.trim() !== "") return;
+
     if (mainElement.scrollTop + mainElement.clientHeight >= mainElement.scrollHeight - 50) {
         const noResultsMsg = document.getElementById('no-results-msg');
         if (loadedCount < window.booksData.length && !isLoadingMore && noResultsMsg.style.display !== 'flex') {
@@ -131,22 +173,12 @@ mainElement.addEventListener('scroll', () => {
                 window.renderBooksUI(loadedCount, 8);
                 document.getElementById("bottomSpinner").style.display = "none";
                 isLoadingMore = false;
-            }, 1500); 
+            }, 1000); 
         }
     }
 });
 
-document.getElementById('app-search-input').addEventListener('input', (e) => {
-    const searchText = e.target.value.toLowerCase();
-    let foundMatch = false;
-    document.querySelectorAll('.book-card').forEach(card => {
-        if (card.querySelector('.book-title').innerText.toLowerCase().includes(searchText)) {
-            card.style.display = 'flex'; foundMatch = true;
-        } else { card.style.display = 'none'; }
-    });
-    document.getElementById('no-results-msg').style.display = foundMatch ? 'none' : 'flex';
-});
-
+// --- CANVAS ANIMATION LOGIC ---
 const canvas = document.getElementById('networkCanvas');
 const ctx = canvas.getContext('2d');
 let width, height;
@@ -267,7 +299,7 @@ window.addEventListener('popstate', (e) => {
     } else {
         updateActiveMenuState('menu-home');
         document.getElementById('app-search-input').value = '';
-        document.querySelectorAll('.book-card').forEach(card => card.style.display = 'flex');
+        window.renderBooksUI(0, initialLoad);
     }
 });
 
@@ -279,7 +311,6 @@ const searchBtn = document.getElementById('open-search');
 const closeSearchBtn = document.getElementById('close-search');
 const searchBox = document.getElementById('search-box');
 const liveSearchInput = document.getElementById('app-search-input');
-const noResultsMsg = document.getElementById('no-results-msg');
 
 searchBtn.addEventListener('click', () => {
     history.pushState({ popup: 'search' }, ''); 
@@ -289,8 +320,8 @@ searchBtn.addEventListener('click', () => {
 
 closeSearchBtn.addEventListener('click', () => {
     liveSearchInput.value = '';
-    document.querySelectorAll('.book-card').forEach(card => card.style.display = 'flex');
-    noResultsMsg.style.display = 'none';
+    window.renderBooksUI(0, initialLoad);
+    document.getElementById('no-results-msg').style.display = 'none';
     goBack();
 });
 
