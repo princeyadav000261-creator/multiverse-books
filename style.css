@@ -31,18 +31,8 @@
 
 * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Inter', 'Poppins', sans-serif; -webkit-tap-highlight-color: transparent; }
 
-/* Browser 100dvh Fix for Brave & Chrome Mobile */
-body { 
-    background-color: #000; 
-    color: #ffffff; 
-    display: flex; 
-    justify-content: center; 
-    height: 100%; 
-    min-height: 100vh;
-    min-height: 100dvh; 
-    position: relative; 
-    overflow: hidden; 
-}
+/* Fixed 100dvh safely without breaking scroll */
+body { background-color: #000; color: #ffffff; display: flex; justify-content: center; height: 100vh; height: 100dvh; position: relative; overflow: hidden; }
 
 /* 🛡️ IMAGE PROTECTION ADDED HERE 🛡️ */
 img {
@@ -55,16 +45,8 @@ img {
 }
 
 .app-container {
-    width: 100%; 
-    max-width: 414px; 
-    height: 100%; 
-    min-height: 100vh;
-    min-height: 100dvh;
-    background-color: var(--bg-main);
-    position: relative; 
-    overflow: hidden; 
-    display: flex; 
-    flex-direction: column;
+    width: 100%; max-width: 414px; height: 100%; height: 100dvh; background-color: var(--bg-main);
+    position: relative; overflow: hidden; display: flex; flex-direction: column;
     box-shadow: 0 0 20px rgba(0,0,0,0.5);
 }
 
@@ -87,7 +69,7 @@ header { display: flex; align-items: center; justify-content: space-between; pad
 
 .sidebar-overlay { position: absolute; inset: 0; background: rgba(0,0,0,0.5); backdrop-filter: blur(2px); z-index: 25; opacity: 0; pointer-events: none; transition: opacity 0.3s ease; }
 .sidebar-overlay.active { opacity: 1; pointer-events: all; }
-.sidebar { position: absolute; top: 0; left: 0; width: 85%; max-width: 330px; height: 100%; background-color: var(--spidy-sidebar-bg); z-index: 30; transform: translateX(-100%); transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1); display: flex; flex-direction: column; box-shadow: 5px 0 15px rgba(0,0,0,0.5); overflow-y: auto; border-right: 1px solid var(--border-color); padding-bottom: 25px; /* Browser bar fix */ }
+.sidebar { position: absolute; top: 0; left: 0; width: 85%; max-width: 330px; height: 100%; background-color: var(--spidy-sidebar-bg); z-index: 30; transform: translateX(-100%); transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1); display: flex; flex-direction: column; box-shadow: 5px 0 15px rgba(0,0,0,0.5); overflow-y: auto; border-right: 1px solid var(--border-color); }
 .sidebar::-webkit-scrollbar { display: none; }
 .sidebar.active { transform: translateX(0); }
 .sidebar-header-new { display: flex; align-items: center; padding: 24px 20px; border-bottom: 1px solid var(--border-color); }
@@ -330,30 +312,14 @@ main::-webkit-scrollbar { display: none; }
     .modal-header-fixed { padding: 15px 5%; }
 }
 
-/* ⬇️ SMALL SCREENS (LIKE POCO) & CROSS BROWSER RESPONSIVE FIXES ⬇️ */
-@media screen and (max-width: 410px) {
-    /* Header Fixes (To prevent MULTIVERSE BOOKS from cutting into '...') */
-    header { padding: 15px 12px; gap: 8px; }
-    .header-title { font-size: 0.92rem; letter-spacing: 0px; }
-    .icon-box { width: 36px; height: 36px; }
-    .header-left { gap: 8px; }
+/* ⬇️ SAFE FIX FOR SMALL SCREENS ONLY (POCO ETC) ⬇️ */
+@media screen and (max-width: 400px) {
+    /* Prevent header text from cutting out, without changing original design too much */
+    header { padding: 18px 15px; }
+    .header-title { font-size: 1rem; letter-spacing: 0px; }
+    .icon-box { width: 38px; height: 38px; }
     
-    /* Loader Tags Fix (To keep PDF, NOTES, FORMULA in one straight line) */
-    .premium-tags { 
-        flex-wrap: nowrap; 
-        gap: 5px; 
-        padding: 0 5px;
-        width: 100%;
-        justify-content: center;
-    }
-    .tag { 
-        padding: 6px 8px; 
-        font-size: 8.5px; 
-        gap: 4px; 
-        white-space: nowrap;
-    }
-    .tag i { font-size: 10px; }
-    
-    /* Sidebar header name adjustment */
-    .profile-name { font-size: 18px; }
+    /* Loader Tags fit in one line - FONT SIZE KEPT ORIGINAL (10px), just spacing reduced */
+    .premium-tags { flex-wrap: nowrap; gap: 6px; padding: 0 5px; }
+    .tag { padding: 8px 10px; font-size: 10px; }
 }
