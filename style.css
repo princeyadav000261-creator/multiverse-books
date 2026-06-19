@@ -148,12 +148,11 @@ main::-webkit-scrollbar { display: none; }
 
 .header-content-wrapper { display: flex; align-items: center; gap: 15px; flex-grow: 1; }
 
-/* ⬇️ PERFECT CIRCLE & TRANSPARENT BACK BUTTON ⬇️ */
 .modal-header-fixed .back-btn { 
     width: 42px; 
     height: 42px; 
-    border-radius: 50%; /* Circle */
-    background-color: transparent; /* No inner background */
+    border-radius: 50%; 
+    background-color: transparent; 
     border: 1px solid rgba(255, 255, 255, 0.15); 
     color: #ffffff; 
     font-size: 18px; 
@@ -176,10 +175,66 @@ main::-webkit-scrollbar { display: none; }
 .download-modal::-webkit-scrollbar { display: none; }
 .dl-content-wrapper { padding: 5px 20px 0; display: flex; flex-direction: column; min-height: 100%; }
 
-.dl-img-container { position: relative; width: 100%; margin-bottom: 15px; text-align: center; } 
-.dl-preview-image { width: 100%; height: 260px; object-fit: contain; border-radius: 18px; background: #fff; padding: 10px; border: 1px solid var(--border-color); display: block; margin: 0 auto;}
+/* --- NEW BOOK IMAGE DESIGN WITH INNER GLOW & CURVE --- */
+.dl-img-wrapper-outer {
+    display: flex;
+    justify-content: center;
+    width: 100%;
+    margin-top: 10px;
+    margin-bottom: 30px;
+}
 
-.dl-powered-badge { position: absolute; bottom: -15px; left: 50%; transform: translateX(-50%); z-index: 10; white-space: nowrap; box-shadow: 0 4px 10px rgba(0,0,0,0.3); background: #ffffff !important; color: #000000 !important; border: 1px solid rgba(0,0,0,0.1) !important; font-weight: 900; } 
+.dl-img-container {
+    position: relative;
+    display: inline-block;
+    padding: 6px;
+    border-radius: 18px;
+    border: 2px solid #ffffff;
+    background: transparent;
+    box-shadow: inset 0 0 18px rgba(255, 255, 255, 0.9), 0 10px 25px rgba(0, 0, 0, 0.6); 
+}
+
+.dl-preview-image {
+    width: 100%;
+    max-width: 320px;
+    height: auto;
+    max-height: 420px;
+    object-fit: contain; 
+    border-radius: 12px;
+    background: #fff;
+    display: block;
+}
+
+/* --- REDESIGNED POWERED BY BADGE --- */
+.dl-powered-badge {
+    position: absolute;
+    bottom: -12px;
+    left: 15px;
+    background: #141a29 !important;
+    color: #ffffff !important;
+    font-size: 10px;
+    font-weight: 800;
+    padding: 6px 14px !important;
+    border-radius: 6px !important;
+    border: none !important;
+    border-left: 3px solid #ffffff !important;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.6), -3px 0 12px rgba(255,255,255,0.3) !important;
+    letter-spacing: 0.5px;
+    z-index: 10;
+    text-transform: uppercase;
+    transform: none !important;
+}
+
+/* --- PREVENT LONG PRESS LINK PREVIEW --- */
+.disable-long-press {
+    -webkit-touch-callout: none;
+    -webkit-user-select: none;
+    -khtml-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
+    cursor: pointer;
+}
 
 .dl-title { margin-top: 15px; font-size: 18px; font-weight: 800; line-height: 1.3; color: #fff; }
 .dl-author { font-size: 13px; color: var(--text-secondary); margin-top: 4px; }
@@ -193,7 +248,6 @@ main::-webkit-scrollbar { display: none; }
 .exam-tags { display: flex; flex-wrap: wrap; gap: 8px; }
 .dl-modal-tag { background: transparent; border: 1px solid rgba(59, 130, 246, 0.4); color: #93c5fd; font-size: 12px; font-weight: 500; padding: 6px 12px; border-radius: 16px; }
 
-/* DOWNLOAD PAGE SPACING FOR NEW ICONS */
 .dl-social-container { margin-top: 30px; margin-bottom: 30px; display: flex; justify-content: center; padding: 0 5px; }
 
 .notifications-panel { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background-color: #0c111d; z-index: 999; display: flex; flex-direction: column; transform: translateX(100%); transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1); }
@@ -235,19 +289,14 @@ main::-webkit-scrollbar { display: none; }
 .dev-card-desc { font-size: 0.85rem; font-weight: 500; color: var(--dev-text-secondary); }
 .dev-small-caps { font-variant: small-caps; font-size: 0.95rem; font-weight: 600; }
 
-/* ⬇️ GLOWING SQUARE ICONS DESIGN ⬇️ */
 .find-online-section { padding: 10px 15px 30px; display: flex; justify-content: center; }
 .dev-social-row { display: flex; justify-content: center; gap: 18px; width: 100%; }
 .dev-soc-btn { width: 56px; height: 56px; border-radius: 16px; display: flex; justify-content: center; align-items: center; font-size: 24px; text-decoration: none; transition: all 0.2s ease; }
 .dev-soc-btn:active { transform: scale(0.92); }
 
-/* YouTube - Red Tint + Border + Glow */
 .dev-yt { background: rgba(239, 68, 68, 0.1); color: #ef4444; border: 1px solid rgba(239, 68, 68, 0.2); box-shadow: 0 4px 15px rgba(239, 68, 68, 0.15); }
-/* Instagram - Pink Tint + Border + Glow */
 .dev-ig { background: rgba(236, 72, 153, 0.1); color: #ec4899; border: 1px solid rgba(236, 72, 153, 0.2); box-shadow: 0 4px 15px rgba(236, 72, 153, 0.15); }
-/* Telegram - Blue Tint + Border + Glow */
 .dev-tg { background: rgba(59, 130, 246, 0.1); color: #3b82f6; border: 1px solid rgba(59, 130, 246, 0.2); box-shadow: 0 4px 15px rgba(59, 130, 246, 0.15); }
-/* WhatsApp - Green Tint + Border + Glow */
 .dev-wa { background: rgba(16, 185, 129, 0.1); color: #10b981; border: 1px solid rgba(16, 185, 129, 0.2); box-shadow: 0 4px 15px rgba(16, 185, 129, 0.15); }
 
 .dmca-content { padding: 15px 20px 40px; }
@@ -312,14 +361,10 @@ main::-webkit-scrollbar { display: none; }
     .modal-header-fixed { padding: 15px 5%; }
 }
 
-/* ⬇️ SAFE FIX FOR SMALL SCREENS ONLY (POCO ETC) ⬇️ */
 @media screen and (max-width: 400px) {
-    /* Prevent header text from cutting out, without changing original design too much */
     header { padding: 18px 15px; }
     .header-title { font-size: 1rem; letter-spacing: 0px; }
     .icon-box { width: 38px; height: 38px; }
-    
-    /* Loader Tags fit in one line - FONT SIZE KEPT ORIGINAL (10px), just spacing reduced */
     .premium-tags { flex-wrap: nowrap; gap: 6px; padding: 0 5px; }
     .tag { padding: 8px 10px; font-size: 10px; }
 }
