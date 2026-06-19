@@ -27,7 +27,7 @@
         <div class="popup">
             <div class="popup-logo"><img src="https://upload.wikimedia.org/wikipedia/commons/6/6b/WhatsApp.svg" alt="WhatsApp" oncontextmenu="return false;" draggable="false"></div>
             <h1> JOIN COMMUNITY</h1>
-            <p> 𝐒𝐭𝐮𝐝𝐲 𝐦𝐚𝐭𝐞𝐫𝐢𝐚𝐥 𝐤𝐞 𝐥𝐢𝐲𝐞 𝐢𝐝𝐡𝐚𝐫-𝐮𝐝𝐡𝐚𝐫 𝐛𝐡𝐚𝐭𝐚𝐤𝐧𝐚 𝐜𝐡𝐡𝐨𝐝𝐨! 📚 𝐀𝐛 𝐦𝐢𝐥𝐞𝐠𝐚 𝐬𝐚𝐚𝐫𝐚 𝐜𝐨𝐧𝐭𝐞𝐧𝐭 𝐛𝐢𝐥𝐤𝐮𝐥 𝐅𝐑𝐄𝐄. 𝐈𝐧𝐬𝐭𝐚𝐧𝐭 𝐮𝐩𝐝𝐚𝐭𝐞𝐬 𝐚𝐮𝐫 𝐛𝐞𝐬𝐭 𝐛𝐨𝐨𝐤𝐬 𝐩𝐚𝐚𝐧𝐞 𝐤𝐞 𝐥𝐢𝐲𝐞 𝐚𝐚𝐣 𝐡𝐢 𝐡𝐮𝐦𝐚𝐫𝐚 𝐖𝐡𝐚𝐭𝐬𝐀𝐩𝐩 𝐜𝐡𝐚𝐧𝐧𝐞𝐥 𝐣𝐨𝐢𝐧 𝐤𝐚𝐫𝐨.☟☟ </p>
+            <p> 𝐒𝐭𝐮𝐝𝐲 𝐦𝐚𝐭𝐞𝐫𝐢𝐚𝐥 𝐤𝐞 𝐥𝐢𝐲𝐞 𝐢𝐝𝐡𝐚𝐫-𝐮𝐝𝐡𝐚𝐫 𝐛𝐡𝐚𝐭𝐚𝐤𝐧𝐚 𝐜𝐡𝐡𝐨𝐝𝐨! 📚 𝐀𝐛 𝐦𝐢𝐥𝐞𝐠𝐚 𝐬𝐚𝐚𝐫𝐚 𝐜𝐨𝐧𝐭𝐞𝐧𝐭 𝐛𝐢𝐥𝐤𝐮𝐥 𝐅𝐑𝐄𝐄. 𝐈𝐧𝐬𝐭𝐚𝐧𝐭 𝐮ps 𝐚𝐮𝐫 𝐛𝐞𝐬𝐭 𝐛𝐨𝐨𝐤𝐬 𝐩𝐚𝐚𝐧𝐞 𝐤𝐞 𝐥𝐢𝐲𝐞 𝐚𝐚𝐣 𝐡𝐢 𝐡𝐮𝐦𝐚𝐫𝐚 𝐖𝐡𝐚𝐭𝐬𝐀𝐩𝐩 𝐜𝐡𝐚𝐧𝐧𝐞𝐥 𝐣𝐨𝐢𝐧 𝐤𝐚𝐫𝐨.☟☟ </p>
             <button class="join-btn" onclick="joinChannel()"><img src="https://upload.wikimedia.org/wikipedia/commons/6/6b/WhatsApp.svg" alt="WhatsApp" oncontextmenu="return false;" draggable="false">WhatsApp Channel</button>
             <div class="later" onclick="closePopup()">MAYBE LATER</div>
         </div>
@@ -116,7 +116,6 @@
             <div class="premium-copyright">© 2026 MULTIVERSE BOOKS <span style="margin: 0 5px;">|</span> MADE WITH <i class="fas fa-heart" style="color: #ff4757; margin: 0 3px; filter: drop-shadow(0 0 5px rgba(255,71,87,0.8));"></i> BY MADxPRINCE</div>
         </main>
 
-        <!-- DOWNLOAD PAGE MODAL -->
         <div class="download-modal" id="downloadModal">
             <div class="modal-header-fixed">
                 <button class="back-btn" onclick="closeDownloadPage()"><i class="fas fa-arrow-left"></i></button>
@@ -124,22 +123,30 @@
             </div>
             
             <div class="dl-content-wrapper">
-                <div class="dl-img-container">
-                    <img id="dlPreviewImage" class="dl-preview-image" src="" oncontextmenu="return false;" draggable="false">
-                    <div class="powered-badge dl-powered-badge">❀ POWERED BY : MADxPRINCE ❀</div>
+                
+                <div class="dl-img-wrapper-outer">
+                    <div class="dl-img-container">
+                        <img id="dlPreviewImage" class="dl-preview-image" src="" oncontextmenu="return false;" draggable="false">
+                        <div class="dl-powered-badge disable-long-press">POWERED BY : MADxPRINCE</div>
+                    </div>
                 </div>
                 
                 <h2 class="dl-title" id="dlBookTitle"></h2>
                 <div class="dl-author" id="dlBookAuthor"></div>
                 
-                <a id="dlPdfLink" href="" target="_blank" style="text-decoration:none;">
-                    <button class="dl-main-btn"><i class="fas fa-download"></i> Download PDF</button>
-                </a>
-                <a id="dlYoutubeLink" href="" target="_blank" class="dl-box">
+                <div id="dlPdfLinkBtn" class="dl-main-btn disable-long-press" style="margin-top: 20px;">
+                    <i class="fas fa-download"></i> Download PDF
+                </div>
+
+                <div id="dlYoutubeLinkBtn" class="dl-box disable-long-press">
                     <i class="fab fa-youtube icon" style="color: #ef4444;"></i>
-                    <div><div class="dl-box-title">Watch Tutorials</div><div class="dl-box-sub">How to download books?</div></div>
-                </a>
-                <div class="dl-box" onclick="shareBook()">
+                    <div>
+                        <div class="dl-box-title">Watch Tutorials</div>
+                        <div class="dl-box-sub">How to download books?</div>
+                    </div>
+                </div>
+
+                <div class="dl-box disable-long-press" onclick="shareBook()">
                     <i class="fas fa-share-nodes icon"></i>
                     <div><div class="dl-box-title">Share this book</div><div class="dl-box-sub">Send this book to friends</div></div>
                 </div>
@@ -149,7 +156,6 @@
                     <div class="exam-tags" id="dlModalTags"></div>
                 </div>
 
-                <!-- SAME SQUARE GLOWING ICONS DESIGN ADDED HERE -->
                 <div class="dl-social-container">
                     <div class="dev-social-row">
                         <a href="https://youtube.com/@madxprince" target="_blank" class="dev-soc-btn dev-yt"><i class="fab fa-youtube"></i></a>
@@ -168,7 +174,6 @@
             <div class="noti-body" id="dynamic-noti-container"></div>
         </div>
 
-        <!-- ABOUT DEVELOPER PAGE -->
         <div class="overlay-panel" id="about-dev-panel">
             <div class="modal-header-fixed">
                 <div class="header-content-wrapper">
@@ -247,4 +252,3 @@
     <script type="module" src="./app.js"></script>
 </body>
 </html>
-
