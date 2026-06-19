@@ -318,7 +318,6 @@ window.addEventListener('popstate', (e) => {
     if(sBook) {
         if(window.openDownloadPage) window.openDownloadPage(sBook, true); 
     } else {
-        // Sirf tabhi Home pe reset karega jab exact home icon daba ho ya pop state blank ho
         if (!e.state || (e.state && !e.state.popup)) {
             updateActiveMenuState('menu-home');
         }
@@ -380,7 +379,7 @@ menuBtn.addEventListener('click', () => {
 });
 sidebarOverlay.addEventListener('click', goBack);
 
-// 🔥 YAHAN ACTIVE STATE KA LOGIC UPDATE KIYA HAI 🔥
+// 🔥 ACTIVE MENU TICK & PERFECT PANEL ROUTING FIX 🔥
 const mainMenuIDs = ['menu-home', 'menu-about-dev', 'menu-contact', 'menu-dmca'];
 function updateActiveMenuState(clickedId) {
     mainMenuIDs.forEach(id => {
@@ -399,34 +398,42 @@ function updateActiveMenuState(clickedId) {
 
 document.getElementById('menu-home').addEventListener('click', (e) => { 
     e.preventDefault(); 
-    updateActiveMenuState('menu-home'); // Home pe active tick lagayega
-    goBack(); 
+    updateActiveMenuState('menu-home');
+    document.getElementById('sidebar').classList.remove('active');
+    document.getElementById('sidebar-overlay').classList.remove('active');
+    history.replaceState({}, ''); 
 });
 
 document.getElementById('menu-about-dev').addEventListener('click', (e) => {
     e.preventDefault();
-    updateActiveMenuState('menu-about-dev'); // About dev pe active tick lagayega
+    updateActiveMenuState('menu-about-dev');
+    
+    // Exactly open the dev panel and close others
+    document.getElementById('about-dev-panel').classList.add('active');
+    document.getElementById('dmca-panel').classList.remove('active');
+    document.getElementById('sidebar').classList.remove('active');
+    document.getElementById('sidebar-overlay').classList.remove('active');
+    
     history.replaceState({ popup: 'dev' }, ''); 
-    aboutDevPanel.classList.add('active');
-    dmcaPanel.classList.remove('active');
-    sidebar.classList.remove('active');
-    sidebarOverlay.classList.remove('active');
 });
 
 document.getElementById('menu-dmca').addEventListener('click', (e) => {
     e.preventDefault();
-    updateActiveMenuState('menu-dmca'); // DMCA pe active tick lagayega
+    updateActiveMenuState('menu-dmca');
+    
+    // Exactly open the dmca panel and close others
+    document.getElementById('dmca-panel').classList.add('active');
+    document.getElementById('about-dev-panel').classList.remove('active');
+    document.getElementById('sidebar').classList.remove('active');
+    document.getElementById('sidebar-overlay').classList.remove('active');
+    
     history.replaceState({ popup: 'dmca' }, ''); 
-    dmcaPanel.classList.add('active');
-    aboutDevPanel.classList.remove('active');
-    sidebar.classList.remove('active');
-    sidebarOverlay.classList.remove('active');
 });
 
 const urls = { contact: "https://t.me/Multiverse_Contact_Bot", whatsapp: "https://whatsapp.com/channel/0029Vb6NBZx1yT2GByTTVf2A", telegram: "https://t.me/MultiverseBooks", instagram: "https://www.instagram.com/madxprince_3030", youtube: "https://youtube.com/@madxprince" };
 document.getElementById('menu-contact').addEventListener('click', (e) => { 
     e.preventDefault(); 
-    updateActiveMenuState('menu-contact'); // Contact pe active tick lagayega
+    updateActiveMenuState('menu-contact'); 
     window.open(urls.contact, '_blank'); 
     goBack(); 
 });
