@@ -68,7 +68,6 @@ header { display: flex; align-items: center; justify-content: space-between; pad
 .sidebar-overlay { position: absolute; inset: 0; background: rgba(0,0,0,0.5); backdrop-filter: blur(2px); z-index: 25; opacity: 0; pointer-events: none; transition: opacity 0.3s ease; }
 .sidebar-overlay.active { opacity: 1; pointer-events: all; }
 
-/* ✅ SIDEBAR FIX - Height adjusted to 100dvh */
 .sidebar { position: absolute; top: 0; left: 0; width: 85%; max-width: 330px; height: 100%; height: 100dvh; background-color: var(--spidy-sidebar-bg); z-index: 30; transform: translateX(-100%); transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1); display: flex; flex-direction: column; box-shadow: 5px 0 15px rgba(0,0,0,0.5); overflow-y: auto; border-right: 1px solid var(--border-color); }
 .sidebar::-webkit-scrollbar { display: none; }
 .sidebar.active { transform: translateX(0); }
@@ -96,7 +95,6 @@ header { display: flex; align-items: center; justify-content: space-between; pad
 .card-insta { background-color: var(--insta-bg); box-shadow: inset 0 0 0 1px rgba(225, 48, 108, 0.1); } .card-insta i, .card-insta span { color: var(--insta-pink); }
 .card-youtube { background-color: var(--youtube-bg); box-shadow: inset 0 0 0 1px rgba(255, 0, 0, 0.1); } .card-youtube i, .card-youtube span { color: var(--youtube-red); }
 
-/* ✅ FOOTER FIX - Added extra bottom padding (40px) & flex-shrink to prevent clipping */
 .sidebar-footer { margin-top: auto; padding: 20px 20px 40px 20px; text-align: center; border-top: 1px solid var(--border-color); flex-shrink: 0; }
 
 .system-status { display: flex; align-items: center; justify-content: center; gap: 8px; color: var(--text-primary); font-size: 11px; font-weight: 700; letter-spacing: 1px; margin-bottom: 8px; }
@@ -239,7 +237,6 @@ main::-webkit-scrollbar { display: none; }
 .dl-title { margin-top: 15px; font-size: 18px; font-weight: 800; line-height: 1.3; color: #fff; }
 .dl-author { font-size: 13px; color: var(--text-secondary); margin-top: 4px; }
 
-/* ✅ BUTTON FIX - Mota aur perfectly styled button */
 .dl-main-btn { 
     width: 100%; 
     min-height: 58px;
@@ -358,16 +355,36 @@ main::-webkit-scrollbar { display: none; }
     position: absolute; bottom: 35px; left: 50%; transform: translateX(-50%); color: #ffffff; font-size: 11px; font-weight: 700; letter-spacing: 1.5px; font-family: 'Poppins', sans-serif; text-transform: uppercase; z-index: 10; white-space: nowrap;
 }
 
+/* 🔥 POPUP STYLING UPDATED 🔥 */
 .popup-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.85); backdrop-filter: blur(5px); display: none; justify-content: center; align-items: center; z-index: 9999999; padding: 20px; }
 .popup { width: 100%; max-width: 380px; padding: 30px 20px 25px; border-radius: 32px; background: linear-gradient(180deg, rgba(0,255,85,.14), rgba(0,0,0,.98)); border: 1px solid rgba(255,255,255,.14); text-align: center; animation: popupAnim .35s ease; }
 @keyframes popupAnim { from { transform: scale(.82); opacity: 0; } to { transform: scale(1); opacity: 1; } }
-.popup-logo { width: 88px; height: 88px; margin: auto; border-radius: 28px; background: linear-gradient(145deg, #1a1a1a, #050505); display: flex; justify-content: center; align-items: center; }
+
+/* Popup Logo with Green Glow */
+.popup-logo { 
+    width: 88px; height: 88px; margin: auto; border-radius: 28px; 
+    background: linear-gradient(145deg, #1a1a1a, #050505); 
+    display: flex; justify-content: center; align-items: center; 
+    box-shadow: 0 0 30px rgba(37, 211, 102, 0.4), inset 0 0 15px rgba(37, 211, 102, 0.15);
+}
 .popup-logo img { width: 52px; }
-.popup h1 { color: #fff; font-size: 24px; font-weight: 800; margin-top: 24px; letter-spacing: .5px; font-family: 'Poppins', sans-serif;}
-.popup p { color: #b8b8b8; font-size: 15px; line-height: 1.6; margin-top: 14px; }
-.join-btn { width: 100%; height: 68px; margin-top: 30px; border: none; border-radius: 24px; background: linear-gradient(135deg, #6dff9c 0%, #32ff7e 25%, #14d85c 55%, #08b848 100%); color: #fff; font-size: 20px; font-weight: 700; display: flex; align-items: center; justify-content: center; gap: 12px; cursor: pointer; position: relative; overflow: hidden; transition: .35s ease; box-shadow: 0 7px 0 #06792f, 0 12px 24px rgba(0,255,115,.28); }
+
+/* Exactly Aligned Text and Badge */
+.popup h1 { 
+    color: #fff; font-size: 20px; font-weight: 800; margin-top: 24px; 
+    letter-spacing: 0.5px; font-family: 'Poppins', sans-serif;
+    display: flex; justify-content: center; align-items: center; gap: 6px; 
+}
+.popup p { color: #b8b8b8; font-size: 14px; line-height: 1.6; margin-top: 14px; }
+
+/* 18px Blue Tick Shape */
+.verified-badge-ui { width: 18px; height: 18px; flex-shrink: 0; filter: drop-shadow(0px 2px 5px rgba(0, 0, 0, 0.4)); }
+
+.join-btn { width: 100%; height: 68px; margin-top: 30px; border: none; border-radius: 24px; background: linear-gradient(135deg, #6dff9c 0%, #32ff7e 25%, #14d85c 55%, #08b848 100%); color: #fff; font-size: 20px; font-weight: 700; display: flex; align-items: center; justify-content: center; gap: 12px; cursor: pointer; position: relative; overflow: hidden; transition: .35s ease; box-shadow: 0 7px 0 #06792f, 0 12px 24px rgba(0,255,115,.28); outline: none;}
 .join-btn img { width: 26px; filter: brightness(125%) drop-shadow(0 0 6px rgba(255,255,255,.45)); }
-.later { margin-top: 18px; color: #888; font-size: 6px; font-weight: 700; letter-spacing: 2px; cursor: pointer; transition: .3s; font-family: 'Poppins', sans-serif;}
+.join-btn:active { transform: translateY(4px); box-shadow: 0 3px 0 #06792f, 0 6px 12px rgba(0,255,115,.28); }
+
+.later { margin-top: 18px; color: #888; font-size: 8px; font-weight: 700; letter-spacing: 2px; cursor: pointer; transition: .3s; font-family: 'Poppins', sans-serif;}
 .later:hover { color: #fff; }
 
 @media screen and (min-width: 768px) {
