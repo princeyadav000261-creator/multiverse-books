@@ -23,19 +23,17 @@ let isLoadingMore = false;
 let activeBookSlug = ""; 
 let activeBookTitle = "";
 
-// ✅ NAYA LOGIC: Screen ke hisaab se column calculate karke exact multiple me load karna
 function getBatchSize() {
-    let cols = 2; // Mobile ke liye default 2 columns
+    let cols = 2; 
     if (window.innerWidth >= 768) {
         const container = document.getElementById("bookContainer");
         if (container && container.clientWidth) {
-            // Container ki width ke hisaab se dynamically calculate karna (200px width + 25px gap)
             cols = Math.floor((container.clientWidth + 25) / 225) || 1;
         } else {
-            cols = 4; // Default PC fallback
+            cols = 4; 
         }
     }
-    return cols * 4; // Hamesha exactly 4 rows load karega (Koi jagah khali nahi rahegi)
+    return cols * 4; 
 }
 
 const q = query(collection(db, "books"), orderBy("createdAt", "desc"));
@@ -54,7 +52,6 @@ onSnapshot(q, (snapshot) => {
     
     const searchInput = document.getElementById('app-search-input').value;
     if(searchInput.trim() === "") {
-        // Initial Loading: Double batch size load karenge (8 rows)
         window.renderBooksUI(0, getBatchSize() * 2);
     } else {
         performSearch(searchInput);
@@ -188,7 +185,6 @@ mainElement.addEventListener('scroll', () => {
             isLoadingMore = true;
             document.getElementById("bottomSpinner").style.display = "flex";
             setTimeout(() => {
-                // ✅ Exactly full rows load hongi automatically
                 window.renderBooksUI(loadedCount, getBatchSize());
                 document.getElementById("bottomSpinner").style.display = "none";
                 isLoadingMore = false;
@@ -309,10 +305,7 @@ function closeActiveModals() {
     document.getElementById("no-results-msg").style.display = "none";
 }
 
-// ✅ SCROLL FIX: Popstate par pura UI reset nahi hoga ab
 window.addEventListener('popstate', (e) => {
-    
-    // Sirf modals band karenge, main background grid ko delete nahi karenge
     document.getElementById("downloadModal").style.display = "none";
     document.getElementById('noti-panel').classList.remove('active');
     document.getElementById('sidebar').classList.remove('active');
@@ -325,9 +318,11 @@ window.addEventListener('popstate', (e) => {
     if(sBook) {
         if(window.openDownloadPage) window.openDownloadPage(sBook, true); 
     } else {
-        updateActiveMenuState('menu-home');
+        // Sirf tabhi Home pe reset karega jab exact home icon daba ho ya pop state blank ho
+        if (!e.state || (e.state && !e.state.popup)) {
+            updateActiveMenuState('menu-home');
+        }
         
-        // Agar user search se back nahi aa raha, toh search box hide kardo
         if (!e.state || e.state.popup !== 'search') {
             document.getElementById('search-box').classList.remove('active');
             
@@ -338,8 +333,6 @@ window.addEventListener('popstate', (e) => {
                 window.renderBooksUI(0, getBatchSize() * 2); 
             }
         }
-        
-        // Yahan se DOM reset wala code hata diya gaya hai taaki Scroll Position Save rahe!
     }
 });
 
@@ -387,24 +380,32 @@ menuBtn.addEventListener('click', () => {
 });
 sidebarOverlay.addEventListener('click', goBack);
 
+// 🔥 YAHAN ACTIVE STATE KA LOGIC UPDATE KIYA HAI 🔥
 const mainMenuIDs = ['menu-home', 'menu-about-dev', 'menu-contact', 'menu-dmca'];
 function updateActiveMenuState(clickedId) {
     mainMenuIDs.forEach(id => {
         const el = document.getElementById(id);
-        if (el) { el.classList.remove('active'); el.classList.add('normal'); }
+        if (el) { 
+            el.classList.remove('active'); 
+            el.classList.add('normal'); 
+        }
     });
     const activeEl = document.getElementById(clickedId);
-    if (activeEl) { activeEl.classList.remove('normal'); activeEl.classList.add('active'); }
+    if (activeEl) { 
+        activeEl.classList.remove('normal'); 
+        activeEl.classList.add('active'); 
+    }
 }
 
-const aboutDevPanel = document.getElementById('about-dev-panel');
-const dmcaPanel = document.getElementById('dmca-panel');
-
-document.getElementById('menu-home').addEventListener('click', (e) => { e.preventDefault(); goBack(); });
+document.getElementById('menu-home').addEventListener('click', (e) => { 
+    e.preventDefault(); 
+    updateActiveMenuState('menu-home'); // Home pe active tick lagayega
+    goBack(); 
+});
 
 document.getElementById('menu-about-dev').addEventListener('click', (e) => {
     e.preventDefault();
-    updateActiveMenuState('menu-about-dev');
+    updateActiveMenuState('menu-about-dev'); // About dev pe active tick lagayega
     history.replaceState({ popup: 'dev' }, ''); 
     aboutDevPanel.classList.add('active');
     dmcaPanel.classList.remove('active');
@@ -414,7 +415,7 @@ document.getElementById('menu-about-dev').addEventListener('click', (e) => {
 
 document.getElementById('menu-dmca').addEventListener('click', (e) => {
     e.preventDefault();
-    updateActiveMenuState('menu-dmca');
+    updateActiveMenuState('menu-dmca'); // DMCA pe active tick lagayega
     history.replaceState({ popup: 'dmca' }, ''); 
     dmcaPanel.classList.add('active');
     aboutDevPanel.classList.remove('active');
@@ -423,7 +424,13 @@ document.getElementById('menu-dmca').addEventListener('click', (e) => {
 });
 
 const urls = { contact: "https://t.me/Multiverse_Contact_Bot", whatsapp: "https://whatsapp.com/channel/0029Vb6NBZx1yT2GByTTVf2A", telegram: "https://t.me/MultiverseBooks", instagram: "https://www.instagram.com/madxprince_3030", youtube: "https://youtube.com/@madxprince" };
-document.getElementById('menu-contact').addEventListener('click', (e) => { e.preventDefault(); updateActiveMenuState('menu-contact'); window.open(urls.contact, '_blank'); goBack(); });
+document.getElementById('menu-contact').addEventListener('click', (e) => { 
+    e.preventDefault(); 
+    updateActiveMenuState('menu-contact'); // Contact pe active tick lagayega
+    window.open(urls.contact, '_blank'); 
+    goBack(); 
+});
+
 document.getElementById('link-whatsapp').addEventListener('click', () => { window.open(urls.whatsapp, '_blank'); });
 document.getElementById('link-telegram').addEventListener('click', () => { window.open(urls.telegram, '_blank'); });
 document.getElementById('link-insta').addEventListener('click', () => { window.open(urls.instagram, '_blank'); });
