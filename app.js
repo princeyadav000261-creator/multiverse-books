@@ -39,7 +39,6 @@ onSnapshot(q, (snapshot) => {
     document.getElementById("bookContainer").innerHTML = "";
     loadedCount = 0;
     
-    // Check if we are searching something while data loads
     const searchInput = document.getElementById('app-search-input').value;
     if(searchInput.trim() === "") {
         window.renderBooksUI(0, initialLoad);
@@ -58,7 +57,6 @@ window.renderBooksUI = function(startIndex, count, customData = null) {
     let dataToRender = customData ? customData : window.booksData;
     let endIndex = Math.min(startIndex + count, dataToRender.length);
 
-    // If starting fresh, clear container
     if(startIndex === 0) container.innerHTML = "";
 
     for(let i = startIndex; i < endIndex; i++) {
@@ -109,8 +107,17 @@ window.openDownloadPage = function(slug, skipPushState = false) {
     document.getElementById("dlPreviewImage").src = book.image;
     document.getElementById("dlBookTitle").innerText = book.title;
     document.getElementById("dlBookAuthor").innerText = book.author;
-    document.getElementById("dlPdfLink").href = book.pdfLink;
-    document.getElementById("dlYoutubeLink").href = book.ytLink || "#";
+    
+    // Naya event jo link hide rakhega aur fast open karega
+    document.getElementById("dlPdfLinkBtn").onclick = function() {
+        if(book.pdfLink) window.open(book.pdfLink, '_blank');
+    };
+
+    document.getElementById("dlYoutubeLinkBtn").onclick = function() {
+        if(book.ytLink && book.ytLink !== "#") {
+            window.open(book.ytLink, '_blank');
+        }
+    };
 
     let examsArray = (book.exams || "General").split(',').map(item => item.trim());
     document.getElementById("dlModalTags").innerHTML = examsArray.map(exam => `<div class="dl-modal-tag">${exam}</div>`).join('');
@@ -132,7 +139,6 @@ window.shareBook = function() {
     else { navigator.clipboard.writeText(shareUrl); alert("Link Copied!"); }
 }
 
-// Optimized Search Function
 function performSearch(searchText) {
     const term = searchText.toLowerCase();
     const filteredData = window.booksData.filter(book => 
@@ -141,7 +147,7 @@ function performSearch(searchText) {
     );
     
     if(filteredData.length > 0) {
-        window.renderBooksUI(0, filteredData.length, filteredData); // Render all matches
+        window.renderBooksUI(0, filteredData.length, filteredData); 
         document.getElementById('no-results-msg').style.display = 'none';
     } else {
         document.getElementById("bookContainer").innerHTML = "";
@@ -153,7 +159,7 @@ document.getElementById('app-search-input').addEventListener('input', (e) => {
     const searchText = e.target.value;
     if(searchText.trim() === "") {
         document.getElementById('no-results-msg').style.display = 'none';
-        window.renderBooksUI(0, initialLoad); // Reset to default load
+        window.renderBooksUI(0, initialLoad); 
     } else {
         performSearch(searchText);
     }
@@ -161,7 +167,6 @@ document.getElementById('app-search-input').addEventListener('input', (e) => {
 
 const mainElement = document.getElementById('mainContentArea');
 mainElement.addEventListener('scroll', () => {
-    // Only load more if search is empty
     if(document.getElementById('app-search-input').value.trim() !== "") return;
 
     if (mainElement.scrollTop + mainElement.clientHeight >= mainElement.scrollHeight - 50) {
@@ -178,7 +183,6 @@ mainElement.addEventListener('scroll', () => {
     }
 });
 
-// --- CANVAS ANIMATION LOGIC ---
 const canvas = document.getElementById('networkCanvas');
 const ctx = canvas.getContext('2d');
 let width, height;
