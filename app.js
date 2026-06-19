@@ -293,6 +293,7 @@ window.addEventListener("load", () => {
 window.closePopup = function(){ document.getElementById("popupOverlay").style.display = "none"; };
 window.joinChannel = function(){ window.open('https://whatsapp.com/channel/0029Vb6NBZx1yT2GByTTVf2A', '_blank'); };
 
+// 🔥 BUG FIX 1: Jab koi bhi popup close ho, toh Active Menu hamesha 'Home' par reset ho
 function closeActiveModals() {
     document.getElementById('search-box').classList.remove('active');
     document.getElementById('noti-panel').classList.remove('active');
@@ -303,6 +304,7 @@ function closeActiveModals() {
     document.getElementById("downloadModal").style.display = "none";
     document.getElementById("popupOverlay").style.display = "none";
     document.getElementById("no-results-msg").style.display = "none";
+    updateActiveMenuState('menu-home'); // Ensures UI instantly resets to Home
 }
 
 window.addEventListener('popstate', (e) => {
@@ -318,6 +320,7 @@ window.addEventListener('popstate', (e) => {
     if(sBook) {
         if(window.openDownloadPage) window.openDownloadPage(sBook, true); 
     } else {
+        // 🔥 BUG FIX 2: Mobile device ke back button dabane par bhi Home reset hoga
         if (!e.state || (e.state && !e.state.popup)) {
             updateActiveMenuState('menu-home');
         }
@@ -372,14 +375,16 @@ const menuBtn = document.getElementById('open-menu');
 const sidebar = document.getElementById('sidebar');
 const sidebarOverlay = document.getElementById('sidebar-overlay');
 
+// 🔥 BUG FIX 3: Jab bhi Sidebar UI button se khulega, toh strictly 'Home' par hi selection hoga
 menuBtn.addEventListener('click', () => { 
+    updateActiveMenuState('menu-home'); // Force set Home selection
     history.pushState({ popup: 'sidebar' }, '');
     sidebar.classList.add('active'); 
     sidebarOverlay.classList.add('active'); 
 });
 sidebarOverlay.addEventListener('click', goBack);
 
-// 🔥 ACTIVE MENU TICK & PERFECT PANEL ROUTING FIX 🔥
+
 const mainMenuIDs = ['menu-home', 'menu-about-dev', 'menu-contact', 'menu-dmca'];
 function updateActiveMenuState(clickedId) {
     mainMenuIDs.forEach(id => {
@@ -396,38 +401,31 @@ function updateActiveMenuState(clickedId) {
     }
 }
 
+// 🔥 BUG FIX 4: Home button ko manual replaceState ki jagah goBack de diya taaki history kharab na ho
 document.getElementById('menu-home').addEventListener('click', (e) => { 
     e.preventDefault(); 
     updateActiveMenuState('menu-home');
-    document.getElementById('sidebar').classList.remove('active');
-    document.getElementById('sidebar-overlay').classList.remove('active');
-    history.replaceState({}, ''); 
+    goBack(); 
 });
 
 document.getElementById('menu-about-dev').addEventListener('click', (e) => {
     e.preventDefault();
     updateActiveMenuState('menu-about-dev');
-    
-    // Exactly open the dev panel and close others
+    history.replaceState({ popup: 'dev' }, ''); 
     document.getElementById('about-dev-panel').classList.add('active');
     document.getElementById('dmca-panel').classList.remove('active');
     document.getElementById('sidebar').classList.remove('active');
     document.getElementById('sidebar-overlay').classList.remove('active');
-    
-    history.replaceState({ popup: 'dev' }, ''); 
 });
 
 document.getElementById('menu-dmca').addEventListener('click', (e) => {
     e.preventDefault();
     updateActiveMenuState('menu-dmca');
-    
-    // Exactly open the dmca panel and close others
+    history.replaceState({ popup: 'dmca' }, ''); 
     document.getElementById('dmca-panel').classList.add('active');
     document.getElementById('about-dev-panel').classList.remove('active');
     document.getElementById('sidebar').classList.remove('active');
     document.getElementById('sidebar-overlay').classList.remove('active');
-    
-    history.replaceState({ popup: 'dmca' }, ''); 
 });
 
 const urls = { contact: "https://t.me/Multiverse_Contact_Bot", whatsapp: "https://whatsapp.com/channel/0029Vb6NBZx1yT2GByTTVf2A", telegram: "https://t.me/MultiverseBooks", instagram: "https://www.instagram.com/madxprince_3030", youtube: "https://youtube.com/@madxprince" };
