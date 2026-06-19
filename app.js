@@ -19,11 +19,24 @@ const db = getFirestore(app);
 
 window.booksData = [];
 let loadedCount = 0; 
-
-const initialLoad = window.innerWidth >= 768 ? 24 : 8;
 let isLoadingMore = false;
 let activeBookSlug = ""; 
 let activeBookTitle = "";
+
+// ✅ NAYA LOGIC: Screen ke hisaab se column calculate karke exact multiple me load karna
+function getBatchSize() {
+    let cols = 2; // Mobile ke liye default 2 columns
+    if (window.innerWidth >= 768) {
+        const container = document.getElementById("bookContainer");
+        if (container && container.clientWidth) {
+            // Container ki width ke hisaab se dynamically calculate karna (200px width + 25px gap)
+            cols = Math.floor((container.clientWidth + 25) / 225) || 1;
+        } else {
+            cols = 4; // Default PC fallback
+        }
+    }
+    return cols * 4; // Hamesha exactly 4 rows load karega (Koi jagah khali nahi rahegi)
+}
 
 const q = query(collection(db, "books"), orderBy("createdAt", "desc"));
 
@@ -41,7 +54,8 @@ onSnapshot(q, (snapshot) => {
     
     const searchInput = document.getElementById('app-search-input').value;
     if(searchInput.trim() === "") {
-        window.renderBooksUI(0, initialLoad);
+        // Initial Loading: Double batch size load karenge (8 rows)
+        window.renderBooksUI(0, getBatchSize() * 2);
     } else {
         performSearch(searchInput);
     }
@@ -108,7 +122,6 @@ window.openDownloadPage = function(slug, skipPushState = false) {
     document.getElementById("dlBookTitle").innerText = book.title;
     document.getElementById("dlBookAuthor").innerText = book.author;
     
-    // Naya event jo link hide rakhega aur fast open karega
     document.getElementById("dlPdfLinkBtn").onclick = function() {
         if(book.pdfLink) window.open(book.pdfLink, '_blank');
     };
@@ -159,7 +172,7 @@ document.getElementById('app-search-input').addEventListener('input', (e) => {
     const searchText = e.target.value;
     if(searchText.trim() === "") {
         document.getElementById('no-results-msg').style.display = 'none';
-        window.renderBooksUI(0, initialLoad); 
+        window.renderBooksUI(0, getBatchSize() * 2); 
     } else {
         performSearch(searchText);
     }
@@ -175,7 +188,8 @@ mainElement.addEventListener('scroll', () => {
             isLoadingMore = true;
             document.getElementById("bottomSpinner").style.display = "flex";
             setTimeout(() => {
-                window.renderBooksUI(loadedCount, 8);
+                // ✅ Exactly full rows load hongi automatically
+                window.renderBooksUI(loadedCount, getBatchSize());
                 document.getElementById("bottomSpinner").style.display = "none";
                 isLoadingMore = false;
             }, 1000); 
@@ -295,15 +309,37 @@ function closeActiveModals() {
     document.getElementById("no-results-msg").style.display = "none";
 }
 
+// ✅ SCROLL FIX: Popstate par pura UI reset nahi hoga ab
 window.addEventListener('popstate', (e) => {
-    closeActiveModals();
+    
+    // Sirf modals band karenge, main background grid ko delete nahi karenge
+    document.getElementById("downloadModal").style.display = "none";
+    document.getElementById('noti-panel').classList.remove('active');
+    document.getElementById('sidebar').classList.remove('active');
+    document.getElementById('sidebar-overlay').classList.remove('active');
+    document.getElementById('about-dev-panel').classList.remove('active');
+    document.getElementById('dmca-panel').classList.remove('active');
+    document.getElementById("popupOverlay").style.display = "none";
+
     const sBook = new URLSearchParams(window.location.search).get('book');
     if(sBook) {
         if(window.openDownloadPage) window.openDownloadPage(sBook, true); 
     } else {
         updateActiveMenuState('menu-home');
-        document.getElementById('app-search-input').value = '';
-        window.renderBooksUI(0, initialLoad);
+        
+        // Agar user search se back nahi aa raha, toh search box hide kardo
+        if (!e.state || e.state.popup !== 'search') {
+            document.getElementById('search-box').classList.remove('active');
+            
+            const searchInput = document.getElementById('app-search-input');
+            if(searchInput.value.trim() !== '') {
+                searchInput.value = '';
+                document.getElementById('no-results-msg').style.display = 'none';
+                window.renderBooksUI(0, getBatchSize() * 2); 
+            }
+        }
+        
+        // Yahan se DOM reset wala code hata diya gaya hai taaki Scroll Position Save rahe!
     }
 });
 
@@ -324,7 +360,7 @@ searchBtn.addEventListener('click', () => {
 
 closeSearchBtn.addEventListener('click', () => {
     liveSearchInput.value = '';
-    window.renderBooksUI(0, initialLoad);
+    window.renderBooksUI(0, getBatchSize() * 2);
     document.getElementById('no-results-msg').style.display = 'none';
     goBack();
 });
