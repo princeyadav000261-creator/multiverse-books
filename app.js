@@ -445,10 +445,36 @@ document.getElementById('close-dev-btn').addEventListener('click', goBack);
 document.getElementById('close-dmca-btn').addEventListener('click', goBack);
 
 const quotes = [
-    { text: "The future belongs to those who believe in the beauty of their dreams.", author: "Eleanor Roosevelt" },
-    { text: "Success is not final, failure is not fatal: it is the courage to continue that counts.", author: "Winston Churchill" },
-    { text: "All that I am, or hope to be, I owe to my angel mother.", author: "Abraham Lincoln" }
+    { text: "Be the change that you wish to see in the world.", author: "Mahatma Gandhi" },
+    { text: "I have not failed. I've just found 10,000 ways that won't work.", author: "Thomas A. Edison" },
+    { text: "The only way to do great work is to love what you do.", author: "Steve Jobs" },
+    { text: "In the middle of difficulty lies opportunity.", author: "Albert Einstein" },
+    { text: "It does not matter how slowly you go as long as you do not stop.", author: "Confucius" },
+    { text: "Whatever you are, be a good one.", author: "Abraham Lincoln" },
+    { text: "The time is always right to do what is right.", author: "Martin Luther King Jr." },
+    { text: "If you tell the truth, you don't have to remember anything.", author: "Mark Twain" },
+    { text: "Turn your wounds into wisdom.", author: "Oprah Winfrey" },
+    { text: "A person who never made a mistake never tried anything new.", author: "Albert Einstein" },
+    { text: "The purpose of our lives is to be happy.", author: "Dalai Lama" },
+    { text: "Simplicity is the ultimate sophistication.", author: "Leonardo da Vinci" },
+    { text: "The journey of a thousand miles begins with one step.", author: "Lao Tzu" },
+    { text: "Tough times never last, but tough people do.", author: "Robert H. Schuller" },
+    { text: "Imagination is more important than knowledge.", author: "Albert Einstein" },
+    { text: "That which does not kill us makes us stronger.", author: "Friedrich Nietzsche" },
+    { text: "No one can make you feel inferior without your consent.", author: "Eleanor Roosevelt" },
+    { text: "You only live once, but if you do it right, once is enough.", author: "Mae West" },
+    { text: "A room without books is like a body without a soul.", author: "Marcus Tullius Cicero" },
+    { text: "Be yourself; everyone else is already taken.", author: "Oscar Wilde" },
+    { text: "Happiness depends upon ourselves.", author: "Aristotle" },
+    { text: "The mind is everything. What you think you become.", author: "Buddha" },
+    { text: "Action is the foundational key to all success.", author: "Pablo Picasso" },
+    { text: "To love and be loved is to feel the sun from both sides.", author: "David Viscott" },
+    { text: "Every moment is a fresh beginning.", author: "T.S. Eliot" },
+    { text: "Never let the fear of striking out keep you from playing the game.", author: "Babe Ruth" },
+    { text: "The best way to predict your future is to create it.", author: "Abraham Lincoln" },
+    { text: "Do what you can, with what you have, where you are.", author: "Theodore Roosevelt" }
 ];
+
 
 const todayDays = Math.floor(Date.now() / (1000 * 60 * 60 * 24));
 const currentQuoteIndex = todayDays % quotes.length;
