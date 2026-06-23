@@ -27,6 +27,11 @@ const SUPER_ADMIN_EMAIL = "princeyadav000261@gmail.com";
 let myLangChart = null; let myDownloadsChart = null;
 let isAppInitialized = false;
 
+// Admin Pagination Variables
+let adminFilteredBooks = [];
+let adminCurrentPage = 1;
+const adminBooksPerPage = 10;
+
 // 1. ORIGINAL CANVAS LOADER
 const canvas = document.getElementById('networkCanvas');
 const ctx = canvas.getContext('2d');
@@ -163,7 +168,12 @@ onAuthStateChanged(auth, async (user) => {
             const searchInput = document.getElementById('app-search-input').value;
             if(searchInput.trim() === "") { window.renderBooksUI(0, getBatchSize() * 2); } else { performFuzzySearch(searchInput); }
             window.generateNotifications();
+            
+            // Sync Admin Search
+            adminFilteredBooks = [...window.booksData];
+            document.getElementById('adminSearchBook').value = '';
             renderAdminBooksTable(); 
+            
             if(window.IS_SUPER_ADMIN) updateAdminCharts();
             
             const sBook = new URLSearchParams(window.location.search).get('book');
@@ -211,7 +221,7 @@ document.getElementById('admin-logout-btn').addEventListener('click', () => {
 window.closePopup = function(){ document.getElementById("popupOverlay").style.display = "none"; };
 window.joinChannel = function(){ window.open('https://whatsapp.com/channel/0029Vb6NBZx1yT2GByTTVf2A', '_blank'); };
 
-// 4. FUZZY SEARCH
+// 4. FUZZY SEARCH (Main Website)
 let searchTimeout;
 const searchInputEl = document.getElementById('app-search-input');
 const closeSearchBtn = document.getElementById('close-search');
@@ -321,7 +331,6 @@ window.addEventListener('popstate', (e) => {
     else { document.getElementById("downloadModal").style.display = "none"; }
 });
 
-// Download Modal Fixes (Share & YouTube working now)
 window.openDownloadPage = function(slug, skipPushState = false) {
     const book = window.booksData.find(b => b.slug === slug); if(!book) return;
     document.getElementById("downloadModal").style.display = "flex";
@@ -349,7 +358,7 @@ window.shareBook = function() {
 }
 
 
-// 6. ADMIN FUNCTIONS
+// 6. ADMIN FUNCTIONS & PAGINATION
 function showToast(message) {
     const toast = document.getElementById('toast'); document.getElementById('toastMsg').innerText = message;
     toast.classList.add('show'); setTimeout(() => { toast.classList.remove('show'); }, 3000);
@@ -371,10 +380,50 @@ document.getElementById('addBookForm').addEventListener('submit', async (e) => {
     try { await addDoc(collection(db, "books"), newBook); showToast("Book Published!"); e.target.reset(); } catch (error) { showToast("Error saving book."); } 
 });
 
+// Admin Manage Pagination & Search Logic
+document.getElementById('adminSearchBook').addEventListener('input', (e) => {
+    const term = e.target.value.toLowerCase().replace(/[^a-z0-9\s]/g, '');
+    const tokens = term.split(/\s+/).filter(t => t.length > 0);
+    adminFilteredBooks = window.booksData.filter(b => {
+        const str = (b.title + " " + b.author).toLowerCase().replace(/[^a-z0-9\s]/g, '');
+        return tokens.every(t => str.includes(t));
+    });
+    adminCurrentPage = 1;
+    renderAdminBooksTable();
+});
+
+window.changeAdminPage = function(dir) {
+    adminCurrentPage += dir;
+    renderAdminBooksTable();
+}
+
 function renderAdminBooksTable() {
     if(!document.getElementById('adminBooksTableBody')) return;
-    const tbody = document.getElementById('adminBooksTableBody'); let htmlString = "";
-    window.booksData.forEach((book) => { 
+    
+    if(document.getElementById('adminSearchBook').value.trim() === "") {
+        adminFilteredBooks = [...window.booksData];
+    }
+
+    const totalPages = Math.ceil(adminFilteredBooks.length / adminBooksPerPage) || 1;
+    if(adminCurrentPage > totalPages) adminCurrentPage = totalPages;
+    if(adminCurrentPage < 1) adminCurrentPage = 1;
+
+    document.getElementById('admPageInfo').innerText = `Page ${adminCurrentPage} of ${totalPages}`;
+    document.getElementById('admPrevPage').disabled = adminCurrentPage === 1;
+    document.getElementById('admNextPage').disabled = adminCurrentPage === totalPages;
+
+    const startIdx = (adminCurrentPage - 1) * adminBooksPerPage;
+    const paginated = adminFilteredBooks.slice(startIdx, startIdx + adminBooksPerPage);
+
+    const tbody = document.getElementById('adminBooksTableBody');
+    let htmlString = "";
+    
+    if(paginated.length === 0) {
+         tbody.innerHTML = `<tr><td colspan="3" style="text-align:center; padding:20px; color:#a1a1aa;">No books found matching search.</td></tr>`;
+         return;
+    }
+
+    paginated.forEach((book) => { 
         htmlString += `<tr>
             <td><img src="${book.image}" style="width:40px; border-radius:5px;"></td>
             <td><strong style="color:#fff;">${book.title}</strong><br><span style="font-size:0.8rem; color:#a1a1aa;">${book.author}</span></td>
@@ -387,7 +436,7 @@ function renderAdminBooksTable() {
     tbody.innerHTML = htmlString;
 }
 
-window.deleteBookRecord = async function(id) { if(confirm("Delete this book?")) { try { await deleteDoc(doc(db, "books", id)); showToast("Deleted!"); } catch (e) { showToast("Error!"); } } }
+window.deleteBookRecord = async function(id) { if(confirm("Delete this book permanently?")) { try { await deleteDoc(doc(db, "books", id)); showToast("Deleted!"); } catch (e) { showToast("Error!"); } } }
 
 window.openAdminEditModal = function(id) {
     const book = window.booksData.find(x => x.id === id); 
