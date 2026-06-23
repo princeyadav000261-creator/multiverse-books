@@ -23,7 +23,7 @@ let activeBookSlug = "";
 let activeBookTitle = "";
 
 window.IS_SUPER_ADMIN = false;
-const SUPER_ADMIN_EMAIL = "princeyadav000261@gmail.com";
+const SUPER_ADMIN_EMAIL = "princeyadav000261@gmail.com"; 
 let myLangChart = null; let myDownloadsChart = null;
 let isAppInitialized = false;
 
@@ -78,7 +78,7 @@ function resizeCanvas() {
     canvas.width = width * dpr; canvas.height = height * dpr; ctx.scale(dpr, dpr); initHex(); 
 }
 
-// 2. DAILY QUOTES LOGIC (28 Quotes)
+// 2. DAILY QUOTES LOGIC
 const quotes = [
     { text: "Be the change that you wish to see in the world.", author: "Mahatma Gandhi" },
     { text: "I have not failed. I've just found 10,000 ways that won't work.", author: "Thomas A. Edison" },
@@ -115,7 +115,7 @@ document.getElementById('daily-quote-text').innerHTML = `<i class="fas fa-quote-
 document.getElementById('daily-quote-author').innerText = `— ${quotes[currentQuoteIndex].author}`;
 
 
-// 3. AUTH FLOW (Upload Cards & Role Management Fixed)
+// 3. AUTH FLOW
 onAuthStateChanged(auth, async (user) => {
     if (user) {
         document.getElementById('loginOverlay').style.display = 'none';
@@ -126,22 +126,17 @@ onAuthStateChanged(auth, async (user) => {
             isAppInitialized = true;
         }
 
-        // FIX 1: Show clean parsed string name across auth mechanisms
         let dName = user.displayName;
         if (!dName || dName.trim() === "") { dName = user.email.split('@')[0]; }
         document.getElementById('sidebarProfileName').innerText = dName;
-        
-        // FIX: Force set uniform high quality official placeholder asset inside profile
         document.getElementById('sidebarProfileImg').src = "https://i.postimg.cc/cJdGqYHG/IMG-20260524-WA0004.jpg";
 
-        // FIX: All logged-in mechanisms now cleanly access Upload Books section link
         document.getElementById('menu-admin-panel').style.display = 'flex';
 
         if (user.email === SUPER_ADMIN_EMAIL) {
             window.IS_SUPER_ADMIN = true;
             document.getElementById('sidebarRoleText').innerText = "Super Admin";
             
-            // Show all tabs for Super Admin
             document.getElementById('admTabManage').style.display = 'inline-flex';
             document.getElementById('admTabAnalytics').style.display = 'inline-flex';
             document.getElementById('adminTutorialEdit').style.display = 'block';
@@ -156,12 +151,9 @@ onAuthStateChanged(auth, async (user) => {
             window.IS_SUPER_ADMIN = false;
             document.getElementById('sidebarRoleText').innerText = "Verified User";
             
-            // FIX: Restrict tabs dynamically for non Super Admins (Only Add & Video)
             document.getElementById('admTabManage').style.display = 'none';
             document.getElementById('admTabAnalytics').style.display = 'none';
             document.getElementById('adminTutorialEdit').style.display = 'none';
-            
-            // Force reset to active valid tab
             switchAdminTab('add');
         }
 
@@ -225,7 +217,7 @@ document.getElementById('loginForm').addEventListener('submit', async (e) => {
         document.getElementById('loginOverlay').style.opacity = '0'; 
         setTimeout(() => { document.getElementById('loginOverlay').style.display = 'none'; }, 500); 
     } catch(err) { 
-        showToast("Error: Invalid Credentials!"); 
+        showToast("Failed: Invalid Credentials!"); 
         btn.innerHTML = `Login Securely`; 
     } 
 });
@@ -237,7 +229,7 @@ document.getElementById('googleSignInBtn').addEventListener('click', async () =>
         setTimeout(() => { document.getElementById('loginOverlay').style.display = 'none'; }, 500); 
         showToast("Google Login Successful!");
     } catch(err) { 
-        showToast("Google Sign-In Failed! Settings check karein."); 
+        showToast("Failed: Google Sign-In Error. Check Rules."); 
     } 
 });
 
@@ -365,6 +357,7 @@ window.openDownloadPage = function(slug, skipPushState = false) {
     document.getElementById("downloadModal").style.display = "flex";
     document.getElementById("dlPreviewImage").src = book.image; document.getElementById("dlBookTitle").innerText = book.title; document.getElementById("dlBookAuthor").innerText = book.author;
     document.getElementById("dlPdfLinkBtn").onclick = function() { if(book.pdfLink) window.open(book.pdfLink, '_blank'); };
+    
     document.getElementById("dlYoutubeLinkBtn").onclick = function() { if(book.ytLink && book.ytLink !== "#") { window.open(book.ytLink, '_blank'); } };
 
     let examsArray = (book.exams || "General").split(',').map(item => item.trim());
@@ -389,7 +382,6 @@ window.shareBook = function() {
 // 6. ADMIN FUNCTIONS & PAGINATION
 function showToast(message) {
     const toast = document.getElementById('toast'); 
-    // FIX 3: Toast color management logic correctly separates Red from Green based on outcome status
     if (message.toLowerCase().includes('failed') || message.toLowerCase().includes('error') || message.toLowerCase().includes('invalid')) {
         toast.style.background = '#ef4444';
         toast.innerHTML = `<i class="fas fa-exclamation-circle"></i> <span id="toastMsg">${message}</span>`;
@@ -407,15 +399,21 @@ function getYouTubeEmbedUrl(url) {
     return videoId ? `https://www.youtube.com/embed/${videoId}?controls=1&rel=0&modestbranding=1` : url;
 }
 window.updateTutorialLink = async function() { 
-    if(!window.IS_SUPER_ADMIN) return; const newUrl = document.getElementById('newTutorialUrl').value; if(!newUrl) return showToast("Enter URL!"); 
-    try { await setDoc(doc(db, "settings", "global"), { tutorialVideoUrl: newUrl }, { merge: true }); showToast("Video Updated Successfully!"); document.getElementById('newTutorialUrl').value = ''; } catch(e) { showToast("Error updating video."); } 
+    if(!window.IS_SUPER_ADMIN) return; const newUrl = document.getElementById('newTutorialUrl').value; if(!newUrl) return showToast("Failed: Enter URL!"); 
+    try { 
+        await setDoc(doc(db, "settings", "global"), { tutorialVideoUrl: newUrl }, { merge: true }); 
+        showToast("Video Updated Successfully!"); 
+        document.getElementById('newTutorialUrl').value = ''; 
+    } catch(e) { 
+        showToast("Failed: " + e.message); 
+    } 
 }
 
 document.getElementById('addBookForm').addEventListener('submit', async (e) => {
     e.preventDefault(); 
     const titleInput = document.getElementById('inTitle').value; const imgInput = document.getElementById('inImage').value;
     const newBook = { title: titleInput, author: document.getElementById('inAuthor').value, image: imgInput, year: document.getElementById('inYear').value, lang: document.getElementById('inLang').value, exams: document.getElementById('inExams').value, pdfLink: document.getElementById('inPdfUrl').value, ytLink: document.getElementById('inYtUrl').value, dateAdded: new Date().toLocaleDateString('en-GB').toUpperCase(), createdAt: new Date().getTime() };
-    try { await addDoc(collection(db, "books"), newBook); showToast("Book Published!"); e.target.reset(); } catch (error) { showToast("Error saving book."); } 
+    try { await addDoc(collection(db, "books"), newBook); showToast("Book Published!"); e.target.reset(); } catch (error) { showToast("Failed: Error saving book."); } 
 });
 
 document.getElementById('adminSearchBook').addEventListener('input', (e) => {
@@ -452,7 +450,7 @@ function renderAdminBooksTable() {
     let htmlString = "";
     
     if(paginated.length === 0) {
-         tbody.innerHTML = `<tr><td colspan="3" style="text-align:center; padding:20px; color:#a1a1aa;">No books found matching search.</td></tr>`;
+         tbody.innerHTML = `<tr><td colspan="3" style="text-align:center; padding:20px; color:#a1a1aa; font-weight:800;">No books found matching search.</td></tr>`;
          return;
     }
 
@@ -469,7 +467,7 @@ function renderAdminBooksTable() {
     tbody.innerHTML = htmlString;
 }
 
-window.deleteBookRecord = async function(id) { if(confirm("Delete this book permanently?")) { try { await deleteDoc(doc(db, "books", id)); showToast("Deleted!"); } catch (e) { showToast("Error!"); } } }
+window.deleteBookRecord = async function(id) { if(confirm("Delete this book permanently?")) { try { await deleteDoc(doc(db, "books", id)); showToast("Deleted!"); } catch (e) { showToast("Failed: Delete error!"); } } }
 
 window.openAdminEditModal = function(id) {
     const book = window.booksData.find(x => x.id === id); 
@@ -498,7 +496,7 @@ document.getElementById('editBookForm').addEventListener('submit', async (e) => 
         pdfLink: document.getElementById('edPdfUrl').value, 
         ytLink: document.getElementById('edYtUrl').value 
     };
-    try { await updateDoc(doc(db, "books", docId), updatedData); document.getElementById('adminEditModal').style.display='none'; showToast("Updated Successfully!"); } catch (error) { showToast("Error updating."); }
+    try { await updateDoc(doc(db, "books", docId), updatedData); document.getElementById('adminEditModal').style.display='none'; showToast("Updated Successfully!"); } catch (error) { showToast("Failed: Update Error."); }
 });
 
 function updateAdminCharts(dlDataArray = [0,0,0,0,0,0,0,0,0,0,0,0]) {
