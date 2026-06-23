@@ -106,26 +106,22 @@ async function logActivity(actionType, bookTitle, imageUrl = "", deletedBookData
             timestamp: new Date().getTime(),
             dateStr: new Date().toLocaleString('en-GB', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute:'2-digit' })
         });
-    } catch(e) { console.error(e); }
+    } catch(e) { console.error("Activity Logging Failed:", e); }
 }
 
 window.addEventListener('resize', resizeCanvas); resizeCanvas(); animateHex(0);
-
 
 // 3. AUTH FLOW, LOADER, POPUP & RESTRICTIONS LOGIC
 let hasHandledInitialAuth = false;
 
 onAuthStateChanged(auth, async (user) => {
-    
     if (user) {
-        // User logged in
         let dName = user.displayName;
         if (!dName || dName.trim() === "") { dName = user.email.split('@')[0]; }
         document.getElementById('sidebarProfileName').innerText = dName;
         
         document.getElementById('menu-admin-panel').style.display = 'flex';
         
-        // Hide Login Overlay (if visible)
         document.getElementById('loginOverlay').style.opacity = '0';
         setTimeout(() => { document.getElementById('loginOverlay').style.display = 'none'; }, 500);
 
@@ -136,7 +132,7 @@ onAuthStateChanged(auth, async (user) => {
             document.getElementById('admTabManage').style.display = 'inline-flex';
             document.getElementById('admTabAnalytics').style.display = 'inline-flex';
             document.getElementById('adminTutorialEdit').style.display = 'block';
-            document.getElementById('addYtLinkContainer').style.display = 'flex'; // SUPER ADMIN SEES YT LINK
+            document.getElementById('addYtLinkContainer').style.display = 'flex'; 
             
             const currentYearStr = new Date().getFullYear().toString();
             onSnapshot(doc(db, "download_stats", currentYearStr), (docSnap) => {
@@ -152,14 +148,13 @@ onAuthStateChanged(auth, async (user) => {
             });
 
         } else {
-            // NORMAL USER RESTRICTIONS APPLIED HERE
             window.IS_SUPER_ADMIN = false;
             document.getElementById('sidebarRoleText').innerText = "Verified User";
             
             document.getElementById('admTabManage').style.display = 'none';
             document.getElementById('admTabAnalytics').style.display = 'none';
             document.getElementById('adminTutorialEdit').style.display = 'none';
-            document.getElementById('addYtLinkContainer').style.display = 'none'; // NORMAL USER WONT SEE YT LINK
+            document.getElementById('addYtLinkContainer').style.display = 'none'; 
             switchAdminTab('add');
         }
 
@@ -177,10 +172,9 @@ onAuthStateChanged(auth, async (user) => {
                     document.getElementById("popupOverlay").style.display = "flex";
                     hasHandledInitialAuth = true;
                 }, 600);
-            }, 2500); // 2.5 seconds loader animation time
+            }, 2500);
         }
 
-        // Setup db listeners
         onSnapshot(doc(db, "settings", "global"), (docSnap) => {
             if (docSnap.exists() && docSnap.data().tutorialVideoUrl) {
                 const embedUrl = getYouTubeEmbedUrl(docSnap.data().tutorialVideoUrl);
@@ -212,7 +206,6 @@ onAuthStateChanged(auth, async (user) => {
         });
 
     } else {
-        // USER IS NOT LOGGED IN -> IMMEDIATELY SHOW LOGIN PAGE
         window.IS_SUPER_ADMIN = false;
         hasHandledInitialAuth = false;
         
@@ -425,21 +418,28 @@ window.updateTutorialLink = async function() {
     } 
 }
 
-// SUBMIT RESTRICTIONS FOR NORMAL USERS IMPLEMENTED HERE
+// ADD BOOK - FIXED ERROR HANDLING AND PREMIUM LOADING STATE
 document.getElementById('addBookForm').addEventListener('submit', async (e) => {
     e.preventDefault(); 
+    
+    const btn = document.getElementById('publishBtn');
+    const originalText = btn.innerHTML;
+    
     const titleInput = document.getElementById('inTitle').value; 
     const imgInput = document.getElementById('inImage').value;
     const pdfUrlInput = document.getElementById('inPdfUrl').value;
     const ytUrlInput = document.getElementById('inYtUrl').value;
 
-    // Google Drive Link Check for normal users
     if (!window.IS_SUPER_ADMIN) {
         if (!pdfUrlInput.includes('drive.google.com')) {
             showToast("Failed: You can only upload Google Drive links!");
             return;
         }
     }
+
+    // Show loading state
+    btn.innerHTML = `<i class="fas fa-circle-notch fa-spin"></i> Uploading...`;
+    btn.disabled = true;
 
     const newBook = { 
         title: titleInput, 
@@ -449,15 +449,28 @@ document.getElementById('addBookForm').addEventListener('submit', async (e) => {
         lang: document.getElementById('inLang').value, 
         exams: document.getElementById('inExams').value, 
         pdfLink: pdfUrlInput, 
-        ytLink: window.IS_SUPER_ADMIN ? ytUrlInput : "", // normal users can't upload yt link
+        ytLink: window.IS_SUPER_ADMIN ? ytUrlInput : "", 
         dateAdded: new Date().toLocaleDateString('en-GB').toUpperCase(), 
         createdAt: new Date().getTime() 
     };
+
     try { 
         await addDoc(collection(db, "books"), newBook); 
-        await logActivity("ADD", titleInput, imgInput);
-        showToast("Book Published!"); e.target.reset(); 
-    } catch (error) { showToast("Failed: Error saving book."); } 
+        
+        // Log Activity wrapped safely so it doesn't break main flow
+        try { await logActivity("ADD", titleInput, imgInput); } 
+        catch (logErr) { console.warn("Activity log skipped:", logErr); }
+        
+        showToast("Book Published Successfully!"); 
+        e.target.reset(); 
+    } catch (error) { 
+        console.error("Save Error: ", error);
+        showToast("Failed: " + error.message); 
+    } finally {
+        // Restore button state
+        btn.innerHTML = originalText;
+        btn.disabled = false;
+    }
 });
 
 document.getElementById('adminSearchBook').addEventListener('input', (e) => {
@@ -516,9 +529,12 @@ window.deleteBookRecord = async function(id) {
         try { 
             const book = window.booksData.find(x => x.id === id);
             await deleteDoc(doc(db, "books", id)); 
-            await logActivity("DELETE", book.title, book.image, book);
-            showToast("Deleted!"); 
-        } catch (e) { showToast("Failed: Delete error!"); } 
+            try { await logActivity("DELETE", book.title, book.image, book); } catch(e){}
+            showToast("Deleted Successfully!"); 
+        } catch (error) { 
+            console.error("Delete Error:", error);
+            showToast("Failed: " + error.message); 
+        } 
     } 
 }
 
@@ -536,8 +552,24 @@ window.openAdminEditModal = function(id) {
     document.getElementById('adminEditModal').style.display = 'flex';
 }
 
+// EDIT BOOK - FIXED ERROR HANDLING AND PREMIUM LOADING STATE
 document.getElementById('editBookForm').addEventListener('submit', async (e) => {
     e.preventDefault(); 
+    
+    const btn = document.getElementById('editSaveBtn');
+    const originalText = btn.innerHTML;
+    const pdfUrlInput = document.getElementById('edPdfUrl').value;
+
+    if (!window.IS_SUPER_ADMIN) {
+        if (!pdfUrlInput.includes('drive.google.com')) {
+            showToast("Failed: You can only upload Google Drive links!");
+            return;
+        }
+    }
+
+    btn.innerHTML = `<i class="fas fa-circle-notch fa-spin"></i> Saving...`;
+    btn.disabled = true;
+
     const docId = document.getElementById('editDocId').value;
     const updatedData = { 
         title: document.getElementById('edTitle').value, 
@@ -546,15 +578,22 @@ document.getElementById('editBookForm').addEventListener('submit', async (e) => 
         lang: document.getElementById('edLang').value, 
         exams: document.getElementById('edExams').value, 
         image: document.getElementById('edImage').value, 
-        pdfLink: document.getElementById('edPdfUrl').value, 
-        ytLink: document.getElementById('edYtUrl').value 
+        pdfLink: pdfUrlInput, 
+        ytLink: window.IS_SUPER_ADMIN ? document.getElementById('edYtUrl').value : ""
     };
+
     try { 
         await updateDoc(doc(db, "books", docId), updatedData); 
-        await logActivity("EDIT", updatedData.title, updatedData.image);
+        try { await logActivity("EDIT", updatedData.title, updatedData.image); } catch(e){}
         document.getElementById('adminEditModal').style.display='none'; 
         showToast("Updated Successfully!"); 
-    } catch (error) { showToast("Failed: Update Error."); }
+    } catch (error) { 
+        console.error("Edit Error:", error);
+        showToast("Failed: " + error.message); 
+    } finally {
+        btn.innerHTML = originalText;
+        btn.disabled = false;
+    }
 });
 
 function updateAdminCharts(dlDataArray = [0,0,0,0,0,0,0,0,0,0,0,0]) {
@@ -608,8 +647,12 @@ window.recoverBook = async function(logId) {
     if(confirm(`Recover "${log.bookTitle}"?`)) {
         try {
             await setDoc(doc(db, "books", log.deletedData.id), log.deletedData);
-            await logActivity("RESTORE", log.bookTitle, log.image);
+            try { await logActivity("RESTORE", log.bookTitle, log.image); } catch(e){}
             showToast("Book Restored Successfully!");
-        } catch(e) { showToast("Failed to restore."); }
+        } catch(error) { 
+            console.error("Recover Error:", error);
+            showToast("Failed: " + error.message); 
+        }
     }
 }
+
