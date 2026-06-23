@@ -30,7 +30,7 @@ let isAppInitialized = false;
 let adminFilteredBooks = [];
 let adminCurrentPage = 1;
 const adminBooksPerPage = 10;
-let dbLogs = []; // Logs array added back
+let dbLogs = []; 
 
 // 1. ORIGINAL CANVAS LOADER
 const canvas = document.getElementById('networkCanvas');
@@ -86,63 +86,62 @@ const quotes = [
     { text: "The only way to do great work is to love what you do.", author: "Steve Jobs" },
     { text: "In the middle of difficulty lies opportunity.", author: "Albert Einstein" },
     { text: "It does not matter how slowly you go as long as you do not stop.", author: "Confucius" },
-    { text: "Whatever you are, be a good one.", author: "Abraham Lincoln" },
-    { text: "The time is always right to do what is right.", author: "Martin Luther King Jr." },
-    { text: "If you tell the truth, you don't have to remember anything.", author: "Mark Twain" },
-    { text: "Turn your wounds into wisdom.", author: "Oprah Winfrey" },
-    { text: "A person who never made a mistake never tried anything new.", author: "Albert Einstein" },
-    { text: "The purpose of our lives is to be happy.", author: "Dalai Lama" },
-    { text: "Simplicity is the ultimate sophistication.", author: "Leonardo da Vinci" },
-    { text: "The journey of a thousand miles begins with one step.", author: "Lao Tzu" },
-    { text: "Tough times never last, but tough people do.", author: "Robert H. Schuller" },
-    { text: "Imagination is more important than knowledge.", author: "Albert Einstein" },
-    { text: "That which does not kill us makes us stronger.", author: "Friedrich Nietzsche" },
-    { text: "No one can make you feel inferior without your consent.", author: "Eleanor Roosevelt" },
-    { text: "You only live once, but if you do it right, once is enough.", author: "Mae West" },
-    { text: "A room without books is like a body without a soul.", author: "Marcus Tullius Cicero" },
-    { text: "Be yourself; everyone else is already taken.", author: "Oscar Wilde" },
-    { text: "Happiness depends upon ourselves.", author: "Aristotle" },
-    { text: "The mind is everything. What you think you become.", author: "Buddha" },
-    { text: "Action is the foundational key to all success.", author: "Pablo Picasso" },
-    { text: "To love and be loved is to feel the sun from both sides.", author: "David Viscott" },
-    { text: "Every moment is a fresh beginning.", author: "T.S. Eliot" },
-    { text: "Never let the fear of striking out keep you from playing the game.", author: "Babe Ruth" },
-    { text: "The best way to predict your future is to create it.", author: "Abraham Lincoln" },
-    { text: "Do what you can, with what you have, where you are.", author: "Theodore Roosevelt" }
+    { text: "Whatever you are, be a good one.", author: "Abraham Lincoln" }
 ];
 const todayDays = Math.floor(Date.now() / (1000 * 60 * 60 * 24));
 const currentQuoteIndex = todayDays % quotes.length;
 document.getElementById('daily-quote-text').innerHTML = `<i class="fas fa-quote-left" style="color: rgba(255,255,255,0.3); margin-right:5px;"></i> ${quotes[currentQuoteIndex].text}`;
 document.getElementById('daily-quote-author').innerText = `— ${quotes[currentQuoteIndex].author}`;
 
-// LOG ACTIVITY FUNCTION RESTORED
+// UPDATED LOG ACTIVITY FUNCTION (WITH PHOTO & EMAIL)
 async function logActivity(actionType, bookTitle, imageUrl = "", deletedBookData = null) {
     try {
+        const user = auth.currentUser;
         await addDoc(collection(db, "activity_logs"), {
             action: actionType,
             bookTitle: bookTitle,
             image: imageUrl,
             deletedData: deletedBookData,
             adminName: document.getElementById('sidebarProfileName').innerText,
+            adminEmail: user ? user.email : "Unknown",
+            adminPhoto: user && user.photoURL ? user.photoURL : "https://i.postimg.cc/cJdGqYHG/IMG-20260524-WA0004.jpg",
             timestamp: new Date().getTime(),
             dateStr: new Date().toLocaleString('en-GB', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute:'2-digit' })
         });
     } catch(e) { console.error(e); }
 }
 
-// Ensure Canvas is ready early
 window.addEventListener('resize', resizeCanvas); resizeCanvas(); animateHex(0);
 
-// 3. AUTH FLOW (No Black Screen)
+// 3. AUTH FLOW (FIXED: NO BLACK SCREEN)
 let authChecked = false;
+let initialLoadDone = false;
+
 onAuthStateChanged(auth, async (user) => {
     authChecked = true;
+    
+    // Remove loader immediately and smoothly upon checking auth state
+    if (!initialLoadDone) {
+        const loader = document.getElementById("loaderScreen");
+        loader.style.opacity = "0";
+        setTimeout(() => { 
+            cancelAnimationFrame(animationId); 
+            loader.style.display = "none"; 
+        }, 600);
+        initialLoadDone = true;
+    }
+
     if (user) {
         let dName = user.displayName;
         if (!dName || dName.trim() === "") { dName = user.email.split('@')[0]; }
         document.getElementById('sidebarProfileName').innerText = dName;
-        document.getElementById('sidebarProfileImg').src = "https://i.postimg.cc/cJdGqYHG/IMG-20260524-WA0004.jpg";
+        document.getElementById('sidebarProfileImg').src = user.photoURL || "https://i.postimg.cc/cJdGqYHG/IMG-20260524-WA0004.jpg";
         document.getElementById('menu-admin-panel').style.display = 'flex';
+
+        // Set layout directly to app
+        document.getElementById('loginOverlay').style.display = 'none'; 
+        document.getElementById('mainAppWrapper').style.display = 'block'; 
+        document.getElementById("popupOverlay").style.display = "flex";
 
         if (user.email === SUPER_ADMIN_EMAIL) {
             window.IS_SUPER_ADMIN = true;
@@ -207,29 +206,12 @@ onAuthStateChanged(auth, async (user) => {
         });
     } else {
         window.IS_SUPER_ADMIN = false;
+        document.getElementById('mainAppWrapper').style.display = 'none';
+        document.getElementById('loginOverlay').style.display = 'flex';
+        setTimeout(() => { document.getElementById('loginOverlay').style.opacity = '1'; }, 50); 
     }
 });
 
-// Remove loader smoothly and route properly
-window.addEventListener("load", () => {
-    setTimeout(() => {
-        const loader = document.getElementById("loaderScreen");
-        loader.style.opacity = "0";
-        setTimeout(() => { 
-            cancelAnimationFrame(animationId); 
-            loader.style.display = "none"; 
-            
-            // Check auth state routing
-            if (auth.currentUser) {
-                document.getElementById('mainAppWrapper').style.display = 'block';
-                document.getElementById("popupOverlay").style.display = "flex";
-            } else {
-                document.getElementById('loginOverlay').style.display = 'flex';
-                setTimeout(() => { document.getElementById('loginOverlay').style.opacity = '1'; }, 50); 
-            }
-        }, 600); 
-    }, 3000); 
-});
 
 document.getElementById('loginForm').addEventListener('submit', async (e) => {
     e.preventDefault(); 
@@ -239,19 +221,16 @@ document.getElementById('loginForm').addEventListener('submit', async (e) => {
         await signInWithEmailAndPassword(auth, email, pass); 
         e.target.reset(); 
         showToast("Login Successful!"); 
-        document.getElementById('loginOverlay').style.opacity = '0'; 
-        setTimeout(() => { document.getElementById('loginOverlay').style.display = 'none'; document.getElementById('mainAppWrapper').style.display = 'block'; document.getElementById("popupOverlay").style.display = "flex"; }, 500); 
+        btn.innerHTML = `Login`; 
     } catch(err) { 
         showToast("Failed: Invalid Credentials!"); 
-        btn.innerHTML = `Login Securely`; 
+        btn.innerHTML = `Login`; 
     } 
 });
 
 document.getElementById('googleSignInBtn').addEventListener('click', async () => { 
     try { 
         await signInWithPopup(auth, provider); 
-        document.getElementById('loginOverlay').style.opacity = '0'; 
-        setTimeout(() => { document.getElementById('loginOverlay').style.display = 'none'; document.getElementById('mainAppWrapper').style.display = 'block'; document.getElementById("popupOverlay").style.display = "flex"; }, 500); 
         showToast("Google Login Successful!");
     } catch(err) { 
         showToast("Failed: Google Sign-In Error. Check Rules."); 
@@ -262,9 +241,6 @@ document.getElementById('admin-logout-btn').addEventListener('click', () => {
     if(confirm("Are you sure you want to logout?")) {
         signOut(auth).then(() => { 
             document.getElementById('admin-dashboard-panel').classList.remove('active');
-            document.getElementById('mainAppWrapper').style.display = 'none';
-            document.getElementById('loginOverlay').style.display = 'flex';
-            setTimeout(() => { document.getElementById('loginOverlay').style.opacity = '1'; }, 50); 
         });
     }
 });
@@ -406,7 +382,6 @@ window.shareBook = function() {
     if (navigator.share) navigator.share({ title: activeBookTitle, text: "Download free book", url: shareUrl });
     else { navigator.clipboard.writeText(shareUrl); alert("Link Copied!"); }
 }
-
 
 // 6. ADMIN FUNCTIONS & PAGINATION
 function showToast(message) {
@@ -557,7 +532,7 @@ function updateAdminCharts(dlDataArray = [0,0,0,0,0,0,0,0,0,0,0,0]) {
     if(ctxDownloads) { if(myDownloadsChart) myDownloadsChart.destroy(); myDownloadsChart = new Chart(ctxDownloads, { type: 'line', data: { labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'], datasets: [{ label: `Downloads`, data: dlDataArray, borderColor: '#10b981', backgroundColor: 'rgba(16, 185, 129, 0.2)', borderWidth: 2, fill: true }] }, options: { responsive: true, maintainAspectRatio: false } }); }
 }
 
-// RESTORED ACTIVITY LOGS RENDER FUNCTION
+// RESTORED & ENHANCED ACTIVITY LOGS RENDER FUNCTION
 function renderLogs() {
     const tbody = document.getElementById('logsTableBody'); 
     if(!tbody) return;
@@ -571,7 +546,22 @@ function renderLogs() {
         else if (log.action === 'RESTORE') { badge = `<span class="log-badge log-restore"><i class="fas fa-trash-restore"></i> Restored</span>`; }
         
         let img = log.image ? `<img src="${log.image}" class="log-table-img" onerror="this.src='https://via.placeholder.com/40x55?text=Img'">` : ''; 
-        htmlString += `<tr><td>${badge}</td><td style="display: flex; align-items: center;">${img}<span style="color:#fff; font-weight: 800; font-size:1.05rem;">${log.bookTitle}</span></td><td><div style="font-weight: 800; color: #fff; text-transform: uppercase;">${log.adminName}</div></td><td><div style="color: #a1a1aa; font-size: 0.9rem; font-weight:700;"><i class="far fa-clock" style="margin-right:5px;"></i> ${log.dateStr}</div>${recoveryBtn}</td></tr>`;
+        let adminImg = log.adminPhoto ? log.adminPhoto : "https://i.postimg.cc/cJdGqYHG/IMG-20260524-WA0004.jpg";
+        
+        htmlString += `<tr>
+            <td>
+                <div class="log-admin-info">
+                    <img src="${adminImg}">
+                    <div>
+                        <div style="font-weight: 800; color: #fff; text-transform: uppercase;">${log.adminName || "Admin"}</div>
+                        <div style="font-size: 10px; color: #a1a1aa; font-weight: 600;">${log.adminEmail || "Unknown Email"}</div>
+                    </div>
+                </div>
+            </td>
+            <td>${badge}</td>
+            <td style="display: flex; align-items: center;">${img}<span style="color:#fff; font-weight: 800; font-size:1.05rem;">${log.bookTitle}</span></td>
+            <td><div style="color: #a1a1aa; font-size: 0.9rem; font-weight:700;"><i class="far fa-clock" style="margin-right:5px;"></i> ${log.dateStr}</div>${recoveryBtn}</td>
+        </tr>`;
     }); 
     tbody.innerHTML = htmlString;
 }
