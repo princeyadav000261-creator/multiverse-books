@@ -10,7 +10,6 @@
 </head>
 <body>
 
-    <!-- 1. PREMIUM COMPACT LOGIN OVERLAY -->
     <div id="loginOverlay" class="login-container">
         <div class="login-content-wrapper">
             <div class="login-logo-container"><img src="https://i.postimg.cc/cJdGqYHG/IMG-20260524-WA0004.jpg" alt="Multiverse Logo" class="login-logo" oncontextmenu="return false;" draggable="false"></div>
@@ -23,16 +22,14 @@
                     <div class="input-wrapper"><i class="fas fa-lock left-icon"></i><input type="password" id="loginPassword" placeholder="Enter Password" required><i class="fas fa-eye toggle-eye" id="toggleEye" onclick="togglePasswordVisibility()"></i></div>
                     <button type="submit" id="loginBtn" class="btn-login">Login Securely</button>
                 </form>
-                <div style="height: 10px;"></div> <!-- Spacing instead of OR -->
+                <div style="height: 10px;"></div>
                 <button type="button" id="googleSignInBtn" class="btn-token-style"><img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" alt="G" style="width: 20px;"> Login with Google</button>
             </div>
         </div>
     </div>
 
-    <!-- MAIN APP WRAPPER -->
     <div id="mainAppWrapper" style="display: none; width: 100%; height: 100%;">
         
-        <!-- 2. ORIGINAL CANVAS LOADER -->
         <div class="loader-screen" id="loaderScreen">
             <canvas id="networkCanvas"></canvas>
             <div class="loader-logo"><img src="https://i.postimg.cc/cJdGqYHG/IMG-20260524-WA0004.jpg" alt="Logo" oncontextmenu="return false;" draggable="false"></div>
@@ -47,7 +44,6 @@
             <div class="loader-powered-text">POWERED BY MADxPRINCE</div>
         </div>
 
-        <!-- 3. ORIGINAL WHATSAPP POPUP -->
         <div class="popup-overlay" id="popupOverlay">
             <div class="popup">
                 <div class="popup-logo"><img src="https://upload.wikimedia.org/wikipedia/commons/6/6b/WhatsApp.svg" alt="WhatsApp" oncontextmenu="return false;" draggable="false"></div>
@@ -60,7 +56,6 @@
             </div>
         </div>
 
-        <!-- 4. ORIGINAL APP UI -->
         <div class="app-container">
             <header>
                 <div class="header-left">
@@ -126,9 +121,9 @@
 
                 <div id="no-results-msg">
                     <div class="no-results-card">
-                        <div class="no-results-icon"><i class="fas fa-book-open"></i></div>
-                        <h2>BOOK NOT FOUND</h2>
-                        <p>Sorry, we couldn't find any book matching your search.</p>
+                        <div class="no-results-icon"><i class="fas fa-book-open" style="background: linear-gradient(135deg, #00d2ff 0%, #3a7bd5 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent;"></i></div>
+                        <h2 style="font-size: 16px; font-weight: 800; color: #ffffff; margin-bottom: 8px; letter-spacing: 0.5px;">BOOK NOT FOUND</h2>
+                        <p style="font-size: 12px; color: #8c97ac; line-height: 1.5; margin-bottom: 20px; padding: 0 10px;">Sorry, we couldn't find any book matching your search.</p>
                         <div class="powered-badge">❀ POWERED BY : MADxPRINCE ❀</div>
                     </div>
                 </div>
@@ -140,7 +135,6 @@
                 <div class="premium-copyright">© 2026 MULTIVERSE BOOKS <span style="margin: 0 5px;">|</span> MADE WITH <i class="fas fa-heart" style="color: #ff4757; margin: 0 3px; filter: drop-shadow(0 0 5px rgba(255,71,87,0.8));"></i> BY MADxPRINCE</div>
             </main>
 
-            <!-- Download Modal -->
             <div class="download-modal" id="downloadModal">
                 <div class="modal-header-fixed">
                     <button class="back-btn" onclick="closeDownloadPage()"><i class="fas fa-arrow-left"></i></button>
@@ -166,13 +160,11 @@
                 </div>
             </div>
 
-            <!-- Notifications Panel -->
             <div class="notifications-panel" id="noti-panel">
                 <div class="noti-header"><div class="noti-title-area"><div class="noti-icon"><i class="fas fa-bell"></i></div><div class="noti-text"><h2>Notifications</h2><p>Updates & News</p></div></div><div class="icon-box" id="close-noti"><i class="fas fa-times"></i></div></div>
                 <div class="noti-body" id="dynamic-noti-container"></div>
             </div>
 
-            <!-- About Dev Panel -->
             <div class="overlay-panel" id="about-dev-panel">
                 <div class="modal-header-fixed">
                     <div class="header-content-wrapper"><button class="back-btn" id="close-dev-btn"><i class="fas fa-arrow-left"></i></button><h1 class="modal-title">ABOUT DEVELOPER</h1></div>
@@ -203,7 +195,6 @@
                 <div class="premium-copyright">© 2026 MULTIVERSE BOOKS <span style="margin: 0 5px;">|</span> MADE WITH <i class="fas fa-heart" style="color: #ff4757; margin: 0 3px;"></i> BY MADxPRINCE</div>
             </div>
 
-            <!-- DMCA Panel -->
             <div class="overlay-panel" id="dmca-panel">
                 <div class="modal-header-fixed"><button class="back-btn" id="close-dmca-btn"><i class="fas fa-arrow-left"></i></button><h1 class="modal-title">DMCA REQUEST</h1></div>
                 <div class="dmca-content">
@@ -236,7 +227,6 @@
                 <div class="premium-copyright">© 2026 MULTIVERSE BOOKS <span style="margin: 0 5px;">|</span> MADE WITH <i class="fas fa-heart" style="color: #ff4757; margin: 0 3px;"></i> BY MADxPRINCE</div>
             </div>
 
-            <!-- 5. ISOLATED ADMIN PANEL OVERLAY -->
             <div class="overlay-panel" id="admin-dashboard-panel" style="background: #0d0d12;">
                 <div class="modal-header-fixed" style="background: #09090b;">
                     <div class="header-content-wrapper">
@@ -256,7 +246,6 @@
                 </div>
 
                 <div class="adm-content-area">
-                    <!-- ADD BOOK SECTION (With Specific Placeholders & 2023-2030) -->
                     <div id="sectionAddBook" class="adm-section active">
                         <div class="adm-card">
                             <div class="adm-card-title"><i class="fas fa-pen-nib"></i> Enter Book Details</div>
@@ -280,12 +269,10 @@
                         </div>
                     </div>
 
-                    <!-- MANAGE BOOKS SECTION (With Pagination & Search) -->
                     <div id="sectionManageBooks" class="adm-section">
                         <div class="adm-card">
                             <div class="adm-card-title"><i class="fas fa-list"></i> Manage Vault Inventory</div>
                             
-                            <!-- Search Bar for Admin -->
                             <div style="display: flex; gap: 15px; margin-bottom: 20px;">
                                 <div style="flex: 1; position: relative;">
                                     <i class="fas fa-search" style="position: absolute; left: 15px; top: 50%; transform: translateY(-50%); color: #a1a1aa;"></i>
@@ -300,7 +287,6 @@
                                 </table>
                             </div>
 
-                            <!-- Pagination Controls -->
                             <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 20px;">
                                 <button class="adm-page-btn" id="admPrevPage" onclick="changeAdminPage(-1)"><i class="fas fa-chevron-left"></i> Prev</button>
                                 <span id="admPageInfo" style="color: #a1a1aa; font-size: 0.9rem; font-weight: 600;">Page 1 of 1</span>
@@ -309,11 +295,10 @@
                         </div>
                     </div>
 
-                    <!-- TUTORIAL SECTION -->
                     <div id="sectionTutorial" class="adm-section">
                         <div class="adm-card">
                             <div class="adm-card-title"><i class="fas fa-video"></i> Upload Guide & Tutorial</div>
-                            <div style="position: relative; padding-bottom: 56.25%; height: 0; overflow: hidden; border-radius: 12px;">
+                            <div style="position: relative; padding-bottom: 56.25%; height: 0; overflow: hidden; border-radius: 12px; background: #000;">
                                 <iframe id="tutorialIframe" src="" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; border: 0;" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen></iframe>
                             </div>
                             <div id="adminTutorialEdit" style="display: none; margin-top: 20px; padding-top:20px; border-top: 1px solid rgba(255,255,255,0.1);">
@@ -324,7 +309,6 @@
                         </div>
                     </div>
 
-                    <!-- ANALYTICS SECTION -->
                     <div id="sectionAnalytics" class="adm-section">
                         <div class="adm-card">
                             <div class="adm-card-title"><i class="fas fa-chart-pie"></i> Real-Time Stats</div>
@@ -339,7 +323,6 @@
         </div>
     </div>
 
-    <!-- 6. ADMIN EDIT MODAL (With Fixed 2023-2030 Options) -->
     <div class="adm-modal-overlay" id="adminEditModal">
         <div class="adm-modal-box">
             <h3 style="color: #fff; margin-bottom: 15px; font-size: 1.1rem; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 10px;">
@@ -368,7 +351,7 @@
         </div>
     </div>
 
-    <div id="toast"><i class="fas fa-check-circle"></i> <span id="toastMsg">Action Successful!</span></div>
+    <div id="toast"></div>
 
     <script type="module" src="./app.js"></script>
     <script>
