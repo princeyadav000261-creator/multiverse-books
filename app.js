@@ -1,5 +1,5 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
-import { getFirestore, collection, addDoc, doc, updateDoc, deleteDoc, onSnapshot, query, orderBy, setDoc, getDoc } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
+import { getFirestore, collection, addDoc, doc, updateDoc, deleteDoc, onSnapshot, query, orderBy, setDoc } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
 import { getAuth, signInWithEmailAndPassword, GoogleAuthProvider, signInWithPopup, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js";
 
 const firebaseConfig = {
@@ -18,7 +18,6 @@ const provider = new GoogleAuthProvider();
 
 window.booksData = [];
 let loadedCount = 0; 
-let isLoadingMore = false;
 let activeBookSlug = ""; 
 let activeBookTitle = "";
 
@@ -26,17 +25,69 @@ window.IS_SUPER_ADMIN = false;
 const SUPER_ADMIN_EMAIL = "princeyadav000261@gmail.com"; 
 let myLangChart = null; let myDownloadsChart = null;
 
-// ================= AUTHENTICATION & LOGIN FLOW =================
+// ================= 1. CANVAS LOADER LOGIC (Original Restored) =================
+const canvas = document.getElementById('networkCanvas');
+const ctx = canvas.getContext('2d');
+let width, height;
+let hexagons = [];
+let animationId;
+
+function initHex() {
+    hexagons = [];
+    const R = 32; const X_OFFSET = R * 1.5; const Y_OFFSET = Math.sqrt(3) * R;
+    const cols = Math.ceil(width / X_OFFSET) + 2; const rows = Math.ceil(height / Y_OFFSET) + 2;
+    for (let q = -1; q < cols; q++) {
+        for (let r = -1; r < rows; r++) {
+            let x = q * X_OFFSET; let y = r * Y_OFFSET;
+            if (q % 2 !== 0) y += Y_OFFSET / 2;
+            let rand = Math.random();
+            if (rand > 0.45) { hexagons.push({ x: x, y: y, type: 'main', blinkOffset: Math.random() * Math.PI * 2, blinkSpeed: 0.001 + Math.random() * 0.0015 }); } 
+            else if (rand > 0.15) { hexagons.push({ x: x + 15, y: y + 15, type: 'bg', blinkOffset: Math.random() * Math.PI * 2, blinkSpeed: 0.0008 }); }
+        }
+    }
+}
+
+function drawHexagon(x, y, alpha, type) {
+    ctx.beginPath(); const R = 32;
+    for (let i = 0; i < 6; i++) {
+        const angle = (Math.PI / 3) * i; const hx = x + R * Math.cos(angle); const hy = y + R * Math.sin(angle);
+        if (i === 0) ctx.moveTo(hx, hy); else ctx.lineTo(hx, hy);
+    }
+    ctx.closePath();
+    ctx.strokeStyle = type === 'main' ? `rgba(255, 255, 255, ${alpha})` : `rgba(255, 255, 255, ${alpha * 0.15})`; 
+    ctx.lineWidth = type === 'main' ? 0.5 : 0.2;
+    ctx.stroke();
+    for (let i = 0; i < 6; i++) {
+        const angle = (Math.PI / 3) * i; const hx = x + R * Math.cos(angle); const hy = y + R * Math.sin(angle);
+        ctx.beginPath(); ctx.arc(hx, hy, type === 'main' ? 1.5 : 0.8, 0, Math.PI * 2);
+        ctx.fillStyle = type === 'main' ? ctx.strokeStyle : `rgba(255, 255, 255, ${alpha * 0.2})`; ctx.fill();
+    }
+}
+
+function animateHex(time) {
+    ctx.clearRect(0, 0, width, height);
+    hexagons.forEach(hex => { let alpha = 0.5 + 0.5 * Math.sin(time * hex.blinkSpeed + hex.blinkOffset); drawHexagon(hex.x, hex.y, alpha, hex.type); });
+    animationId = requestAnimationFrame(animateHex);
+}
+
+function resizeCanvas() {
+    const dpr = window.devicePixelRatio || 1; width = window.innerWidth; height = window.innerHeight;
+    canvas.width = width * dpr; canvas.height = height * dpr; ctx.scale(dpr, dpr); initHex(); 
+}
+window.addEventListener('resize', resizeCanvas); resizeCanvas(); animateHex(0);
+
+
+// ================= 2. AUTHENTICATION & LOGIN FLOW =================
+let isUserLoggedIn = false;
+
 onAuthStateChanged(auth, async (user) => {
-    const loader = document.getElementById('systemLoader');
     const loginOverlay = document.getElementById('loginOverlay');
     const mainApp = document.getElementById('mainAppWrapper');
 
     if (user) {
-        // User Logged In
-        loginOverlay.style.opacity = '0';
-        setTimeout(() => { loginOverlay.style.display = 'none'; }, 500);
-        mainApp.style.display = 'flex';
+        isUserLoggedIn = true;
+        loginOverlay.style.display = 'none';
+        mainApp.style.display = 'flex'; // Auth done, show app behind loader
         
         document.getElementById('sidebarProfileName').innerText = user.displayName || user.email.split('@')[0];
         if(user.photoURL) document.getElementById('sidebarProfileImg').src = user.photoURL;
@@ -47,7 +98,6 @@ onAuthStateChanged(auth, async (user) => {
             document.getElementById('menu-admin-panel').style.display = 'flex';
             document.getElementById('adminTutorialEdit').style.display = 'block';
             
-            // Analytics Listener for Super Admin
             const currentYearStr = new Date().getFullYear().toString();
             onSnapshot(doc(db, "download_stats", currentYearStr), (docSnap) => {
                 let dlData = [0,0,0,0,0,0,0,0,0,0,0,0];
@@ -57,11 +107,9 @@ onAuthStateChanged(auth, async (user) => {
         } else {
             window.IS_SUPER_ADMIN = false;
             document.getElementById('sidebarRoleText').innerText = "Verified User";
-            // Normal user hide admin panel
             document.getElementById('menu-admin-panel').style.display = 'none';
         }
 
-        // Fetch Global Settings (Tutorial Video)
         onSnapshot(doc(db, "settings", "global"), (docSnap) => {
             if (docSnap.exists() && docSnap.data().tutorialVideoUrl) {
                 const embedUrl = getYouTubeEmbedUrl(docSnap.data().tutorialVideoUrl);
@@ -69,7 +117,6 @@ onAuthStateChanged(auth, async (user) => {
             }
         });
 
-        // Fetch Books
         const q = query(collection(db, "books"), orderBy("createdAt", "desc"));
         onSnapshot(q, (snapshot) => {
             window.booksData = [];
@@ -83,18 +130,36 @@ onAuthStateChanged(auth, async (user) => {
             const searchInput = document.getElementById('app-search-input').value;
             if(searchInput.trim() === "") { window.renderBooksUI(0, 16); } else { performFuzzySearch(searchInput); }
             window.generateNotifications();
-            renderAdminBooksTable(); // Render table for admin if authorized
+            renderAdminBooksTable(); 
             if(window.IS_SUPER_ADMIN) updateAdminCharts();
         });
-
-        if (loader) { loader.style.opacity = '0'; setTimeout(() => { loader.style.display = 'none'; }, 400); }
     } else {
-        // Not Logged In
+        isUserLoggedIn = false;
         mainApp.style.display = 'none';
-        loginOverlay.style.display = 'flex';
-        setTimeout(() => { loginOverlay.style.opacity = '1'; }, 50); 
-        if (loader) { loader.style.display = 'none'; }
+        // Don't show login immediately, wait for loader to finish
     }
+});
+
+// Remove canvas loader after 3 seconds exactly like the original
+window.addEventListener("load", () => {
+    setTimeout(() => {
+        const loader = document.getElementById("loaderScreen");
+        loader.style.opacity = "0";
+        loader.style.visibility = "hidden";
+        
+        setTimeout(() => { 
+            cancelAnimationFrame(animationId);
+            loader.remove(); 
+            
+            // Flow Logic: If logged in -> WhatsApp Popup. Else -> Login Screen
+            if(isUserLoggedIn) {
+                document.getElementById("popupOverlay").style.display = "flex";
+            } else {
+                document.getElementById('loginOverlay').style.display = 'flex';
+                setTimeout(() => { document.getElementById('loginOverlay').style.opacity = '1'; }, 50); 
+            }
+        }, 600); 
+    }, 3000); 
 });
 
 // Login Actions
@@ -102,17 +167,43 @@ document.getElementById('loginForm').addEventListener('submit', async (e) => {
     e.preventDefault(); 
     const email = document.getElementById('loginEmail').value; const pass = document.getElementById('loginPassword').value;
     const btn = document.getElementById('loginBtn'); btn.innerHTML = `Wait...`;
-    try { await signInWithEmailAndPassword(auth, email, pass); e.target.reset(); showToast("Login Successful!"); } 
+    try { 
+        await signInWithEmailAndPassword(auth, email, pass); 
+        e.target.reset(); 
+        showToast("Login Successful!"); 
+        // Force hide login overlay, auth listener will show app
+        document.getElementById('loginOverlay').style.opacity = '0';
+        setTimeout(() => { document.getElementById('loginOverlay').style.display = 'none'; }, 500);
+        document.getElementById("popupOverlay").style.display = "flex"; // Show whatsapp popup on manual login
+    } 
     catch(err) { showToast("Error: Invalid Credentials!"); } btn.innerHTML = `Login Securely`; 
 });
 
 document.getElementById('googleSignInBtn').addEventListener('click', async () => { 
-    try { await signInWithPopup(auth, provider); } catch(err) { showToast("Google Sign-In Failed!"); } 
+    try { 
+        await signInWithPopup(auth, provider); 
+        document.getElementById('loginOverlay').style.opacity = '0';
+        setTimeout(() => { document.getElementById('loginOverlay').style.display = 'none'; }, 500);
+        document.getElementById("popupOverlay").style.display = "flex";
+    } catch(err) { showToast("Google Sign-In Failed!"); } 
 });
 
-document.getElementById('menu-logout').addEventListener('click', () => { if(confirm("Are you sure you want to logout?")) signOut(auth); });
+// NEW LOGOUT BUTTON LOCATION (Inside Admin Panel Header)
+document.getElementById('admin-logout-btn').addEventListener('click', () => { 
+    if(confirm("Are you sure you want to logout?")) {
+        signOut(auth).then(() => {
+            document.getElementById('admin-dashboard-panel').classList.remove('active');
+            document.getElementById('loginOverlay').style.display = 'flex';
+            setTimeout(() => { document.getElementById('loginOverlay').style.opacity = '1'; }, 50); 
+        });
+    }
+});
 
-// ================= ULTRA ADVANCED FUZZY SEARCH (Bug Fixed) =================
+// Popup Functions
+window.closePopup = function(){ document.getElementById("popupOverlay").style.display = "none"; };
+window.joinChannel = function(){ window.open('https://whatsapp.com/channel/0029Vb6NBZx1yT2GByTTVf2A', '_blank'); };
+
+// ================= 3. ULTRA ADVANCED FUZZY SEARCH (Debounced) =================
 let searchTimeout;
 const searchInputEl = document.getElementById('app-search-input');
 const closeSearchBtn = document.getElementById('close-search');
@@ -120,8 +211,6 @@ const closeSearchBtn = document.getElementById('close-search');
 searchInputEl.addEventListener('input', (e) => {
     clearTimeout(searchTimeout);
     const searchText = e.target.value;
-    
-    // DEBOUNCE: Wait 300ms after user stops typing to prevent lag
     searchTimeout = setTimeout(() => {
         if(searchText.trim() === "") {
             document.getElementById('no-results-msg').style.display = 'none';
@@ -133,23 +222,19 @@ searchInputEl.addEventListener('input', (e) => {
 });
 
 closeSearchBtn.addEventListener('click', () => {
-    searchInputEl.value = ''; // Clear text
+    searchInputEl.value = ''; 
     document.getElementById('no-results-msg').style.display = 'none';
     window.renderBooksUI(0, 16);
     document.getElementById('search-box').classList.remove('active');
-    // history back logic
     if (history.state && history.state.popup === 'search') { history.back(); }
 });
 
 function performFuzzySearch(searchText) {
-    // Advanced Logic: "Physics Khan Sir" matches "Physics by Khan Sir"
-    // Remove special chars, lower case, split by space to get individual keywords
     let normalizedSearch = searchText.toLowerCase().replace(/[^a-z0-9\s]/g, '');
     let searchTokens = normalizedSearch.split(/\s+/).filter(token => token.length > 0);
 
     const filteredData = window.booksData.filter(book => {
         let textToSearch = (book.title + " " + book.author).toLowerCase().replace(/[^a-z0-9\s]/g, '');
-        // Check if ALL search tokens exist ANYWHERE in the title+author text
         return searchTokens.every(token => textToSearch.includes(token));
     });
     
@@ -162,7 +247,7 @@ function performFuzzySearch(searchText) {
     }
 }
 
-// ================= UI RENDERING (MAIN APP) =================
+// ================= 4. UI RENDERING & NAVIGATION =================
 window.renderBooksUI = function(startIndex, count, customData = null) {
     const container = document.getElementById("bookContainer");
     let dataToRender = customData ? customData : window.booksData;
@@ -188,7 +273,7 @@ window.generateNotifications = function() {
     });
 }
 
-// Navigation Events for Main App
+// Sidebar & Modals
 document.getElementById('open-search').addEventListener('click', () => { history.pushState({ popup: 'search' }, ''); document.getElementById('search-box').classList.add('active'); setTimeout(() => { searchInputEl.focus(); }, 300); });
 document.getElementById('open-noti').addEventListener('click', () => { history.pushState({ popup: 'noti' }, ''); document.getElementById('noti-panel').classList.add('active'); document.querySelector('.blink-dot').style.display = 'none'; });
 document.getElementById('close-noti').addEventListener('click', () => { if (history.state && history.state.popup) { history.back(); } else { document.getElementById('noti-panel').classList.remove('active'); }});
@@ -204,7 +289,7 @@ document.getElementById('close-dev-btn').addEventListener('click', () => { histo
 document.getElementById('menu-dmca').addEventListener('click', (e) => { e.preventDefault(); history.replaceState({ popup: 'dmca' }, ''); document.getElementById('dmca-panel').classList.add('active'); document.getElementById('about-dev-panel').classList.remove('active'); sidebar.classList.remove('active'); sidebarOverlay.classList.remove('active'); });
 document.getElementById('close-dmca-btn').addEventListener('click', () => { history.back(); });
 
-// Admin Panel Toggle
+// Admin Panel Open/Close
 document.getElementById('menu-admin-panel').addEventListener('click', (e) => {
     e.preventDefault();
     history.pushState({ popup: 'admin' }, '');
@@ -213,7 +298,6 @@ document.getElementById('menu-admin-panel').addEventListener('click', (e) => {
 });
 document.getElementById('close-admin-btn').addEventListener('click', () => { history.back(); });
 
-// Popstate (Back button logic)
 window.addEventListener('popstate', (e) => {
     document.getElementById("downloadModal").style.display = "none";
     document.getElementById('noti-panel').classList.remove('active');
@@ -235,7 +319,7 @@ window.openDownloadPage = function(slug) {
 window.closeDownloadPage = function() { history.back(); }
 
 
-// ================= ADMIN DASHBOARD LOGIC =================
+// ================= 5. ADMIN DASHBOARD LOGIC =================
 function showToast(message) {
     const toast = document.getElementById('toast'); document.getElementById('toastMsg').innerText = message;
     toast.classList.add('show'); setTimeout(() => { toast.classList.remove('show'); }, 3000);
@@ -249,7 +333,6 @@ function getYouTubeEmbedUrl(url) {
         else if(url.includes("youtu.be/")) { videoId = url.split("youtu.be/")[1].split("?")[0]; } 
         else if(url.includes("/shorts/")) { videoId = url.split("/shorts/")[1].split("?")[0]; }
     } catch(e) {}
-    // Added controls=1 & rel=0 for premium feel & settings gear
     return videoId ? `https://www.youtube.com/embed/${videoId}?controls=1&rel=0&modestbranding=1` : url;
 }
 
@@ -271,7 +354,6 @@ document.getElementById('addBookForm').addEventListener('submit', async (e) => {
     try { await addDoc(collection(db, "books"), newBook); showToast("Book Published!"); e.target.reset(); } catch (error) { showToast("Error saving book."); } 
 });
 
-// Admin Manage Table Render
 function renderAdminBooksTable() {
     if(!document.getElementById('adminBooksTableBody')) return;
     const tbody = document.getElementById('adminBooksTableBody');
@@ -302,7 +384,6 @@ document.getElementById('editBookForm').addEventListener('submit', async (e) => 
     try { await updateDoc(doc(db, "books", docId), updatedData); document.getElementById('editModal').style.display='none'; showToast("Updated!"); } catch (error) { showToast("Error updating."); }
 });
 
-// Admin Charts
 function updateAdminCharts(dlDataArray = [0,0,0,0,0,0,0,0,0,0,0,0]) {
     if(!window.IS_SUPER_ADMIN) return;
     const langCounts = { 'Hindi': 0, 'English': 0, 'Bilingual': 0 }; 
