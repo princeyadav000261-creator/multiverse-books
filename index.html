@@ -10,6 +10,7 @@
 </head>
 <body>
 
+    <!-- 1. LOGIN OVERLAY (Shows first if not logged in) -->
     <div id="loginOverlay" class="login-container">
         <div class="login-content-wrapper">
             <div class="login-logo-container"><img src="https://i.postimg.cc/cJdGqYHG/IMG-20260524-WA0004.jpg" alt="Multiverse Logo" class="login-logo" oncontextmenu="return false;" draggable="false"></div>
@@ -27,8 +28,10 @@
         </div>
     </div>
 
+    <!-- MAIN APP WRAPPER -->
     <div id="mainAppWrapper" style="display: none; width: 100%; height: 100%;">
         
+        <!-- 2. ORIGINAL CANVAS LOADER -->
         <div class="loader-screen" id="loaderScreen">
             <canvas id="networkCanvas"></canvas>
             <div class="loader-logo"><img src="https://i.postimg.cc/cJdGqYHG/IMG-20260524-WA0004.jpg" alt="Logo" oncontextmenu="return false;" draggable="false"></div>
@@ -43,6 +46,7 @@
             <div class="loader-powered-text">POWERED BY MADxPRINCE</div>
         </div>
 
+        <!-- 3. ORIGINAL WHATSAPP POPUP -->
         <div class="popup-overlay" id="popupOverlay">
             <div class="popup">
                 <div class="popup-logo"><img src="https://upload.wikimedia.org/wikipedia/commons/6/6b/WhatsApp.svg" alt="WhatsApp" oncontextmenu="return false;" draggable="false"></div>
@@ -55,6 +59,7 @@
             </div>
         </div>
 
+        <!-- 4. ORIGINAL APP UI -->
         <div class="app-container">
             <header>
                 <div class="header-left">
@@ -85,6 +90,7 @@
                     <div class="section-title">MAIN MENU</div>
                     <a href="#" class="menu-item active" id="menu-home"><i class="fas fa-home"></i><span>Home</span></a>
                     <a href="#" class="menu-item normal" id="menu-about-dev"><i class="fas fa-user-tie"></i><span>About Developer</span></a>
+                    <!-- Upload Books Menu Item -->
                     <a href="#" class="menu-item normal" id="menu-admin-panel" style="display: none;"><i class="fas fa-cloud-upload-alt"></i><span>Upload Books</span></a>
                     <a href="#" class="menu-item normal" id="menu-dmca"><i class="fas fa-shield-halved"></i><span>DMCA Request</span></a>
                 </div>
@@ -104,6 +110,7 @@
             </div>
 
             <main id="mainContentArea">
+                <!-- Quotes Section Restored Perfectly -->
                 <section class="quote-card">
                     <div class="welcome-badge">
                         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" width="14" height="14" style="margin-right: 5px; margin-top: -2px;">
@@ -120,9 +127,10 @@
 
                 <div id="no-results-msg">
                     <div class="no-results-card">
-                        <div class="no-results-icon"><i class="fas fa-search-minus" style="color: #60a5fa;"></i></div>
-                        <h2 style="color: #fff; font-size: 16px;">BOOK NOT FOUND</h2>
-                        <p style="color: #8c97ac; font-size: 12px; margin-top: 5px;">Try searching with author name or proper keywords.</p>
+                        <div class="no-results-icon"><i class="fas fa-book-open"></i></div>
+                        <h2>BOOK NOT FOUND</h2>
+                        <p>Sorry, we couldn't find any book matching your search.</p>
+                        <div class="powered-badge">❀ POWERED BY : MADxPRINCE ❀</div>
                     </div>
                 </div>
 
@@ -133,6 +141,7 @@
                 <div class="premium-copyright">© 2026 MULTIVERSE BOOKS <span style="margin: 0 5px;">|</span> MADE WITH <i class="fas fa-heart" style="color: #ff4757; margin: 0 3px; filter: drop-shadow(0 0 5px rgba(255,71,87,0.8));"></i> BY MADxPRINCE</div>
             </main>
 
+            <!-- Download Modal (Exam Relevance and Social Icons added back perfectly) -->
             <div class="download-modal" id="downloadModal">
                 <div class="modal-header-fixed">
                     <button class="back-btn" onclick="closeDownloadPage()"><i class="fas fa-arrow-left"></i></button>
@@ -145,6 +154,8 @@
                     <div id="dlYoutubeLinkBtn" class="dl-box disable-long-press"><i class="fab fa-youtube icon" style="color: #ef4444;"></i><div><div class="dl-box-title">Watch Tutorials</div><div class="dl-box-sub">How to download books?</div></div></div>
                     <div class="dl-box disable-long-press" onclick="shareBook()"><i class="fas fa-share-nodes icon"></i><div><div class="dl-box-title">Share this book</div><div class="dl-box-sub">Send this book to friends</div></div></div>
                     <div class="exam-rel-box"><div class="exam-header"><i class="fas fa-ribbon"></i> EXAM RELEVANCE</div><div class="exam-tags" id="dlModalTags"></div></div>
+                    
+                    <!-- Original Social Container Back in Action -->
                     <div class="dl-social-container">
                         <div class="dev-social-row">
                             <a href="https://youtube.com/@madxprince" target="_blank" class="dev-soc-btn dev-yt"><i class="fab fa-youtube"></i></a>
@@ -157,11 +168,13 @@
                 </div>
             </div>
 
+            <!-- Notifications Panel -->
             <div class="notifications-panel" id="noti-panel">
                 <div class="noti-header"><div class="noti-title-area"><div class="noti-icon"><i class="fas fa-bell"></i></div><div class="noti-text"><h2>Notifications</h2><p>Updates & News</p></div></div><div class="icon-box" id="close-noti"><i class="fas fa-times"></i></div></div>
                 <div class="noti-body" id="dynamic-noti-container"></div>
             </div>
 
+            <!-- About Dev Panel -->
             <div class="overlay-panel" id="about-dev-panel">
                 <div class="modal-header-fixed">
                     <div class="header-content-wrapper"><button class="back-btn" id="close-dev-btn"><i class="fas fa-arrow-left"></i></button><h1 class="modal-title">ABOUT DEVELOPER</h1></div>
@@ -179,27 +192,63 @@
                     <div class="dev-info-card"><div class="dev-icon-box"><i class="fas fa-graduation-cap"></i></div><div class="dev-card-content"><div class="dev-card-title">Education</div><div class="dev-card-desc"><span class="dev-small-caps">Class</span> 11th (PCMB) | <span class="dev-small-caps">Batch:</span> 2026-28</div></div></div>
                     <div class="dev-info-card"><div class="dev-icon-box"><i class="fas fa-map-marker-alt"></i></div><div class="dev-card-content"><div class="dev-card-title">Location</div><div class="dev-card-desc"><span class="dev-small-caps">Bihar , India</span> 🚩</div></div></div>
                     <div class="dev-info-card"><div class="dev-icon-box"><i class="fas fa-birthday-cake"></i></div><div class="dev-card-content"><div class="dev-card-title">Birthday</div><div class="dev-card-desc"><span class="dev-small-caps">6 December</span> 💐💖</div></div></div>
+                    <div class="dev-info-card"><div class="dev-icon-box"><i class="fas fa-tools"></i></div><div class="dev-card-content"><div class="dev-card-title">Skills</div><div class="dev-card-desc" style="font-family: serif; font-style: italic; font-size: 0.95rem; font-weight: 600;">Hehe... Nothing ☠️</div></div></div>
+                </div>
+                <div class="find-online-section">
+                    <div class="dev-social-row">
+                        <a href="https://youtube.com/@madxprince" class="dev-soc-btn dev-yt"><i class="fab fa-youtube"></i></a>
+                        <a href="https://www.instagram.com/madxprince_3030" class="dev-soc-btn dev-ig"><i class="fab fa-instagram"></i></a>
+                        <a href="https://t.me/MADxPRINCE" class="dev-soc-btn dev-tg"><i class="fab fa-telegram-plane"></i></a>
+                        <a href="https://whatsapp.com/channel/0029Vb6NBZx1yT2GByTTVf2A" class="dev-soc-btn dev-wa"><i class="fab fa-whatsapp"></i></a>
+                    </div>
                 </div>
                 <div class="premium-copyright">© 2026 MULTIVERSE BOOKS <span style="margin: 0 5px;">|</span> MADE WITH <i class="fas fa-heart" style="color: #ff4757; margin: 0 3px;"></i> BY MADxPRINCE</div>
             </div>
 
+            <!-- DMCA Panel (Original Detailed Texts Restored Perfectly) -->
             <div class="overlay-panel" id="dmca-panel">
                 <div class="modal-header-fixed"><button class="back-btn" id="close-dmca-btn"><i class="fas fa-arrow-left"></i></button><h1 class="modal-title">DMCA REQUEST</h1></div>
                 <div class="dmca-content">
-                    <div class="dmca-hero"><h1 class="dmca-hero-title">COPYRIGHT DISCLAIMER</h1><p class="dmca-hero-subtitle"><span class="dmca-badge"><i class="fas fa-graduation-cap"></i> Educational</span></p></div>
-                    <div class="dmca-section"><h2 class="dmca-section-title"><span class="dmca-mini-icon icon-book"><i class="fas fa-book"></i></span>Content Ownership</h2><p>This website is created solely for educational purposes...</p></div>
-                    <div class="dmca-section" style="border-color: rgba(96, 165, 250, 0.3);"><h2 class="dmca-section-title" style="color: #60a5fa;"><span class="dmca-mini-icon icon-contact"><i class="fas fa-envelope"></i></span>Contact Information</h2><a href="https://t.me/Multiverse_Contact_Bot" target="_blank" class="dmca-contact-link"><i class="fab fa-telegram-plane"></i> @Multiverse_Contact_Bot</a></div>
+                    <div class="dmca-hero">
+                        <h1 class="dmca-hero-title">COPYRIGHT DISCLAIMER</h1>
+                        <p class="dmca-hero-subtitle"><span class="dmca-badge"><i class="fas fa-graduation-cap"></i> Educational</span><span class="dmca-badge"><i class="fas fa-flask"></i> Research</span><span class="dmca-badge"><i class="fas fa-book-open"></i> Reference</span></p>
+                    </div>
+                    <div class="dmca-section">
+                        <h2 class="dmca-section-title"><span class="dmca-mini-icon icon-book"><i class="fas fa-book"></i></span>Content Ownership</h2>
+                        <p>This website is created solely for educational, informational and archival purposes. We do not claim ownership of any copyrighted material shared on this platform. All copyrights and intellectual property rights belong to their respective authors, publishers and owners.</p>
+                    </div>
+                    <div class="dmca-section">
+                        <h2 class="dmca-section-title"><span class="dmca-mini-icon icon-copyright"><i class="fas fa-copyright"></i></span>Copyright Concerns</h2>
+                        <p>If you are the copyright owner of any material available here and believe that your content has been shared without proper authorization, please contact us.</p>
+                    </div>
+                    <div class="dmca-section" style="border-color: rgba(96, 165, 250, 0.3);">
+                        <h2 class="dmca-section-title" style="color: #60a5fa;"><span class="dmca-mini-icon icon-contact"><i class="fas fa-envelope"></i></span>Contact Information</h2>
+                        <a href="https://t.me/Multiverse_Contact_Bot" target="_blank" class="dmca-contact-link"><i class="fab fa-telegram-plane"></i> @Multiverse_Contact_Bot</a>
+                        <p style="margin-top: 15px; font-weight: bold; color: #a1a1aa; font-size: 0.75rem;">⏱ Review Time: 24–48 Hours</p>
+                    </div>
+                    <div class="dmca-section">
+                        <h2 class="dmca-section-title" style="color: #f59e0b;"><span class="dmca-mini-icon icon-shield"><i class="fas fa-shield-alt"></i></span>Important Notice</h2>
+                        <p>The materials shared on this platform are intended for educational, research, review and reference purposes only. Users are encouraged to support authors and publishers by purchasing original books whenever possible.</p>
+                    </div>
+                    <div class="dmca-section">
+                        <h2 class="dmca-section-title" style="color: #ec4899;"><span class="dmca-mini-icon" style="background: linear-gradient(135deg, #a855f7, #ec4899);"><i class="fas fa-user-shield"></i></span>User Responsibility</h2>
+                        <p>Users are solely responsible for how they access, download, share or use any content available through this platform. This website and its administrators cannot be held responsible for any misuse or unauthorized use of the materials.</p>
+                    </div>
                 </div>
-                <div class="premium-copyright">© 2026 MULTIVERSE BOOKS</div>
+                <div class="premium-copyright">© 2026 MULTIVERSE BOOKS <span style="margin: 0 5px;">|</span> MADE WITH <i class="fas fa-heart" style="color: #ff4757; margin: 0 3px;"></i> BY MADxPRINCE</div>
             </div>
 
+            <!-- 5. ISOLATED ADMIN PANEL OVERLAY -->
             <div class="overlay-panel" id="admin-dashboard-panel" style="background: #0d0d12;">
-                <div class="adm-top-header">
-                    <div style="display: flex; align-items: center; gap: 15px;">
+                <!-- Fixed Header Matching Main App's Look -->
+                <div class="modal-header-fixed" style="background: #09090b;">
+                    <div class="header-content-wrapper">
                         <button class="back-btn" id="close-admin-btn"><i class="fas fa-arrow-left"></i></button>
-                        <h1 class="adm-header-title">VAULT ADMIN PANEL</h1>
+                        <h1 class="modal-title">VAULT ADMIN PANEL</h1>
                     </div>
-                    <button class="adm-logout-btn" id="admin-logout-btn"><i class="fas fa-power-off"></i> Logout</button>
+                    <div class="header-active-badge" id="admin-logout-btn" style="cursor: pointer; background: rgba(239, 68, 68, 0.15); color: #ef4444; border: 1px solid rgba(239, 68, 68, 0.3);">
+                        <i class="fas fa-power-off"></i> Logout
+                    </div>
                 </div>
                 
                 <div class="adm-tabs">
@@ -210,6 +259,7 @@
                 </div>
 
                 <div class="adm-content-area">
+                    <!-- ADD BOOK SECTION -->
                     <div id="sectionAddBook" class="adm-section active">
                         <div class="adm-card">
                             <div class="adm-card-title"><i class="fas fa-pen-nib"></i> Enter Book Details</div>
@@ -231,6 +281,7 @@
                         </div>
                     </div>
 
+                    <!-- MANAGE BOOKS SECTION -->
                     <div id="sectionManageBooks" class="adm-section">
                         <div class="adm-card">
                             <div class="adm-card-title"><i class="fas fa-list"></i> Manage Vault Inventory</div>
@@ -243,6 +294,7 @@
                         </div>
                     </div>
 
+                    <!-- TUTORIAL SECTION -->
                     <div id="sectionTutorial" class="adm-section">
                         <div class="adm-card">
                             <div class="adm-card-title"><i class="fas fa-video"></i> Upload Guide & Tutorial</div>
@@ -257,6 +309,7 @@
                         </div>
                     </div>
 
+                    <!-- ANALYTICS SECTION -->
                     <div id="sectionAnalytics" class="adm-section">
                         <div class="adm-card">
                             <div class="adm-card-title"><i class="fas fa-chart-pie"></i> Real-Time Stats</div>
@@ -271,16 +324,28 @@
         </div>
     </div>
 
+    <!-- 6. ISOLATED ADMIN EDIT MODAL (Showing All Edit Fields Now) -->
     <div class="adm-modal-overlay" id="adminEditModal">
         <div class="adm-modal-box">
-            <h3 style="color: #fff; margin-bottom: 20px; font-size: 1.2rem; display: flex; justify-content: space-between; align-items: center;">
+            <h3 style="color: #fff; margin-bottom: 15px; font-size: 1.1rem; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 10px;">
                 <span><i class="fas fa-pen"></i> Edit Vault Record</span>
                 <i class="fas fa-times" onclick="document.getElementById('adminEditModal').style.display='none'" style="cursor: pointer; color: #a1a1aa; padding: 5px;"></i>
             </h3>
             <form id="editBookForm">
                 <input type="hidden" id="editDocId"> 
                 <div class="adm-form-group"><label class="adm-label">Book Title</label><input type="text" id="edTitle" class="adm-input" required autocomplete="off"></div>
+                <div class="adm-form-group"><label class="adm-label">Author Name</label><input type="text" id="edAuthor" class="adm-input" required autocomplete="off"></div>
+                <div class="adm-form-group"><label class="adm-label">Publish Year</label>
+                    <select id="edYear" class="adm-input" required><option value="2024">2024</option><option value="2025">2025</option><option value="2026">2026</option></select>
+                </div>
+                <div class="adm-form-group"><label class="adm-label">Language</label>
+                    <select id="edLang" class="adm-input"><option value="Hindi">Hindi</option><option value="English">English</option><option value="Bilingual">Bilingual</option></select>
+                </div>
+                <div class="adm-form-group"><label class="adm-label">Exam Relevance</label><input type="text" id="edExams" class="adm-input" required autocomplete="off"></div>
                 <div class="adm-form-group"><label class="adm-label">Cover Image URL</label><input type="url" id="edImage" class="adm-input" required autocomplete="off"></div>
+                <div class="adm-form-group"><label class="adm-label">Direct PDF Link</label><input type="url" id="edPdfUrl" class="adm-input" required autocomplete="off"></div>
+                <div class="adm-form-group"><label class="adm-label">YouTube Tutorial Link (Optional)</label><input type="url" id="edYtUrl" class="adm-input" autocomplete="off"></div>
+                
                 <button type="submit" class="adm-submit-btn" style="background:#3b82f6;"><i class="fas fa-save"></i> Save Changes</button>
             </form>
         </div>
