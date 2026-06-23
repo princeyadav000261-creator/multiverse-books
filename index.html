@@ -10,7 +10,7 @@
 </head>
 <body>
 
-    <div class="loader-screen" id="loaderScreen" style="display: flex; opacity: 1;">
+    <div class="loader-screen" id="loaderScreen" style="display: none; opacity: 0;">
         <canvas id="networkCanvas"></canvas>
         <div class="loader-logo"><img src="https://i.postimg.cc/cJdGqYHG/IMG-20260524-WA0004.jpg" alt="Logo" oncontextmenu="return false;" draggable="false"></div>
         <div class="loader-title">MULTIVERSE BOOKS</div>
@@ -24,8 +24,7 @@
         <div class="loader-powered-text">POWERED BY MADxPRINCE</div>
     </div>
 
-    <!-- NEW LOGIN UI (Image 4 Premium Design) -->
-    <div id="loginOverlay" class="login-container">
+    <div id="loginOverlay" class="login-container" style="display: none; opacity: 0;">
         <div class="login-content-wrapper">
             <div class="login-logo-glow">
                 <img src="https://i.postimg.cc/cJdGqYHG/IMG-20260524-WA0004.jpg" alt="Multiverse Logo">
@@ -93,7 +92,6 @@
             <div class="sidebar-overlay" id="sidebar-overlay"></div>
             <div class="sidebar" id="sidebar">
                 <div class="sidebar-header-new">
-                    <!-- STATIC LOGO, WILL NOT CHANGE TO GOOGLE PHOTO -->
                     <img src="https://i.postimg.cc/cJdGqYHG/IMG-20260524-WA0004.jpg" alt="Profile" class="profile-img" id="sidebarProfileImg" oncontextmenu="return false;" draggable="false">
                     <div class="profile-info">
                         <div class="profile-name" id="sidebarProfileName">MULTIVERSE BOOKS</div>
@@ -138,7 +136,6 @@
                 <div class="section-header-title"><i class="fas fa-book-open" style="color: #10b981;"></i> Trending Books 🔥 </div>
                 <div class="book-container" id="bookContainer"></div>
 
-                <!-- NEW COMPACT BOOK NOT FOUND UI -->
                 <div id="no-results-msg" style="display: none; padding-bottom: 30px;">
                     <div class="no-results-card">
                         <div class="no-results-icon"><i class="fas fa-book-open"></i></div>
@@ -247,7 +244,6 @@
                 <div class="premium-copyright">© 2026 MULTIVERSE BOOKS <span style="margin: 0 5px;">|</span> MADE WITH <i class="fas fa-heart" style="color: #ff4757; margin: 0 3px;"></i> BY MADxPRINCE</div>
             </div>
 
-            <!-- ADMIN DASHBOARD -->
             <div class="overlay-panel" id="admin-dashboard-panel" style="background: #0d0d12;">
                 <div class="modal-header-fixed" style="background: #09090b;">
                     <div class="header-content-wrapper">
@@ -330,7 +326,6 @@
                         </div>
                     </div>
 
-                    <!-- UPDATED ANALYTICS & LOGS SECTION WITH PROPER EMAIL/PHOTO -->
                     <div id="sectionAnalytics" class="adm-section">
                         <div class="adm-card">
                             <div class="adm-card-title"><i class="fas fa-chart-pie"></i> Real-Time Stats</div>
@@ -355,7 +350,6 @@
         </div>
     </div>
 
-    <!-- Edit Modal -->
     <div class="adm-modal-overlay" id="adminEditModal">
         <div class="adm-modal-box">
             <h3 style="color: #fff; margin-bottom: 15px; font-size: 1.1rem; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 10px; font-weight: 800;">
