@@ -104,9 +104,7 @@ header { display: flex; align-items: center; justify-content: space-between; pad
 .credits { color: var(--spidy-text-small); font-size: 9px; font-weight: 600; letter-spacing: 1px; }
 @keyframes pulse { 0% { box-shadow: 0 0 0 0 rgba(0, 255, 102, 0.4); } 70% { box-shadow: 0 0 0 6px rgba(0, 255, 102, 0); } 100% { box-shadow: 0 0 0 0 rgba(0, 255, 102, 0); } }
 
-.premium-copyright {
-    margin-top: auto; padding: 18px 10px; text-align: center; font-size: 9px; font-weight: 700; color: #ffffff; letter-spacing: 0.8px; text-transform: uppercase; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; display: flex; justify-content: center; align-items: center; background: linear-gradient(90deg, transparent, rgba(255,255,255,0.06), transparent); border-top: 1px solid var(--border-color); width: 100%; flex-shrink: 0; text-shadow: 0px 0px 8px rgba(255, 255, 255, 0.3);
-}
+.premium-copyright { margin-top: auto; padding: 18px 10px; text-align: center; font-size: 9px; font-weight: 700; color: #ffffff; letter-spacing: 0.8px; text-transform: uppercase; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; display: flex; justify-content: center; align-items: center; background: linear-gradient(90deg, transparent, rgba(255,255,255,0.06), transparent); border-top: 1px solid var(--border-color); width: 100%; flex-shrink: 0; text-shadow: 0px 0px 8px rgba(255, 255, 255, 0.3); }
 main .premium-copyright, .dl-content-wrapper .premium-copyright { width: calc(100% + 40px); margin-left: -20px; margin-right: -20px; }
 
 main { flex: 1; overflow-y: auto; padding: 15px 20px 0px; display: flex; flex-direction: column; }
@@ -143,22 +141,7 @@ main::-webkit-scrollbar { display: none; }
 
 .header-content-wrapper { display: flex; align-items: center; gap: 15px; flex-grow: 1; }
 
-.modal-header-fixed .back-btn { 
-    width: 42px; 
-    height: 42px; 
-    border-radius: 50%; 
-    background-color: transparent; 
-    border: 1px solid rgba(255, 255, 255, 0.15); 
-    color: #ffffff; 
-    font-size: 18px; 
-    display: flex; 
-    justify-content: center; 
-    align-items: center; 
-    cursor: pointer; 
-    flex-shrink: 0; 
-    outline: none; 
-    transition: 0.2s ease; 
-}
+.modal-header-fixed .back-btn { width: 42px; height: 42px; border-radius: 50%; background-color: transparent; border: 1px solid rgba(255, 255, 255, 0.15); color: #ffffff; font-size: 18px; display: flex; justify-content: center; align-items: center; cursor: pointer; flex-shrink: 0; outline: none; transition: 0.2s ease; }
 .modal-header-fixed .back-btn:active { transform: scale(0.95); }
 
 .modal-header-fixed .modal-title { font-family: 'Poppins', sans-serif; font-size: 17px; font-weight: 800; color: var(--text-primary); text-transform: uppercase; letter-spacing: 0px; margin: 0; }
@@ -259,18 +242,50 @@ main::-webkit-scrollbar { display: none; }
 
 .dmca-contact-link { display: inline-block; color: #60a5fa; font-weight: 700; text-decoration: none; margin-top: 10px; padding: 10px 15px; background: rgba(96, 165, 250, 0.1); border-radius: 12px; }
 
-/* ==========================================================
-   ADDED SYSTEM LOADER, LOGIN & ADMIN PANEL STYLES
-   ========================================================== */
+/* ------------------------------------------------------------------
+   ORIGINAL CANVAS LOADER CSS (Restored Perfectly)
+------------------------------------------------------------------ */
+.loader-screen { position: fixed; inset: 0; display: flex; justify-content: center; align-items: center; flex-direction: column; background-color: #050505; z-index: 9999999; overflow: hidden; transition: .6s; }
 
-#systemLoader { position: fixed; inset: 0; z-index: 9999999; background: #050505; display: flex; flex-direction: column; justify-content: center; align-items: center; transition: opacity 0.4s ease; }
-.dots-container { display: flex; gap: 12px; margin-bottom: 25px; }
-.dot { width: 14px; height: 14px; background-color: #a1a1aa; border-radius: 50%; animation: pPulse 1.2s infinite ease-in-out; opacity: 0.3; }
-.dot:nth-child(2) { animation-delay: 0.2s; } .dot:nth-child(3) { animation-delay: 0.4s; } .dot:nth-child(4) { animation-delay: 0.6s; }
-@keyframes pPulse { 0%, 100% { opacity: 0.2; transform: scale(0.8); } 50% { opacity: 1; transform: scale(1.3); background-color: #10b981; box-shadow: 0 0 15px #10b981; } }
-.loader-text { font-size: 1.1rem; font-weight: 800; letter-spacing: 3px; text-transform: uppercase; color: #a1a1aa; }
+#networkCanvas { position: absolute; top: 0; left: 0; width: 100vw; height: 100vh; z-index: 1; pointer-events: none; }
 
-.login-container { display: none; position: fixed; inset: 0; z-index: 999999; flex-direction: column; background: #050508; transition: opacity 0.5s ease; opacity: 0; overflow-y: auto; }
+.loader-logo { width: 115px; height: 115px; border-radius: 30px; overflow: hidden; padding: 8px; background: linear-gradient(135deg, #ffffff, #f1f5f9); box-shadow: 0 0 18px rgba(255,255,255,.55), 0 0 35px rgba(255,255,255,.45), 0 0 60px rgba(255,255,255,.25); animation: pulseLogo 2s infinite; z-index: 5; position: relative; }
+.loader-logo img { width: 100%; height: 100%; object-fit: contain; border-radius: 22px; }
+@keyframes pulseLogo { 0% { transform: scale(1); } 50% { transform: scale(1.05); } 100% { transform: scale(1); } }
+.loader-title { margin-top: 20px; font-size: 24px; font-weight: 900; letter-spacing: 1px; z-index: 5; font-family: 'Poppins', sans-serif;}
+.premium-tags { margin-top: 18px; display: flex; gap: 10px; flex-wrap: wrap; justify-content: center; z-index: 5; padding: 0 10px; }
+.tag { padding: 8px 14px; border-radius: 14px; background: rgba(255,255,255,.05); border: 1px solid rgba(255,255,255,.08); display: flex; align-items: center; gap: 7px; font-size: 10px; font-weight: 700; color: #ffffff; backdrop-filter: blur(12px); font-family: 'Poppins', sans-serif; }
+.tag i { color: #ffffff; filter: drop-shadow(0 0 6px rgba(255,255,255,.8)) drop-shadow(0 0 12px rgba(255,255,255,.5)); }
+.loader-bar { width: 200px; height: 7px; border-radius: 30px; overflow: hidden; background: rgba(255,255,255,.08); border: 1px solid rgba(255,255,255,.12); box-shadow: inset 0 0 8px rgba(255,255,255,.08), 0 0 12px rgba(255,255,255,.08); margin-top: 28px; z-index: 5; }
+.loader-fill { width: 0%; height: 100%; background: linear-gradient(90deg, #ffffff, #f8fafc, #ffffff); box-shadow: 0 0 10px rgba(255,255,255,.8), 0 0 20px rgba(255,255,255,.55), 0 0 35px rgba(255,255,255,.3); animation: loadBar 3s linear forwards; position: relative; overflow: hidden; }
+.loader-fill::before { content: ""; position: absolute; top: 0; left: -40%; width: 40%; height: 100%; background: linear-gradient(90deg, transparent, rgba(255,255,255,.95), transparent); animation: shineMove 1.2s linear infinite; }
+@keyframes shineMove { 0% { left: -40%; } 100% { left: 120%; } }
+@keyframes loadBar { 0% { width: 0%; } 100% { width: 100%; } }
+.loader-powered-text { position: absolute; bottom: 35px; left: 50%; transform: translateX(-50%); color: #ffffff; font-size: 11px; font-weight: 700; letter-spacing: 1.5px; font-family: 'Poppins', sans-serif; text-transform: uppercase; z-index: 10; white-space: nowrap; }
+
+/* ------------------------------------------------------------------
+   ORIGINAL WHATSAPP POPUP CSS
+------------------------------------------------------------------ */
+.popup-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.85); backdrop-filter: blur(5px); display: none; justify-content: center; align-items: center; z-index: 9999998; padding: 20px; }
+.popup { width: 100%; max-width: 380px; padding: 30px 20px 25px; border-radius: 32px; background: linear-gradient(180deg, rgba(0,255,85,.14), rgba(0,0,0,.98)); border: 1px solid rgba(255,255,255,.14); text-align: center; animation: popupAnim .35s ease; }
+@keyframes popupAnim { from { transform: scale(.82); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+
+.popup-logo { width: 88px; height: 88px; margin: auto; border-radius: 28px; background: linear-gradient(145deg, #1a1a1a, #050505); display: flex; justify-content: center; align-items: center; box-shadow: 0 0 30px rgba(37, 211, 102, 0.4), inset 0 0 15px rgba(37, 211, 102, 0.15); }
+.popup-logo img { width: 52px; }
+
+.popup h1 { color: #fff; font-size: 20px; font-weight: 800; margin-top: 24px; letter-spacing: 0.5px; font-family: 'Poppins', sans-serif; display: flex; justify-content: center; align-items: center; gap: 6px; }
+.popup p { color: #b8b8b8; font-size: 14px; line-height: 1.6; margin-top: 14px; }
+.verified-badge-ui { width: 18px; height: 18px; flex-shrink: 0; filter: drop-shadow(0px 2px 5px rgba(0, 0, 0, 0.4)); }
+.join-btn { width: 100%; height: 68px; margin-top: 30px; border: none; border-radius: 24px; background: linear-gradient(135deg, #6dff9c 0%, #32ff7e 25%, #14d85c 55%, #08b848 100%); color: #fff; font-size: 20px; font-weight: 700; display: flex; align-items: center; justify-content: center; gap: 12px; cursor: pointer; position: relative; overflow: hidden; transition: .35s ease; box-shadow: 0 7px 0 #06792f, 0 12px 24px rgba(0,255,115,.28); outline: none;}
+.join-btn img { width: 26px; filter: brightness(125%) drop-shadow(0 0 6px rgba(255,255,255,.45)); }
+.join-btn:active { transform: translateY(4px); box-shadow: 0 3px 0 #06792f, 0 6px 12px rgba(0,255,115,.28); }
+.later { margin-top: 18px; color: #888; font-size: 8px; font-weight: 700; letter-spacing: 2px; cursor: pointer; transition: .3s; font-family: 'Poppins', sans-serif;}
+.later:hover { color: #fff; }
+
+/* ------------------------------------------------------------------
+   LOGIN OVERLAY STYLES
+------------------------------------------------------------------ */
+.login-container { display: none; position: fixed; inset: 0; z-index: 99999; flex-direction: column; background: #050508; transition: opacity 0.5s ease; opacity: 0; overflow-y: auto; }
 .login-content-wrapper { margin: auto; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 20px; width: 100%; max-width: 400px; }
 .login-logo { width: 90px; height: 90px; border-radius: 20px; box-shadow: 0 10px 30px rgba(139, 92, 246, 0.4); margin-bottom: 20px; }
 .welcome-header { text-align: center; margin-bottom: 20px; }
@@ -286,7 +301,9 @@ main::-webkit-scrollbar { display: none; }
 .btn-login { background: #6d5dfc; color: #fff; width: 100%; padding: 15px; border-radius: 12px; border: none; font-size: 1rem; font-weight: 700; cursor: pointer; transition: 0.3s; }
 .btn-token-style { background: transparent; color: #fff; width: 100%; padding: 14px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.2); font-size: 0.95rem; font-weight: 600; cursor: pointer; display: flex; justify-content: center; align-items: center; gap: 10px; }
 
-/* Admin Overlay Panel Styles */
+/* ------------------------------------------------------------------
+   ADMIN PANEL STYLES
+------------------------------------------------------------------ */
 .admin-dashboard-area { padding: 20px; overflow-y: auto; height: calc(100% - 130px); }
 .admin-top-nav { display: flex; gap: 10px; padding: 15px 20px; background: #0a0a0c; overflow-x: auto; border-bottom: 1px solid rgba(255,255,255,0.05); }
 .admin-top-nav::-webkit-scrollbar { display: none; }
@@ -306,7 +323,6 @@ main::-webkit-scrollbar { display: none; }
 .form-input:focus { border-color: #8b5cf6; }
 .btn-submit { background: #fff; color: #000; padding: 15px; border: none; border-radius: 10px; font-weight: 700; cursor: pointer; margin-top: 10px; }
 
-.table-responsive { overflow-x: auto; }
 .books-table { width: 100%; border-collapse: collapse; text-align: left; min-width: 400px;}
 .books-table th { padding: 12px; background: rgba(255,255,255,0.05); color: #a1a1aa; font-size: 0.8rem; }
 .books-table td { padding: 12px; border-bottom: 1px solid rgba(255,255,255,0.05); }
@@ -316,12 +332,11 @@ main::-webkit-scrollbar { display: none; }
 
 #toast { position: fixed; bottom: 30px; right: 20px; background: #10b981; color: #fff; padding: 15px 25px; border-radius: 10px; font-weight: 700; transform: translateX(150%); transition: 0.4s ease; z-index: 9999999; display: flex; align-items: center; gap: 10px; }
 #toast.show { transform: translateX(0); }
-
 #no-results-msg { padding: 20px 10px; }
 .no-results-card { background: rgba(20,20,25,0.8); border: 1px solid rgba(255,255,255,0.1); padding: 30px; border-radius: 20px; text-align: center; }
 .no-results-icon { font-size: 40px; color: #a1a1aa; margin-bottom: 15px; }
 
-/* Responsive Media Queries */
+/* Responsive Adjustments */
 @media screen and (min-width: 768px) {
     .app-container { max-width: 100%; border-radius: 0; box-shadow: none; }
     main { padding: 20px 5% 0px; }
