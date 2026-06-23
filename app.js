@@ -241,7 +241,7 @@ onAuthStateChanged(auth, async (user) => {
     }
 });
 
-// LOGIN WITH NEW LOADER
+// LOGIN WITH PREMIUM DOTTED LOADER
 document.getElementById('loginForm').addEventListener('submit', async (e) => {
     e.preventDefault(); 
     const email = document.getElementById('loginEmail').value; 
@@ -249,8 +249,8 @@ document.getElementById('loginForm').addEventListener('submit', async (e) => {
     
     const btn = document.getElementById('loginBtn'); 
     const originalContent = btn.innerHTML;
-    // Inject Premium Loader
-    btn.innerHTML = `<span style="display:flex; align-items:center; gap:8px;"><div class="premium-loader"></div> Loading...</span>`;
+    // Inject Premium Dotted Loader with Authenticating Text
+    btn.innerHTML = `<span style="display:flex; align-items:center; gap:8px;"><div class="premium-loader"></div> Authenticating...</span>`;
     
     try { 
         await signInWithEmailAndPassword(auth, email, pass); 
@@ -277,7 +277,7 @@ document.getElementById('loginForm').addEventListener('submit', async (e) => {
     } 
 });
 
-// GOOGLE SIGN IN WITH NEW LOADER
+// GOOGLE SIGN IN WITH PREMIUM DOTTED LOADER
 document.getElementById('googleSignInBtn').addEventListener('click', async () => { 
     const btn = document.getElementById('googleSignInBtn');
     const originalContent = btn.innerHTML;
@@ -629,7 +629,8 @@ document.getElementById('addBookForm').addEventListener('submit', async (e) => {
         }
     }
 
-    btn.innerHTML = `<span class="btn-text" style="display: flex; align-items: center; justify-content: center; gap: 10px;"><div class="premium-loader" style="border-top-color:#000;"></div> Publishing...</span>`;
+    // Publish button gets premium dotted loader
+    btn.innerHTML = `<span class="btn-text" style="display: flex; align-items: center; justify-content: center; gap: 10px;"><div class="premium-loader" style="border-color:#000;"></div> Publishing...</span>`;
     btn.disabled = true;
 
     const newBook = { 
@@ -735,7 +736,7 @@ window.openAdminEditModal = function(id) {
     document.getElementById('adminEditModal').style.display = 'flex';
 }
 
-// EDIT BOOK
+// EDIT BOOK (UPDATED TO USE PREMIUM LOADER)
 document.getElementById('editBookForm').addEventListener('submit', async (e) => {
     e.preventDefault(); 
     
@@ -750,6 +751,7 @@ document.getElementById('editBookForm').addEventListener('submit', async (e) => 
         }
     }
 
+    // Save button gets premium dotted loader
     btn.innerHTML = `<span class="btn-text" style="display: flex; align-items: center; justify-content: center; gap: 10px;"><div class="premium-loader"></div> Saving...</span>`;
     btn.disabled = true;
 
@@ -900,3 +902,4 @@ window.recoverBook = async function(logId) {
         } catch(error) { showToast("Failed: Rules Blocked Restore!"); }
     }
 }
+
