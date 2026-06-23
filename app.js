@@ -902,4 +902,3 @@ window.recoverBook = async function(logId) {
         } catch(error) { showToast("Failed: Rules Blocked Restore!"); }
     }
 }
-
