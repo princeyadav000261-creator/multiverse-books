@@ -63,15 +63,21 @@ header { display: flex; align-items: center; justify-content: space-between; pad
 .profile-info { margin-left: 14px; flex-grow: 1; min-width: 0; display: flex; flex-direction: column; justify-content: center; }
 .profile-name { color: var(--text-primary); font-size: 18px; font-weight: 1000; letter-spacing: 0.5px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 
+/* --- PREMIUM MENU DESIGN UPDATE --- */
 .menu-section { padding: 18px 20px 8px; }
 .section-title { color: var(--spidy-text-small); font-size: 11px; font-weight: 700; letter-spacing: 1px; margin-bottom: 12px; }
-.menu-item { display: flex; align-items: center; padding: 13px 18px; border-radius: 12px; text-decoration: none; margin-bottom: 8px; cursor: pointer; transition: all 0.3s ease; }
+.menu-item { display: flex; align-items: center; padding: 14px 18px; border-radius: 14px; text-decoration: none; margin-bottom: 10px; cursor: pointer; transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); border: 1px solid transparent; }
 .menu-item i { font-size: 18px; width: 30px; color: var(--spidy-text-muted); transition: 0.3s; }
 .menu-item span { font-size: 14.5px; font-weight: 600; color: var(--spidy-text-muted); transition: 0.3s; }
-.menu-item.normal:hover { background-color: rgba(255, 255, 255, 0.03); }
+.menu-item.normal { background-color: rgba(255, 255, 255, 0.02); border: 1px solid rgba(255, 255, 255, 0.04); box-shadow: inset 0 0 10px rgba(255, 255, 255, 0.01); }
+.menu-item.normal:hover { background-color: rgba(255, 255, 255, 0.06); border-color: rgba(255, 255, 255, 0.15); transform: translateX(4px); box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3); } /* Smooth right slide effect */
 .menu-item.normal:hover span, .menu-item.normal:hover i { color: var(--text-primary); }
-.menu-item.active { background-color: var(--spidy-accent-blue-bg); box-shadow: inset 0 0 0 1px rgba(123, 138, 255, 0.1); }
-.menu-item.active i, .menu-item.active span { color: var(--spidy-accent-blue); }
+.menu-item.active { background: linear-gradient(135deg, rgba(123, 138, 255, 0.15), rgba(106, 90, 205, 0.05)); border: 1px solid rgba(123, 138, 255, 0.3); box-shadow: 0 4px 15px rgba(0,0,0,0.2), inset 0 0 12px rgba(123, 138, 255, 0.1); }
+.menu-item.active i { color: var(--spidy-accent-blue); text-shadow: 0 0 10px rgba(123, 138, 255, 0.5); }
+.menu-item.active span { color: var(--text-primary); text-shadow: 0 0 8px rgba(255, 255, 255, 0.3); }
+
+/* PRO BADGE STYLING */
+.pro-badge { margin-left: auto; background: linear-gradient(135deg, #f59e0b, #ea580c); color: #fff !important; font-size: 9px; font-weight: 800 !important; padding: 4px 10px; border-radius: 20px; letter-spacing: 1px; box-shadow: 0 3px 10px rgba(245, 158, 11, 0.4); text-transform: uppercase; border: 1px solid rgba(255,255,255,0.2); }
 
 .card-link i.external { margin-left: auto; font-size: 12px; width: auto; opacity: 0.7; }
 .card-whatsapp { background-color: var(--whatsapp-bg); box-shadow: inset 0 0 0 1px rgba(37, 211, 102, 0.1); } .card-whatsapp i, .card-whatsapp span { color: var(--whatsapp-green); }
@@ -298,8 +304,9 @@ main::-webkit-scrollbar { display: none; }
 .adm-card { background: #14141a; border: 1px solid rgba(255,255,255,0.1); border-radius: 20px; padding: 25px; margin-bottom: 20px; }
 .adm-card-title { font-size: 1.1rem; font-weight: 800; color: #fff; margin-bottom: 20px; display: flex; align-items: center; gap: 10px; border-bottom: 1px solid rgba(255,255,255,0.05); padding-bottom: 15px; }
 
+/* --- ADMIN LABELS UPDATED TO WHITE --- */
 .adm-form-group { display: flex; flex-direction: column; gap: 5px; margin-bottom: 15px; }
-.adm-label { font-size: 0.85rem; color: #a1a1aa; font-weight: 800; }
+.adm-label { font-size: 0.85rem; color: #ffffff; font-weight: 800; } 
 .adm-input { width: 100%; background: rgba(0,0,0,0.5); border: 1px solid rgba(255,255,255,0.1); padding: 14px; border-radius: 10px; color: #fff; outline: none; font-family: 'Inter', sans-serif; font-weight: 700; }
 .adm-input:focus { border-color: #8b5cf6; }
 
@@ -363,7 +370,7 @@ select.adm-input { appearance: none; -webkit-appearance: none; padding-right: 40
 }
 
 /* ------------------------------------------------------------------
-   YOUTUBE TUTORIAL CARDS STYLES (UPDATED HORIZONTAL LAYOUT)
+   YOUTUBE TUTORIAL CARDS STYLES
 ------------------------------------------------------------------ */
 .yt-card {
     background-color: var(--bg-card);
@@ -423,7 +430,6 @@ select.adm-input { appearance: none; -webkit-appearance: none; padding-right: 40
     overflow: hidden; line-height: 1.4; margin-bottom: 4px;
 }
 
-/* UPDATED FOR HORIZONTAL LAYOUT */
 .yt-channel-name {
     font-size: 11px; color: var(--text-secondary); display: flex; align-items: center; flex-wrap: wrap; gap: 4px; font-weight: 500; margin-top: 3px;
 }
