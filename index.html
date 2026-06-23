@@ -5,69 +5,34 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>MULTIVERSE BOOKS</title>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <link rel="stylesheet" href="./style.css">
 </head>
 <body>
 
-    <div class="loader-screen" id="loaderScreen">
-        <canvas id="networkCanvas"></canvas>
-        <div class="loader-logo"><img src="https://i.postimg.cc/cJdGqYHG/IMG-20260524-WA0004.jpg" alt="Logo" oncontextmenu="return false;" draggable="false"></div>
-        <div class="loader-title">MULTIVERSE BOOKS</div>
-        <div class="premium-tags">
-            <div class="tag"><i class="fa-solid fa-file-pdf"></i> PDF</div>
-            <div class="tag"><i class="fa-solid fa-note-sticky"></i> NOTES</div>
-            <div class="tag"><i class="fa-solid fa-square-root-variable"></i> FORMULA</div>
-            <div class="tag"><i class="fa-solid fa-layer-group"></i> MORE</div>
-        </div>
-        <div class="loader-bar"><div class="loader-fill"></div></div>
-        <div class="loader-powered-text">POWERED BY MADxPRINCE</div>
+    <div id="systemLoader">
+        <div class="dots-container"><div class="dot"></div><div class="dot"></div><div class="dot"></div><div class="dot"></div></div>
+        <div class="loader-text">Verifying System...</div>
     </div>
 
-    <div class="popup-overlay" id="popupOverlay">
-        <div class="popup">
-            <div class="popup-logo">
-                <img src="https://upload.wikimedia.org/wikipedia/commons/6/6b/WhatsApp.svg" alt="WhatsApp" oncontextmenu="return false;" draggable="false">
+    <div id="loginOverlay" class="login-container">
+        <div class="login-content-wrapper">
+            <div class="login-logo-container"><img src="https://i.postimg.cc/cJdGqYHG/IMG-20260524-WA0004.jpg" alt="Multiverse Logo" class="login-logo" oncontextmenu="return false;" draggable="false"></div>
+            <div class="welcome-header"><span class="welcome-top">Welcome To</span><h2 class="welcome-title">MULTIVERSE BOOKS</h2></div>
+            <p class="welcome-subtitle">Premium Study Material | Smart Vault Access</p>
+            <div class="login-card">
+                <form id="loginForm">
+                    <div class="input-wrapper"><i class="fas fa-envelope left-icon"></i><input type="email" id="loginEmail" placeholder="Enter Admin Email" required autocomplete="off"></div>
+                    <div class="input-wrapper"><i class="fas fa-lock left-icon"></i><input type="password" id="loginPassword" placeholder="Enter Password" required><i class="fas fa-eye toggle-eye" id="toggleEye" onclick="togglePasswordVisibility()"></i></div>
+                    <button type="submit" id="loginBtn" class="btn-login">Login Securely</button>
+                </form>
+                <div style="text-align: center; margin: 15px 0; color: #a1a1aa; font-size: 0.8rem;">OR</div>
+                <button type="button" id="googleSignInBtn" class="btn-token-style"><img src="https://upload.wikimedia.org/wikipedia/commons/5/53/Google_%22G%22_Logo.svg" alt="G" style="width: 20px;"> Login with Google</button>
             </div>
-            
-            <h1> 
-                𝗠𝘂𝗹𝘁𝗶𝘃𝗲𝗿𝘀𝗲 𝗕𝗼𝗼𝗸𝘀 𝗢𝗳𝗳𝗶𝗰𝗶𝗮𝗹
-                <svg class="verified-badge-ui" viewBox="0 0 100 100">
-                    <defs>
-                        <linearGradient id="pG1" x1="0%" y1="0%" x2="0%" y2="100%">
-                            <stop offset="0%" stop-color="#55bbf8" />
-                            <stop offset="100%" stop-color="#0a7bd2" />
-                        </linearGradient>
-                    </defs>
-                    <g fill="url(#pG1)">
-                        <circle cx="50" cy="15" r="14" />
-                        <circle cx="50" cy="15" r="14" transform="rotate(30 50 50)" />
-                        <circle cx="50" cy="15" r="14" transform="rotate(60 50 50)" />
-                        <circle cx="50" cy="15" r="14" transform="rotate(90 50 50)" />
-                        <circle cx="50" cy="15" r="14" transform="rotate(120 50 50)" />
-                        <circle cx="50" cy="15" r="14" transform="rotate(150 50 50)" />
-                        <circle cx="50" cy="15" r="14" transform="rotate(180 50 50)" />
-                        <circle cx="50" cy="15" r="14" transform="rotate(210 50 50)" />
-                        <circle cx="50" cy="15" r="14" transform="rotate(240 50 50)" />
-                        <circle cx="50" cy="15" r="14" transform="rotate(270 50 50)" />
-                        <circle cx="50" cy="15" r="14" transform="rotate(300 50 50)" />
-                        <circle cx="50" cy="15" r="14" transform="rotate(330 50 50)" />
-                        <circle cx="50" cy="50" r="33" />
-                    </g>
-                    <path d="M33 52 L43 62 L67 36" fill="none" stroke="#ffffff" stroke-width="8" stroke-linecap="round" stroke-linejoin="round" filter="drop-shadow(0px 3px 2px rgba(0,0,0,0.3))" />
-                </svg>
-            </h1>
-
-            <p> 𝐒𝐭𝐮𝐝𝐲 𝐦𝐚𝐭𝐞𝐫𝐢𝐚𝐥 𝐤𝐞 𝐥𝐢𝐲𝐞 𝐢𝐝𝐡𝐚𝐫-𝐮𝐝𝐡𝐚𝐫 𝐛𝐡𝐚𝐭𝐚𝐤𝐧𝐚 𝐜𝐡𝐡𝐨𝐝𝐨! 📚 𝐀𝐛 𝐦𝐢𝐥𝐞𝐠𝐚 𝐬𝐚𝐚𝐫𝐚 𝐜𝐨𝐧𝐭𝐞𝐧𝐭 𝐛𝐢𝐥𝐤𝐮𝐥 𝐅𝐑𝐄𝐄. 𝐈𝐧𝐬𝐭𝐚𝐧𝐭 𝐮𝐩𝐝𝐚𝐭𝐞𝐬 𝐚𝐮𝐫 𝐛𝐞𝐬𝐭 𝐛𝐨𝐨𝐤𝐬 𝐩𝐚𝐚𝐧𝐞 𝐤𝐞 𝐥𝐢𝐲𝐞 𝐚𝐚𝐣 𝐡𝐢 𝐡𝐮𝐦𝐚𝐫𝐚 𝐖𝐡𝐚𝐭𝐬𝐀𝐩𝐩 𝐜𝐡𝐚𝐧𝐧𝐞𝐥 𝐣𝐨𝐢𝐧 𝐤𝐚𝐫𝐞. ☟☟</p>
-            
-            <button class="join-btn" onclick="joinChannel()">
-                <img src="https://upload.wikimedia.org/wikipedia/commons/6/6b/WhatsApp.svg" alt="WhatsApp" oncontextmenu="return false;" draggable="false">
-                WhatsApp Channel
-            </button>
-            <div class="later" onclick="closePopup()">MAYBE LATER</div>
         </div>
     </div>
 
-    <div class="app-container">
+    <div class="app-container" id="mainAppWrapper" style="display: none;">
         <header>
             <div class="header-left">
                 <div class="icon-box" id="open-menu"><i class="fas fa-bars"></i></div>
@@ -83,7 +48,7 @@
             <div class="search-box-expanded" id="search-box">
                 <div class="search-input-wrapper">
                     <i class="fas fa-search"></i>
-                    <input type="text" class="search-input" id="app-search-input" placeholder="Search books, notes...">
+                    <input type="text" class="search-input" id="app-search-input" placeholder="Advance Search (e.g. Physics Khan Sir)...">
                 </div>
                 <div class="icon-box" id="close-search"><i class="fas fa-arrow-right"></i></div>
             </div>
@@ -92,9 +57,10 @@
         <div class="sidebar-overlay" id="sidebar-overlay"></div>
         <div class="sidebar" id="sidebar">
             <div class="sidebar-header-new">
-                <img src="https://i.postimg.cc/cJdGqYHG/IMG-20260524-WA0004.jpg" alt="Profile" class="profile-img" oncontextmenu="return false;" draggable="false">
+                <img src="https://i.postimg.cc/cJdGqYHG/IMG-20260524-WA0004.jpg" alt="Profile" class="profile-img" id="sidebarProfileImg" oncontextmenu="return false;" draggable="false">
                 <div class="profile-info">
-                    <div class="profile-name">MULTIVERSE BOOKS</div>
+                    <div class="profile-name" id="sidebarProfileName">MULTIVERSE BOOKS</div>
+                    <div style="font-size: 10px; color: #10b981; font-weight: bold; margin-top: 2px;" id="sidebarRoleText">User Access</div>
                 </div>
             </div>
 
@@ -102,16 +68,15 @@
                 <div class="section-title">MAIN MENU</div>
                 <a href="#" class="menu-item active" id="menu-home"><i class="fas fa-home"></i><span>Home</span></a>
                 <a href="#" class="menu-item normal" id="menu-about-dev"><i class="fas fa-user-tie"></i><span>About Developer</span></a>
-                <a href="https://t.me/MULTIVERSE_CONTACT_BOT" class="menu-item normal" id="menu-contact"><i class="fas fa-address-book"></i><span>Contact</span></a>
+                <a href="#" class="menu-item normal" id="menu-admin-panel" style="display: none;"><i class="fas fa-cloud-upload-alt"></i><span>Upload Books</span></a>
                 <a href="#" class="menu-item normal" id="menu-dmca"><i class="fas fa-shield-halved"></i><span>DMCA Request</span></a>
             </div>
 
             <div class="menu-section">
                 <div class="section-title">COMMUNITY</div>
-                <a href="https://whatsapp.com/channel/0029Vb6NBZx1yT2GByTTVf2A" class="menu-item card-link card-whatsapp" id="link-whatsapp"><i class="fab fa-whatsapp"></i><span>Join WhatsApp</span><i class="fas fa-external-link-square-alt external"></i></a>
-                <a href="https://t.me/MultiverseBooks" class="menu-item card-link card-telegram" id="link-telegram"><i class="fab fa-telegram-plane"></i><span>Join Telegram</span><i class="fas fa-external-link-square-alt external"></i></a>
-                <a href="https://www.instagram.com/madxprince_3030" class="menu-item card-link card-insta" id="link-insta"><i class="fab fa-instagram"></i><span>Instagram</span><i class="fas fa-external-link-square-alt external"></i></a>
-                <a href="https://youtube.com/@madxprince" class="menu-item card-link card-youtube" id="link-youtube"><i class="fab fa-youtube"></i><span>YouTube Channel</span><i class="fas fa-external-link-square-alt external"></i></a>
+                <a href="https://whatsapp.com/channel/0029Vb6NBZx1yT2GByTTVf2A" class="menu-item card-link card-whatsapp"><i class="fab fa-whatsapp"></i><span>Join WhatsApp</span><i class="fas fa-external-link-square-alt external"></i></a>
+                <a href="https://youtube.com/@madxprince" class="menu-item card-link card-youtube"><i class="fab fa-youtube"></i><span>YouTube Channel</span><i class="fas fa-external-link-square-alt external"></i></a>
+                <a href="#" class="menu-item normal" id="menu-logout" style="color: #ef4444; margin-top: 10px;"><i class="fas fa-power-off"></i><span>Logout</span></a>
             </div>
 
             <div class="sidebar-footer">
@@ -122,38 +87,24 @@
 
         <main id="mainContentArea">
             <section class="quote-card">
-                <div class="welcome-badge">
-                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" width="14" height="14" style="margin-right: 5px; margin-top: -2px;">
-                        <path fill-rule="evenodd" d="M9 4.5a.75.75 0 0 1 .721.544l.813 2.846a3.75 3.75 0 0 0 2.522 2.522l2.846.813a.75.75 0 0 1 0 1.45l-2.846.813a3.75 3.75 0 0 0-2.522 2.522l-.813 2.846a.75.75 0 0 1-1.442 0l-.813-2.846a3.75 3.75 0 0 0-2.522-2.522l-2.846-.813a.75.75 0 0 1 0-1.45l2.846-.813a3.75 3.75 0 0 0 2.522-2.522l.813-2.846A.75.75 0 0 1 9 4.5ZM18 1.5a.75.75 0 0 1 .728.568l.258 1.036c.236.94.97 1.674 1.91 1.91l1.036.258a.75.75 0 0 1 0 1.456l-1.036.258c-.94.236-1.674.97-1.91 1.91l-.258 1.036a.75.75 0 0 1-1.456 0l-.258-1.036a2.625 2.625 0 0 0-1.91-1.91l-1.036-.258a.75.75 0 0 1 0-1.456l1.036-.258a2.625 2.625 0 0 0 1.91-1.91l.258-1.036A.75.75 0 0 1 18 1.5ZM16.5 15a.75.75 0 0 1 .712.513l.394 1.183c.15.447.5.799.948.948l1.183.395a.75.75 0 0 1 0 1.422l-1.183.395c-.447.15-.799.5-.948.948l-.395 1.183a.75.75 0 0 1-1.422 0l-.395-1.183a1.5 1.5 0 0 0-.948-.948l-1.183-.395a.75.75 0 0 1 0-1.422l1.183-.395c.447-.15.799-.5.948-.948l.395-1.183A.75.75 0 0 1 16.5 15Z" clip-rule="evenodd" />
-                    </svg>
-                    WELCOME BACK
-                </div>
-                
+                <div class="welcome-badge"><i class="fas fa-bolt" style="margin-right: 5px;"></i> WELCOME BACK</div>
                 <div class="quote-text" id="daily-quote-text"><i class="fas fa-quote-left" style="color: rgba(255,255,255,0.3); margin-right:5px;"></i> Loading...</div>
                 <div class="quote-author" id="daily-quote-author"></div>
             </section>
 
-            <div class="section-header-title">
-                <i class="fas fa-book-open" style="color: #10b981;"></i> Trending Books 🔥 
-            </div>
-
+            <div class="section-header-title"><i class="fas fa-book-open" style="color: #10b981;"></i> Trending Books 🔥 </div>
             <div class="book-container" id="bookContainer"></div>
 
             <div id="no-results-msg">
                 <div class="no-results-card">
-                    <div class="no-results-icon"><i class="fas fa-book-open"></i></div>
-                    <h2>BOOK NOT FOUND</h2>
-                    <p>Sorry, we couldn't find any book matching your search.</p>
-                    <div class="powered-badge">❀ POWERED BY : MADxPRINCE ❀</div>
+                    <div class="no-results-icon"><i class="fas fa-search-minus"></i></div>
+                    <h2>NO MATCH FOUND</h2>
+                    <p>Try searching with different keywords or author name.</p>
                 </div>
             </div>
 
-            <div class="bottom-spinner-container" id="bottomSpinner">
-                <div class="bottom-spinner"></div>
-                <div style="color:#a1a1aa; font-size:13px; font-weight:600;">Loading more...</div>
-            </div>
-
-            <div class="premium-copyright">© 2026 MULTIVERSE BOOKS <span style="margin: 0 5px;">|</span> MADE WITH <i class="fas fa-heart" style="color: #ff4757; margin: 0 3px; filter: drop-shadow(0 0 5px rgba(255,71,87,0.8));"></i> BY MADxPRINCE</div>
+            <div class="bottom-spinner-container" id="bottomSpinner"><div class="bottom-spinner"></div><div style="color:#a1a1aa; font-size:13px; font-weight:600;">Loading more...</div></div>
+            <div class="premium-copyright">© 2026 MULTIVERSE BOOKS <span style="margin: 0 5px;">|</span> MADE WITH <i class="fas fa-heart" style="color: #ff4757; margin: 0 3px;"></i> BY MADxPRINCE</div>
         </main>
 
         <div class="download-modal" id="downloadModal">
@@ -161,50 +112,15 @@
                 <button class="back-btn" onclick="closeDownloadPage()"><i class="fas fa-arrow-left"></i></button>
                 <h1 class="modal-title">MULTIVERSE BOOKS</h1>
             </div>
-            
             <div class="dl-content-wrapper">
-                <div class="dl-img-wrapper-outer">
-                    <div class="dl-img-container">
-                        <img id="dlPreviewImage" class="dl-preview-image" src="" oncontextmenu="return false;" draggable="false">
-                        <div class="dl-powered-badge disable-long-press">POWERED BY : MADxPRINCE</div>
-                    </div>
-                </div>
-                
+                <div class="dl-img-wrapper-outer"><div class="dl-img-container"><img id="dlPreviewImage" class="dl-preview-image" src="" oncontextmenu="return false;" draggable="false"><div class="dl-powered-badge disable-long-press">POWERED BY : MADxPRINCE</div></div></div>
                 <h2 class="dl-title" id="dlBookTitle"></h2>
                 <div class="dl-author" id="dlBookAuthor"></div>
-                
-                <button id="dlPdfLinkBtn" class="dl-main-btn disable-long-press">
-                    <i class="fas fa-download"></i> Download PDF
-                </button>
-
-                <div id="dlYoutubeLinkBtn" class="dl-box disable-long-press">
-                    <i class="fab fa-youtube icon" style="color: #ef4444;"></i>
-                    <div>
-                        <div class="dl-box-title">Watch Tutorials</div>
-                        <div class="dl-box-sub">How to download books?</div>
-                    </div>
-                </div>
-
-                <div class="dl-box disable-long-press" onclick="shareBook()">
-                    <i class="fas fa-share-nodes icon"></i>
-                    <div><div class="dl-box-title">Share this book</div><div class="dl-box-sub">Send this book to friends</div></div>
-                </div>
-                
-                <div class="exam-rel-box">
-                    <div class="exam-header"><i class="fas fa-ribbon"></i> EXAM RELEVANCE</div>
-                    <div class="exam-tags" id="dlModalTags"></div>
-                </div>
-
-                <div class="dl-social-container">
-                    <div class="dev-social-row">
-                        <a href="https://youtube.com/@madxprince" target="_blank" class="dev-soc-btn dev-yt"><i class="fab fa-youtube"></i></a>
-                        <a href="https://www.instagram.com/madxprince_3030" target="_blank" class="dev-soc-btn dev-ig"><i class="fab fa-instagram"></i></a>
-                        <a href="https://t.me/MultiverseBooks" target="_blank" class="dev-soc-btn dev-tg"><i class="fab fa-telegram-plane"></i></a>
-                        <a href="https://whatsapp.com/channel/0029Vb6NBZx1yT2GByTTVf2A" target="_blank" class="dev-soc-btn dev-wa"><i class="fab fa-whatsapp"></i></a>
-                    </div>
-                </div>
-                
-                <div class="premium-copyright">© 2026 MULTIVERSE BOOKS <span style="margin: 0 5px;">|</span> MADE WITH <i class="fas fa-heart" style="color: #ff4757; margin: 0 3px; filter: drop-shadow(0 0 5px rgba(255,71,87,0.8));"></i> BY MADxPRINCE</div>
+                <button id="dlPdfLinkBtn" class="dl-main-btn disable-long-press"><i class="fas fa-download"></i> Download PDF</button>
+                <div id="dlYoutubeLinkBtn" class="dl-box disable-long-press"><i class="fab fa-youtube icon" style="color: #ef4444;"></i><div><div class="dl-box-title">Watch Tutorials</div><div class="dl-box-sub">How to download books?</div></div></div>
+                <div class="dl-box disable-long-press" onclick="shareBook()"><i class="fas fa-share-nodes icon"></i><div><div class="dl-box-title">Share this book</div><div class="dl-box-sub">Send this book to friends</div></div></div>
+                <div class="exam-rel-box"><div class="exam-header"><i class="fas fa-ribbon"></i> EXAM RELEVANCE</div><div class="exam-tags" id="dlModalTags"></div></div>
+                <div class="premium-copyright" style="margin-top: 30px;">© 2026 MULTIVERSE BOOKS</div>
             </div>
         </div>
 
@@ -215,79 +131,129 @@
 
         <div class="overlay-panel" id="about-dev-panel">
             <div class="modal-header-fixed">
-                <div class="header-content-wrapper">
-                    <button class="back-btn" id="close-dev-btn"><i class="fas fa-arrow-left"></i></button>
-                    <h1 class="modal-title">ABOUT DEVELOPER</h1>
-                </div>
-                <div class="header-active-badge"><span class="dot"></span> Active</div>
+                <div class="header-content-wrapper"><button class="back-btn" id="close-dev-btn"><i class="fas fa-arrow-left"></i></button><h1 class="modal-title">ABOUT DEVELOPER</h1></div>
             </div>
-            
             <div class="dev-profile-section">
-                <div class="profile-avatar-container">
-                    <div class="dev-profile-img-wrapper">
-                        <img src="https://i.postimg.cc/D0BF1b77/file-000000000e847207a64f6711d825a859.png" class="dev-profile-img" oncontextmenu="return false;" draggable="false">
-                    </div>
-                    <div class="profile-shield"><i class="fas fa-shield-alt"></i></div>
-                </div>
-                <h2 class="dev-greeting">Hey there! I'm MADxPRINCE</h2>
+                <h2 class="dev-greeting" style="margin-top:30px;">MADxPRINCE</h2>
                 <p class="dev-quote">"Dream Big, Hustle Hard, and Never Stop Exploring!"</p>
             </div>
-            
-            <div class="dev-cards-container">
-                <div class="dev-info-card"><div class="dev-icon-box"><i class="fas fa-graduation-cap"></i></div><div class="dev-card-content"><div class="dev-card-title">Education</div><div class="dev-card-desc"><span class="dev-small-caps">Class</span> 11th (PCMB) | <span class="dev-small-caps">Batch:</span> 2026-28</div></div></div>
-                <div class="dev-info-card"><div class="dev-icon-box"><i class="fas fa-map-marker-alt"></i></div><div class="dev-card-content"><div class="dev-card-title">Location</div><div class="dev-card-desc"><span class="dev-small-caps">Bihar , India</span> 🚩</div></div></div>
-                <div class="dev-info-card"><div class="dev-icon-box"><i class="fas fa-birthday-cake"></i></div><div class="dev-card-content"><div class="dev-card-title">Birthday</div><div class="dev-card-desc"><span class="dev-small-caps">6 December</span> 💐💖</div></div></div>
-                <div class="dev-info-card"><div class="dev-icon-box"><i class="fas fa-tools"></i></div><div class="dev-card-content"><div class="dev-card-title">Skills</div><div class="dev-card-desc" style="font-family: serif; font-style: italic; font-size: 0.95rem; font-weight: 600;">Hehe... Nothing ☠️</div></div></div>
-            </div>
-
-            <div class="find-online-section">
-                <div class="dev-social-row">
-                    <a href="https://youtube.com/@madxprince" class="dev-soc-btn dev-yt"><i class="fab fa-youtube"></i></a>
-                    <a href="https://www.instagram.com/madxprince_3030" class="dev-soc-btn dev-ig"><i class="fab fa-instagram"></i></a>
-                    <a href="https://t.me/MADxPRINCE" class="dev-soc-btn dev-tg"><i class="fab fa-telegram-plane"></i></a>
-                    <a href="https://whatsapp.com/channel/0029Vb6NBZx1yT2GByTTVf2A" class="dev-soc-btn dev-wa"><i class="fab fa-whatsapp"></i></a>
-                </div>
-            </div>
-            
-            <div class="premium-copyright">© 2026 MULTIVERSE BOOKS <span style="margin: 0 5px;">|</span> MADE WITH <i class="fas fa-heart" style="color: #ff4757; margin: 0 3px; filter: drop-shadow(0 0 5px rgba(255,71,87,0.8));"></i> BY MADxPRINCE</div>
         </div>
 
         <div class="overlay-panel" id="dmca-panel">
-            <div class="modal-header-fixed">
-                <button class="back-btn" id="close-dmca-btn"><i class="fas fa-arrow-left"></i></button>
-                <h1 class="modal-title">DMCA REQUEST</h1>
-            </div>
-            <div class="dmca-content">
-                <div class="dmca-hero">
-                    <h1 class="dmca-hero-title">COPYRIGHT DISCLAIMER</h1>
-                    <p class="dmca-hero-subtitle"><span class="dmca-badge"><i class="fas fa-graduation-cap"></i> Educational</span><span class="dmca-badge"><i class="fas fa-flask"></i> Research</span><span class="dmca-badge"><i class="fas fa-book-open"></i> Reference</span></p>
-                </div>
-                <div class="dmca-section">
-                    <h2 class="dmca-section-title"><span class="dmca-mini-icon icon-book"><i class="fas fa-book"></i></span>Content Ownership</h2>
-                    <p>This website is created solely for educational, informational and archival purposes. We do not claim ownership of any copyrighted material shared on this platform. All copyrights and intellectual property rights belong to their respective authors, publishers and owners.</p>
-                </div>
-                <div class="dmca-section">
-                    <h2 class="dmca-section-title"><span class="dmca-mini-icon icon-copyright"><i class="fas fa-copyright"></i></span>Copyright Concerns</h2>
-                    <p>If you are the copyright owner of any material available here and believe that your content has been shared without proper authorization, please contact us.</p>
-                </div>
-                <div class="dmca-section" style="border-color: rgba(96, 165, 250, 0.3);">
-                    <h2 class="dmca-section-title" style="color: #60a5fa;"><span class="dmca-mini-icon icon-contact"><i class="fas fa-envelope"></i></span>Contact Information</h2>
-                    <a href="https://t.me/Multiverse_Contact_Bot" target="_blank" class="dmca-contact-link"><i class="fab fa-telegram-plane"></i> @Multiverse_Contact_Bot</a>
-                    <p style="margin-top: 15px; font-weight: bold; color: #a1a1aa; font-size: 0.75rem;">⏱ Review Time: 24–48 Hours</p>
-                </div>
-                <div class="dmca-section">
-                    <h2 class="dmca-section-title" style="color: #f59e0b;"><span class="dmca-mini-icon icon-shield"><i class="fas fa-shield-alt"></i></span>Important Notice</h2>
-                    <p>The materials shared on this platform are intended for educational, research, review and reference purposes only. Users are encouraged to support authors and publishers by purchasing original books whenever possible.</p>
-                </div>
-                <div class="dmca-section">
-                    <h2 class="dmca-section-title" style="color: #ec4899;"><span class="dmca-mini-icon" style="background: linear-gradient(135deg, #a855f7, #ec4899);"><i class="fas fa-user-shield"></i></span>User Responsibility</h2>
-                    <p>Users are solely responsible for how they access, download, share or use any content available through this platform. This website and its administrators cannot be held responsible for any misuse or unauthorized use of the materials.</p>
-                </div>
-            </div>
-            <div class="premium-copyright">© 2026 MULTIVERSE BOOKS <span style="margin: 0 5px;">|</span> MADE WITH <i class="fas fa-heart" style="color: #ff4757; margin: 0 3px; filter: drop-shadow(0 0 5px rgba(255,71,87,0.8));"></i> BY MADxPRINCE</div>
+            <div class="modal-header-fixed"><button class="back-btn" id="close-dmca-btn"><i class="fas fa-arrow-left"></i></button><h1 class="modal-title">DMCA REQUEST</h1></div>
+            <div class="dmca-content"><div class="dmca-hero"><h1 class="dmca-hero-title">COPYRIGHT DISCLAIMER</h1></div></div>
         </div>
+
+        <div class="overlay-panel" id="admin-dashboard-panel" style="background: #050505;">
+            <div class="modal-header-fixed" style="background: rgba(10,10,12,0.95); backdrop-filter: blur(10px); border-bottom: 1px solid rgba(255,255,255,0.1);">
+                <button class="back-btn" id="close-admin-btn"><i class="fas fa-arrow-left"></i></button>
+                <h1 class="modal-title" style="flex:1;">VAULT ADMIN PANEL</h1>
+                
+                <div class="admin-top-nav">
+                    <button class="admin-nav-btn active" onclick="switchAdminTab('add')"><i class="fas fa-plus"></i> Add</button>
+                    <button class="admin-nav-btn" onclick="switchAdminTab('manage')"><i class="fas fa-list"></i> Manage</button>
+                    <button class="admin-nav-btn" onclick="switchAdminTab('tutorial')"><i class="fas fa-video"></i> Video</button>
+                    <button class="admin-nav-btn" onclick="switchAdminTab('analytics')"><i class="fas fa-chart-pie"></i> Stats</button>
+                </div>
+            </div>
+
+            <div class="admin-dashboard-area">
+                <div id="sectionAddBook" class="admin-section-container active">
+                    <div class="admin-card">
+                        <div class="card-header"><i class="fas fa-pen-nib"></i> Enter Book Details</div>
+                        <form id="addBookForm" class="form-grid">
+                            <div class="form-group full-width"><label class="form-label">Book Title</label><input type="text" id="inTitle" class="form-input" required autocomplete="off"></div>
+                            <div class="form-group"><label class="form-label">Author Name</label><input type="text" id="inAuthor" class="form-input" required autocomplete="off"></div>
+                            <div class="form-group"><label class="form-label">Publish Year</label>
+                                <select id="inYear" class="form-input" required>
+                                    <option value="2024">2024</option><option value="2025">2025</option><option value="2026" selected>2026</option>
+                                </select>
+                            </div>
+                            <div class="form-group"><label class="form-label">Language</label>
+                                <select id="inLang" class="form-input"><option value="Hindi">Hindi</option><option value="English">English</option><option value="Bilingual">Bilingual</option></select>
+                            </div>
+                            <div class="form-group"><label class="form-label">Exam Relevance</label><input type="text" id="inExams" class="form-input" required autocomplete="off"></div>
+                            <div class="form-group full-width"><label class="form-label">Cover Image URL</label><input type="url" id="inImage" class="form-input" required autocomplete="off"></div>
+                            <div class="form-group full-width"><label class="form-label">Direct PDF Link</label><input type="url" id="inPdfUrl" class="form-input" required autocomplete="off"></div>
+                            <div class="form-group full-width" id="addYtLinkContainer"><label class="form-label">YouTube Tutorial Link (Optional)</label><input type="url" id="inYtUrl" class="form-input" autocomplete="off"></div>
+                            <button type="submit" class="btn-submit"><i class="fas fa-cloud-upload-alt"></i> Publish Book</button>
+                        </form>
+                    </div>
+                </div>
+
+                <div id="sectionManageBooks" class="admin-section-container">
+                    <div class="admin-card">
+                        <div class="card-header"><i class="fas fa-list"></i> Manage Vault Inventory</div>
+                        <div class="table-responsive">
+                            <table class="books-table">
+                                <thead><tr><th>Cover</th><th>Info</th><th>Actions</th></tr></thead>
+                                <tbody id="adminBooksTableBody"></tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="sectionTutorial" class="admin-section-container">
+                    <div class="admin-card">
+                        <div class="card-header"><i class="fas fa-video"></i> Upload Guide & Tutorial</div>
+                        <div class="video-wrapper">
+                            <iframe id="tutorialIframe" src="" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen></iframe>
+                        </div>
+                        <div id="adminTutorialEdit" style="display: none; margin-top: 20px; padding-top:20px; border-top: 1px solid rgba(255,255,255,0.1);">
+                            <h4 style="margin-bottom: 10px; color: #10b981;"><i class="fas fa-cogs"></i> Super Admin Action</h4>
+                            <input type="url" id="newTutorialUrl" class="form-input" placeholder="Paste YouTube OR Shorts URL Here" style="width:100%; margin-bottom:10px;">
+                            <button type="button" id="btnUpdateVideo" class="btn-submit" onclick="updateTutorialLink()" style="background:#10b981; color:#fff;">Update Video For All Users</button>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="sectionAnalytics" class="admin-section-container">
+                    <div class="admin-card">
+                        <div class="card-header"><i class="fas fa-chart-pie"></i> Real-Time Stats</div>
+                        <div class="charts-grid" style="grid-template-columns: 1fr; gap:20px;">
+                            <div class="chart-box"><canvas id="langChart"></canvas></div>
+                            <div class="chart-box"><canvas id="downloadsChart"></canvas></div>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+
+        <div class="modal-overlay" id="editModal" style="z-index: 999999;">
+            <div class="modal-content" style="background: #1a1a24;">
+                <i class="fas fa-times close-modal" onclick="document.getElementById('editModal').style.display='none'" style="color:#fff; cursor:pointer; position:absolute; right:20px; top:20px; font-size:20px;"></i>
+                <h3 style="margin-bottom: 20px; color:#fff;">Edit Vault Record</h3>
+                <form id="editBookForm" class="form-grid">
+                    <input type="hidden" id="editDocId"> 
+                    <div class="form-group full-width"><label class="form-label">Book Title</label><input type="text" id="edTitle" class="form-input" required autocomplete="off"></div>
+                    <div class="form-group full-width"><label class="form-label">Cover Image URL</label><input type="url" id="edImage" class="form-input" required autocomplete="off"></div>
+                    <button type="submit" class="btn-submit" style="background:#3b82f6; color:#fff;"><i class="fas fa-save"></i> Save Changes</button>
+                </form>
+            </div>
+        </div>
+
     </div>
 
+    <div id="toast"><i class="fas fa-check-circle"></i> <span id="toastMsg">Action Successful!</span></div>
+
     <script type="module" src="./app.js"></script>
+    <script>
+        function togglePasswordVisibility() {
+            const passInput = document.getElementById('loginPassword'); const eyeIcon = document.getElementById('toggleEye');
+            if (passInput.type === 'password') { passInput.type = 'text'; eyeIcon.classList.remove('fa-eye'); eyeIcon.classList.add('fa-eye-slash'); eyeIcon.style.color = '#8b5cf6'; } 
+            else { passInput.type = 'password'; eyeIcon.classList.remove('fa-eye-slash'); eyeIcon.classList.add('fa-eye'); eyeIcon.style.color = '#a1a1aa'; }
+        }
+        
+        function switchAdminTab(tabName) {
+            document.querySelectorAll('.admin-section-container').forEach(el => el.classList.remove('active'));
+            document.querySelectorAll('.admin-nav-btn').forEach(el => el.classList.remove('active'));
+            
+            if(tabName === 'add') { document.getElementById('sectionAddBook').classList.add('active'); document.querySelectorAll('.admin-nav-btn')[0].classList.add('active'); }
+            else if(tabName === 'manage') { document.getElementById('sectionManageBooks').classList.add('active'); document.querySelectorAll('.admin-nav-btn')[1].classList.add('active'); }
+            else if(tabName === 'tutorial') { document.getElementById('sectionTutorial').classList.add('active'); document.querySelectorAll('.admin-nav-btn')[2].classList.add('active'); }
+            else if(tabName === 'analytics') { document.getElementById('sectionAnalytics').classList.add('active'); document.querySelectorAll('.admin-nav-btn')[3].classList.add('active'); }
+        }
+    </script>
 </body>
 </html>
