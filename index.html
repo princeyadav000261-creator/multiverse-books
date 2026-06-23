@@ -244,6 +244,7 @@
                 <div class="premium-copyright">© 2026 MULTIVERSE BOOKS <span style="margin: 0 5px;">|</span> MADE WITH <i class="fas fa-heart" style="color: #ff4757; margin: 0 3px;"></i> BY MADxPRINCE</div>
             </div>
 
+            <!-- ADMIN DASHBOARD -->
             <div class="overlay-panel" id="admin-dashboard-panel" style="background: #0d0d12;">
                 <div class="modal-header-fixed" style="background: #09090b;">
                     <div class="header-content-wrapper">
@@ -279,9 +280,9 @@
                                 </div>
                                 <div class="adm-form-group"><label class="adm-label">Exam Relevance</label><input type="text" id="inExams" class="adm-input" placeholder="e.g. SSC, BPSC, RRB" required autocomplete="off"></div>
                                 <div class="adm-form-group"><label class="adm-label">Cover Image URL</label><input type="url" id="inImage" class="adm-input" placeholder="https://example.com/image.jpg" required autocomplete="off"></div>
-                                <div class="adm-form-group"><label class="adm-label">Direct PDF Link</label><input type="url" id="inPdfUrl" class="adm-input" placeholder="Google Drive or Direct Link" required autocomplete="off"></div>
+                                <div class="adm-form-group"><label class="adm-label">Direct PDF Link</label><input type="url" id="inPdfUrl" class="adm-input" placeholder="Google Drive Link" required autocomplete="off"></div>
                                 <div class="adm-form-group" id="addYtLinkContainer"><label class="adm-label">YouTube Tutorial Link (Optional)</label><input type="url" id="inYtUrl" class="adm-input" placeholder="https://youtube.com/watch?v=..." autocomplete="off"></div>
-                                <button type="submit" class="adm-submit-btn"><i class="fas fa-cloud-upload-alt"></i> Publish Book</button>
+                                <button type="submit" id="publishBtn" class="adm-submit-btn"><i class="fas fa-cloud-upload-alt"></i> Publish Book</button>
                             </form>
                         </div>
                     </div>
@@ -350,6 +351,7 @@
         </div>
     </div>
 
+    <!-- Edit Modal -->
     <div class="adm-modal-overlay" id="adminEditModal">
         <div class="adm-modal-box">
             <h3 style="color: #fff; margin-bottom: 15px; font-size: 1.1rem; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 10px; font-weight: 800;">
@@ -373,7 +375,7 @@
                 <div class="adm-form-group"><label class="adm-label">Direct PDF Link</label><input type="url" id="edPdfUrl" class="adm-input" required autocomplete="off"></div>
                 <div class="adm-form-group"><label class="adm-label">YouTube Tutorial Link (Optional)</label><input type="url" id="edYtUrl" class="adm-input" autocomplete="off"></div>
                 
-                <button type="submit" class="adm-submit-btn" style="background:#3b82f6;"><i class="fas fa-save"></i> Save Changes</button>
+                <button type="submit" id="editSaveBtn" class="adm-submit-btn" style="background:#3b82f6;"><i class="fas fa-save"></i> Save Changes</button>
             </form>
         </div>
     </div>
