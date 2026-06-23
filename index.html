@@ -10,83 +10,52 @@
 </head>
 <body>
 
-    <!-- 1. PREMIUM COMPACT LOGIN OVERLAY (Bulletproof Inline CSS) -->
-    <div id="loginOverlay" class="login-container" style="position: fixed; inset: 0; z-index: 99999; display: none; flex-direction: column; background: #050508; overflow-y: auto;">
-        <div class="login-content-wrapper" style="margin: auto; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 20px; width: 100%; max-width: 360px;">
-            <div class="login-logo-container">
-                <img src="https://i.postimg.cc/cJdGqYHG/IMG-20260524-WA0004.jpg" alt="Multiverse Logo" class="login-logo" style="width: 85px; height: 85px; border-radius: 20px; margin-bottom: 20px; box-shadow: 0 10px 30px rgba(0, 0, 0, 0.6); border: 1px solid rgba(255, 255, 255, 0.2); background: #0d0d12;" oncontextmenu="return false;" draggable="false">
-            </div>
-            <div class="welcome-header" style="text-align: center; margin-bottom: 12px;">
-                <span class="welcome-top" style="color: #8b5cf6; font-size: 0.8rem; font-weight: 700; letter-spacing: 2px; text-transform: uppercase;">Welcome To</span>
-                <h2 class="welcome-title" style="font-size: 1.6rem; font-weight: 800; color: #fff; letter-spacing: 1px; margin-top: 8px;">MULTIVERSE BOOKS</h2>
-            </div>
-            <!-- FIX: Added margin-bottom 30px to stop overlapping -->
-            <p class="welcome-subtitle" style="font-size: 0.85rem; color: #a1a1aa; text-align: center; margin-bottom: 30px; letter-spacing: 0.5px;">Premium Study Material | Smart Vault Access</p>
-            
-            <div class="login-card" style="background: rgba(20, 20, 25, 0.9); border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 24px; padding: 30px 25px; width: 100%; box-shadow: 0 20px 50px rgba(0,0,0,0.8), inset 0 0 25px rgba(255,255,255,0.06);">
-                <div style="text-align: center;">
-                    <div class="multiverse-badge" style="background: rgba(20, 20, 30, 0.9); border: 1px solid rgba(88, 101, 242, 0.4); color: #ffffff; padding: 12px 26px; border-radius: 14px; display: inline-flex; align-items: center; gap: 12px; font-weight: 600; font-size: 1.05rem; margin-bottom: 25px; box-shadow: 0 10px 20px rgba(0, 0, 0, 0.4), 0 0 15px rgba(88, 101, 242, 0.15);">
-                        <i class="fas fa-graduation-cap" style="color: #8b5cf6; font-size: 1.2rem;"></i> Multiverse Books
-                    </div>
-                </div>
+    <div class="loader-screen" id="loaderScreen" style="display: flex; opacity: 1;">
+        <canvas id="networkCanvas"></canvas>
+        <div class="loader-logo"><img src="https://i.postimg.cc/cJdGqYHG/IMG-20260524-WA0004.jpg" alt="Logo" oncontextmenu="return false;" draggable="false"></div>
+        <div class="loader-title">MULTIVERSE BOOKS</div>
+        <div class="premium-tags">
+            <div class="tag"><i class="fa-solid fa-file-pdf"></i> PDF</div>
+            <div class="tag"><i class="fa-solid fa-note-sticky"></i> NOTES</div>
+            <div class="tag"><i class="fa-solid fa-square-root-variable"></i> FORMULA</div>
+            <div class="tag"><i class="fa-solid fa-layer-group"></i> MORE</div>
+        </div>
+        <div class="loader-bar"><div class="loader-fill"></div></div>
+        <div class="loader-powered-text">POWERED BY MADxPRINCE</div>
+    </div>
+
+    <div id="loginOverlay" class="login-container">
+        <div class="login-content-wrapper">
+            <div class="login-logo-container"><img src="https://i.postimg.cc/cJdGqYHG/IMG-20260524-WA0004.jpg" alt="Multiverse Logo" class="login-logo" oncontextmenu="return false;" draggable="false"></div>
+            <div class="welcome-header"><span class="welcome-top">Welcome To</span><h2 class="welcome-title">MULTIVERSE BOOKS</h2></div>
+            <p class="welcome-subtitle">Premium Study Material | Smart Vault Access</p>
+            <div class="login-card">
+                <div style="text-align: center;"><div class="multiverse-badge"><i class="fas fa-graduation-cap" style="color: #8b5cf6; font-size: 1.2rem;"></i> Multiverse Books</div></div>
                 <form id="loginForm">
-                    <div class="input-wrapper" style="position: relative; display: flex; align-items: center; margin-bottom: 15px; width: 100%;">
-                        <i class="fas fa-envelope left-icon" style="position: absolute; left: 15px; color: #a1a1aa;"></i>
-                        <input type="email" id="loginEmail" placeholder="Enter Admin Email" required autocomplete="off" style="width: 100%; background: #1a1c24; border: 1px solid rgba(255,255,255,0.1); border-radius: 12px; padding: 15px 40px; color: #fff; outline: none;">
-                    </div>
-                    <div class="input-wrapper" style="position: relative; display: flex; align-items: center; margin-bottom: 15px; width: 100%;">
-                        <i class="fas fa-lock left-icon" style="position: absolute; left: 15px; color: #a1a1aa;"></i>
-                        <input type="password" id="loginPassword" placeholder="Enter Password" required style="width: 100%; background: #1a1c24; border: 1px solid rgba(255,255,255,0.1); border-radius: 12px; padding: 15px 40px; color: #fff; outline: none;">
-                        <i class="fas fa-eye toggle-eye" id="toggleEye" onclick="togglePasswordVisibility()" style="position: absolute; right: 15px; color: #a1a1aa; cursor: pointer; padding: 5px;"></i>
-                    </div>
-                    <button type="submit" id="loginBtn" class="btn-login" style="background: #6d5dfc; color: #fff; width: 100%; padding: 15px; border-radius: 12px; border: none; font-size: 1rem; font-weight: 700; cursor: pointer;">Login Securely</button>
+                    <div class="input-wrapper"><i class="fas fa-envelope left-icon"></i><input type="email" id="loginEmail" placeholder="Enter Admin Email" required autocomplete="off"></div>
+                    <div class="input-wrapper"><i class="fas fa-lock left-icon"></i><input type="password" id="loginPassword" placeholder="Enter Password" required><i class="fas fa-eye toggle-eye" id="toggleEye" onclick="togglePasswordVisibility()"></i></div>
+                    <button type="submit" id="loginBtn" class="btn-login">Login Securely</button>
                 </form>
-                <div style="height: 15px;"></div>
-                <button type="button" id="googleSignInBtn" class="btn-token-style" style="background: transparent; color: #fff; width: 100%; padding: 14px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.2); font-size: 0.95rem; font-weight: 600; cursor: pointer; display: flex; justify-content: center; align-items: center; gap: 10px;">
-                    <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" alt="G" style="width: 20px;"> Login with Google
-                </button>
+                <div style="height: 10px;"></div>
+                <button type="button" id="googleSignInBtn" class="btn-token-style"><img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" alt="G" style="width: 20px;"> Login with Google</button>
             </div>
         </div>
     </div>
 
-    <!-- MAIN APP WRAPPER (Fix: flex for proper centering) -->
-    <div id="mainAppWrapper" style="display: none; width: 100%; height: 100%; justify-content: center;">
+    <div id="mainAppWrapper" style="display: none; width: 100%; height: 100%;">
         
-        <!-- 2. ORIGINAL CANVAS LOADER -->
-        <div class="loader-screen" id="loaderScreen" style="position: fixed; inset: 0; background-color: #050505; z-index: 9999999; display: flex; flex-direction: column; justify-content: center; align-items: center;">
-            <canvas id="networkCanvas" style="position: absolute; top: 0; left: 0; width: 100vw; height: 100vh; z-index: 1; pointer-events: none;"></canvas>
-            <div class="loader-logo" style="width: 115px; height: 115px; border-radius: 30px; padding: 8px; background: linear-gradient(135deg, #ffffff, #f1f5f9); box-shadow: 0 0 18px rgba(255,255,255,.55); z-index: 5; position: relative;">
-                <img src="https://i.postimg.cc/cJdGqYHG/IMG-20260524-WA0004.jpg" alt="Logo" style="width: 100%; height: 100%; object-fit: contain; border-radius: 22px;" oncontextmenu="return false;" draggable="false">
-            </div>
-            <div class="loader-title" style="margin-top: 20px; font-size: 24px; font-weight: 900; letter-spacing: 1px; z-index: 5; color: #fff; font-family: 'Poppins', sans-serif;">MULTIVERSE BOOKS</div>
-            <div class="premium-tags" style="margin-top: 18px; display: flex; gap: 10px; z-index: 5;">
-                <div class="tag" style="padding: 8px 14px; border-radius: 14px; background: rgba(255,255,255,.05); border: 1px solid rgba(255,255,255,.08); color: #fff; font-size: 10px; font-weight: 700;"><i class="fa-solid fa-file-pdf"></i> PDF</div>
-                <div class="tag" style="padding: 8px 14px; border-radius: 14px; background: rgba(255,255,255,.05); border: 1px solid rgba(255,255,255,.08); color: #fff; font-size: 10px; font-weight: 700;"><i class="fa-solid fa-note-sticky"></i> NOTES</div>
-                <div class="tag" style="padding: 8px 14px; border-radius: 14px; background: rgba(255,255,255,.05); border: 1px solid rgba(255,255,255,.08); color: #fff; font-size: 10px; font-weight: 700;"><i class="fa-solid fa-square-root-variable"></i> FORMULA</div>
-            </div>
-            <div class="loader-bar" style="width: 200px; height: 7px; border-radius: 30px; background: rgba(255,255,255,.08); margin-top: 28px; z-index: 5; position: relative; overflow: hidden;">
-                <div class="loader-fill" style="width: 0%; height: 100%; background: #fff; animation: loadBar 3s linear forwards;"></div>
-            </div>
-            <div class="loader-powered-text" style="position: absolute; bottom: 35px; color: #fff; font-size: 11px; font-weight: 700; letter-spacing: 1.5px; z-index: 10;">POWERED BY MADxPRINCE</div>
-        </div>
-
-        <!-- 3. ORIGINAL WHATSAPP POPUP -->
-        <div class="popup-overlay" id="popupOverlay" style="position: fixed; inset: 0; background: rgba(0,0,0,0.85); backdrop-filter: blur(5px); display: none; justify-content: center; align-items: center; z-index: 9999998; padding: 20px;">
-            <div class="popup" style="width: 100%; max-width: 380px; padding: 30px 20px 25px; border-radius: 32px; background: linear-gradient(180deg, rgba(0,255,85,.14), rgba(0,0,0,.98)); border: 1px solid rgba(255,255,255,.14); text-align: center;">
-                <div class="popup-logo" style="width: 88px; height: 88px; margin: auto; border-radius: 28px; background: linear-gradient(145deg, #1a1a1a, #050505); display: flex; justify-content: center; align-items: center; box-shadow: 0 0 30px rgba(37, 211, 102, 0.4), inset 0 0 15px rgba(37, 211, 102, 0.15);">
-                    <img src="https://upload.wikimedia.org/wikipedia/commons/6/6b/WhatsApp.svg" alt="WhatsApp" style="width: 52px;" oncontextmenu="return false;" draggable="false">
-                </div>
-                <h1 style="color: #fff; font-size: 20px; font-weight: 800; margin-top: 24px; letter-spacing: 0.5px; font-family: 'Poppins', sans-serif; display: flex; justify-content: center; align-items: center; gap: 6px;">
-                    𝗠𝘂𝗹𝘁𝗶𝘃𝗲𝗿𝘀𝗲 𝗕𝗼𝗼𝗸𝘀 𝗢𝗳𝗳𝗶𝗰𝗶𝗮𝗹
-                    <svg class="verified-badge-ui" viewBox="0 0 100 100" style="width: 18px; height: 18px; flex-shrink: 0; filter: drop-shadow(0px 2px 5px rgba(0, 0, 0, 0.4));"><defs><linearGradient id="pG1" x1="0%" y1="0%" x2="0%" y2="100%"><stop offset="0%" stop-color="#55bbf8" /><stop offset="100%" stop-color="#0a7bd2" /></linearGradient></defs><g fill="url(#pG1)"><circle cx="50" cy="15" r="14" /><circle cx="50" cy="15" r="14" transform="rotate(30 50 50)" /><circle cx="50" cy="15" r="14" transform="rotate(60 50 50)" /><circle cx="50" cy="15" r="14" transform="rotate(90 50 50)" /><circle cx="50" cy="15" r="14" transform="rotate(120 50 50)" /><circle cx="50" cy="15" r="14" transform="rotate(150 50 50)" /><circle cx="50" cy="15" r="14" transform="rotate(180 50 50)" /><circle cx="50" cy="15" r="14" transform="rotate(210 50 50)" /><circle cx="50" cy="15" r="14" transform="rotate(240 50 50)" /><circle cx="50" cy="15" r="14" transform="rotate(270 50 50)" /><circle cx="50" cy="15" r="14" transform="rotate(300 50 50)" /><circle cx="50" cy="15" r="14" transform="rotate(330 50 50)" /><circle cx="50" cy="50" r="33" /></g><path d="M33 52 L43 62 L67 36" fill="none" stroke="#ffffff" stroke-width="8" stroke-linecap="round" stroke-linejoin="round" filter="drop-shadow(0px 3px 2px rgba(0,0,0,0.3))" /></svg>
+        <div class="popup-overlay" id="popupOverlay">
+            <div class="popup">
+                <div class="popup-logo"><img src="https://upload.wikimedia.org/wikipedia/commons/6/6b/WhatsApp.svg" alt="WhatsApp" oncontextmenu="return false;" draggable="false"></div>
+                <h1> 𝗠𝘂𝗹𝘁𝗶𝘃𝗲𝗿𝘀𝗲 𝗕𝗼𝗼𝗸𝘀 𝗢𝗳𝗳𝗶𝗰𝗶𝗮𝗹
+                    <svg class="verified-badge-ui" viewBox="0 0 100 100"><defs><linearGradient id="pG1" x1="0%" y1="0%" x2="0%" y2="100%"><stop offset="0%" stop-color="#55bbf8" /><stop offset="100%" stop-color="#0a7bd2" /></linearGradient></defs><g fill="url(#pG1)"><circle cx="50" cy="15" r="14" /><circle cx="50" cy="15" r="14" transform="rotate(30 50 50)" /><circle cx="50" cy="15" r="14" transform="rotate(60 50 50)" /><circle cx="50" cy="15" r="14" transform="rotate(90 50 50)" /><circle cx="50" cy="15" r="14" transform="rotate(120 50 50)" /><circle cx="50" cy="15" r="14" transform="rotate(150 50 50)" /><circle cx="50" cy="15" r="14" transform="rotate(180 50 50)" /><circle cx="50" cy="15" r="14" transform="rotate(210 50 50)" /><circle cx="50" cy="15" r="14" transform="rotate(240 50 50)" /><circle cx="50" cy="15" r="14" transform="rotate(270 50 50)" /><circle cx="50" cy="15" r="14" transform="rotate(300 50 50)" /><circle cx="50" cy="15" r="14" transform="rotate(330 50 50)" /><circle cx="50" cy="50" r="33" /></g><path d="M33 52 L43 62 L67 36" fill="none" stroke="#ffffff" stroke-width="8" stroke-linecap="round" stroke-linejoin="round" filter="drop-shadow(0px 3px 2px rgba(0,0,0,0.3))" /></svg>
                 </h1>
-                <p style="color: #b8b8b8; font-size: 14px; line-height: 1.6; margin-top: 14px;">𝐒𝐭𝐮𝐝𝐲 𝐦𝐚𝐭𝐞𝐫𝐢𝐚𝐥 𝐤𝐞 𝐥𝐢𝐲𝐞 𝐢𝐝𝐡𝐚𝐫-𝐮𝐝𝐡𝐚𝐫 𝐛𝐡𝐚𝐭𝐚𝐤𝐧𝐚 𝐜𝐡𝐡𝐨𝐝𝐨! 📚 𝐀𝐛 𝐦𝐢𝐥𝐞𝐠𝐚 𝐬𝐚𝐚𝐫𝐚 𝐜𝐨𝐧𝐭𝐞𝐧𝐭 𝐛𝐢𝐥𝐤𝐮𝐥 𝐅𝐑𝐄𝐄. 𝐈𝐧𝐬𝐭𝐚𝐧𝐭 𝐮𝐩𝐝𝐚𝐭𝐞𝐬 𝐚𝐮𝐫 𝐛𝐞𝐬𝐭 𝐛𝐨𝐨𝐤𝐬 𝐩𝐚𝐚𝐧𝐞 𝐤𝐞 𝐥𝐢𝐲𝐞 𝐚𝐚𝐣 𝐡𝐢 𝐡𝐮𝐦𝐚𝐫𝐚 𝐖𝐡𝐚𝐭𝐬𝐀𝐩𝐩 𝐜𝐡𝐚𝐧𝐧𝐞𝐥 𝐣𝐨𝐢𝐧 𝐤𝐚𝐫𝐞. ☟☟</p>
+                <p> 𝐒𝐭𝐮𝐝𝐲 𝐦𝐚𝐭𝐞𝐫𝐢𝐚𝐥 𝐤𝐞 𝐥𝐢𝐲𝐞 𝐢𝐝𝐡𝐚𝐫-𝐮𝐝𝐡𝐚𝐫 𝐛𝐡𝐚𝐭𝐚𝐤𝐧𝐚 𝐜𝐡𝐡𝐨𝐝𝐨! 📚 𝐀𝐛 𝐦𝐢𝐥𝐞𝐠𝐚 𝐬𝐚𝐚𝐫𝐚 𝐜𝐨𝐧𝐭𝐞𝐧𝐭 𝐛𝐢𝐥𝐤𝐮𝐥 𝐅𝐑𝐄𝐄. 𝐈𝐧𝐬𝐭𝐚𝐧𝐭 𝐮𝐩𝐝𝐚𝐭𝐞𝐬 𝐚𝐮𝐫 𝐛𝐞𝐬𝐭 𝐛𝐨𝐨𝐤𝐬 𝐩𝐚𝐚𝐧𝐞 𝐤𝐞 𝐥𝐢𝐲𝐞 𝐚𝐚𝐣 𝐡𝐢 𝐡𝐮𝐦𝐚𝐫𝐚 𝐖𝐡𝐚𝐭𝐬𝐀𝐩𝐩 𝐜𝐡𝐚𝐧𝐧𝐞𝐥 𝐣𝐨𝐢𝐧 𝐤𝐚𝐫𝐞. ☟☟</p>
                 <button class="join-btn" onclick="joinChannel()"><img src="https://upload.wikimedia.org/wikipedia/commons/6/6b/WhatsApp.svg" alt="WhatsApp" oncontextmenu="return false;" draggable="false"> WhatsApp Channel</button>
                 <div class="later" onclick="closePopup()">MAYBE LATER</div>
             </div>
         </div>
 
-        <!-- 4. ORIGINAL APP UI -->
         <div class="app-container">
             <header>
                 <div class="header-left">
@@ -138,7 +107,9 @@
             <main id="mainContentArea">
                 <section class="quote-card">
                     <div class="welcome-badge">
-                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" width="14" height="14" style="margin-right: 5px; margin-top: -2px;"><path fill-rule="evenodd" d="M9 4.5a.75.75 0 0 1 .721.544l.813 2.846a3.75 3.75 0 0 0 2.522 2.522l2.846.813a.75.75 0 0 1 0 1.45l-2.846.813a3.75 3.75 0 0 0-2.522 2.522l-.813 2.846a.75.75 0 0 1-1.442 0l-.813-2.846a3.75 3.75 0 0 0-2.522-2.522l-2.846-.813a.75.75 0 0 1 0-1.45l2.846-.813a3.75 3.75 0 0 0 2.522-2.522l.813-2.846A.75.75 0 0 1 9 4.5ZM18 1.5a.75.75 0 0 1 .728.568l.258 1.036c.236.94.97 1.674 1.91 1.91l1.036.258a.75.75 0 0 1 0 1.456l-1.036.258c-.94.236-1.674.97-1.91 1.91l-.258 1.036a.75.75 0 0 1-1.456 0l-.258-1.036a2.625 2.625 0 0 0-1.91-1.91l-1.036-.258a.75.75 0 0 1 0-1.456l1.036-.258a2.625 2.625 0 0 0 1.91-1.91l.258-1.036A.75.75 0 0 1 18 1.5ZM16.5 15a.75.75 0 0 1 .712.513l.394 1.183c.15.447.5.799.948.948l1.183.395a.75.75 0 0 1 0 1.422l-1.183.395c-.447.15-.799.5-.948.948l-.395 1.183a.75.75 0 0 1-1.422 0l-.395-1.183a1.5 1.5 0 0 0-.948-.948l-1.183-.395a.75.75 0 0 1 0-1.422l1.183-.395c.447-.15.799-.5.948-.948l.395-1.183A.75.75 0 0 1 16.5 15Z" clip-rule="evenodd" /></svg>
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" width="14" height="14" style="margin-right: 5px; margin-top: -2px;">
+                            <path fill-rule="evenodd" d="M9 4.5a.75.75 0 0 1 .721.544l.813 2.846a3.75 3.75 0 0 0 2.522 2.522l2.846.813a.75.75 0 0 1 0 1.45l-2.846.813a3.75 3.75 0 0 0-2.522 2.522l-.813 2.846a.75.75 0 0 1-1.442 0l-.813-2.846a3.75 3.75 0 0 0-2.522-2.522l-2.846-.813a.75.75 0 0 1 0-1.45l2.846-.813a3.75 3.75 0 0 0 2.522-2.522l.813-2.846A.75.75 0 0 1 9 4.5ZM18 1.5a.75.75 0 0 1 .728.568l.258 1.036c.236.94.97 1.674 1.91 1.91l1.036.258a.75.75 0 0 1 0 1.456l-1.036.258c-.94.236-1.674.97-1.91 1.91l-.258 1.036a.75.75 0 0 1-1.456 0l-.258-1.036a2.625 2.625 0 0 0-1.91-1.91l-1.036-.258a.75.75 0 0 1 0-1.456l1.036-.258a2.625 2.625 0 0 0 1.91-1.91l.258-1.036A.75.75 0 0 1 18 1.5ZM16.5 15a.75.75 0 0 1 .712.513l.394 1.183c.15.447.5.799.948.948l1.183.395a.75.75 0 0 1 0 1.422l-1.183.395c-.447.15-.799.5-.948.948l-.395 1.183a.75.75 0 0 1-1.422 0l-.395-1.183a1.5 1.5 0 0 0-.948-.948l-1.183-.395a.75.75 0 0 1 0-1.422l1.183-.395c.447-.15.799-.5.948-.948l.395-1.183A.75.75 0 0 1 16.5 15Z" clip-rule="evenodd" />
+                        </svg>
                         WELCOME BACK
                     </div>
                     <div class="quote-text" id="daily-quote-text"><i class="fas fa-quote-left" style="color: rgba(255,255,255,0.3); margin-right:5px;"></i> Loading...</div>
@@ -148,8 +119,7 @@
                 <div class="section-header-title"><i class="fas fa-book-open" style="color: #10b981;"></i> Trending Books 🔥 </div>
                 <div class="book-container" id="bookContainer"></div>
 
-                <!-- PREMIUM BOOK NOT FOUND DESIGN -->
-                <div id="no-results-msg">
+                <div id="no-results-msg" style="display: none; padding-bottom: 30px;">
                     <div class="no-results-card">
                         <div class="no-results-icon"><i class="fas fa-book-open"></i></div>
                         <h2>BOOK NOT FOUND</h2>
@@ -165,7 +135,6 @@
                 <div class="premium-copyright">© 2026 MULTIVERSE BOOKS <span style="margin: 0 5px;">|</span> MADE WITH <i class="fas fa-heart" style="color: #ff4757; margin: 0 3px; filter: drop-shadow(0 0 5px rgba(255,71,87,0.8));"></i> BY MADxPRINCE</div>
             </main>
 
-            <!-- Download Modal -->
             <div class="download-modal" id="downloadModal">
                 <div class="modal-header-fixed">
                     <button class="back-btn" onclick="closeDownloadPage()"><i class="fas fa-arrow-left"></i></button>
@@ -191,13 +160,11 @@
                 </div>
             </div>
 
-            <!-- Notifications Panel -->
             <div class="notifications-panel" id="noti-panel">
                 <div class="noti-header"><div class="noti-title-area"><div class="noti-icon"><i class="fas fa-bell"></i></div><div class="noti-text"><h2>Notifications</h2><p>Updates & News</p></div></div><div class="icon-box" id="close-noti"><i class="fas fa-times"></i></div></div>
                 <div class="noti-body" id="dynamic-noti-container"></div>
             </div>
 
-            <!-- About Dev Panel -->
             <div class="overlay-panel" id="about-dev-panel">
                 <div class="modal-header-fixed">
                     <div class="header-content-wrapper"><button class="back-btn" id="close-dev-btn"><i class="fas fa-arrow-left"></i></button><h1 class="modal-title">ABOUT DEVELOPER</h1></div>
@@ -228,7 +195,6 @@
                 <div class="premium-copyright">© 2026 MULTIVERSE BOOKS <span style="margin: 0 5px;">|</span> MADE WITH <i class="fas fa-heart" style="color: #ff4757; margin: 0 3px;"></i> BY MADxPRINCE</div>
             </div>
 
-            <!-- DMCA Panel -->
             <div class="overlay-panel" id="dmca-panel">
                 <div class="modal-header-fixed"><button class="back-btn" id="close-dmca-btn"><i class="fas fa-arrow-left"></i></button><h1 class="modal-title">DMCA REQUEST</h1></div>
                 <div class="dmca-content">
@@ -261,7 +227,6 @@
                 <div class="premium-copyright">© 2026 MULTIVERSE BOOKS <span style="margin: 0 5px;">|</span> MADE WITH <i class="fas fa-heart" style="color: #ff4757; margin: 0 3px;"></i> BY MADxPRINCE</div>
             </div>
 
-            <!-- 5. ISOLATED ADMIN PANEL OVERLAY -->
             <div class="overlay-panel" id="admin-dashboard-panel" style="background: #0d0d12;">
                 <div class="modal-header-fixed" style="background: #09090b;">
                     <div class="header-content-wrapper">
@@ -281,7 +246,6 @@
                 </div>
 
                 <div class="adm-content-area">
-                    <!-- ADD BOOK SECTION -->
                     <div id="sectionAddBook" class="adm-section active">
                         <div class="adm-card">
                             <div class="adm-card-title"><i class="fas fa-pen-nib"></i> Enter Book Details</div>
@@ -289,16 +253,12 @@
                                 <div class="adm-form-group"><label class="adm-label">Book Title</label><input type="text" id="inTitle" class="adm-input" placeholder="e.g. Vocab - 15000+ Vocabularies" required autocomplete="off"></div>
                                 <div class="adm-form-group"><label class="adm-label">Author Name</label><input type="text" id="inAuthor" class="adm-input" placeholder="e.g. Neetu Singh Mam" required autocomplete="off"></div>
                                 <div class="adm-form-group"><label class="adm-label">Publish Year</label>
-                                    <div style="position: relative;">
-                                        <select id="inYear" class="adm-input" required>
-                                            <option value="2023">2023</option><option value="2024">2024</option><option value="2025">2025</option><option value="2026" selected>2026</option><option value="2027">2027</option><option value="2028">2028</option><option value="2029">2029</option><option value="2030">2030</option>
-                                        </select>
-                                    </div>
+                                    <select id="inYear" class="adm-input" required>
+                                        <option value="2023">2023</option><option value="2024">2024</option><option value="2025">2025</option><option value="2026" selected>2026</option><option value="2027">2027</option><option value="2028">2028</option><option value="2029">2029</option><option value="2030">2030</option>
+                                    </select>
                                 </div>
                                 <div class="adm-form-group"><label class="adm-label">Language</label>
-                                    <div style="position: relative;">
-                                        <select id="inLang" class="adm-input"><option value="Hindi">Hindi</option><option value="English">English</option><option value="Bilingual">Bilingual</option></select>
-                                    </div>
+                                    <select id="inLang" class="adm-input"><option value="Hindi">Hindi</option><option value="English">English</option><option value="Bilingual">Bilingual</option></select>
                                 </div>
                                 <div class="adm-form-group"><label class="adm-label">Exam Relevance</label><input type="text" id="inExams" class="adm-input" placeholder="e.g. SSC, BPSC, RRB" required autocomplete="off"></div>
                                 <div class="adm-form-group"><label class="adm-label">Cover Image URL</label><input type="url" id="inImage" class="adm-input" placeholder="https://example.com/image.jpg" required autocomplete="off"></div>
@@ -309,7 +269,6 @@
                         </div>
                     </div>
 
-                    <!-- MANAGE BOOKS SECTION -->
                     <div id="sectionManageBooks" class="adm-section">
                         <div class="adm-card">
                             <div class="adm-card-title"><i class="fas fa-list"></i> Manage Vault Inventory</div>
@@ -336,7 +295,6 @@
                         </div>
                     </div>
 
-                    <!-- TUTORIAL SECTION -->
                     <div id="sectionTutorial" class="adm-section">
                         <div class="adm-card">
                             <div class="adm-card-title"><i class="fas fa-video"></i> Upload Guide & Tutorial</div>
@@ -351,7 +309,6 @@
                         </div>
                     </div>
 
-                    <!-- ANALYTICS & LOGS SECTION -->
                     <div id="sectionAnalytics" class="adm-section">
                         <div class="adm-card">
                             <div class="adm-card-title"><i class="fas fa-chart-pie"></i> Real-Time Stats</div>
@@ -361,12 +318,11 @@
                             </div>
                         </div>
 
-                        <!-- 4. SYSTEM ACTIVITY LOGS -->
                         <div class="adm-card" style="margin-top: 20px;">
                             <div class="adm-card-title"><i class="fas fa-shield-alt"></i> System Activity Logs</div>
                             <div style="overflow-x: auto;">
                                 <table class="adm-table">
-                                    <thead><tr><th>Action</th><th>Book Details</th><th>Admin Authority</th><th>Date & Recover</th></tr></thead>
+                                    <thead><tr><th>Action Taken</th><th>Modified File / Book</th><th>Admin Authority</th><th>Date & Recovery</th></tr></thead>
                                     <tbody id="logsTableBody"><tr><td colspan="4" style="text-align:center; padding:20px; color:#a1a1aa; font-weight:800;">Loading Activity Logs...</td></tr></tbody>
                                 </table>
                             </div>
@@ -377,7 +333,6 @@
         </div>
     </div>
 
-    <!-- ADMIN EDIT MODAL -->
     <div class="adm-modal-overlay" id="adminEditModal">
         <div class="adm-modal-box">
             <h3 style="color: #fff; margin-bottom: 15px; font-size: 1.1rem; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 10px; font-weight: 800;">
@@ -406,7 +361,6 @@
         </div>
     </div>
 
-    <!-- DYNAMIC RED AND GREEN TOAST ELEMENT -->
     <div id="toast"></div>
 
     <script type="module" src="./app.js"></script>
