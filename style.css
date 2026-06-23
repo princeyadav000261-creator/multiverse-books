@@ -255,19 +255,27 @@ main::-webkit-scrollbar { display: none; }
 .later:hover { color: #fff; }
 
 /* ------------------------------------------------------------------
-   PREMIUM COMPACT LOGIN CARD - UPDATED WITH GLOW & LOGO BORDER
+   PREMIUM TRANSPARENT LOGIN CARD WITH WHITE GLOW (LIKE IMAGE)
 ------------------------------------------------------------------ */
 .login-container { position: fixed; inset: 0; z-index: 99999; flex-direction: column; background: #050508; transition: opacity 0.5s ease; overflow-y: auto; }
 .login-content-wrapper { margin: auto; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 20px; width: 100%; max-width: 380px; }
 .login-logo-glow { width: 85px; height: 85px; background: #fff; border-radius: 22px; display: flex; justify-content: center; align-items: center; box-shadow: 0 0 40px rgba(138, 43, 226, 0.4), inset 0 0 10px rgba(0,0,0,0.1); margin-bottom: 20px; padding: 4px; }
-/* ADDED GREY BORDER TO LOGO */
 .login-logo-glow img { width: 100%; height: 100%; object-fit: cover; border-radius: 18px; border: 2px solid #52525b; }
 .login-title-small { color: #9d88ff; font-size: 13px; font-weight: 800; letter-spacing: 2px; text-transform: uppercase; }
 .login-title-large { color: #fff; font-size: 26px; font-weight: 900; margin-top: 5px; font-family: 'Poppins', sans-serif; letter-spacing: 1px; }
 .login-subtitle { color: #8c97ac; font-size: 12px; margin-top: 8px; margin-bottom: 30px; letter-spacing: 0.5px; }
 
-/* ADDED WHITE INNER GLOW */
-.login-card { background: #12131a; border: 1px solid rgba(255,255,255,0.05); border-radius: 24px; padding: 30px 25px; width: 100%; box-shadow: inset 0 0 50px rgba(255, 255, 255, 0.05), 0 20px 50px rgba(0,0,0,0.8); }
+/* TRANSPARENT GLASS EFFECT WITH WHITE GLOW */
+.login-card { 
+    background: rgba(255, 255, 255, 0.02); 
+    backdrop-filter: blur(12px); 
+    -webkit-backdrop-filter: blur(12px);
+    border: 1px solid rgba(255, 255, 255, 0.1); 
+    border-radius: 24px; 
+    padding: 30px 25px; 
+    width: 100%; 
+    box-shadow: 0 0 25px rgba(255, 255, 255, 0.05), inset 0 0 15px rgba(255, 255, 255, 0.05); 
+}
 .login-badge { background: rgba(26, 27, 38, 0.8); border: 1px solid rgba(255,255,255,0.08); border-radius: 12px; padding: 8px 18px; display: inline-flex; align-items: center; justify-content: center; gap: 8px; color: #fff; font-weight: 600; font-size: 13px; margin-bottom: 25px; box-shadow: 0 4px 10px rgba(0,0,0,0.2); }
 
 .input-wrapper { position: relative; display: flex; align-items: center; margin-bottom: 15px; width: 100%; }
@@ -281,19 +289,18 @@ main::-webkit-scrollbar { display: none; }
 .btn-token-style { background: #1a1b26; color: #fff; width: 100%; padding: 16px; border-radius: 14px; border: 1px solid rgba(255,255,255,0.05); font-size: 14px; font-weight: 600; cursor: pointer; display: flex; justify-content: center; align-items: center; gap: 10px; transition: 0.3s; }
 .btn-token-style:hover { background: rgba(255,255,255,0.05); }
 
-/* --- PREMIUM BUTTON LOADER ANIMATION --- */
+/* --- NEW PREMIUM DOTTED LOADER ANIMATION --- */
 .premium-loader {
     width: 18px;
     height: 18px;
-    border: 2.5px solid rgba(255,255,255,0.2);
-    border-top-color: #ffffff;
+    border: 2.5px dotted #ffffff;
     border-radius: 50%;
-    animation: spinLoaderPremium 0.8s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+    animation: spinDottedPremium 1.5s linear infinite;
     display: inline-block;
 }
-@keyframes spinLoaderPremium {
-    from { transform: rotate(0deg); }
-    to { transform: rotate(360deg); }
+@keyframes spinDottedPremium {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
 }
 
 /* ------------------------------------------------------------------
@@ -469,4 +476,3 @@ select.adm-input { appearance: none; -webkit-appearance: none; padding-right: 40
 .yt-edit:hover { background: #2563eb; transform: scale(1.1); }
 .yt-delete { background: rgba(239, 68, 68, 0.9); }
 .yt-delete:hover { background: #dc2626; transform: scale(1.1); }
-
