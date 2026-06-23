@@ -57,7 +57,7 @@ header { display: flex; align-items: center; justify-content: space-between; pad
 
 /* FIXED SIDEBAR OVERFLOW FOR FIXED FOOTER & ACTIVE ANIMATION ADDED BACK */
 .sidebar { position: absolute; top: 0; left: 0; width: 85%; max-width: 330px; height: 100%; height: 100dvh; background-color: var(--spidy-sidebar-bg); z-index: 30; transform: translateX(-100%); transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1); display: flex; flex-direction: column; box-shadow: 5px 0 15px rgba(0,0,0,0.5); overflow: hidden; border-right: 1px solid var(--border-color); }
-.sidebar.active { transform: translateX(0); } /* YE LINE MISSING THI */
+.sidebar.active { transform: translateX(0); } 
 .sidebar-header-new { display: flex; align-items: center; padding: 20px 20px; border-bottom: 1px solid var(--border-color); flex-shrink: 0; }
 .profile-img { width: 46px; height: 46px; border-radius: 12px; object-fit: cover; box-shadow: 0 0 15px rgba(123, 138, 255, 0.4); flex-shrink: 0; background: #fff;}
 .profile-info { margin-left: 14px; flex-grow: 1; min-width: 0; display: flex; flex-direction: column; justify-content: center; }
@@ -79,8 +79,8 @@ header { display: flex; align-items: center; justify-content: space-between; pad
 .menu-item.active i { color: var(--spidy-accent-blue); text-shadow: 0 0 10px rgba(123, 138, 255, 0.5); }
 .menu-item.active span { color: var(--text-primary); text-shadow: 0 0 8px rgba(255, 255, 255, 0.3); }
 
-/* UPDATED PRO BADGE (PURPLE THEME MATCHING SCREENSHOT) */
-.pro-badge { margin-left: auto; background: rgba(144, 98, 255, 0.15); color: #b388ff !important; font-size: 9px; font-weight: 800 !important; padding: 5px 10px; border-radius: 8px; letter-spacing: 0.5px; text-transform: uppercase; border: 1px solid rgba(144, 98, 255, 0.3); }
+/* UPDATED PRO BADGE (PERFECT DESIGN MATCH) */
+.pro-badge { margin-left: auto; background-color: #2D1B4E; color: #C28BFF !important; font-size: 8.5px; font-weight: 800 !important; padding: 3px 8px; border-radius: 6px; letter-spacing: 0.8px; text-transform: uppercase; border: none; box-shadow: none; }
 
 .card-link i.external { margin-left: auto; font-size: 12px; width: auto; opacity: 0.7; }
 .card-whatsapp { background-color: var(--whatsapp-bg); box-shadow: inset 0 0 0 1px rgba(37, 211, 102, 0.1); } .card-whatsapp i, .card-whatsapp span { color: var(--whatsapp-green); }
@@ -147,8 +147,10 @@ main::-webkit-scrollbar { display: none; }
 .disable-long-press { -webkit-touch-callout: none; -webkit-user-select: none; -khtml-user-select: none; -moz-user-select: none; -ms-user-select: none; user-select: none; cursor: pointer; }
 .dl-title { margin-top: 15px; font-size: 18px; font-weight: 800; line-height: 1.3; color: #fff; }
 .dl-author { font-size: 13px; color: var(--text-secondary); margin-top: 4px; }
-.dl-main-btn { width: 100%; min-height: 58px; padding: 16px 20px; border: none; border-radius: 16px; margin-top: 20px; background: #10b981; color: #ffffff; font-size: 18px; font-weight: 800; display: flex; justify-content: center; align-items: center; gap: 10px; cursor: pointer; box-shadow: 0 6px 20px rgba(16, 185, 129, 0.25); outline: none; }
-.dl-box { width: 100%; margin-top: 12px; padding: 14px 16px; border-radius: 16px; display: flex; align-items: center; gap: 14px; background: var(--bg-card); text-decoration: none; color: #fff; cursor: pointer; border: 1px solid var(--border-color); }
+.dl-main-btn { width: 100%; min-height: 58px; padding: 16px 20px; border: none; border-radius: 16px; margin-top: 20px; background: #10b981; color: #ffffff; font-size: 18px; font-weight: 800; display: flex; justify-content: center; align-items: center; gap: 10px; cursor: pointer; box-shadow: 0 6px 20px rgba(16, 185, 129, 0.25); outline: none; transition: 0.2s ease;}
+.dl-main-btn:active { transform: scale(0.96); }
+.dl-box { width: 100%; margin-top: 12px; padding: 14px 16px; border-radius: 16px; display: flex; align-items: center; gap: 14px; background: var(--bg-card); text-decoration: none; color: #fff; cursor: pointer; border: 1px solid var(--border-color); transition: 0.2s ease; }
+.dl-box:active { transform: scale(0.96); }
 .dl-box i.icon { font-size: 20px; width: 42px; height: 42px; display: flex; justify-content: center; align-items: center; border-radius: 12px; background: rgba(255,255,255,0.04); flex-shrink: 0; }
 .dl-box-title { font-size: 14px; font-weight: 600; }
 .dl-box-sub { font-size: 12px; color: var(--text-secondary); margin-top: 2px; }
@@ -253,17 +255,19 @@ main::-webkit-scrollbar { display: none; }
 .later:hover { color: #fff; }
 
 /* ------------------------------------------------------------------
-   PREMIUM COMPACT LOGIN CARD
+   PREMIUM COMPACT LOGIN CARD - UPDATED WITH GLOW & LOGO BORDER
 ------------------------------------------------------------------ */
 .login-container { position: fixed; inset: 0; z-index: 99999; flex-direction: column; background: #050508; transition: opacity 0.5s ease; overflow-y: auto; }
 .login-content-wrapper { margin: auto; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 20px; width: 100%; max-width: 380px; }
 .login-logo-glow { width: 85px; height: 85px; background: #fff; border-radius: 22px; display: flex; justify-content: center; align-items: center; box-shadow: 0 0 40px rgba(138, 43, 226, 0.4), inset 0 0 10px rgba(0,0,0,0.1); margin-bottom: 20px; padding: 4px; }
-.login-logo-glow img { width: 100%; height: 100%; object-fit: cover; border-radius: 18px; }
+/* ADDED GREY BORDER TO LOGO */
+.login-logo-glow img { width: 100%; height: 100%; object-fit: cover; border-radius: 18px; border: 2px solid #52525b; }
 .login-title-small { color: #9d88ff; font-size: 13px; font-weight: 800; letter-spacing: 2px; text-transform: uppercase; }
 .login-title-large { color: #fff; font-size: 26px; font-weight: 900; margin-top: 5px; font-family: 'Poppins', sans-serif; letter-spacing: 1px; }
 .login-subtitle { color: #8c97ac; font-size: 12px; margin-top: 8px; margin-bottom: 30px; letter-spacing: 0.5px; }
 
-.login-card { background: #12131a; border: 1px solid rgba(255,255,255,0.05); border-radius: 24px; padding: 30px 25px; width: 100%; box-shadow: 0 20px 50px rgba(0,0,0,0.8); }
+/* ADDED WHITE INNER GLOW */
+.login-card { background: #12131a; border: 1px solid rgba(255,255,255,0.05); border-radius: 24px; padding: 30px 25px; width: 100%; box-shadow: inset 0 0 50px rgba(255, 255, 255, 0.05), 0 20px 50px rgba(0,0,0,0.8); }
 .login-badge { background: rgba(26, 27, 38, 0.8); border: 1px solid rgba(255,255,255,0.08); border-radius: 12px; padding: 8px 18px; display: inline-flex; align-items: center; justify-content: center; gap: 8px; color: #fff; font-weight: 600; font-size: 13px; margin-bottom: 25px; box-shadow: 0 4px 10px rgba(0,0,0,0.2); }
 
 .input-wrapper { position: relative; display: flex; align-items: center; margin-bottom: 15px; width: 100%; }
@@ -272,10 +276,25 @@ main::-webkit-scrollbar { display: none; }
 .input-wrapper input { width: 100%; background: #1a1c24; border: 1px solid rgba(255,255,255,0.05); border-radius: 14px; padding: 16px 45px; color: #fff; outline: none; font-weight: 500; font-size: 14px; }
 .input-wrapper input:focus { border-color: #6d5dfc; }
 
-.btn-login { background: #6d5dfc; color: #fff; width: 100%; padding: 16px; border-radius: 14px; border: none; font-size: 15px; font-weight: 700; cursor: pointer; transition: 0.3s; margin-top: 10px; box-shadow: 0 8px 20px rgba(109, 93, 252, 0.3); }
+.btn-login { background: #6d5dfc; color: #fff; width: 100%; padding: 16px; border-radius: 14px; border: none; font-size: 15px; font-weight: 700; cursor: pointer; transition: 0.3s; margin-top: 10px; box-shadow: 0 8px 20px rgba(109, 93, 252, 0.3); display: flex; justify-content: center; align-items: center; gap: 10px;}
 .btn-login:hover { background: #5a4bdf; }
 .btn-token-style { background: #1a1b26; color: #fff; width: 100%; padding: 16px; border-radius: 14px; border: 1px solid rgba(255,255,255,0.05); font-size: 14px; font-weight: 600; cursor: pointer; display: flex; justify-content: center; align-items: center; gap: 10px; transition: 0.3s; }
 .btn-token-style:hover { background: rgba(255,255,255,0.05); }
+
+/* --- PREMIUM BUTTON LOADER ANIMATION --- */
+.premium-loader {
+    width: 18px;
+    height: 18px;
+    border: 2.5px solid rgba(255,255,255,0.2);
+    border-top-color: #ffffff;
+    border-radius: 50%;
+    animation: spinLoaderPremium 0.8s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+    display: inline-block;
+}
+@keyframes spinLoaderPremium {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+}
 
 /* ------------------------------------------------------------------
    BOOK NOT FOUND
@@ -450,3 +469,4 @@ select.adm-input { appearance: none; -webkit-appearance: none; padding-right: 40
 .yt-edit:hover { background: #2563eb; transform: scale(1.1); }
 .yt-delete { background: rgba(239, 68, 68, 0.9); }
 .yt-delete:hover { background: #dc2626; transform: scale(1.1); }
+
