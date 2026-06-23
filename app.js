@@ -23,7 +23,7 @@ let activeBookSlug = "";
 let activeBookTitle = "";
 
 window.IS_SUPER_ADMIN = false;
-const SUPER_ADMIN_EMAIL = "princeyadav000261@gmail.com"; 
+const SUPER_ADMIN_EMAIL = "princeyadav000261@gmail.com";
 let myLangChart = null; let myDownloadsChart = null;
 let isAppInitialized = false;
 
@@ -78,7 +78,7 @@ function resizeCanvas() {
     canvas.width = width * dpr; canvas.height = height * dpr; ctx.scale(dpr, dpr); initHex(); 
 }
 
-// 2. DAILY QUOTES LOGIC
+// 2. DAILY QUOTES LOGIC (28 Quotes)
 const quotes = [
     { text: "Be the change that you wish to see in the world.", author: "Mahatma Gandhi" },
     { text: "I have not failed. I've just found 10,000 ways that won't work.", author: "Thomas A. Edison" },
@@ -115,7 +115,7 @@ document.getElementById('daily-quote-text').innerHTML = `<i class="fas fa-quote-
 document.getElementById('daily-quote-author').innerText = `— ${quotes[currentQuoteIndex].author}`;
 
 
-// 3. AUTH FLOW
+// 3. AUTH FLOW (Upload Cards & Role Management Fixed)
 onAuthStateChanged(auth, async (user) => {
     if (user) {
         document.getElementById('loginOverlay').style.display = 'none';
@@ -126,16 +126,25 @@ onAuthStateChanged(auth, async (user) => {
             isAppInitialized = true;
         }
 
-        // FIX: Ensure correct email name is displayed
+        // FIX 1: Show clean parsed string name across auth mechanisms
         let dName = user.displayName;
         if (!dName || dName.trim() === "") { dName = user.email.split('@')[0]; }
         document.getElementById('sidebarProfileName').innerText = dName;
-        if(user.photoURL) document.getElementById('sidebarProfileImg').src = user.photoURL;
+        
+        // FIX: Force set uniform high quality official placeholder asset inside profile
+        document.getElementById('sidebarProfileImg').src = "https://i.postimg.cc/cJdGqYHG/IMG-20260524-WA0004.jpg";
+
+        // FIX: All logged-in mechanisms now cleanly access Upload Books section link
+        document.getElementById('menu-admin-panel').style.display = 'flex';
 
         if (user.email === SUPER_ADMIN_EMAIL) {
             window.IS_SUPER_ADMIN = true;
             document.getElementById('sidebarRoleText').innerText = "Super Admin";
-            document.getElementById('menu-admin-panel').style.display = 'flex';
+            
+            // Show all tabs for Super Admin
+            document.getElementById('admTabManage').style.display = 'inline-flex';
+            document.getElementById('admTabAnalytics').style.display = 'inline-flex';
+            document.getElementById('adminTutorialEdit').style.display = 'block';
             
             const currentYearStr = new Date().getFullYear().toString();
             onSnapshot(doc(db, "download_stats", currentYearStr), (docSnap) => {
@@ -146,15 +155,20 @@ onAuthStateChanged(auth, async (user) => {
         } else {
             window.IS_SUPER_ADMIN = false;
             document.getElementById('sidebarRoleText').innerText = "Verified User";
-            document.getElementById('menu-admin-panel').style.display = 'none';
+            
+            // FIX: Restrict tabs dynamically for non Super Admins (Only Add & Video)
+            document.getElementById('admTabManage').style.display = 'none';
+            document.getElementById('admTabAnalytics').style.display = 'none';
+            document.getElementById('adminTutorialEdit').style.display = 'none';
+            
+            // Force reset to active valid tab
+            switchAdminTab('add');
         }
 
         onSnapshot(doc(db, "settings", "global"), (docSnap) => {
             if (docSnap.exists() && docSnap.data().tutorialVideoUrl) {
                 const embedUrl = getYouTubeEmbedUrl(docSnap.data().tutorialVideoUrl);
                 if(document.getElementById('tutorialIframe')) document.getElementById('tutorialIframe').src = embedUrl;
-            } else {
-                if(document.getElementById('tutorialIframe')) document.getElementById('tutorialIframe').src = "";
             }
         });
 
@@ -204,13 +218,27 @@ document.getElementById('loginForm').addEventListener('submit', async (e) => {
     e.preventDefault(); 
     const email = document.getElementById('loginEmail').value; const pass = document.getElementById('loginPassword').value;
     const btn = document.getElementById('loginBtn'); btn.innerHTML = `Wait...`;
-    try { await signInWithEmailAndPassword(auth, email, pass); e.target.reset(); showToast("Login Successful!"); document.getElementById('loginOverlay').style.opacity = '0'; setTimeout(() => { document.getElementById('loginOverlay').style.display = 'none'; }, 500); } 
-    catch(err) { showToast("Error: Invalid Credentials!"); btn.innerHTML = `Login Securely`; } 
+    try { 
+        await signInWithEmailAndPassword(auth, email, pass); 
+        e.target.reset(); 
+        showToast("Login Successful!"); 
+        document.getElementById('loginOverlay').style.opacity = '0'; 
+        setTimeout(() => { document.getElementById('loginOverlay').style.display = 'none'; }, 500); 
+    } catch(err) { 
+        showToast("Error: Invalid Credentials!"); 
+        btn.innerHTML = `Login Securely`; 
+    } 
 });
 
 document.getElementById('googleSignInBtn').addEventListener('click', async () => { 
-    try { await signInWithPopup(auth, provider); document.getElementById('loginOverlay').style.opacity = '0'; setTimeout(() => { document.getElementById('loginOverlay').style.display = 'none'; }, 500); } 
-    catch(err) { showToast("Google Sign-In Failed! " + err.message); } 
+    try { 
+        await signInWithPopup(auth, provider); 
+        document.getElementById('loginOverlay').style.opacity = '0'; 
+        setTimeout(() => { document.getElementById('loginOverlay').style.display = 'none'; }, 500); 
+        showToast("Google Login Successful!");
+    } catch(err) { 
+        showToast("Google Sign-In Failed! Settings check karein."); 
+    } 
 });
 
 document.getElementById('admin-logout-btn').addEventListener('click', () => { 
@@ -337,7 +365,6 @@ window.openDownloadPage = function(slug, skipPushState = false) {
     document.getElementById("downloadModal").style.display = "flex";
     document.getElementById("dlPreviewImage").src = book.image; document.getElementById("dlBookTitle").innerText = book.title; document.getElementById("dlBookAuthor").innerText = book.author;
     document.getElementById("dlPdfLinkBtn").onclick = function() { if(book.pdfLink) window.open(book.pdfLink, '_blank'); };
-    
     document.getElementById("dlYoutubeLinkBtn").onclick = function() { if(book.ytLink && book.ytLink !== "#") { window.open(book.ytLink, '_blank'); } };
 
     let examsArray = (book.exams || "General").split(',').map(item => item.trim());
@@ -362,7 +389,7 @@ window.shareBook = function() {
 // 6. ADMIN FUNCTIONS & PAGINATION
 function showToast(message) {
     const toast = document.getElementById('toast'); 
-    // Fix: Red for Error, Green for Success
+    // FIX 3: Toast color management logic correctly separates Red from Green based on outcome status
     if (message.toLowerCase().includes('failed') || message.toLowerCase().includes('error') || message.toLowerCase().includes('invalid')) {
         toast.style.background = '#ef4444';
         toast.innerHTML = `<i class="fas fa-exclamation-circle"></i> <span id="toastMsg">${message}</span>`;
@@ -409,10 +436,7 @@ window.changeAdminPage = function(dir) {
 
 function renderAdminBooksTable() {
     if(!document.getElementById('adminBooksTableBody')) return;
-    
-    if(document.getElementById('adminSearchBook').value.trim() === "") {
-        adminFilteredBooks = [...window.booksData];
-    }
+    if(document.getElementById('adminSearchBook').value.trim() === "") { adminFilteredBooks = [...window.booksData]; }
 
     const totalPages = Math.ceil(adminFilteredBooks.length / adminBooksPerPage) || 1;
     if(adminCurrentPage > totalPages) adminCurrentPage = totalPages;
@@ -424,7 +448,6 @@ function renderAdminBooksTable() {
 
     const startIdx = (adminCurrentPage - 1) * adminBooksPerPage;
     const paginated = adminFilteredBooks.slice(startIdx, startIdx + adminBooksPerPage);
-
     const tbody = document.getElementById('adminBooksTableBody');
     let htmlString = "";
     
