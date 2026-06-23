@@ -1,5 +1,5 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
-import { getFirestore, collection, addDoc, doc, updateDoc, deleteDoc, onSnapshot, query, orderBy, setDoc } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
+import { getFirestore, collection, addDoc, doc, updateDoc, deleteDoc, onSnapshot, query, orderBy, setDoc, increment } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
 import { getAuth, signInWithEmailAndPassword, GoogleAuthProvider, signInWithPopup, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js";
 
 const firebaseConfig = {
@@ -35,7 +35,7 @@ let dbLogs = [];
 const urlParamsCheck = new URLSearchParams(window.location.search);
 window.isDeepLinkLoad = urlParamsCheck.has('book'); 
 
-// 1. ORIGINAL CANVAS LOADER
+// CANVAS LOADER
 const canvas = document.getElementById('networkCanvas');
 const ctx = canvas.getContext('2d');
 let width, height;
@@ -125,8 +125,6 @@ function showAppAndPopup() {
     setTimeout(() => { 
         loader.style.display = "none"; 
         cancelAnimationFrame(animationId);
-        
-        // Agar normal load hai (Deep link nahi hai) tabhi Popup show karo
         if(!window.isDeepLinkLoad) {
             document.getElementById("popupOverlay").style.display = "flex";
         }
@@ -135,7 +133,6 @@ function showAppAndPopup() {
 
 onAuthStateChanged(auth, async (user) => {
     if (user) {
-        // Optimistic UI ke liye flag save kar diya
         localStorage.setItem('isUserLoggedIn', 'true');
 
         let dName = user.displayName;
@@ -148,7 +145,6 @@ onAuthStateChanged(auth, async (user) => {
             document.getElementById('sidebarRoleText').innerText = "Super Admin";
             document.getElementById('uploadMenuText').innerText = "Manage Vault";
             
-            // Super admin sees everything
             document.getElementById('admTabManage').style.display = 'inline-flex';
             document.getElementById('admTabAnalytics').style.display = 'inline-flex';
             document.getElementById('adminTutorialEdit').style.display = 'block';
@@ -169,12 +165,10 @@ onAuthStateChanged(auth, async (user) => {
             }, (error) => {});
 
         } else {
-            // Normal Admin / Google User Setup
             window.IS_SUPER_ADMIN = false;
             document.getElementById('sidebarRoleText').innerText = "Verified User";
             document.getElementById('uploadMenuText').innerText = "Upload Books";
             
-            // Hide Management & YT Link stuff from Normal users
             document.getElementById('admTabManage').style.display = 'none';
             document.getElementById('admTabAnalytics').style.display = 'none';
             document.getElementById('adminTutorialEdit').style.display = 'none';
@@ -192,7 +186,6 @@ onAuthStateChanged(auth, async (user) => {
             });
         });
 
-        // Fetch Books
         const q = query(collection(db, "books"), orderBy("createdAt", "desc"));
         onSnapshot(q, (snapshot) => {
             window.booksData = [];
@@ -212,14 +205,12 @@ onAuthStateChanged(auth, async (user) => {
             
             if(window.IS_SUPER_ADMIN) updateAdminCharts();
             
-            // Handle Data for Deep Link
             const sBook = new URLSearchParams(window.location.search).get('book');
             if(sBook && window.isDeepLinkLoad) { 
                 window.openDownloadPage(sBook, true);
             }
         });
 
-        // Ensure Loader handles Normal App Starts correctly
         if (isInitialLoad && !window.isDeepLinkLoad) {
             const elapsed = Date.now() - appStartTime;
             const remainingTime = Math.max(0, 2500 - elapsed); 
@@ -244,7 +235,7 @@ onAuthStateChanged(auth, async (user) => {
     }
 });
 
-// LOGIC: Manual Login Flow
+// LOGIN
 document.getElementById('loginForm').addEventListener('submit', async (e) => {
     e.preventDefault(); 
     const email = document.getElementById('loginEmail').value; const pass = document.getElementById('loginPassword').value;
@@ -266,54 +257,40 @@ document.getElementById('loginForm').addEventListener('submit', async (e) => {
             resizeCanvas(); requestAnimationFrame(animateHex); 
             setTimeout(() => { loader.style.opacity = "1"; }, 50);
 
-            if(!window.isDeepLinkLoad) {
-                setTimeout(showAppAndPopup, 2500);
-            }
+            if(!window.isDeepLinkLoad) { setTimeout(showAppAndPopup, 2500); }
         }, 500);
 
-    } catch(err) { 
-        showToast("Failed: Invalid Credentials!"); 
-        btn.innerHTML = `Login`; 
-    } 
+    } catch(err) { showToast("Failed: Invalid Credentials!"); btn.innerHTML = `Login`; } 
 });
 
 document.getElementById('googleSignInBtn').addEventListener('click', async () => { 
     try { 
         await signInWithPopup(auth, provider); 
         showToast("Google Login Successful!");
-        
         const loginOverlay = document.getElementById('loginOverlay');
         loginOverlay.style.opacity = '0';
-        
         setTimeout(() => {
             loginOverlay.style.display = 'none';
             const loader = document.getElementById("loaderScreen");
             loader.style.display = "flex";
             resizeCanvas(); requestAnimationFrame(animateHex);
             setTimeout(() => { loader.style.opacity = "1"; }, 50);
-
-            if(!window.isDeepLinkLoad) {
-                setTimeout(showAppAndPopup, 2500);
-            }
+            if(!window.isDeepLinkLoad) { setTimeout(showAppAndPopup, 2500); }
         }, 500);
-    } catch(err) { 
-        showToast("Failed: Google Sign-In Error."); 
-    } 
+    } catch(err) { showToast("Failed: Google Sign-In Error."); } 
 });
 
 
 document.getElementById('admin-logout-btn').addEventListener('click', () => { 
     if(confirm("Are you sure you want to logout?")) {
-        signOut(auth).then(() => { 
-            document.getElementById('admin-dashboard-panel').classList.remove('active');
-        });
+        signOut(auth).then(() => { document.getElementById('admin-dashboard-panel').classList.remove('active'); });
     }
 });
 
 window.closePopup = function(){ document.getElementById("popupOverlay").style.display = "none"; };
 window.joinChannel = function(){ window.open('https://whatsapp.com/channel/0029Vb6NBZx1yT2GByTTVf2A', '_blank'); };
 
-// 4. FUZZY SEARCH
+// SEARCH
 let searchTimeout;
 const searchInputEl = document.getElementById('app-search-input');
 const closeSearchBtn = document.getElementById('close-search');
@@ -343,7 +320,6 @@ function performFuzzySearch(searchText) {
     else { document.getElementById("bookContainer").innerHTML = ""; document.getElementById('no-results-msg').style.display = 'flex'; }
 }
 
-// 5. AUTO GRID BOOK LOADING
 function getBatchSize() {
     let cols = 2; 
     if (window.innerWidth >= 768) {
@@ -387,6 +363,7 @@ window.renderBooksUI = function(startIndex, count, customData = null) {
     }
     loadedCount = endIndex;
 }
+
 window.generateNotifications = function() {
     const notiContainer = document.getElementById('dynamic-noti-container'); notiContainer.innerHTML = ''; 
     window.booksData.slice(0, 15).forEach((book) => {
@@ -423,11 +400,35 @@ window.addEventListener('popstate', (e) => {
     else { document.getElementById("downloadModal").style.display = "none"; }
 });
 
+// FIX 1: UPDATE FIREBASE DOWNLOAD GRAPH ON PDF CLICK
 window.openDownloadPage = function(slug, skipPushState = false) {
     const book = window.booksData.find(b => b.slug === slug); if(!book) return;
     document.getElementById("downloadModal").style.display = "flex";
     document.getElementById("dlPreviewImage").src = book.image; document.getElementById("dlBookTitle").innerText = book.title; document.getElementById("dlBookAuthor").innerText = book.author;
-    document.getElementById("dlPdfLinkBtn").onclick = function() { if(book.pdfLink) window.open(book.pdfLink, '_blank'); };
+    
+    document.getElementById("dlPdfLinkBtn").onclick = async function() { 
+        if(book.pdfLink) {
+            window.open(book.pdfLink, '_blank'); 
+            
+            // Increment Graph Logic
+            try {
+                const currentMonth = new Date().toLocaleString('en-US', { month: 'short' }).toLowerCase();
+                const yearStr = new Date().getFullYear().toString();
+                await updateDoc(doc(db, "download_stats", yearStr), {
+                    [currentMonth]: increment(1)
+                });
+            } catch(e) {
+                // If doc doesn't exist yet, create it
+                try {
+                    const currentMonth = new Date().toLocaleString('en-US', { month: 'short' }).toLowerCase();
+                    const yearStr = new Date().getFullYear().toString();
+                    await setDoc(doc(db, "download_stats", yearStr), {
+                        [currentMonth]: 1
+                    }, { merge: true });
+                } catch(err) {}
+            }
+        }
+    };
     
     document.getElementById("dlYoutubeLinkBtn").onclick = function() { 
         if(book.ytLink && book.ytLink !== "#" && book.ytLink !== "") { 
@@ -446,7 +447,6 @@ window.openDownloadPage = function(slug, skipPushState = false) {
     if (!skipPushState) { history.pushState({ popup: 'book' }, '', '?book=' + book.slug); }
 }
 
-// Deep link se Back aane par Sequence
 window.closeDownloadPage = function() {
     if (history.state && history.state.popup === 'book') { 
         history.back(); 
@@ -455,18 +455,14 @@ window.closeDownloadPage = function() {
         window.history.replaceState({}, '', window.location.pathname); 
     }
 
-    // Sequence trigger: Sirf tabhi jab ye first deep link open tha
     if(window.isDeepLinkLoad) {
         window.isDeepLinkLoad = false;
-        
-        // Show Loader first
         const loader = document.getElementById("loaderScreen");
         loader.style.display = "flex";
         loader.style.opacity = "1";
         resizeCanvas(); 
         requestAnimationFrame(animateHex);
 
-        // Wait -> hide loader -> show WhatsApp
         setTimeout(() => {
             loader.style.opacity = "0";
             setTimeout(() => {
@@ -483,7 +479,6 @@ window.shareBook = function() {
     else { navigator.clipboard.writeText(shareUrl); alert("Link Copied!"); }
 }
 
-// 6. ADMIN FUNCTIONS & PAGINATION
 function showToast(message) {
     const toast = document.getElementById('toast'); 
     if (message.toLowerCase().includes('failed') || message.toLowerCase().includes('error') || message.toLowerCase().includes('invalid')) {
@@ -497,7 +492,7 @@ function showToast(message) {
     setTimeout(() => { toast.classList.remove('show'); }, 3000);
 }
 
-// === NEW YOUTUBE TUTORIAL GENERATOR LOGIC ===
+// === FIX 2: PREMIUM YOUTUBE CARDS WITH FAKE VIEWS & AUTO-AVATAR ===
 async function renderTutorialCard(videoUrl, docId, containerId, isAdmin) {
     try {
         const videoIdMatch = videoUrl.match(/(?:youtu\.be\/|youtube\.com\/(?:[^\/]+\/.+\/|(?:v|e(?:mbed)?)\/|.*[?&]v=)|youtube\.com\/shorts\/)([^"&?\/\s]{11})/i);
@@ -518,18 +513,41 @@ async function renderTutorialCard(videoUrl, docId, containerId, isAdmin) {
         const thumbnailUrl = `https://img.youtube.com/vi/${videoId}/maxresdefault.jpg`;
         const fallbackUrl = `https://img.youtube.com/vi/${videoId}/hqdefault.jpg`;
         
-        let deleteBtn = isAdmin ? `<button class="yt-delete-btn" onclick="deleteTutorial('${docId}')"><i class="fas fa-trash"></i></button>` : '';
+        // Auto Generate Channel Avatar
+        const avatarUrl = `https://ui-avatars.com/api/?name=${encodeURIComponent(channelName)}&background=random&color=fff&size=64&bold=true`;
+        
+        // Algorithm for consistent Fake Views based on Video ID
+        let hash = 0;
+        for (let i = 0; i < videoId.length; i++) { hash = videoId.charCodeAt(i) + ((hash << 5) - hash); }
+        const viewsNum = Math.abs(hash % 850) + 12; // Gives a number between 12 and ~862
+        const fakeViews = viewsNum > 100 ? (viewsNum / 10).toFixed(1) + "K" : viewsNum + "K";
+        
+        // Add Edit & Delete Button if Super Admin
+        let actionBtns = '';
+        if(isAdmin) {
+            actionBtns = `
+            <div class="yt-action-btns">
+                <button class="yt-action-btn yt-edit" onclick="editTutorial('${docId}', '${videoUrl}')"><i class="fas fa-pen"></i></button>
+                <button class="yt-action-btn yt-delete" onclick="deleteTutorial('${docId}')"><i class="fas fa-trash"></i></button>
+            </div>`;
+        }
 
         const cardHTML = `
             <div class="yt-card">
-                ${deleteBtn}
+                ${actionBtns}
                 <div class="yt-thumbnail-wrapper" onclick="window.open('${videoUrl}', '_blank')">
                     <img src="${thumbnailUrl}" class="yt-thumbnail-img" alt="Thumbnail" onerror="this.src='${fallbackUrl}'">
                     <div class="yt-play-icon"><i class="fas fa-play" style="margin-left: 3px;"></i></div>
                 </div>
                 <div class="yt-info-box" onclick="window.open('${videoUrl}', '_blank')">
-                    <div class="yt-video-title">${title}</div>
-                    <div class="yt-channel-name"><i class="fas fa-check-circle" style="color: #a1a1aa; font-size: 10px;"></i> ${channelName}</div>
+                    <div style="display:flex; gap:12px; align-items:flex-start;">
+                        <img src="${avatarUrl}" style="width:36px; height:36px; border-radius:50%; flex-shrink:0;">
+                        <div>
+                            <div class="yt-video-title">${title}</div>
+                            <div class="yt-channel-name">${channelName} <i class="fas fa-check-circle" style="color:#a1a1aa; font-size:10px;"></i></div>
+                            <div class="yt-stats-text">${fakeViews} Views • Recommended</div>
+                        </div>
+                    </div>
                 </div>
             </div>
         `;
@@ -548,6 +566,19 @@ window.addTutorialLink = async function() {
     } catch(e) { showToast("Failed: " + e.message); } 
 }
 
+window.editTutorial = async function(id, currentUrl) {
+    if(!window.IS_SUPER_ADMIN) return;
+    const newUrl = prompt("Enter new YouTube / Shorts URL:", currentUrl);
+    if(newUrl && newUrl.trim() !== "" && newUrl !== currentUrl) {
+        try {
+            await updateDoc(doc(db, "tutorials", id), { url: newUrl.trim() });
+            showToast("Video Updated Successfully!");
+        } catch(e) {
+            showToast("Failed to update video!");
+        }
+    }
+}
+
 window.deleteTutorial = async function(id) {
     if(!window.IS_SUPER_ADMIN) return;
     if(confirm("Remove this tutorial video permanently?")) {
@@ -555,7 +586,7 @@ window.deleteTutorial = async function(id) {
     }
 }
 
-// ADD BOOK (Normal Google Login Users can also upload via Drive Links)
+// ADD BOOK
 document.getElementById('addBookForm').addEventListener('submit', async (e) => {
     e.preventDefault(); 
     
