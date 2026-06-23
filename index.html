@@ -10,9 +10,18 @@
 </head>
 <body>
 
-    <div id="systemLoader">
-        <div class="dots-container"><div class="dot"></div><div class="dot"></div><div class="dot"></div><div class="dot"></div></div>
-        <div class="loader-text">Verifying System...</div>
+    <div class="loader-screen" id="loaderScreen">
+        <canvas id="networkCanvas"></canvas>
+        <div class="loader-logo"><img src="https://i.postimg.cc/cJdGqYHG/IMG-20260524-WA0004.jpg" alt="Logo" oncontextmenu="return false;" draggable="false"></div>
+        <div class="loader-title">MULTIVERSE BOOKS</div>
+        <div class="premium-tags">
+            <div class="tag"><i class="fa-solid fa-file-pdf"></i> PDF</div>
+            <div class="tag"><i class="fa-solid fa-note-sticky"></i> NOTES</div>
+            <div class="tag"><i class="fa-solid fa-square-root-variable"></i> FORMULA</div>
+            <div class="tag"><i class="fa-solid fa-layer-group"></i> MORE</div>
+        </div>
+        <div class="loader-bar"><div class="loader-fill"></div></div>
+        <div class="loader-powered-text">POWERED BY MADxPRINCE</div>
     </div>
 
     <div id="loginOverlay" class="login-container">
@@ -29,6 +38,18 @@
                 <div style="text-align: center; margin: 15px 0; color: #a1a1aa; font-size: 0.8rem;">OR</div>
                 <button type="button" id="googleSignInBtn" class="btn-token-style"><img src="https://upload.wikimedia.org/wikipedia/commons/5/53/Google_%22G%22_Logo.svg" alt="G" style="width: 20px;"> Login with Google</button>
             </div>
+        </div>
+    </div>
+
+    <div class="popup-overlay" id="popupOverlay">
+        <div class="popup">
+            <div class="popup-logo"><img src="https://upload.wikimedia.org/wikipedia/commons/6/6b/WhatsApp.svg" alt="WhatsApp" oncontextmenu="return false;" draggable="false"></div>
+            <h1> 𝗠𝘂𝗹𝘁𝗶𝘃𝗲𝗿𝘀𝗲 𝗕𝗼𝗼𝗸𝘀 𝗢𝗳𝗳𝗶𝗰𝗶𝗮𝗹
+                <svg class="verified-badge-ui" viewBox="0 0 100 100"><defs><linearGradient id="pG1" x1="0%" y1="0%" x2="0%" y2="100%"><stop offset="0%" stop-color="#55bbf8" /><stop offset="100%" stop-color="#0a7bd2" /></linearGradient></defs><g fill="url(#pG1)"><circle cx="50" cy="50" r="33" /></g><path d="M33 52 L43 62 L67 36" fill="none" stroke="#ffffff" stroke-width="8" stroke-linecap="round" stroke-linejoin="round" filter="drop-shadow(0px 3px 2px rgba(0,0,0,0.3))" /></svg>
+            </h1>
+            <p> 𝐒𝐭𝐮𝐝𝐲 𝐦𝐚𝐭𝐞𝐫𝐢𝐚𝐥 𝐤𝐞 𝐥𝐢𝐲𝐞 𝐢𝐝𝐡𝐚𝐫-𝐮𝐝𝐡𝐚𝐫 𝐛𝐡𝐚𝐭𝐚𝐤𝐧𝐚 𝐜𝐡𝐡𝐨𝐝𝐨! 📚 𝐀𝐛 𝐦𝐢𝐥𝐞𝐠𝐚 𝐬𝐚𝐚𝐫𝐚 𝐜𝐨𝐧𝐭𝐞𝐧𝐭 𝐛𝐢𝐥𝐤𝐮𝐥 𝐅𝐑𝐄𝐄. 𝐈𝐧𝐬𝐭𝐚𝐧𝐭 𝐮𝐩𝐝𝐚𝐭𝐞𝐬 𝐚𝐮𝐫 𝐛𝐞𝐬𝐭 𝐛𝐨𝐨𝐤𝐬 𝐩𝐚𝐚𝐧𝐞 𝐤𝐞 𝐥𝐢𝐲𝐞 𝐚𝐚𝐣 𝐡𝐢 𝐡𝐮𝐦𝐚𝐫𝐚 𝐖𝐡𝐚𝐭𝐬𝐀𝐩𝐩 𝐜𝐡𝐚𝐧𝐧𝐞𝐥 𝐣𝐨𝐢𝐧 𝐤𝐚𝐫𝐞. ☟☟</p>
+            <button class="join-btn" onclick="joinChannel()"><img src="https://upload.wikimedia.org/wikipedia/commons/6/6b/WhatsApp.svg" alt="WhatsApp" oncontextmenu="return false;" draggable="false"> WhatsApp Channel</button>
+            <div class="later" onclick="closePopup()">MAYBE LATER</div>
         </div>
     </div>
 
@@ -76,7 +97,6 @@
                 <div class="section-title">COMMUNITY</div>
                 <a href="https://whatsapp.com/channel/0029Vb6NBZx1yT2GByTTVf2A" class="menu-item card-link card-whatsapp"><i class="fab fa-whatsapp"></i><span>Join WhatsApp</span><i class="fas fa-external-link-square-alt external"></i></a>
                 <a href="https://youtube.com/@madxprince" class="menu-item card-link card-youtube"><i class="fab fa-youtube"></i><span>YouTube Channel</span><i class="fas fa-external-link-square-alt external"></i></a>
-                <a href="#" class="menu-item normal" id="menu-logout" style="color: #ef4444; margin-top: 10px;"><i class="fas fa-power-off"></i><span>Logout</span></a>
             </div>
 
             <div class="sidebar-footer">
@@ -144,17 +164,22 @@
             <div class="dmca-content"><div class="dmca-hero"><h1 class="dmca-hero-title">COPYRIGHT DISCLAIMER</h1></div></div>
         </div>
 
-        <div class="overlay-panel" id="admin-dashboard-panel" style="background: #050505;">
-            <div class="modal-header-fixed" style="background: rgba(10,10,12,0.95); backdrop-filter: blur(10px); border-bottom: 1px solid rgba(255,255,255,0.1);">
-                <button class="back-btn" id="close-admin-btn"><i class="fas fa-arrow-left"></i></button>
-                <h1 class="modal-title" style="flex:1;">VAULT ADMIN PANEL</h1>
-                
-                <div class="admin-top-nav">
-                    <button class="admin-nav-btn active" onclick="switchAdminTab('add')"><i class="fas fa-plus"></i> Add</button>
-                    <button class="admin-nav-btn" onclick="switchAdminTab('manage')"><i class="fas fa-list"></i> Manage</button>
-                    <button class="admin-nav-btn" onclick="switchAdminTab('tutorial')"><i class="fas fa-video"></i> Video</button>
-                    <button class="admin-nav-btn" onclick="switchAdminTab('analytics')"><i class="fas fa-chart-pie"></i> Stats</button>
+        <div class="overlay-panel" id="admin-dashboard-panel" style="background: var(--dev-bg-main);">
+            <div class="modal-header-fixed">
+                <div class="header-content-wrapper">
+                    <button class="back-btn" id="close-admin-btn"><i class="fas fa-arrow-left"></i></button>
+                    <h1 class="modal-title">VAULT ADMIN PANEL</h1>
                 </div>
+                <div class="header-active-badge" id="admin-logout-btn" style="cursor: pointer; background: rgba(239, 68, 68, 0.15); color: #ef4444; border: 1px solid rgba(239, 68, 68, 0.3);">
+                    <i class="fas fa-power-off"></i> Logout
+                </div>
+            </div>
+            
+            <div class="admin-top-nav">
+                <button class="admin-nav-btn active" onclick="switchAdminTab('add')"><i class="fas fa-plus"></i> Add</button>
+                <button class="admin-nav-btn" onclick="switchAdminTab('manage')"><i class="fas fa-list"></i> Manage</button>
+                <button class="admin-nav-btn" onclick="switchAdminTab('tutorial')"><i class="fas fa-video"></i> Video</button>
+                <button class="admin-nav-btn" onclick="switchAdminTab('analytics')"><i class="fas fa-chart-pie"></i> Stats</button>
             </div>
 
             <div class="admin-dashboard-area">
@@ -216,7 +241,6 @@
                         </div>
                     </div>
                 </div>
-
             </div>
         </div>
 
