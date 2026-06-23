@@ -18,15 +18,13 @@ const provider = new GoogleAuthProvider();
 
 window.booksData = [];
 let loadedCount = 0; 
-let activeBookSlug = ""; 
-let activeBookTitle = "";
 
 window.IS_SUPER_ADMIN = false;
 const SUPER_ADMIN_EMAIL = "princeyadav000261@gmail.com"; 
 let myLangChart = null; let myDownloadsChart = null;
 let isAppInitialized = false;
 
-// ================= ORIGINAL CANVAS LOADER =================
+// 1. ORIGINAL CANVAS LOADER
 const canvas = document.getElementById('networkCanvas');
 const ctx = canvas.getContext('2d');
 let width, height;
@@ -73,28 +71,66 @@ function resizeCanvas() {
     canvas.width = width * dpr; canvas.height = height * dpr; ctx.scale(dpr, dpr); initHex(); 
 }
 
-// ================= AUTH FLOW =================
+// 2. DAILY QUOTES LOGIC (Restored 28 Quotes)
+const quotes = [
+    { text: "Be the change that you wish to see in the world.", author: "Mahatma Gandhi" },
+    { text: "I have not failed. I've just found 10,000 ways that won't work.", author: "Thomas A. Edison" },
+    { text: "The only way to do great work is to love what you do.", author: "Steve Jobs" },
+    { text: "In the middle of difficulty lies opportunity.", author: "Albert Einstein" },
+    { text: "It does not matter how slowly you go as long as you do not stop.", author: "Confucius" },
+    { text: "Whatever you are, be a good one.", author: "Abraham Lincoln" },
+    { text: "The time is always right to do what is right.", author: "Martin Luther King Jr." },
+    { text: "If you tell the truth, you don't have to remember anything.", author: "Mark Twain" },
+    { text: "Turn your wounds into wisdom.", author: "Oprah Winfrey" },
+    { text: "A person who never made a mistake never tried anything new.", author: "Albert Einstein" },
+    { text: "The purpose of our lives is to be happy.", author: "Dalai Lama" },
+    { text: "Simplicity is the ultimate sophistication.", author: "Leonardo da Vinci" },
+    { text: "The journey of a thousand miles begins with one step.", author: "Lao Tzu" },
+    { text: "Tough times never last, but tough people do.", author: "Robert H. Schuller" },
+    { text: "Imagination is more important than knowledge.", author: "Albert Einstein" },
+    { text: "That which does not kill us makes us stronger.", author: "Friedrich Nietzsche" },
+    { text: "No one can make you feel inferior without your consent.", author: "Eleanor Roosevelt" },
+    { text: "You only live once, but if you do it right, once is enough.", author: "Mae West" },
+    { text: "A room without books is like a body without a soul.", author: "Marcus Tullius Cicero" },
+    { text: "Be yourself; everyone else is already taken.", author: "Oscar Wilde" },
+    { text: "Happiness depends upon ourselves.", author: "Aristotle" },
+    { text: "The mind is everything. What you think you become.", author: "Buddha" },
+    { text: "Action is the foundational key to all success.", author: "Pablo Picasso" },
+    { text: "To love and be loved is to feel the sun from both sides.", author: "David Viscott" },
+    { text: "Every moment is a fresh beginning.", author: "T.S. Eliot" },
+    { text: "Never let the fear of striking out keep you from playing the game.", author: "Babe Ruth" },
+    { text: "The best way to predict your future is to create it.", author: "Abraham Lincoln" },
+    { text: "Do what you can, with what you have, where you are.", author: "Theodore Roosevelt" }
+];
+const todayDays = Math.floor(Date.now() / (1000 * 60 * 60 * 24));
+const currentQuoteIndex = todayDays % quotes.length;
+document.getElementById('daily-quote-text').innerHTML = `<i class="fas fa-quote-left" style="color: rgba(255,255,255,0.3); margin-right:5px;"></i> ${quotes[currentQuoteIndex].text}`;
+document.getElementById('daily-quote-author').innerText = `— ${quotes[currentQuoteIndex].author}`;
+
+
+// 3. AUTH FLOW
 onAuthStateChanged(auth, async (user) => {
     if (user) {
-        // HIDE LOGIN
         document.getElementById('loginOverlay').style.display = 'none';
         
-        // IF APP NOT INITIALIZED, START THE LOADER -> WHATSAPP -> MAIN APP FLOW
         if(!isAppInitialized) {
             document.getElementById('mainAppWrapper').style.display = 'block';
             startAppFlow();
             isAppInitialized = true;
         }
 
-        // Setup Sidebar Profile
-        document.getElementById('sidebarProfileName').innerText = user.displayName || user.email.split('@')[0];
+        // Fix 1: Show attractive name instead of email string
+        let dName = user.displayName;
+        if (!dName || dName.trim() === "") {
+            dName = (user.email === SUPER_ADMIN_EMAIL) ? "MULTIVERSE ADMIN" : "MULTIVERSE USER";
+        }
+        document.getElementById('sidebarProfileName').innerText = dName;
         if(user.photoURL) document.getElementById('sidebarProfileImg').src = user.photoURL;
 
         if (user.email === SUPER_ADMIN_EMAIL) {
             window.IS_SUPER_ADMIN = true;
             document.getElementById('sidebarRoleText').innerText = "Super Admin";
             document.getElementById('menu-admin-panel').style.display = 'flex';
-            document.getElementById('adminTutorialEdit').style.display = 'block';
             
             const currentYearStr = new Date().getFullYear().toString();
             onSnapshot(doc(db, "download_stats", currentYearStr), (docSnap) => {
@@ -108,7 +144,6 @@ onAuthStateChanged(auth, async (user) => {
             document.getElementById('menu-admin-panel').style.display = 'none';
         }
 
-        // Fetch Data
         onSnapshot(doc(db, "settings", "global"), (docSnap) => {
             if (docSnap.exists() && docSnap.data().tutorialVideoUrl) {
                 const embedUrl = getYouTubeEmbedUrl(docSnap.data().tutorialVideoUrl);
@@ -131,9 +166,7 @@ onAuthStateChanged(auth, async (user) => {
             renderAdminBooksTable(); 
             if(window.IS_SUPER_ADMIN) updateAdminCharts();
         });
-
     } else {
-        // NOT LOGGED IN -> Show Login directly
         document.getElementById('mainAppWrapper').style.display = 'none';
         document.getElementById('loginOverlay').style.display = 'flex';
         setTimeout(() => { document.getElementById('loginOverlay').style.opacity = '1'; }, 50); 
@@ -145,47 +178,37 @@ function startAppFlow() {
     const loader = document.getElementById("loaderScreen");
     loader.style.opacity = "1";
     loader.style.visibility = "visible";
-    
     setTimeout(() => {
-        document.getElementById("popupOverlay").style.display = "flex"; // WhatsApp popup
+        document.getElementById("popupOverlay").style.display = "flex"; 
         loader.style.opacity = "0";
         loader.style.visibility = "hidden";
-        setTimeout(() => { 
-            cancelAnimationFrame(animationId);
-            loader.style.display = "none";
-        }, 600); 
-    }, 3000); // 3 sec Canvas Loader
+        setTimeout(() => { cancelAnimationFrame(animationId); loader.style.display = "none"; }, 600); 
+    }, 3000); 
 }
 
-// Manual Login Events
 document.getElementById('loginForm').addEventListener('submit', async (e) => {
     e.preventDefault(); 
     const email = document.getElementById('loginEmail').value; const pass = document.getElementById('loginPassword').value;
     const btn = document.getElementById('loginBtn'); btn.innerHTML = `Wait...`;
-    try { await signInWithEmailAndPassword(auth, email, pass); e.target.reset(); showToast("Login Successful!"); } 
+    try { await signInWithEmailAndPassword(auth, email, pass); e.target.reset(); showToast("Login Successful!"); document.getElementById('loginOverlay').style.opacity = '0'; setTimeout(() => { document.getElementById('loginOverlay').style.display = 'none'; }, 500); } 
     catch(err) { showToast("Error: Invalid Credentials!"); btn.innerHTML = `Login Securely`; } 
 });
 
 document.getElementById('googleSignInBtn').addEventListener('click', async () => { 
-    try { await signInWithPopup(auth, provider); } catch(err) { showToast("Google Sign-In Failed!"); } 
+    try { await signInWithPopup(auth, provider); document.getElementById('loginOverlay').style.opacity = '0'; setTimeout(() => { document.getElementById('loginOverlay').style.display = 'none'; }, 500); } 
+    catch(err) { showToast("Google Sign-In Failed!"); } 
 });
 
-// Logout (From Admin Panel Header)
 document.getElementById('admin-logout-btn').addEventListener('click', () => { 
     if(confirm("Are you sure you want to logout?")) {
-        signOut(auth).then(() => {
-            isAppInitialized = false; // Reset flow
-            document.getElementById('admin-dashboard-panel').classList.remove('active');
-        });
+        signOut(auth).then(() => { isAppInitialized = false; document.getElementById('admin-dashboard-panel').classList.remove('active'); });
     }
 });
 
-// Popup Functions
 window.closePopup = function(){ document.getElementById("popupOverlay").style.display = "none"; };
 window.joinChannel = function(){ window.open('https://whatsapp.com/channel/0029Vb6NBZx1yT2GByTTVf2A', '_blank'); };
 
-
-// ================= FUZZY SEARCH (Debounce) =================
+// 4. FUZZY SEARCH
 let searchTimeout;
 const searchInputEl = document.getElementById('app-search-input');
 const closeSearchBtn = document.getElementById('close-search');
@@ -194,18 +217,13 @@ searchInputEl.addEventListener('input', (e) => {
     clearTimeout(searchTimeout);
     const searchText = e.target.value;
     searchTimeout = setTimeout(() => {
-        if(searchText.trim() === "") {
-            document.getElementById('no-results-msg').style.display = 'none';
-            window.renderBooksUI(0, 16); 
-        } else { performFuzzySearch(searchText); }
+        if(searchText.trim() === "") { document.getElementById('no-results-msg').style.display = 'none'; window.renderBooksUI(0, 16); } 
+        else { performFuzzySearch(searchText); }
     }, 300);
 });
 
 closeSearchBtn.addEventListener('click', () => {
-    searchInputEl.value = ''; 
-    document.getElementById('no-results-msg').style.display = 'none';
-    window.renderBooksUI(0, 16);
-    document.getElementById('search-box').classList.remove('active');
+    searchInputEl.value = ''; document.getElementById('no-results-msg').style.display = 'none'; window.renderBooksUI(0, 16); document.getElementById('search-box').classList.remove('active');
     if (history.state && history.state.popup === 'search') { history.back(); }
 });
 
@@ -216,16 +234,11 @@ function performFuzzySearch(searchText) {
         let textToSearch = (book.title + " " + book.author).toLowerCase().replace(/[^a-z0-9\s]/g, '');
         return searchTokens.every(token => textToSearch.includes(token));
     });
-    if(filteredData.length > 0) {
-        document.getElementById('no-results-msg').style.display = 'none';
-        window.renderBooksUI(0, filteredData.length, filteredData); 
-    } else {
-        document.getElementById("bookContainer").innerHTML = "";
-        document.getElementById('no-results-msg').style.display = 'flex';
-    }
+    if(filteredData.length > 0) { document.getElementById('no-results-msg').style.display = 'none'; window.renderBooksUI(0, filteredData.length, filteredData); } 
+    else { document.getElementById("bookContainer").innerHTML = ""; document.getElementById('no-results-msg').style.display = 'flex'; }
 }
 
-// ================= UI RENDERING & MAIN APP NAV =================
+// 5. UI RENDERING 
 window.renderBooksUI = function(startIndex, count, customData = null) {
     const container = document.getElementById("bookContainer");
     let dataToRender = customData ? customData : window.booksData;
@@ -264,7 +277,6 @@ document.getElementById('close-dev-btn').addEventListener('click', () => { histo
 document.getElementById('menu-dmca').addEventListener('click', (e) => { e.preventDefault(); history.replaceState({ popup: 'dmca' }, ''); document.getElementById('dmca-panel').classList.add('active'); sidebar.classList.remove('active'); sidebarOverlay.classList.remove('active'); });
 document.getElementById('close-dmca-btn').addEventListener('click', () => { history.back(); });
 
-// Upload Books click
 document.getElementById('menu-admin-panel').addEventListener('click', (e) => {
     e.preventDefault();
     history.pushState({ popup: 'admin' }, '');
@@ -274,27 +286,26 @@ document.getElementById('menu-admin-panel').addEventListener('click', (e) => {
 document.getElementById('close-admin-btn').addEventListener('click', () => { history.back(); });
 
 window.addEventListener('popstate', (e) => {
-    document.getElementById("downloadModal").style.display = "none";
-    document.getElementById('noti-panel').classList.remove('active');
-    document.getElementById('sidebar').classList.remove('active');
-    document.getElementById('sidebar-overlay').classList.remove('active');
-    document.getElementById('about-dev-panel').classList.remove('active');
-    document.getElementById('dmca-panel').classList.remove('active');
-    document.getElementById('admin-dashboard-panel').classList.remove('active');
-    document.getElementById('search-box').classList.remove('active');
+    document.getElementById("downloadModal").style.display = "none"; document.getElementById('noti-panel').classList.remove('active'); document.getElementById('sidebar').classList.remove('active'); document.getElementById('sidebar-overlay').classList.remove('active'); document.getElementById('about-dev-panel').classList.remove('active'); document.getElementById('dmca-panel').classList.remove('active'); document.getElementById('admin-dashboard-panel').classList.remove('active'); document.getElementById('search-box').classList.remove('active');
 });
 
+// FIX 3: Exam Relevance Tag Show Function
 window.openDownloadPage = function(slug) {
     const book = window.booksData.find(b => b.slug === slug); if(!book) return;
     document.getElementById("downloadModal").style.display = "flex";
     document.getElementById("dlPreviewImage").src = book.image; document.getElementById("dlBookTitle").innerText = book.title; document.getElementById("dlBookAuthor").innerText = book.author;
     document.getElementById("dlPdfLinkBtn").onclick = function() { if(book.pdfLink) window.open(book.pdfLink, '_blank'); };
+    
+    // EXAM RELEVANCE RENDER LOGIC
+    let examsArray = (book.exams || "General").split(',').map(item => item.trim());
+    document.getElementById("dlModalTags").innerHTML = examsArray.map(exam => `<div class="dl-modal-tag">${exam}</div>`).join('');
+    
     history.pushState({ popup: 'book' }, '');
 }
 window.closeDownloadPage = function() { history.back(); }
 
 
-// ================= ADMIN FUNCTIONS =================
+// 6. ADMIN FUNCTIONS
 function showToast(message) {
     const toast = document.getElementById('toast'); document.getElementById('toastMsg').innerText = message;
     toast.classList.add('show'); setTimeout(() => { toast.classList.remove('show'); }, 3000);
@@ -323,23 +334,47 @@ function renderAdminBooksTable() {
         htmlString += `<tr>
             <td><img src="${book.image}" style="width:40px; border-radius:5px;"></td>
             <td><strong style="color:#fff;">${book.title}</strong><br><span style="font-size:0.8rem; color:#a1a1aa;">${book.author}</span></td>
-            <td><button style="padding:5px 10px; background:#3b82f6; color:#fff; border:none; border-radius:5px; margin-right:5px; cursor:pointer;" onclick="openAdminEditModal('${book.id}')"><i class="fas fa-edit"></i></button>
-            <button style="padding:5px 10px; background:#ef4444; color:#fff; border:none; border-radius:5px; cursor:pointer;" onclick="deleteBookRecord('${book.id}')"><i class="fas fa-trash"></i></button></td>
+            <td>
+                <!-- Fix 5: Attractive Buttons -->
+                <button class="adm-btn-edit" onclick="openAdminEditModal('${book.id}')"><i class="fas fa-edit"></i></button>
+                <button class="adm-btn-delete" onclick="deleteBookRecord('${book.id}')"><i class="fas fa-trash"></i></button>
+            </td>
         </tr>`; 
     });
     tbody.innerHTML = htmlString;
 }
 
 window.deleteBookRecord = async function(id) { if(confirm("Delete this book?")) { try { await deleteDoc(doc(db, "books", id)); showToast("Deleted!"); } catch (e) { showToast("Error!"); } } }
+
+// Fix 4: Edit modal with all fields populated
 window.openAdminEditModal = function(id) {
     const book = window.booksData.find(x => x.id === id); 
-    document.getElementById('editDocId').value = book.id; document.getElementById('edTitle').value = book.title; document.getElementById('edImage').value = book.image; 
+    document.getElementById('editDocId').value = book.id; 
+    document.getElementById('edTitle').value = book.title; 
+    document.getElementById('edAuthor').value = book.author || ""; 
+    document.getElementById('edYear').value = book.year || "2026"; 
+    document.getElementById('edLang').value = book.lang || "Hindi"; 
+    document.getElementById('edExams').value = book.exams || ""; 
+    document.getElementById('edImage').value = book.image; 
+    document.getElementById('edPdfUrl').value = book.pdfLink || ""; 
+    document.getElementById('edYtUrl').value = book.ytLink || ""; 
     document.getElementById('adminEditModal').style.display = 'flex';
 }
+
 document.getElementById('editBookForm').addEventListener('submit', async (e) => {
-    e.preventDefault(); const docId = document.getElementById('editDocId').value;
-    const updatedData = { title: document.getElementById('edTitle').value, image: document.getElementById('edImage').value };
-    try { await updateDoc(doc(db, "books", docId), updatedData); document.getElementById('adminEditModal').style.display='none'; showToast("Updated!"); } catch (error) { showToast("Error updating."); }
+    e.preventDefault(); 
+    const docId = document.getElementById('editDocId').value;
+    const updatedData = { 
+        title: document.getElementById('edTitle').value, 
+        author: document.getElementById('edAuthor').value, 
+        year: document.getElementById('edYear').value, 
+        lang: document.getElementById('edLang').value, 
+        exams: document.getElementById('edExams').value, 
+        image: document.getElementById('edImage').value, 
+        pdfLink: document.getElementById('edPdfUrl').value, 
+        ytLink: document.getElementById('edYtUrl').value 
+    };
+    try { await updateDoc(doc(db, "books", docId), updatedData); document.getElementById('adminEditModal').style.display='none'; showToast("Updated Successfully!"); } catch (error) { showToast("Error updating."); }
 });
 
 function updateAdminCharts(dlDataArray = [0,0,0,0,0,0,0,0,0,0,0,0]) {
