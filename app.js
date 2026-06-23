@@ -27,7 +27,6 @@ const SUPER_ADMIN_EMAIL = "princeyadav000261@gmail.com";
 let myLangChart = null; let myDownloadsChart = null;
 let isAppInitialized = false;
 
-// Admin Pagination Variables
 let adminFilteredBooks = [];
 let adminCurrentPage = 1;
 const adminBooksPerPage = 10;
@@ -79,7 +78,7 @@ function resizeCanvas() {
     canvas.width = width * dpr; canvas.height = height * dpr; ctx.scale(dpr, dpr); initHex(); 
 }
 
-// 2. DAILY QUOTES LOGIC (28 Quotes)
+// 2. DAILY QUOTES LOGIC
 const quotes = [
     { text: "Be the change that you wish to see in the world.", author: "Mahatma Gandhi" },
     { text: "I have not failed. I've just found 10,000 ways that won't work.", author: "Thomas A. Edison" },
@@ -127,8 +126,9 @@ onAuthStateChanged(auth, async (user) => {
             isAppInitialized = true;
         }
 
+        // FIX: Ensure correct email name is displayed
         let dName = user.displayName;
-        if (!dName || dName.trim() === "") { dName = (user.email === SUPER_ADMIN_EMAIL) ? "MULTIVERSE ADMIN" : "MULTIVERSE USER"; }
+        if (!dName || dName.trim() === "") { dName = user.email.split('@')[0]; }
         document.getElementById('sidebarProfileName').innerText = dName;
         if(user.photoURL) document.getElementById('sidebarProfileImg').src = user.photoURL;
 
@@ -153,6 +153,8 @@ onAuthStateChanged(auth, async (user) => {
             if (docSnap.exists() && docSnap.data().tutorialVideoUrl) {
                 const embedUrl = getYouTubeEmbedUrl(docSnap.data().tutorialVideoUrl);
                 if(document.getElementById('tutorialIframe')) document.getElementById('tutorialIframe').src = embedUrl;
+            } else {
+                if(document.getElementById('tutorialIframe')) document.getElementById('tutorialIframe').src = "";
             }
         });
 
@@ -169,7 +171,6 @@ onAuthStateChanged(auth, async (user) => {
             if(searchInput.trim() === "") { window.renderBooksUI(0, getBatchSize() * 2); } else { performFuzzySearch(searchInput); }
             window.generateNotifications();
             
-            // Sync Admin Search
             adminFilteredBooks = [...window.booksData];
             document.getElementById('adminSearchBook').value = '';
             renderAdminBooksTable(); 
@@ -209,7 +210,7 @@ document.getElementById('loginForm').addEventListener('submit', async (e) => {
 
 document.getElementById('googleSignInBtn').addEventListener('click', async () => { 
     try { await signInWithPopup(auth, provider); document.getElementById('loginOverlay').style.opacity = '0'; setTimeout(() => { document.getElementById('loginOverlay').style.display = 'none'; }, 500); } 
-    catch(err) { showToast("Google Sign-In Failed!"); } 
+    catch(err) { showToast("Google Sign-In Failed! " + err.message); } 
 });
 
 document.getElementById('admin-logout-btn').addEventListener('click', () => { 
@@ -221,7 +222,7 @@ document.getElementById('admin-logout-btn').addEventListener('click', () => {
 window.closePopup = function(){ document.getElementById("popupOverlay").style.display = "none"; };
 window.joinChannel = function(){ window.open('https://whatsapp.com/channel/0029Vb6NBZx1yT2GByTTVf2A', '_blank'); };
 
-// 4. FUZZY SEARCH (Main Website)
+// 4. FUZZY SEARCH
 let searchTimeout;
 const searchInputEl = document.getElementById('app-search-input');
 const closeSearchBtn = document.getElementById('close-search');
@@ -251,7 +252,7 @@ function performFuzzySearch(searchText) {
     else { document.getElementById("bookContainer").innerHTML = ""; document.getElementById('no-results-msg').style.display = 'flex'; }
 }
 
-// 5. AUTO GRID BOOK LOADING (Original Feature Restored)
+// 5. AUTO GRID BOOK LOADING
 function getBatchSize() {
     let cols = 2; 
     if (window.innerWidth >= 768) {
@@ -360,9 +361,19 @@ window.shareBook = function() {
 
 // 6. ADMIN FUNCTIONS & PAGINATION
 function showToast(message) {
-    const toast = document.getElementById('toast'); document.getElementById('toastMsg').innerText = message;
-    toast.classList.add('show'); setTimeout(() => { toast.classList.remove('show'); }, 3000);
+    const toast = document.getElementById('toast'); 
+    // Fix: Red for Error, Green for Success
+    if (message.toLowerCase().includes('failed') || message.toLowerCase().includes('error') || message.toLowerCase().includes('invalid')) {
+        toast.style.background = '#ef4444';
+        toast.innerHTML = `<i class="fas fa-exclamation-circle"></i> <span id="toastMsg">${message}</span>`;
+    } else {
+        toast.style.background = '#10b981';
+        toast.innerHTML = `<i class="fas fa-check-circle"></i> <span id="toastMsg">${message}</span>`;
+    }
+    toast.classList.add('show'); 
+    setTimeout(() => { toast.classList.remove('show'); }, 3000);
 }
+
 function getYouTubeEmbedUrl(url) {
     let videoId = "";
     try { if(url.includes("v=")) { videoId = url.split("v=")[1].split("&")[0]; } else if(url.includes("youtu.be/")) { videoId = url.split("youtu.be/")[1].split("?")[0]; } else if(url.includes("/shorts/")) { videoId = url.split("/shorts/")[1].split("?")[0]; } } catch(e) {}
@@ -380,7 +391,6 @@ document.getElementById('addBookForm').addEventListener('submit', async (e) => {
     try { await addDoc(collection(db, "books"), newBook); showToast("Book Published!"); e.target.reset(); } catch (error) { showToast("Error saving book."); } 
 });
 
-// Admin Manage Pagination & Search Logic
 document.getElementById('adminSearchBook').addEventListener('input', (e) => {
     const term = e.target.value.toLowerCase().replace(/[^a-z0-9\s]/g, '');
     const tokens = term.split(/\s+/).filter(t => t.length > 0);
