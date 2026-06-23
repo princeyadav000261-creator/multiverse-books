@@ -106,24 +106,20 @@ async function logActivity(actionType, bookTitle, imageUrl = "", deletedBookData
             timestamp: new Date().getTime(),
             dateStr: new Date().toLocaleString('en-GB', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute:'2-digit' })
         });
-    } catch(e) { console.error("Activity Logging Failed:", e); }
+    } catch(e) { console.warn("Activity Logging Failed:", e); }
 }
 
 window.addEventListener('resize', resizeCanvas); resizeCanvas(); animateHex(0);
 
-// 3. AUTH FLOW, LOADER, POPUP & RESTRICTIONS LOGIC
-let hasHandledInitialAuth = false;
+// 3. AUTH FLOW, LOADER, POPUP FIX (NO BLACK SCREEN)
+let isInitialLoad = true;
 
 onAuthStateChanged(auth, async (user) => {
     if (user) {
         let dName = user.displayName;
         if (!dName || dName.trim() === "") { dName = user.email.split('@')[0]; }
         document.getElementById('sidebarProfileName').innerText = dName;
-        
         document.getElementById('menu-admin-panel').style.display = 'flex';
-        
-        document.getElementById('loginOverlay').style.opacity = '0';
-        setTimeout(() => { document.getElementById('loginOverlay').style.display = 'none'; }, 500);
 
         if (user.email === SUPER_ADMIN_EMAIL) {
             window.IS_SUPER_ADMIN = true;
@@ -145,7 +141,7 @@ onAuthStateChanged(auth, async (user) => {
                 dbLogs = [];
                 snapshot.forEach(doc => { let l = doc.data(); l.id = doc.id; dbLogs.push(l); });
                 renderLogs();
-            });
+            }, (error) => { console.warn(error); });
 
         } else {
             window.IS_SUPER_ADMIN = false;
@@ -158,23 +154,7 @@ onAuthStateChanged(auth, async (user) => {
             switchAdminTab('add');
         }
 
-        // Fire Loader -> then App -> then WhatsApp Popup
-        if(!hasHandledInitialAuth) {
-            const loader = document.getElementById("loaderScreen");
-            loader.style.display = "flex";
-            setTimeout(() => { loader.style.opacity = "1"; }, 50);
-
-            setTimeout(() => {
-                loader.style.opacity = "0";
-                setTimeout(() => { 
-                    loader.style.display = "none"; 
-                    document.getElementById('mainAppWrapper').style.display = 'block'; 
-                    document.getElementById("popupOverlay").style.display = "flex";
-                    hasHandledInitialAuth = true;
-                }, 600);
-            }, 2500);
-        }
-
+        // Fetch Books & Tutorials
         onSnapshot(doc(db, "settings", "global"), (docSnap) => {
             if (docSnap.exists() && docSnap.data().tutorialVideoUrl) {
                 const embedUrl = getYouTubeEmbedUrl(docSnap.data().tutorialVideoUrl);
@@ -205,28 +185,87 @@ onAuthStateChanged(auth, async (user) => {
             if(sBook) window.openDownloadPage(sBook, true);
         });
 
+        // SHOW LOADER FOR LOGGED IN USERS, THEN APP
+        if (isInitialLoad) {
+            setTimeout(() => {
+                document.getElementById('mainAppWrapper').style.display = 'block'; 
+                document.getElementById("popupOverlay").style.display = "flex";
+
+                const loader = document.getElementById("loaderScreen");
+                loader.style.opacity = "0";
+
+                setTimeout(() => { 
+                    loader.style.display = "none"; 
+                    cancelAnimationFrame(animationId);
+                }, 600);
+            }, 2500);
+            
+            isInitialLoad = false;
+        }
+
     } else {
+        // USER IS NOT LOGGED IN -> IMMEDIATELY SHOW LOGIN PAGE
         window.IS_SUPER_ADMIN = false;
-        hasHandledInitialAuth = false;
         
-        document.getElementById('loaderScreen').style.display = 'none';
-        document.getElementById('mainAppWrapper').style.display = 'none';
-        
-        const loginOverlay = document.getElementById('loginOverlay');
-        loginOverlay.style.display = 'flex';
-        setTimeout(() => { loginOverlay.style.opacity = '1'; }, 50); 
+        if (isInitialLoad) {
+            const loader = document.getElementById("loaderScreen");
+            loader.style.opacity = "0";
+            
+            const loginOverlay = document.getElementById('loginOverlay');
+            loginOverlay.style.display = 'flex';
+            
+            setTimeout(() => { 
+                loader.style.display = "none"; 
+                cancelAnimationFrame(animationId);
+                loginOverlay.style.opacity = '1'; 
+            }, 300);
+            
+            isInitialLoad = false;
+        } else {
+            document.getElementById('mainAppWrapper').style.display = 'none';
+            const loginOverlay = document.getElementById('loginOverlay');
+            loginOverlay.style.display = 'flex';
+            setTimeout(() => { loginOverlay.style.opacity = '1'; }, 50); 
+        }
     }
 });
 
 document.getElementById('loginForm').addEventListener('submit', async (e) => {
     e.preventDefault(); 
     const email = document.getElementById('loginEmail').value; const pass = document.getElementById('loginPassword').value;
-    const btn = document.getElementById('loginBtn'); btn.innerHTML = `Wait...`;
+    const btn = document.getElementById('loginBtn'); btn.innerHTML = `<i class="fas fa-circle-notch fa-spin"></i> Wait...`;
+    
     try { 
         await signInWithEmailAndPassword(auth, email, pass); 
         e.target.reset(); 
         showToast("Login Successful!"); 
         btn.innerHTML = `Login`; 
+        
+        // FADE OUT LOGIN -> SHOW LOADER -> SHOW APP
+        const loginOverlay = document.getElementById('loginOverlay');
+        loginOverlay.style.opacity = '0';
+        
+        setTimeout(() => {
+            loginOverlay.style.display = 'none';
+            const loader = document.getElementById("loaderScreen");
+            loader.style.display = "flex";
+            resizeCanvas(); requestAnimationFrame(animateHex); 
+            
+            setTimeout(() => { loader.style.opacity = "1"; }, 50);
+
+            setTimeout(() => {
+                document.getElementById('mainAppWrapper').style.display = 'block'; 
+                document.getElementById("popupOverlay").style.display = "flex";
+                
+                loader.style.opacity = "0";
+                setTimeout(() => { 
+                    loader.style.display = "none"; 
+                    cancelAnimationFrame(animationId);
+                }, 600);
+            }, 2500);
+            
+        }, 500);
+
     } catch(err) { 
         showToast("Failed: Invalid Credentials!"); 
         btn.innerHTML = `Login`; 
@@ -237,6 +276,30 @@ document.getElementById('googleSignInBtn').addEventListener('click', async () =>
     try { 
         await signInWithPopup(auth, provider); 
         showToast("Google Login Successful!");
+        
+        const loginOverlay = document.getElementById('loginOverlay');
+        loginOverlay.style.opacity = '0';
+        
+        setTimeout(() => {
+            loginOverlay.style.display = 'none';
+            const loader = document.getElementById("loaderScreen");
+            loader.style.display = "flex";
+            resizeCanvas(); requestAnimationFrame(animateHex);
+            
+            setTimeout(() => { loader.style.opacity = "1"; }, 50);
+
+            setTimeout(() => {
+                document.getElementById('mainAppWrapper').style.display = 'block'; 
+                document.getElementById("popupOverlay").style.display = "flex";
+                
+                loader.style.opacity = "0";
+                setTimeout(() => { 
+                    loader.style.display = "none"; 
+                    cancelAnimationFrame(animationId);
+                }, 600);
+            }, 2500);
+            
+        }, 500);
     } catch(err) { 
         showToast("Failed: Google Sign-In Error."); 
     } 
@@ -437,7 +500,6 @@ document.getElementById('addBookForm').addEventListener('submit', async (e) => {
         }
     }
 
-    // Show loading state
     btn.innerHTML = `<i class="fas fa-circle-notch fa-spin"></i> Uploading...`;
     btn.disabled = true;
 
@@ -456,18 +518,17 @@ document.getElementById('addBookForm').addEventListener('submit', async (e) => {
 
     try { 
         await addDoc(collection(db, "books"), newBook); 
-        
-        // Log Activity wrapped safely so it doesn't break main flow
-        try { await logActivity("ADD", titleInput, imgInput); } 
-        catch (logErr) { console.warn("Activity log skipped:", logErr); }
-        
+        await logActivity("ADD", titleInput, imgInput);
         showToast("Book Published Successfully!"); 
         e.target.reset(); 
     } catch (error) { 
         console.error("Save Error: ", error);
-        showToast("Failed: " + error.message); 
+        if(error.message.includes("Missing or insufficient permissions")) {
+            showToast("Failed: Firebase Security Rules Blocked Save!");
+        } else {
+            showToast("Failed: " + error.message); 
+        }
     } finally {
-        // Restore button state
         btn.innerHTML = originalText;
         btn.disabled = false;
     }
@@ -533,7 +594,7 @@ window.deleteBookRecord = async function(id) {
             showToast("Deleted Successfully!"); 
         } catch (error) { 
             console.error("Delete Error:", error);
-            showToast("Failed: " + error.message); 
+            showToast("Failed: Rules Blocked Delete!"); 
         } 
     } 
 }
@@ -589,7 +650,7 @@ document.getElementById('editBookForm').addEventListener('submit', async (e) => 
         showToast("Updated Successfully!"); 
     } catch (error) { 
         console.error("Edit Error:", error);
-        showToast("Failed: " + error.message); 
+        showToast("Failed: Rules Blocked Update!"); 
     } finally {
         btn.innerHTML = originalText;
         btn.disabled = false;
@@ -651,8 +712,7 @@ window.recoverBook = async function(logId) {
             showToast("Book Restored Successfully!");
         } catch(error) { 
             console.error("Recover Error:", error);
-            showToast("Failed: " + error.message); 
+            showToast("Failed: Rules Blocked Restore!"); 
         }
     }
 }
-
