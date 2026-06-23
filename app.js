@@ -30,6 +30,7 @@ let isAppInitialized = false;
 let adminFilteredBooks = [];
 let adminCurrentPage = 1;
 const adminBooksPerPage = 10;
+let dbLogs = []; // Logs array added back
 
 // 1. ORIGINAL CANVAS LOADER
 const canvas = document.getElementById('networkCanvas');
@@ -114,23 +115,33 @@ const currentQuoteIndex = todayDays % quotes.length;
 document.getElementById('daily-quote-text').innerHTML = `<i class="fas fa-quote-left" style="color: rgba(255,255,255,0.3); margin-right:5px;"></i> ${quotes[currentQuoteIndex].text}`;
 document.getElementById('daily-quote-author').innerText = `— ${quotes[currentQuoteIndex].author}`;
 
+// LOG ACTIVITY FUNCTION RESTORED
+async function logActivity(actionType, bookTitle, imageUrl = "", deletedBookData = null) {
+    try {
+        await addDoc(collection(db, "activity_logs"), {
+            action: actionType,
+            bookTitle: bookTitle,
+            image: imageUrl,
+            deletedData: deletedBookData,
+            adminName: document.getElementById('sidebarProfileName').innerText,
+            timestamp: new Date().getTime(),
+            dateStr: new Date().toLocaleString('en-GB', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute:'2-digit' })
+        });
+    } catch(e) { console.error(e); }
+}
 
-// 3. AUTH FLOW
+// Ensure Canvas is ready early
+window.addEventListener('resize', resizeCanvas); resizeCanvas(); animateHex(0);
+
+// 3. AUTH FLOW (No Black Screen)
+let authChecked = false;
 onAuthStateChanged(auth, async (user) => {
+    authChecked = true;
     if (user) {
-        document.getElementById('loginOverlay').style.display = 'none';
-        
-        if(!isAppInitialized) {
-            document.getElementById('mainAppWrapper').style.display = 'block';
-            startAppFlow();
-            isAppInitialized = true;
-        }
-
         let dName = user.displayName;
         if (!dName || dName.trim() === "") { dName = user.email.split('@')[0]; }
         document.getElementById('sidebarProfileName').innerText = dName;
         document.getElementById('sidebarProfileImg').src = "https://i.postimg.cc/cJdGqYHG/IMG-20260524-WA0004.jpg";
-
         document.getElementById('menu-admin-panel').style.display = 'flex';
 
         if (user.email === SUPER_ADMIN_EMAIL) {
@@ -147,6 +158,14 @@ onAuthStateChanged(auth, async (user) => {
                 if (docSnap.exists()) { const d = docSnap.data(); dlData = [ d.jan||0, d.feb||0, d.mar||0, d.apr||0, d.may||0, d.jun||0, d.jul||0, d.aug||0, d.sep||0, d.oct||0, d.nov||0, d.dec||0 ]; }
                 updateAdminCharts(dlData);
             });
+
+            // Activity Logs Listener for Super Admin
+            onSnapshot(query(collection(db, "activity_logs"), orderBy("timestamp", "desc")), (snapshot) => {
+                dbLogs = [];
+                snapshot.forEach(doc => { let l = doc.data(); l.id = doc.id; dbLogs.push(l); });
+                renderLogs();
+            });
+
         } else {
             window.IS_SUPER_ADMIN = false;
             document.getElementById('sidebarRoleText').innerText = "Verified User";
@@ -187,24 +206,30 @@ onAuthStateChanged(auth, async (user) => {
             if(sBook) window.openDownloadPage(sBook, true);
         });
     } else {
-        document.getElementById('mainAppWrapper').style.display = 'none';
-        document.getElementById('loginOverlay').style.display = 'flex';
-        setTimeout(() => { document.getElementById('loginOverlay').style.opacity = '1'; }, 50); 
+        window.IS_SUPER_ADMIN = false;
     }
 });
 
-function startAppFlow() {
-    window.addEventListener('resize', resizeCanvas); resizeCanvas(); animateHex(0);
-    const loader = document.getElementById("loaderScreen");
-    loader.style.opacity = "1";
-    loader.style.visibility = "visible";
+// Remove loader smoothly and route properly
+window.addEventListener("load", () => {
     setTimeout(() => {
-        document.getElementById("popupOverlay").style.display = "flex"; 
+        const loader = document.getElementById("loaderScreen");
         loader.style.opacity = "0";
-        loader.style.visibility = "hidden";
-        setTimeout(() => { cancelAnimationFrame(animationId); loader.style.display = "none"; }, 600); 
+        setTimeout(() => { 
+            cancelAnimationFrame(animationId); 
+            loader.style.display = "none"; 
+            
+            // Check auth state routing
+            if (auth.currentUser) {
+                document.getElementById('mainAppWrapper').style.display = 'block';
+                document.getElementById("popupOverlay").style.display = "flex";
+            } else {
+                document.getElementById('loginOverlay').style.display = 'flex';
+                setTimeout(() => { document.getElementById('loginOverlay').style.opacity = '1'; }, 50); 
+            }
+        }, 600); 
     }, 3000); 
-}
+});
 
 document.getElementById('loginForm').addEventListener('submit', async (e) => {
     e.preventDefault(); 
@@ -215,7 +240,7 @@ document.getElementById('loginForm').addEventListener('submit', async (e) => {
         e.target.reset(); 
         showToast("Login Successful!"); 
         document.getElementById('loginOverlay').style.opacity = '0'; 
-        setTimeout(() => { document.getElementById('loginOverlay').style.display = 'none'; }, 500); 
+        setTimeout(() => { document.getElementById('loginOverlay').style.display = 'none'; document.getElementById('mainAppWrapper').style.display = 'block'; document.getElementById("popupOverlay").style.display = "flex"; }, 500); 
     } catch(err) { 
         showToast("Failed: Invalid Credentials!"); 
         btn.innerHTML = `Login Securely`; 
@@ -226,7 +251,7 @@ document.getElementById('googleSignInBtn').addEventListener('click', async () =>
     try { 
         await signInWithPopup(auth, provider); 
         document.getElementById('loginOverlay').style.opacity = '0'; 
-        setTimeout(() => { document.getElementById('loginOverlay').style.display = 'none'; }, 500); 
+        setTimeout(() => { document.getElementById('loginOverlay').style.display = 'none'; document.getElementById('mainAppWrapper').style.display = 'block'; document.getElementById("popupOverlay").style.display = "flex"; }, 500); 
         showToast("Google Login Successful!");
     } catch(err) { 
         showToast("Failed: Google Sign-In Error. Check Rules."); 
@@ -235,7 +260,12 @@ document.getElementById('googleSignInBtn').addEventListener('click', async () =>
 
 document.getElementById('admin-logout-btn').addEventListener('click', () => { 
     if(confirm("Are you sure you want to logout?")) {
-        signOut(auth).then(() => { isAppInitialized = false; document.getElementById('admin-dashboard-panel').classList.remove('active'); });
+        signOut(auth).then(() => { 
+            document.getElementById('admin-dashboard-panel').classList.remove('active');
+            document.getElementById('mainAppWrapper').style.display = 'none';
+            document.getElementById('loginOverlay').style.display = 'flex';
+            setTimeout(() => { document.getElementById('loginOverlay').style.opacity = '1'; }, 50); 
+        });
     }
 });
 
@@ -357,7 +387,6 @@ window.openDownloadPage = function(slug, skipPushState = false) {
     document.getElementById("downloadModal").style.display = "flex";
     document.getElementById("dlPreviewImage").src = book.image; document.getElementById("dlBookTitle").innerText = book.title; document.getElementById("dlBookAuthor").innerText = book.author;
     document.getElementById("dlPdfLinkBtn").onclick = function() { if(book.pdfLink) window.open(book.pdfLink, '_blank'); };
-    
     document.getElementById("dlYoutubeLinkBtn").onclick = function() { if(book.ytLink && book.ytLink !== "#") { window.open(book.ytLink, '_blank'); } };
 
     let examsArray = (book.exams || "General").split(',').map(item => item.trim());
@@ -405,7 +434,7 @@ window.updateTutorialLink = async function() {
         showToast("Video Updated Successfully!"); 
         document.getElementById('newTutorialUrl').value = ''; 
     } catch(e) { 
-        showToast("Failed: " + e.message); 
+        showToast("Failed: Check Firebase Rules or Data - " + e.message); 
     } 
 }
 
@@ -413,7 +442,11 @@ document.getElementById('addBookForm').addEventListener('submit', async (e) => {
     e.preventDefault(); 
     const titleInput = document.getElementById('inTitle').value; const imgInput = document.getElementById('inImage').value;
     const newBook = { title: titleInput, author: document.getElementById('inAuthor').value, image: imgInput, year: document.getElementById('inYear').value, lang: document.getElementById('inLang').value, exams: document.getElementById('inExams').value, pdfLink: document.getElementById('inPdfUrl').value, ytLink: document.getElementById('inYtUrl').value, dateAdded: new Date().toLocaleDateString('en-GB').toUpperCase(), createdAt: new Date().getTime() };
-    try { await addDoc(collection(db, "books"), newBook); showToast("Book Published!"); e.target.reset(); } catch (error) { showToast("Failed: Error saving book."); } 
+    try { 
+        await addDoc(collection(db, "books"), newBook); 
+        await logActivity("ADD", titleInput, imgInput);
+        showToast("Book Published!"); e.target.reset(); 
+    } catch (error) { showToast("Failed: Error saving book."); } 
 });
 
 document.getElementById('adminSearchBook').addEventListener('input', (e) => {
@@ -467,7 +500,16 @@ function renderAdminBooksTable() {
     tbody.innerHTML = htmlString;
 }
 
-window.deleteBookRecord = async function(id) { if(confirm("Delete this book permanently?")) { try { await deleteDoc(doc(db, "books", id)); showToast("Deleted!"); } catch (e) { showToast("Failed: Delete error!"); } } }
+window.deleteBookRecord = async function(id) { 
+    if(confirm("Delete this book permanently?")) { 
+        try { 
+            const book = window.booksData.find(x => x.id === id);
+            await deleteDoc(doc(db, "books", id)); 
+            await logActivity("DELETE", book.title, book.image, book);
+            showToast("Deleted!"); 
+        } catch (e) { showToast("Failed: Delete error!"); } 
+    } 
+}
 
 window.openAdminEditModal = function(id) {
     const book = window.booksData.find(x => x.id === id); 
@@ -496,7 +538,12 @@ document.getElementById('editBookForm').addEventListener('submit', async (e) => 
         pdfLink: document.getElementById('edPdfUrl').value, 
         ytLink: document.getElementById('edYtUrl').value 
     };
-    try { await updateDoc(doc(db, "books", docId), updatedData); document.getElementById('adminEditModal').style.display='none'; showToast("Updated Successfully!"); } catch (error) { showToast("Failed: Update Error."); }
+    try { 
+        await updateDoc(doc(db, "books", docId), updatedData); 
+        await logActivity("EDIT", updatedData.title, updatedData.image);
+        document.getElementById('adminEditModal').style.display='none'; 
+        showToast("Updated Successfully!"); 
+    } catch (error) { showToast("Failed: Update Error."); }
 });
 
 function updateAdminCharts(dlDataArray = [0,0,0,0,0,0,0,0,0,0,0,0]) {
@@ -508,4 +555,36 @@ function updateAdminCharts(dlDataArray = [0,0,0,0,0,0,0,0,0,0,0,0]) {
     if(ctxLang) { if(myLangChart) myLangChart.destroy(); myLangChart = new Chart(ctxLang, { type: 'doughnut', data: { labels: ['Hindi', 'English', 'Bilingual'], datasets: [{ data: [langCounts.Hindi, langCounts.English, langCounts.Bilingual], backgroundColor: ['#ef4444', '#3b82f6', '#8b5cf6'], borderColor: 'rgba(255,255,255,0.05)', borderWidth: 1 }] }, options: { responsive: true, maintainAspectRatio: false } }); }
     const ctxDownloads = document.getElementById('downloadsChart');
     if(ctxDownloads) { if(myDownloadsChart) myDownloadsChart.destroy(); myDownloadsChart = new Chart(ctxDownloads, { type: 'line', data: { labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'], datasets: [{ label: `Downloads`, data: dlDataArray, borderColor: '#10b981', backgroundColor: 'rgba(16, 185, 129, 0.2)', borderWidth: 2, fill: true }] }, options: { responsive: true, maintainAspectRatio: false } }); }
+}
+
+// RESTORED ACTIVITY LOGS RENDER FUNCTION
+function renderLogs() {
+    const tbody = document.getElementById('logsTableBody'); 
+    if(!tbody) return;
+    if (dbLogs.length === 0) { tbody.innerHTML = `<tr><td colspan="4" style="text-align:center; padding:20px; color:#a1a1aa; font-weight:800;">No activity tracked yet.</td></tr>`; return; }
+    let htmlString = "";
+    dbLogs.forEach(log => {
+        let badge = ''; let recoveryBtn = '';
+        if(log.action === 'ADD') { badge = `<span class="log-badge log-add"><i class="fas fa-plus"></i> Uploaded</span>`; } 
+        else if(log.action === 'EDIT') { badge = `<span class="log-badge log-edit"><i class="fas fa-pen"></i> Modified</span>`; } 
+        else if(log.action === 'DELETE') { badge = `<span class="log-badge log-delete"><i class="fas fa-trash"></i> Deleted</span>`; if(log.deletedData) { recoveryBtn = `<br><button class="btn-recover" onclick="recoverBook('${log.id}')"><i class="fas fa-undo"></i> Recover Vault</button>`; } } 
+        else if (log.action === 'RESTORE') { badge = `<span class="log-badge log-restore"><i class="fas fa-trash-restore"></i> Restored</span>`; }
+        
+        let img = log.image ? `<img src="${log.image}" class="log-table-img" onerror="this.src='https://via.placeholder.com/40x55?text=Img'">` : ''; 
+        htmlString += `<tr><td>${badge}</td><td style="display: flex; align-items: center;">${img}<span style="color:#fff; font-weight: 800; font-size:1.05rem;">${log.bookTitle}</span></td><td><div style="font-weight: 800; color: #fff; text-transform: uppercase;">${log.adminName}</div></td><td><div style="color: #a1a1aa; font-size: 0.9rem; font-weight:700;"><i class="far fa-clock" style="margin-right:5px;"></i> ${log.dateStr}</div>${recoveryBtn}</td></tr>`;
+    }); 
+    tbody.innerHTML = htmlString;
+}
+
+window.recoverBook = async function(logId) {
+    if(!window.IS_SUPER_ADMIN) return;
+    const log = dbLogs.find(l => l.id === logId);
+    if(!log || !log.deletedData) return;
+    if(confirm(`Recover "${log.bookTitle}"?`)) {
+        try {
+            await setDoc(doc(db, "books", log.deletedData.id), log.deletedData);
+            await logActivity("RESTORE", log.bookTitle, log.image);
+            showToast("Book Restored Successfully!");
+        } catch(e) { showToast("Failed to restore."); }
+    }
 }
