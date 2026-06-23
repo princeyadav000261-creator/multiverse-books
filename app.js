@@ -31,7 +31,7 @@ let adminCurrentPage = 1;
 const adminBooksPerPage = 10;
 let dbLogs = []; 
 
-// Deep Link Tracking Flags
+// Deep Link Check
 const urlParamsCheck = new URLSearchParams(window.location.search);
 window.isDeepLinkLoad = urlParamsCheck.has('book'); 
 
@@ -82,7 +82,6 @@ function resizeCanvas() {
     canvas.width = width * dpr; canvas.height = height * dpr; ctx.scale(dpr, dpr); initHex(); 
 }
 
-// 2. DAILY QUOTES LOGIC
 const quotes = [
     { text: "Be the change that you wish to see in the world.", author: "Mahatma Gandhi" },
     { text: "I have not failed. I've just found 10,000 ways that won't work.", author: "Thomas A. Edison" },
@@ -110,15 +109,11 @@ async function logActivity(actionType, bookTitle, imageUrl = "", deletedBookData
             timestamp: new Date().getTime(),
             dateStr: new Date().toLocaleString('en-GB', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute:'2-digit' })
         });
-    } catch(e) { console.warn("Activity Logging Failed:", e); }
+    } catch(e) {}
 }
 
 window.addEventListener('resize', resizeCanvas); resizeCanvas(); animateHex(0);
 
-
-// ==========================================
-// 3. PERFECT FLOW: LOGIN -> LOADER -> WHATSAPP POPUP
-// ==========================================
 let isInitialLoad = true;
 const appStartTime = Date.now();
 
@@ -131,7 +126,7 @@ function showAppAndPopup() {
         loader.style.display = "none"; 
         cancelAnimationFrame(animationId);
         
-        // Agar Deep link load nahi tha, toh WhatsApp popup show karo
+        // Agar normal load hai (Deep link nahi hai) tabhi Popup show karo
         if(!window.isDeepLinkLoad) {
             document.getElementById("popupOverlay").style.display = "flex";
         }
@@ -140,7 +135,7 @@ function showAppAndPopup() {
 
 onAuthStateChanged(auth, async (user) => {
     if (user) {
-        // Set local storage to skip blank screen on reload
+        // Optimistic UI ke liye flag save kar diya
         localStorage.setItem('isUserLoggedIn', 'true');
 
         let dName = user.displayName;
@@ -153,10 +148,12 @@ onAuthStateChanged(auth, async (user) => {
             document.getElementById('sidebarRoleText').innerText = "Super Admin";
             document.getElementById('uploadMenuText').innerText = "Manage Vault";
             
+            // Super admin sees everything
             document.getElementById('admTabManage').style.display = 'inline-flex';
             document.getElementById('admTabAnalytics').style.display = 'inline-flex';
             document.getElementById('adminTutorialEdit').style.display = 'block';
             document.getElementById('addYtLinkContainer').style.display = 'flex'; 
+            document.getElementById('editYtLinkContainer').style.display = 'flex'; 
             
             const currentYearStr = new Date().getFullYear().toString();
             onSnapshot(doc(db, "download_stats", currentYearStr), (docSnap) => {
@@ -169,22 +166,24 @@ onAuthStateChanged(auth, async (user) => {
                 dbLogs = [];
                 snapshot.forEach(doc => { let l = doc.data(); l.id = doc.id; dbLogs.push(l); });
                 renderLogs();
-            }, (error) => { console.warn(error); });
+            }, (error) => {});
 
         } else {
-            // Normal authenticated users (Google Login) can also upload
+            // Normal Admin / Google User Setup
             window.IS_SUPER_ADMIN = false;
             document.getElementById('sidebarRoleText').innerText = "Verified User";
             document.getElementById('uploadMenuText').innerText = "Upload Books";
             
+            // Hide Management & YT Link stuff from Normal users
             document.getElementById('admTabManage').style.display = 'none';
             document.getElementById('admTabAnalytics').style.display = 'none';
             document.getElementById('adminTutorialEdit').style.display = 'none';
             document.getElementById('addYtLinkContainer').style.display = 'none'; 
+            document.getElementById('editYtLinkContainer').style.display = 'none'; 
             switchAdminTab('add');
         }
 
-        // Fetch Tutorial Videos for Admin Panel & App
+        // Fetch Tutorial Videos
         onSnapshot(query(collection(db, "tutorials"), orderBy("createdAt", "desc")), (snapshot) => {
             document.getElementById('adminTutorialsGrid').innerHTML = '';
             snapshot.forEach(doc => {
@@ -193,6 +192,7 @@ onAuthStateChanged(auth, async (user) => {
             });
         });
 
+        // Fetch Books
         const q = query(collection(db, "books"), orderBy("createdAt", "desc"));
         onSnapshot(q, (snapshot) => {
             window.booksData = [];
@@ -212,17 +212,14 @@ onAuthStateChanged(auth, async (user) => {
             
             if(window.IS_SUPER_ADMIN) updateAdminCharts();
             
-            // Check Deep Link Logic
+            // Handle Data for Deep Link
             const sBook = new URLSearchParams(window.location.search).get('book');
-            if(sBook && isInitialLoad) { 
-                document.getElementById('loaderScreen').style.display = 'none';
-                document.getElementById('mainAppWrapper').style.display = 'block'; 
+            if(sBook && window.isDeepLinkLoad) { 
                 window.openDownloadPage(sBook, true);
-                isInitialLoad = false;
             }
         });
 
-        // Setup delay based logic if NOT deep link
+        // Ensure Loader handles Normal App Starts correctly
         if (isInitialLoad && !window.isDeepLinkLoad) {
             const elapsed = Date.now() - appStartTime;
             const remainingTime = Math.max(0, 2500 - elapsed); 
@@ -269,7 +266,6 @@ document.getElementById('loginForm').addEventListener('submit', async (e) => {
             resizeCanvas(); requestAnimationFrame(animateHex); 
             setTimeout(() => { loader.style.opacity = "1"; }, 50);
 
-            // Wait 2.5 seconds -> Fade out Loader -> Popup (if not deep linked)
             if(!window.isDeepLinkLoad) {
                 setTimeout(showAppAndPopup, 2500);
             }
@@ -434,10 +430,9 @@ window.openDownloadPage = function(slug, skipPushState = false) {
     document.getElementById("dlPdfLinkBtn").onclick = function() { if(book.pdfLink) window.open(book.pdfLink, '_blank'); };
     
     document.getElementById("dlYoutubeLinkBtn").onclick = function() { 
-        if(book.ytLink && book.ytLink !== "#") { 
+        if(book.ytLink && book.ytLink !== "#" && book.ytLink !== "") { 
             window.open(book.ytLink, '_blank'); 
         } else {
-            // General Tutorials redirection if not specific
             window.open('https://youtube.com/@madxprince', '_blank');
         }
     };
@@ -451,14 +446,35 @@ window.openDownloadPage = function(slug, skipPushState = false) {
     if (!skipPushState) { history.pushState({ popup: 'book' }, '', '?book=' + book.slug); }
 }
 
+// Deep link se Back aane par Sequence
 window.closeDownloadPage = function() {
-    if (history.state && history.state.popup === 'book') { history.back(); } 
-    else { document.getElementById("downloadModal").style.display = "none"; window.history.replaceState({}, '', window.location.pathname); }
+    if (history.state && history.state.popup === 'book') { 
+        history.back(); 
+    } else { 
+        document.getElementById("downloadModal").style.display = "none"; 
+        window.history.replaceState({}, '', window.location.pathname); 
+    }
 
-    // First time back from deep link -> Show WhatsApp Popup
+    // Sequence trigger: Sirf tabhi jab ye first deep link open tha
     if(window.isDeepLinkLoad) {
         window.isDeepLinkLoad = false;
-        document.getElementById("popupOverlay").style.display = "flex";
+        
+        // Show Loader first
+        const loader = document.getElementById("loaderScreen");
+        loader.style.display = "flex";
+        loader.style.opacity = "1";
+        resizeCanvas(); 
+        requestAnimationFrame(animateHex);
+
+        // Wait -> hide loader -> show WhatsApp
+        setTimeout(() => {
+            loader.style.opacity = "0";
+            setTimeout(() => {
+                loader.style.display = "none";
+                cancelAnimationFrame(animationId);
+                document.getElementById("popupOverlay").style.display = "flex";
+            }, 600);
+        }, 2000);
     }
 }
 window.shareBook = function() {
@@ -518,7 +534,7 @@ async function renderTutorialCard(videoUrl, docId, containerId, isAdmin) {
             </div>
         `;
         document.getElementById(containerId).innerHTML += cardHTML;
-    } catch (error) { console.error(error); }
+    } catch (error) {}
 }
 
 window.addTutorialLink = async function() {
@@ -529,20 +545,13 @@ window.addTutorialLink = async function() {
         await addDoc(collection(db, "tutorials"), { url: url, createdAt: new Date().getTime() });
         showToast("Video Added Successfully!"); 
         document.getElementById('newTutorialUrl').value = ''; 
-    } catch(e) { 
-        showToast("Failed: " + e.message); 
-    } 
+    } catch(e) { showToast("Failed: " + e.message); } 
 }
 
 window.deleteTutorial = async function(id) {
     if(!window.IS_SUPER_ADMIN) return;
     if(confirm("Remove this tutorial video permanently?")) {
-        try {
-            await deleteDoc(doc(db, "tutorials", id));
-            showToast("Video Removed!");
-        } catch(e) {
-            showToast("Failed: " + e.message);
-        }
+        try { await deleteDoc(doc(db, "tutorials", id)); showToast("Video Removed!"); } catch(e) { showToast("Failed: " + e.message); }
     }
 }
 
@@ -587,12 +596,8 @@ document.getElementById('addBookForm').addEventListener('submit', async (e) => {
         showToast("Book Published Successfully!"); 
         e.target.reset(); 
     } catch (error) { 
-        console.error("Save Error: ", error);
-        if(error.message.includes("Missing or insufficient permissions")) {
-            showToast("Failed: Firebase Security Rules Blocked Save!");
-        } else {
-            showToast("Failed: " + error.message); 
-        }
+        if(error.message.includes("Missing or insufficient permissions")) { showToast("Failed: Firebase Security Rules Blocked Save!"); } 
+        else { showToast("Failed: " + error.message); }
     } finally {
         btn.innerHTML = originalText;
         btn.disabled = false;
@@ -657,10 +662,7 @@ window.deleteBookRecord = async function(id) {
             await deleteDoc(doc(db, "books", id)); 
             try { await logActivity("DELETE", book.title, book.image, book); } catch(e){}
             showToast("Deleted Successfully!"); 
-        } catch (error) { 
-            console.error("Delete Error:", error);
-            showToast("Failed: Rules Blocked Delete!"); 
-        } 
+        } catch (error) { showToast("Failed: Rules Blocked Delete!"); } 
     } 
 }
 
@@ -713,10 +715,7 @@ document.getElementById('editBookForm').addEventListener('submit', async (e) => 
         try { await logActivity("EDIT", updatedData.title, updatedData.image); } catch(e){}
         document.getElementById('adminEditModal').style.display='none'; 
         showToast("Updated Successfully!"); 
-    } catch (error) { 
-        console.error("Edit Error:", error);
-        showToast("Failed: Rules Blocked Update!"); 
-    } finally {
+    } catch (error) { showToast("Failed: Rules Blocked Update!"); } finally {
         btn.innerHTML = originalText;
         btn.disabled = false;
     }
@@ -775,9 +774,6 @@ window.recoverBook = async function(logId) {
             await setDoc(doc(db, "books", log.deletedData.id), log.deletedData);
             try { await logActivity("RESTORE", log.bookTitle, log.image); } catch(e){}
             showToast("Book Restored Successfully!");
-        } catch(error) { 
-            console.error("Recover Error:", error);
-            showToast("Failed: Rules Blocked Restore!"); 
-        }
+        } catch(error) { showToast("Failed: Rules Blocked Restore!"); }
     }
 }
