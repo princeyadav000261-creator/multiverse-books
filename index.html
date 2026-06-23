@@ -333,6 +333,9 @@
                         <div class="adm-card">
                             <div class="adm-card-title"><i class="fas fa-chart-pie"></i> Real-Time Stats</div>
                             <div style="display:flex; flex-direction:column; gap:20px;">
+                                <div style="background: rgba(0,0,0,0.5); padding: 15px; border-radius: 12px; height: 250px;">
+                                    <canvas id="booksAddedChart"></canvas>
+                                </div>
                                 <div style="background: rgba(0,0,0,0.5); padding: 15px; border-radius: 12px; height: 250px;"><canvas id="langChart"></canvas></div>
                                 <div style="background: rgba(0,0,0,0.5); padding: 15px; border-radius: 12px; height: 250px;"><canvas id="downloadsChart"></canvas></div>
                             </div>
@@ -389,12 +392,10 @@
             const isDeepLink = new URLSearchParams(window.location.search).has('book');
 
             if (!isLogged) {
-                // Not logged in -> Instant hide app/loader, show login
                 document.getElementById('loaderScreen').style.display = 'none';
                 document.getElementById('loginOverlay').style.display = 'flex';
                 setTimeout(() => document.getElementById('loginOverlay').style.opacity = '1', 10);
             } else if (isDeepLink) {
-                // Logged in & Deep Link -> Instant hide loader, show app and book modal
                 document.getElementById('loaderScreen').style.display = 'none';
                 document.getElementById('mainAppWrapper').style.display = 'block';
                 document.getElementById('downloadModal').style.display = 'flex';
