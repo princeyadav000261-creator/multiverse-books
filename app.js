@@ -24,8 +24,9 @@ let activeBookTitle = "";
 window.IS_SUPER_ADMIN = false;
 const SUPER_ADMIN_EMAIL = "princeyadav000261@gmail.com"; 
 let myLangChart = null; let myDownloadsChart = null;
+let isAppInitialized = false;
 
-// ================= 1. CANVAS LOADER LOGIC (Original Restored) =================
+// ================= ORIGINAL CANVAS LOADER =================
 const canvas = document.getElementById('networkCanvas');
 const ctx = canvas.getContext('2d');
 let width, height;
@@ -46,7 +47,6 @@ function initHex() {
         }
     }
 }
-
 function drawHexagon(x, y, alpha, type) {
     ctx.beginPath(); const R = 32;
     for (let i = 0; i < 6; i++) {
@@ -63,32 +63,30 @@ function drawHexagon(x, y, alpha, type) {
         ctx.fillStyle = type === 'main' ? ctx.strokeStyle : `rgba(255, 255, 255, ${alpha * 0.2})`; ctx.fill();
     }
 }
-
 function animateHex(time) {
     ctx.clearRect(0, 0, width, height);
     hexagons.forEach(hex => { let alpha = 0.5 + 0.5 * Math.sin(time * hex.blinkSpeed + hex.blinkOffset); drawHexagon(hex.x, hex.y, alpha, hex.type); });
     animationId = requestAnimationFrame(animateHex);
 }
-
 function resizeCanvas() {
     const dpr = window.devicePixelRatio || 1; width = window.innerWidth; height = window.innerHeight;
     canvas.width = width * dpr; canvas.height = height * dpr; ctx.scale(dpr, dpr); initHex(); 
 }
-window.addEventListener('resize', resizeCanvas); resizeCanvas(); animateHex(0);
 
-
-// ================= 2. AUTHENTICATION & LOGIN FLOW =================
-let isUserLoggedIn = false;
-
+// ================= AUTH FLOW =================
 onAuthStateChanged(auth, async (user) => {
-    const loginOverlay = document.getElementById('loginOverlay');
-    const mainApp = document.getElementById('mainAppWrapper');
-
     if (user) {
-        isUserLoggedIn = true;
-        loginOverlay.style.display = 'none';
-        mainApp.style.display = 'flex'; // Auth done, show app behind loader
+        // HIDE LOGIN
+        document.getElementById('loginOverlay').style.display = 'none';
         
+        // IF APP NOT INITIALIZED, START THE LOADER -> WHATSAPP -> MAIN APP FLOW
+        if(!isAppInitialized) {
+            document.getElementById('mainAppWrapper').style.display = 'block';
+            startAppFlow();
+            isAppInitialized = true;
+        }
+
+        // Setup Sidebar Profile
         document.getElementById('sidebarProfileName').innerText = user.displayName || user.email.split('@')[0];
         if(user.photoURL) document.getElementById('sidebarProfileImg').src = user.photoURL;
 
@@ -110,6 +108,7 @@ onAuthStateChanged(auth, async (user) => {
             document.getElementById('menu-admin-panel').style.display = 'none';
         }
 
+        // Fetch Data
         onSnapshot(doc(db, "settings", "global"), (docSnap) => {
             if (docSnap.exists() && docSnap.data().tutorialVideoUrl) {
                 const embedUrl = getYouTubeEmbedUrl(docSnap.data().tutorialVideoUrl);
@@ -125,7 +124,6 @@ onAuthStateChanged(auth, async (user) => {
                 data.slug = data.title.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)+/g, '');
                 window.booksData.push(data);
             });
-            
             loadedCount = 0;
             const searchInput = document.getElementById('app-search-input').value;
             if(searchInput.trim() === "") { window.renderBooksUI(0, 16); } else { performFuzzySearch(searchInput); }
@@ -133,68 +131,51 @@ onAuthStateChanged(auth, async (user) => {
             renderAdminBooksTable(); 
             if(window.IS_SUPER_ADMIN) updateAdminCharts();
         });
+
     } else {
-        isUserLoggedIn = false;
-        mainApp.style.display = 'none';
-        // Don't show login immediately, wait for loader to finish
+        // NOT LOGGED IN -> Show Login directly
+        document.getElementById('mainAppWrapper').style.display = 'none';
+        document.getElementById('loginOverlay').style.display = 'flex';
+        setTimeout(() => { document.getElementById('loginOverlay').style.opacity = '1'; }, 50); 
     }
 });
 
-// Remove canvas loader after 3 seconds exactly like the original
-window.addEventListener("load", () => {
+function startAppFlow() {
+    window.addEventListener('resize', resizeCanvas); resizeCanvas(); animateHex(0);
+    const loader = document.getElementById("loaderScreen");
+    loader.style.opacity = "1";
+    loader.style.visibility = "visible";
+    
     setTimeout(() => {
-        const loader = document.getElementById("loaderScreen");
+        document.getElementById("popupOverlay").style.display = "flex"; // WhatsApp popup
         loader.style.opacity = "0";
         loader.style.visibility = "hidden";
-        
         setTimeout(() => { 
             cancelAnimationFrame(animationId);
-            loader.remove(); 
-            
-            // Flow Logic: If logged in -> WhatsApp Popup. Else -> Login Screen
-            if(isUserLoggedIn) {
-                document.getElementById("popupOverlay").style.display = "flex";
-            } else {
-                document.getElementById('loginOverlay').style.display = 'flex';
-                setTimeout(() => { document.getElementById('loginOverlay').style.opacity = '1'; }, 50); 
-            }
+            loader.style.display = "none";
         }, 600); 
-    }, 3000); 
-});
+    }, 3000); // 3 sec Canvas Loader
+}
 
-// Login Actions
+// Manual Login Events
 document.getElementById('loginForm').addEventListener('submit', async (e) => {
     e.preventDefault(); 
     const email = document.getElementById('loginEmail').value; const pass = document.getElementById('loginPassword').value;
     const btn = document.getElementById('loginBtn'); btn.innerHTML = `Wait...`;
-    try { 
-        await signInWithEmailAndPassword(auth, email, pass); 
-        e.target.reset(); 
-        showToast("Login Successful!"); 
-        // Force hide login overlay, auth listener will show app
-        document.getElementById('loginOverlay').style.opacity = '0';
-        setTimeout(() => { document.getElementById('loginOverlay').style.display = 'none'; }, 500);
-        document.getElementById("popupOverlay").style.display = "flex"; // Show whatsapp popup on manual login
-    } 
-    catch(err) { showToast("Error: Invalid Credentials!"); } btn.innerHTML = `Login Securely`; 
+    try { await signInWithEmailAndPassword(auth, email, pass); e.target.reset(); showToast("Login Successful!"); } 
+    catch(err) { showToast("Error: Invalid Credentials!"); btn.innerHTML = `Login Securely`; } 
 });
 
 document.getElementById('googleSignInBtn').addEventListener('click', async () => { 
-    try { 
-        await signInWithPopup(auth, provider); 
-        document.getElementById('loginOverlay').style.opacity = '0';
-        setTimeout(() => { document.getElementById('loginOverlay').style.display = 'none'; }, 500);
-        document.getElementById("popupOverlay").style.display = "flex";
-    } catch(err) { showToast("Google Sign-In Failed!"); } 
+    try { await signInWithPopup(auth, provider); } catch(err) { showToast("Google Sign-In Failed!"); } 
 });
 
-// NEW LOGOUT BUTTON LOCATION (Inside Admin Panel Header)
+// Logout (From Admin Panel Header)
 document.getElementById('admin-logout-btn').addEventListener('click', () => { 
     if(confirm("Are you sure you want to logout?")) {
         signOut(auth).then(() => {
+            isAppInitialized = false; // Reset flow
             document.getElementById('admin-dashboard-panel').classList.remove('active');
-            document.getElementById('loginOverlay').style.display = 'flex';
-            setTimeout(() => { document.getElementById('loginOverlay').style.opacity = '1'; }, 50); 
         });
     }
 });
@@ -203,7 +184,8 @@ document.getElementById('admin-logout-btn').addEventListener('click', () => {
 window.closePopup = function(){ document.getElementById("popupOverlay").style.display = "none"; };
 window.joinChannel = function(){ window.open('https://whatsapp.com/channel/0029Vb6NBZx1yT2GByTTVf2A', '_blank'); };
 
-// ================= 3. ULTRA ADVANCED FUZZY SEARCH (Debounced) =================
+
+// ================= FUZZY SEARCH (Debounce) =================
 let searchTimeout;
 const searchInputEl = document.getElementById('app-search-input');
 const closeSearchBtn = document.getElementById('close-search');
@@ -215,9 +197,7 @@ searchInputEl.addEventListener('input', (e) => {
         if(searchText.trim() === "") {
             document.getElementById('no-results-msg').style.display = 'none';
             window.renderBooksUI(0, 16); 
-        } else {
-            performFuzzySearch(searchText);
-        }
+        } else { performFuzzySearch(searchText); }
     }, 300);
 });
 
@@ -232,12 +212,10 @@ closeSearchBtn.addEventListener('click', () => {
 function performFuzzySearch(searchText) {
     let normalizedSearch = searchText.toLowerCase().replace(/[^a-z0-9\s]/g, '');
     let searchTokens = normalizedSearch.split(/\s+/).filter(token => token.length > 0);
-
     const filteredData = window.booksData.filter(book => {
         let textToSearch = (book.title + " " + book.author).toLowerCase().replace(/[^a-z0-9\s]/g, '');
         return searchTokens.every(token => textToSearch.includes(token));
     });
-    
     if(filteredData.length > 0) {
         document.getElementById('no-results-msg').style.display = 'none';
         window.renderBooksUI(0, filteredData.length, filteredData); 
@@ -247,7 +225,7 @@ function performFuzzySearch(searchText) {
     }
 }
 
-// ================= 4. UI RENDERING & NAVIGATION =================
+// ================= UI RENDERING & MAIN APP NAV =================
 window.renderBooksUI = function(startIndex, count, customData = null) {
     const container = document.getElementById("bookContainer");
     let dataToRender = customData ? customData : window.booksData;
@@ -265,7 +243,6 @@ window.renderBooksUI = function(startIndex, count, customData = null) {
     }
     loadedCount = endIndex;
 }
-
 window.generateNotifications = function() {
     const notiContainer = document.getElementById('dynamic-noti-container'); notiContainer.innerHTML = ''; 
     window.booksData.slice(0, 15).forEach((book) => {
@@ -273,7 +250,6 @@ window.generateNotifications = function() {
     });
 }
 
-// Sidebar & Modals
 document.getElementById('open-search').addEventListener('click', () => { history.pushState({ popup: 'search' }, ''); document.getElementById('search-box').classList.add('active'); setTimeout(() => { searchInputEl.focus(); }, 300); });
 document.getElementById('open-noti').addEventListener('click', () => { history.pushState({ popup: 'noti' }, ''); document.getElementById('noti-panel').classList.add('active'); document.querySelector('.blink-dot').style.display = 'none'; });
 document.getElementById('close-noti').addEventListener('click', () => { if (history.state && history.state.popup) { history.back(); } else { document.getElementById('noti-panel').classList.remove('active'); }});
@@ -283,13 +259,12 @@ document.getElementById('open-menu').addEventListener('click', () => { history.p
 sidebarOverlay.addEventListener('click', () => { history.back(); });
 
 document.getElementById('menu-home').addEventListener('click', (e) => { e.preventDefault(); history.back(); });
-document.getElementById('menu-about-dev').addEventListener('click', (e) => { e.preventDefault(); history.replaceState({ popup: 'dev' }, ''); document.getElementById('about-dev-panel').classList.add('active'); document.getElementById('dmca-panel').classList.remove('active'); sidebar.classList.remove('active'); sidebarOverlay.classList.remove('active'); });
+document.getElementById('menu-about-dev').addEventListener('click', (e) => { e.preventDefault(); history.replaceState({ popup: 'dev' }, ''); document.getElementById('about-dev-panel').classList.add('active'); sidebar.classList.remove('active'); sidebarOverlay.classList.remove('active'); });
 document.getElementById('close-dev-btn').addEventListener('click', () => { history.back(); });
-
-document.getElementById('menu-dmca').addEventListener('click', (e) => { e.preventDefault(); history.replaceState({ popup: 'dmca' }, ''); document.getElementById('dmca-panel').classList.add('active'); document.getElementById('about-dev-panel').classList.remove('active'); sidebar.classList.remove('active'); sidebarOverlay.classList.remove('active'); });
+document.getElementById('menu-dmca').addEventListener('click', (e) => { e.preventDefault(); history.replaceState({ popup: 'dmca' }, ''); document.getElementById('dmca-panel').classList.add('active'); sidebar.classList.remove('active'); sidebarOverlay.classList.remove('active'); });
 document.getElementById('close-dmca-btn').addEventListener('click', () => { history.back(); });
 
-// Admin Panel Open/Close
+// Upload Books click
 document.getElementById('menu-admin-panel').addEventListener('click', (e) => {
     e.preventDefault();
     history.pushState({ popup: 'admin' }, '');
@@ -319,34 +294,21 @@ window.openDownloadPage = function(slug) {
 window.closeDownloadPage = function() { history.back(); }
 
 
-// ================= 5. ADMIN DASHBOARD LOGIC =================
+// ================= ADMIN FUNCTIONS =================
 function showToast(message) {
     const toast = document.getElementById('toast'); document.getElementById('toastMsg').innerText = message;
     toast.classList.add('show'); setTimeout(() => { toast.classList.remove('show'); }, 3000);
 }
-
-// Super Admin YouTube Link Converter (Supports Shorts & Quality params)
 function getYouTubeEmbedUrl(url) {
     let videoId = "";
-    try {
-        if(url.includes("v=")) { videoId = url.split("v=")[1].split("&")[0]; } 
-        else if(url.includes("youtu.be/")) { videoId = url.split("youtu.be/")[1].split("?")[0]; } 
-        else if(url.includes("/shorts/")) { videoId = url.split("/shorts/")[1].split("?")[0]; }
-    } catch(e) {}
+    try { if(url.includes("v=")) { videoId = url.split("v=")[1].split("&")[0]; } else if(url.includes("youtu.be/")) { videoId = url.split("youtu.be/")[1].split("?")[0]; } else if(url.includes("/shorts/")) { videoId = url.split("/shorts/")[1].split("?")[0]; } } catch(e) {}
     return videoId ? `https://www.youtube.com/embed/${videoId}?controls=1&rel=0&modestbranding=1` : url;
 }
-
 window.updateTutorialLink = async function() { 
-    if(!window.IS_SUPER_ADMIN) return; 
-    const newUrl = document.getElementById('newTutorialUrl').value; 
-    if(!newUrl) return showToast("Enter URL!"); 
-    try { 
-        await setDoc(doc(db, "settings", "global"), { tutorialVideoUrl: newUrl }, { merge: true }); 
-        showToast("Video Updated Successfully!"); document.getElementById('newTutorialUrl').value = ''; 
-    } catch(e) { showToast("Error updating video."); } 
+    if(!window.IS_SUPER_ADMIN) return; const newUrl = document.getElementById('newTutorialUrl').value; if(!newUrl) return showToast("Enter URL!"); 
+    try { await setDoc(doc(db, "settings", "global"), { tutorialVideoUrl: newUrl }, { merge: true }); showToast("Video Updated Successfully!"); document.getElementById('newTutorialUrl').value = ''; } catch(e) { showToast("Error updating video."); } 
 }
 
-// Add Book
 document.getElementById('addBookForm').addEventListener('submit', async (e) => {
     e.preventDefault(); 
     const titleInput = document.getElementById('inTitle').value; const imgInput = document.getElementById('inImage').value;
@@ -356,8 +318,7 @@ document.getElementById('addBookForm').addEventListener('submit', async (e) => {
 
 function renderAdminBooksTable() {
     if(!document.getElementById('adminBooksTableBody')) return;
-    const tbody = document.getElementById('adminBooksTableBody');
-    let htmlString = "";
+    const tbody = document.getElementById('adminBooksTableBody'); let htmlString = "";
     window.booksData.forEach((book) => { 
         htmlString += `<tr>
             <td><img src="${book.image}" style="width:40px; border-radius:5px;"></td>
@@ -370,35 +331,24 @@ function renderAdminBooksTable() {
 }
 
 window.deleteBookRecord = async function(id) { if(confirm("Delete this book?")) { try { await deleteDoc(doc(db, "books", id)); showToast("Deleted!"); } catch (e) { showToast("Error!"); } } }
-
 window.openAdminEditModal = function(id) {
     const book = window.booksData.find(x => x.id === id); 
     document.getElementById('editDocId').value = book.id; document.getElementById('edTitle').value = book.title; document.getElementById('edImage').value = book.image; 
-    document.getElementById('editModal').style.display = 'flex';
+    document.getElementById('adminEditModal').style.display = 'flex';
 }
-
 document.getElementById('editBookForm').addEventListener('submit', async (e) => {
-    e.preventDefault();
-    const docId = document.getElementById('editDocId').value;
+    e.preventDefault(); const docId = document.getElementById('editDocId').value;
     const updatedData = { title: document.getElementById('edTitle').value, image: document.getElementById('edImage').value };
-    try { await updateDoc(doc(db, "books", docId), updatedData); document.getElementById('editModal').style.display='none'; showToast("Updated!"); } catch (error) { showToast("Error updating."); }
+    try { await updateDoc(doc(db, "books", docId), updatedData); document.getElementById('adminEditModal').style.display='none'; showToast("Updated!"); } catch (error) { showToast("Error updating."); }
 });
 
 function updateAdminCharts(dlDataArray = [0,0,0,0,0,0,0,0,0,0,0,0]) {
     if(!window.IS_SUPER_ADMIN) return;
     const langCounts = { 'Hindi': 0, 'English': 0, 'Bilingual': 0 }; 
     window.booksData.forEach(b => { if(langCounts[b.lang] !== undefined) { langCounts[b.lang]++; } });
-    
     Chart.defaults.color = '#a1a1aa';
     const ctxLang = document.getElementById('langChart');
-    if(ctxLang) { 
-        if(myLangChart) myLangChart.destroy(); 
-        myLangChart = new Chart(ctxLang, { type: 'doughnut', data: { labels: ['Hindi', 'English', 'Bilingual'], datasets: [{ data: [langCounts.Hindi, langCounts.English, langCounts.Bilingual], backgroundColor: ['#ef4444', '#3b82f6', '#8b5cf6'], borderColor: 'rgba(255,255,255,0.05)', borderWidth: 1 }] }, options: { responsive: true, maintainAspectRatio: false } }); 
-    }
-
+    if(ctxLang) { if(myLangChart) myLangChart.destroy(); myLangChart = new Chart(ctxLang, { type: 'doughnut', data: { labels: ['Hindi', 'English', 'Bilingual'], datasets: [{ data: [langCounts.Hindi, langCounts.English, langCounts.Bilingual], backgroundColor: ['#ef4444', '#3b82f6', '#8b5cf6'], borderColor: 'rgba(255,255,255,0.05)', borderWidth: 1 }] }, options: { responsive: true, maintainAspectRatio: false } }); }
     const ctxDownloads = document.getElementById('downloadsChart');
-    if(ctxDownloads) { 
-        if(myDownloadsChart) myDownloadsChart.destroy(); 
-        myDownloadsChart = new Chart(ctxDownloads, { type: 'line', data: { labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'], datasets: [{ label: `Downloads`, data: dlDataArray, borderColor: '#10b981', backgroundColor: 'rgba(16, 185, 129, 0.2)', borderWidth: 2, fill: true }] }, options: { responsive: true, maintainAspectRatio: false } }); 
-    }
+    if(ctxDownloads) { if(myDownloadsChart) myDownloadsChart.destroy(); myDownloadsChart = new Chart(ctxDownloads, { type: 'line', data: { labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'], datasets: [{ label: `Downloads`, data: dlDataArray, borderColor: '#10b981', backgroundColor: 'rgba(16, 185, 129, 0.2)', borderWidth: 2, fill: true }] }, options: { responsive: true, maintainAspectRatio: false } }); }
 }
