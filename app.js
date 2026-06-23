@@ -111,8 +111,28 @@ async function logActivity(actionType, bookTitle, imageUrl = "", deletedBookData
 
 window.addEventListener('resize', resizeCanvas); resizeCanvas(); animateHex(0);
 
-// 3. AUTH FLOW, LOADER, POPUP FIX (NO BLACK SCREEN)
+
+// ==========================================
+// 3. PERFECT FLOW: LOGIN -> LOADER -> WHATSAPP POPUP
+// ==========================================
 let isInitialLoad = true;
+const appStartTime = Date.now();
+
+// Function jo loader fade hone ke BAAD exactly WhatsApp popup dikhayega
+function showAppAndPopup() {
+    document.getElementById('mainAppWrapper').style.display = 'block'; 
+    const loader = document.getElementById("loaderScreen");
+    loader.style.opacity = "0";
+
+    // Jab loader poori tarah hide ho jaye, tabhi popup show karna hai
+    setTimeout(() => { 
+        loader.style.display = "none"; 
+        cancelAnimationFrame(animationId);
+        
+        // Exact timing for WhatsApp popup so user sees it clearly
+        document.getElementById("popupOverlay").style.display = "flex";
+    }, 600);
+}
 
 onAuthStateChanged(auth, async (user) => {
     if (user) {
@@ -154,7 +174,7 @@ onAuthStateChanged(auth, async (user) => {
             switchAdminTab('add');
         }
 
-        // Fetch Books & Tutorials
+        // Fetch Data
         onSnapshot(doc(db, "settings", "global"), (docSnap) => {
             if (docSnap.exists() && docSnap.data().tutorialVideoUrl) {
                 const embedUrl = getYouTubeEmbedUrl(docSnap.data().tutorialVideoUrl);
@@ -185,43 +205,31 @@ onAuthStateChanged(auth, async (user) => {
             if(sBook) window.openDownloadPage(sBook, true);
         });
 
-        // SHOW LOADER FOR LOGGED IN USERS, THEN APP
+        // IF USER IS ALREADY LOGGED IN: Show loader for 2.5s -> Then trigger Popup
         if (isInitialLoad) {
-            setTimeout(() => {
-                document.getElementById('mainAppWrapper').style.display = 'block'; 
-                document.getElementById("popupOverlay").style.display = "flex";
+            const elapsed = Date.now() - appStartTime;
+            const remainingTime = Math.max(0, 2500 - elapsed); 
 
-                const loader = document.getElementById("loaderScreen");
-                loader.style.opacity = "0";
-
-                setTimeout(() => { 
-                    loader.style.display = "none"; 
-                    cancelAnimationFrame(animationId);
-                }, 600);
-            }, 2500);
-            
+            setTimeout(showAppAndPopup, remainingTime);
             isInitialLoad = false;
         }
 
     } else {
-        // USER IS NOT LOGGED IN -> IMMEDIATELY SHOW LOGIN PAGE
+        // IF USER IS NOT LOGGED IN: Instantly clear loader & show Login
         window.IS_SUPER_ADMIN = false;
         
         if (isInitialLoad) {
             const loader = document.getElementById("loaderScreen");
-            loader.style.opacity = "0";
+            loader.style.display = "none"; 
+            cancelAnimationFrame(animationId);
             
             const loginOverlay = document.getElementById('loginOverlay');
             loginOverlay.style.display = 'flex';
-            
-            setTimeout(() => { 
-                loader.style.display = "none"; 
-                cancelAnimationFrame(animationId);
-                loginOverlay.style.opacity = '1'; 
-            }, 300);
+            setTimeout(() => { loginOverlay.style.opacity = '1'; }, 50); 
             
             isInitialLoad = false;
         } else {
+            // For manual Logout
             document.getElementById('mainAppWrapper').style.display = 'none';
             const loginOverlay = document.getElementById('loginOverlay');
             loginOverlay.style.display = 'flex';
@@ -230,6 +238,7 @@ onAuthStateChanged(auth, async (user) => {
     }
 });
 
+// LOGIC: Manual Login Flow (Login -> Loader -> Popup)
 document.getElementById('loginForm').addEventListener('submit', async (e) => {
     e.preventDefault(); 
     const email = document.getElementById('loginEmail').value; const pass = document.getElementById('loginPassword').value;
@@ -241,28 +250,20 @@ document.getElementById('loginForm').addEventListener('submit', async (e) => {
         showToast("Login Successful!"); 
         btn.innerHTML = `Login`; 
         
-        // FADE OUT LOGIN -> SHOW LOADER -> SHOW APP
+        // Hide Login Overlay
         const loginOverlay = document.getElementById('loginOverlay');
         loginOverlay.style.opacity = '0';
         
         setTimeout(() => {
             loginOverlay.style.display = 'none';
+            // Start Loader
             const loader = document.getElementById("loaderScreen");
             loader.style.display = "flex";
             resizeCanvas(); requestAnimationFrame(animateHex); 
-            
             setTimeout(() => { loader.style.opacity = "1"; }, 50);
 
-            setTimeout(() => {
-                document.getElementById('mainAppWrapper').style.display = 'block'; 
-                document.getElementById("popupOverlay").style.display = "flex";
-                
-                loader.style.opacity = "0";
-                setTimeout(() => { 
-                    loader.style.display = "none"; 
-                    cancelAnimationFrame(animationId);
-                }, 600);
-            }, 2500);
+            // Wait 2.5 seconds -> Fade out Loader -> Show WhatsApp Popup
+            setTimeout(showAppAndPopup, 2500);
             
         }, 500);
 
@@ -285,25 +286,17 @@ document.getElementById('googleSignInBtn').addEventListener('click', async () =>
             const loader = document.getElementById("loaderScreen");
             loader.style.display = "flex";
             resizeCanvas(); requestAnimationFrame(animateHex);
-            
             setTimeout(() => { loader.style.opacity = "1"; }, 50);
 
-            setTimeout(() => {
-                document.getElementById('mainAppWrapper').style.display = 'block'; 
-                document.getElementById("popupOverlay").style.display = "flex";
-                
-                loader.style.opacity = "0";
-                setTimeout(() => { 
-                    loader.style.display = "none"; 
-                    cancelAnimationFrame(animationId);
-                }, 600);
-            }, 2500);
+            // Wait 2.5 seconds -> Fade out Loader -> Show WhatsApp Popup
+            setTimeout(showAppAndPopup, 2500);
             
         }, 500);
     } catch(err) { 
         showToast("Failed: Google Sign-In Error."); 
     } 
 });
+
 
 document.getElementById('admin-logout-btn').addEventListener('click', () => { 
     if(confirm("Are you sure you want to logout?")) {
@@ -481,7 +474,7 @@ window.updateTutorialLink = async function() {
     } 
 }
 
-// ADD BOOK - FIXED ERROR HANDLING AND PREMIUM LOADING STATE
+// ADD BOOK
 document.getElementById('addBookForm').addEventListener('submit', async (e) => {
     e.preventDefault(); 
     
@@ -613,7 +606,7 @@ window.openAdminEditModal = function(id) {
     document.getElementById('adminEditModal').style.display = 'flex';
 }
 
-// EDIT BOOK - FIXED ERROR HANDLING AND PREMIUM LOADING STATE
+// EDIT BOOK
 document.getElementById('editBookForm').addEventListener('submit', async (e) => {
     e.preventDefault(); 
     
