@@ -10,7 +10,8 @@
 </head>
 <body>
 
-    <div class="loader-screen" id="loaderScreen" style="display: none; opacity: 0;">
+    <!-- FIX: Loader default on rahega, taki black screen na aaye -->
+    <div class="loader-screen" id="loaderScreen" style="display: flex; opacity: 1;">
         <canvas id="networkCanvas"></canvas>
         <div class="loader-logo"><img src="https://i.postimg.cc/cJdGqYHG/IMG-20260524-WA0004.jpg" alt="Logo" oncontextmenu="return false;" draggable="false"></div>
         <div class="loader-title">MULTIVERSE BOOKS</div>
@@ -24,6 +25,7 @@
         <div class="loader-powered-text">POWERED BY MADxPRINCE</div>
     </div>
 
+    <!-- Login screen hidden by default, JS show karega -->
     <div id="loginOverlay" class="login-container" style="display: none; opacity: 0;">
         <div class="login-content-wrapper">
             <div class="login-logo-glow">
