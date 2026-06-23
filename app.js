@@ -18,6 +18,9 @@ const provider = new GoogleAuthProvider();
 
 window.booksData = [];
 let loadedCount = 0; 
+let isLoadingMore = false;
+let activeBookSlug = ""; 
+let activeBookTitle = "";
 
 window.IS_SUPER_ADMIN = false;
 const SUPER_ADMIN_EMAIL = "princeyadav000261@gmail.com"; 
@@ -71,7 +74,7 @@ function resizeCanvas() {
     canvas.width = width * dpr; canvas.height = height * dpr; ctx.scale(dpr, dpr); initHex(); 
 }
 
-// 2. DAILY QUOTES LOGIC (Restored 28 Quotes)
+// 2. DAILY QUOTES LOGIC (28 Quotes)
 const quotes = [
     { text: "Be the change that you wish to see in the world.", author: "Mahatma Gandhi" },
     { text: "I have not failed. I've just found 10,000 ways that won't work.", author: "Thomas A. Edison" },
@@ -119,11 +122,8 @@ onAuthStateChanged(auth, async (user) => {
             isAppInitialized = true;
         }
 
-        // Fix 1: Show attractive name instead of email string
         let dName = user.displayName;
-        if (!dName || dName.trim() === "") {
-            dName = (user.email === SUPER_ADMIN_EMAIL) ? "MULTIVERSE ADMIN" : "MULTIVERSE USER";
-        }
+        if (!dName || dName.trim() === "") { dName = (user.email === SUPER_ADMIN_EMAIL) ? "MULTIVERSE ADMIN" : "MULTIVERSE USER"; }
         document.getElementById('sidebarProfileName').innerText = dName;
         if(user.photoURL) document.getElementById('sidebarProfileImg').src = user.photoURL;
 
@@ -161,10 +161,13 @@ onAuthStateChanged(auth, async (user) => {
             });
             loadedCount = 0;
             const searchInput = document.getElementById('app-search-input').value;
-            if(searchInput.trim() === "") { window.renderBooksUI(0, 16); } else { performFuzzySearch(searchInput); }
+            if(searchInput.trim() === "") { window.renderBooksUI(0, getBatchSize() * 2); } else { performFuzzySearch(searchInput); }
             window.generateNotifications();
             renderAdminBooksTable(); 
             if(window.IS_SUPER_ADMIN) updateAdminCharts();
+            
+            const sBook = new URLSearchParams(window.location.search).get('book');
+            if(sBook) window.openDownloadPage(sBook, true);
         });
     } else {
         document.getElementById('mainAppWrapper').style.display = 'none';
@@ -217,13 +220,13 @@ searchInputEl.addEventListener('input', (e) => {
     clearTimeout(searchTimeout);
     const searchText = e.target.value;
     searchTimeout = setTimeout(() => {
-        if(searchText.trim() === "") { document.getElementById('no-results-msg').style.display = 'none'; window.renderBooksUI(0, 16); } 
+        if(searchText.trim() === "") { document.getElementById('no-results-msg').style.display = 'none'; window.renderBooksUI(0, getBatchSize() * 2); } 
         else { performFuzzySearch(searchText); }
     }, 300);
 });
 
 closeSearchBtn.addEventListener('click', () => {
-    searchInputEl.value = ''; document.getElementById('no-results-msg').style.display = 'none'; window.renderBooksUI(0, 16); document.getElementById('search-box').classList.remove('active');
+    searchInputEl.value = ''; document.getElementById('no-results-msg').style.display = 'none'; window.renderBooksUI(0, getBatchSize() * 2); document.getElementById('search-box').classList.remove('active');
     if (history.state && history.state.popup === 'search') { history.back(); }
 });
 
@@ -238,7 +241,33 @@ function performFuzzySearch(searchText) {
     else { document.getElementById("bookContainer").innerHTML = ""; document.getElementById('no-results-msg').style.display = 'flex'; }
 }
 
-// 5. UI RENDERING 
+// 5. AUTO GRID BOOK LOADING (Original Feature Restored)
+function getBatchSize() {
+    let cols = 2; 
+    if (window.innerWidth >= 768) {
+        const container = document.getElementById("bookContainer");
+        if (container && container.clientWidth) { cols = Math.floor((container.clientWidth + 25) / 225) || 1; } else { cols = 4; }
+    }
+    return cols * 4; 
+}
+
+const mainElement = document.getElementById('mainContentArea');
+mainElement.addEventListener('scroll', () => {
+    if(document.getElementById('app-search-input').value.trim() !== "") return;
+    if (mainElement.scrollTop + mainElement.clientHeight >= mainElement.scrollHeight - 50) {
+        const noResultsMsg = document.getElementById('no-results-msg');
+        if (loadedCount < window.booksData.length && !isLoadingMore && noResultsMsg.style.display !== 'flex') {
+            isLoadingMore = true;
+            document.getElementById("bottomSpinner").style.display = "flex";
+            setTimeout(() => {
+                window.renderBooksUI(loadedCount, getBatchSize());
+                document.getElementById("bottomSpinner").style.display = "none";
+                isLoadingMore = false;
+            }, 1000); 
+        }
+    }
+});
+
 window.renderBooksUI = function(startIndex, count, customData = null) {
     const container = document.getElementById("bookContainer");
     let dataToRender = customData ? customData : window.booksData;
@@ -286,23 +315,38 @@ document.getElementById('menu-admin-panel').addEventListener('click', (e) => {
 document.getElementById('close-admin-btn').addEventListener('click', () => { history.back(); });
 
 window.addEventListener('popstate', (e) => {
-    document.getElementById("downloadModal").style.display = "none"; document.getElementById('noti-panel').classList.remove('active'); document.getElementById('sidebar').classList.remove('active'); document.getElementById('sidebar-overlay').classList.remove('active'); document.getElementById('about-dev-panel').classList.remove('active'); document.getElementById('dmca-panel').classList.remove('active'); document.getElementById('admin-dashboard-panel').classList.remove('active'); document.getElementById('search-box').classList.remove('active');
+    document.getElementById('noti-panel').classList.remove('active'); document.getElementById('sidebar').classList.remove('active'); document.getElementById('sidebar-overlay').classList.remove('active'); document.getElementById('about-dev-panel').classList.remove('active'); document.getElementById('dmca-panel').classList.remove('active'); document.getElementById('admin-dashboard-panel').classList.remove('active'); document.getElementById('search-box').classList.remove('active');
+    const sBook = new URLSearchParams(window.location.search).get('book');
+    if(sBook) { if(window.openDownloadPage) window.openDownloadPage(sBook, true); } 
+    else { document.getElementById("downloadModal").style.display = "none"; }
 });
 
-// FIX 3: Exam Relevance Tag Show Function
-window.openDownloadPage = function(slug) {
+// Download Modal Fixes (Share & YouTube working now)
+window.openDownloadPage = function(slug, skipPushState = false) {
     const book = window.booksData.find(b => b.slug === slug); if(!book) return;
     document.getElementById("downloadModal").style.display = "flex";
     document.getElementById("dlPreviewImage").src = book.image; document.getElementById("dlBookTitle").innerText = book.title; document.getElementById("dlBookAuthor").innerText = book.author;
     document.getElementById("dlPdfLinkBtn").onclick = function() { if(book.pdfLink) window.open(book.pdfLink, '_blank'); };
     
-    // EXAM RELEVANCE RENDER LOGIC
+    document.getElementById("dlYoutubeLinkBtn").onclick = function() { if(book.ytLink && book.ytLink !== "#") { window.open(book.ytLink, '_blank'); } };
+
     let examsArray = (book.exams || "General").split(',').map(item => item.trim());
     document.getElementById("dlModalTags").innerHTML = examsArray.map(exam => `<div class="dl-modal-tag">${exam}</div>`).join('');
     
-    history.pushState({ popup: 'book' }, '');
+    activeBookSlug = book.slug;
+    activeBookTitle = book.title;
+    
+    if (!skipPushState) { history.pushState({ popup: 'book' }, '', '?book=' + book.slug); }
 }
-window.closeDownloadPage = function() { history.back(); }
+window.closeDownloadPage = function() {
+    if (history.state && history.state.popup === 'book') { history.back(); } 
+    else { document.getElementById("downloadModal").style.display = "none"; window.history.replaceState({}, '', window.location.pathname); }
+}
+window.shareBook = function() {
+    const shareUrl = window.location.origin + window.location.pathname + "?book=" + activeBookSlug;
+    if (navigator.share) navigator.share({ title: activeBookTitle, text: "Download free book", url: shareUrl });
+    else { navigator.clipboard.writeText(shareUrl); alert("Link Copied!"); }
+}
 
 
 // 6. ADMIN FUNCTIONS
@@ -335,7 +379,6 @@ function renderAdminBooksTable() {
             <td><img src="${book.image}" style="width:40px; border-radius:5px;"></td>
             <td><strong style="color:#fff;">${book.title}</strong><br><span style="font-size:0.8rem; color:#a1a1aa;">${book.author}</span></td>
             <td>
-                <!-- Fix 5: Attractive Buttons -->
                 <button class="adm-btn-edit" onclick="openAdminEditModal('${book.id}')"><i class="fas fa-edit"></i></button>
                 <button class="adm-btn-delete" onclick="deleteBookRecord('${book.id}')"><i class="fas fa-trash"></i></button>
             </td>
@@ -346,7 +389,6 @@ function renderAdminBooksTable() {
 
 window.deleteBookRecord = async function(id) { if(confirm("Delete this book?")) { try { await deleteDoc(doc(db, "books", id)); showToast("Deleted!"); } catch (e) { showToast("Error!"); } } }
 
-// Fix 4: Edit modal with all fields populated
 window.openAdminEditModal = function(id) {
     const book = window.booksData.find(x => x.id === id); 
     document.getElementById('editDocId').value = book.id; 
