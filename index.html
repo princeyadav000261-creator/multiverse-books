@@ -7,6 +7,25 @@
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <link rel="stylesheet" href="./style.css">
+    <script>
+        // INSTANT LOGIN CHECK: Blank screen aur loader delay rokne ke liye
+        document.addEventListener("DOMContentLoaded", () => {
+            const isLogged = localStorage.getItem('isUserLoggedIn');
+            const urlParams = new URLSearchParams(window.location.search);
+            const isDeepLink = urlParams.has('book');
+
+            if (!isLogged) {
+                // Agar login nahi hai toh loader fauran hide aur login screen show
+                document.getElementById('loaderScreen').style.display = 'none';
+                document.getElementById('loginOverlay').style.display = 'flex';
+                document.getElementById('loginOverlay').style.opacity = '1';
+            } else {
+                // Agar deep link se aaye hain to sirf minimal loader
+                document.getElementById('loaderScreen').style.display = 'flex';
+                document.getElementById('loaderScreen').style.opacity = '1';
+            }
+        });
+    </script>
 </head>
 <body>
 
@@ -106,7 +125,7 @@
                     <div class="section-title">MAIN MENU</div>
                     <a href="#" class="menu-item active" id="menu-home"><i class="fas fa-home"></i><span>Home</span></a>
                     <a href="#" class="menu-item normal" id="menu-about-dev"><i class="fas fa-user-tie"></i><span>About Developer</span></a>
-                    <a href="#" class="menu-item normal" id="menu-admin-panel" style="display: none;"><i class="fas fa-cloud-upload-alt"></i><span>Upload Books</span></a>
+                    <a href="#" class="menu-item normal" id="menu-admin-panel" style="display: none;"><i class="fas fa-cloud-upload-alt"></i><span id="uploadMenuText">Upload Books</span></a>
                     <a href="#" class="menu-item normal" id="menu-dmca"><i class="fas fa-shield-halved"></i><span>DMCA Request</span></a>
                 </div>
 
@@ -252,7 +271,7 @@
                 <div class="modal-header-fixed" style="background: #09090b;">
                     <div class="header-content-wrapper">
                         <button class="back-btn" id="close-admin-btn"><i class="fas fa-arrow-left"></i></button>
-                        <h1 class="modal-title">VAULT ADMIN PANEL</h1>
+                        <h1 class="modal-title">VAULT PANEL</h1>
                     </div>
                     <div class="header-active-badge" id="admin-logout-btn" style="cursor: pointer; background: rgba(239, 68, 68, 0.15); color: #ef4444; border: 1px solid rgba(239, 68, 68, 0.3);">
                         <i class="fas fa-power-off"></i> Logout
@@ -260,9 +279,9 @@
                 </div>
                 
                 <div class="adm-tabs">
-                    <button class="adm-tab-btn active" id="admTabAdd" onclick="switchAdminTab('add')"><i class="fas fa-plus"></i> Add</button>
+                    <button class="adm-tab-btn active" id="admTabAdd" onclick="switchAdminTab('add')"><i class="fas fa-plus"></i> Add Book</button>
                     <button class="adm-tab-btn" id="admTabManage" onclick="switchAdminTab('manage')"><i class="fas fa-list"></i> Manage</button>
-                    <button class="adm-tab-btn" id="admTabVideo" onclick="switchAdminTab('tutorial')"><i class="fas fa-video"></i> Video</button>
+                    <button class="adm-tab-btn" id="admTabVideo" onclick="switchAdminTab('tutorial')"><i class="fas fa-video"></i> Tutorial Video</button>
                     <button class="adm-tab-btn" id="admTabAnalytics" onclick="switchAdminTab('analytics')"><i class="fas fa-chart-pie"></i> Stats & Logs</button>
                 </div>
 
@@ -316,16 +335,20 @@
                         </div>
                     </div>
 
+                    <!-- NEW TUTORIAL VIDEO TAB SECTION -->
                     <div id="sectionTutorial" class="adm-section">
                         <div class="adm-card">
-                            <div class="adm-card-title"><i class="fas fa-video"></i> Upload Guide & Tutorial</div>
-                            <div style="position: relative; padding-bottom: 56.25%; height: 0; overflow: hidden; border-radius: 12px; background: #000;">
-                                <iframe id="tutorialIframe" src="" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; border: 0;" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen></iframe>
-                            </div>
-                            <div id="adminTutorialEdit" style="display: none; margin-top: 20px; padding-top:20px; border-top: 1px solid rgba(255,255,255,0.1);">
-                                <h4 style="margin-bottom: 10px; color: #10b981; font-weight: 800;"><i class="fas fa-cogs"></i> Super Admin Action</h4>
+                            <div class="adm-card-title"><i class="fas fa-video"></i> Tutorial Videos Collection</div>
+                            
+                            <div id="adminTutorialEdit" style="display: none; padding-bottom:20px; border-bottom: 1px solid rgba(255,255,255,0.1);">
+                                <h4 style="margin-bottom: 10px; color: #10b981; font-weight: 800;"><i class="fas fa-plus-circle"></i> Add New YouTube/Shorts Video</h4>
                                 <input type="url" id="newTutorialUrl" class="adm-input" placeholder="Paste YouTube OR Shorts URL Here" style="margin-bottom:10px;">
-                                <button type="button" class="adm-submit-btn" onclick="updateTutorialLink()" style="background:#10b981;">Update Video For All Users</button>
+                                <button type="button" class="adm-submit-btn" onclick="addTutorialLink()" style="background:#10b981; color: #fff;"><i class="fas fa-upload"></i> Add Video Card</button>
+                            </div>
+
+                            <!-- YT CARDS GRID -->
+                            <div id="adminTutorialsGrid" style="display: flex; gap: 15px; flex-wrap: wrap; margin-top: 20px; justify-content: center;">
+                                <!-- Videos will load here -->
                             </div>
                         </div>
                     </div>
@@ -378,7 +401,7 @@
                 <div class="adm-form-group"><label class="adm-label">Direct PDF Link</label><input type="url" id="edPdfUrl" class="adm-input" required autocomplete="off"></div>
                 <div class="adm-form-group"><label class="adm-label">YouTube Tutorial Link (Optional)</label><input type="url" id="edYtUrl" class="adm-input" autocomplete="off"></div>
                 
-                <button type="submit" id="editSaveBtn" class="adm-submit-btn" style="background:#3b82f6;"><i class="fas fa-save"></i> Save Changes</button>
+                <button type="submit" id="editSaveBtn" class="adm-submit-btn" style="background:#3b82f6; color:#fff;"><i class="fas fa-save"></i> Save Changes</button>
             </form>
         </div>
     </div>
