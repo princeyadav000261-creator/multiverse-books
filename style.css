@@ -55,7 +55,6 @@ header { display: flex; align-items: center; justify-content: space-between; pad
 .sidebar-overlay { position: absolute; inset: 0; background: rgba(0,0,0,0.5); backdrop-filter: blur(2px); z-index: 25; opacity: 0; pointer-events: none; transition: opacity 0.3s ease; }
 .sidebar-overlay.active { opacity: 1; pointer-events: all; }
 
-/* FIXED SIDEBAR OVERFLOW FOR FIXED FOOTER & ACTIVE ANIMATION ADDED BACK */
 .sidebar { position: absolute; top: 0; left: 0; width: 85%; max-width: 330px; height: 100%; height: 100dvh; background-color: var(--spidy-sidebar-bg); z-index: 30; transform: translateX(-100%); transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1); display: flex; flex-direction: column; box-shadow: 5px 0 15px rgba(0,0,0,0.5); overflow: hidden; border-right: 1px solid var(--border-color); }
 .sidebar.active { transform: translateX(0); } 
 .sidebar-header-new { display: flex; align-items: center; padding: 20px 20px; border-bottom: 1px solid var(--border-color); flex-shrink: 0; }
@@ -63,7 +62,6 @@ header { display: flex; align-items: center; justify-content: space-between; pad
 .profile-info { margin-left: 14px; flex-grow: 1; min-width: 0; display: flex; flex-direction: column; justify-content: center; }
 .profile-name { color: var(--text-primary); font-size: 18px; font-weight: 1000; letter-spacing: 0.5px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 
-/* NEW SCROLL AREA FOR MENUS */
 .sidebar-scroll-area { flex: 1; overflow-y: auto; overflow-x: hidden; padding-bottom: 15px; }
 .sidebar-scroll-area::-webkit-scrollbar { display: none; }
 
@@ -79,7 +77,6 @@ header { display: flex; align-items: center; justify-content: space-between; pad
 .menu-item.active i { color: var(--spidy-accent-blue); text-shadow: 0 0 10px rgba(123, 138, 255, 0.5); }
 .menu-item.active span { color: var(--text-primary); text-shadow: 0 0 8px rgba(255, 255, 255, 0.3); }
 
-/* UPDATED PRO BADGE (PERFECT DESIGN MATCH) */
 .pro-badge { margin-left: auto; background-color: #2D1B4E; color: #C28BFF !important; font-size: 8.5px; font-weight: 800 !important; padding: 3px 8px; border-radius: 6px; letter-spacing: 0.8px; text-transform: uppercase; border: none; box-shadow: none; }
 
 .card-link i.external { margin-left: auto; font-size: 12px; width: auto; opacity: 0.7; }
@@ -88,7 +85,6 @@ header { display: flex; align-items: center; justify-content: space-between; pad
 .card-insta { background-color: var(--insta-bg); box-shadow: inset 0 0 0 1px rgba(225, 48, 108, 0.1); } .card-insta i, .card-insta span { color: var(--insta-pink); }
 .card-youtube { background-color: var(--youtube-bg); box-shadow: inset 0 0 0 1px rgba(255, 0, 0, 0.1); } .card-youtube i, .card-youtube span { color: var(--youtube-red); }
 
-/* FIXED BOTTOM FOOTER */
 .sidebar-footer { margin-top: 0; padding: 15px 20px 25px 20px; text-align: center; border-top: 1px solid rgba(255,255,255,0.03); flex-shrink: 0; background-color: var(--spidy-sidebar-bg); z-index: 10; position: relative; box-shadow: 0 -5px 15px rgba(0,0,0,0.2); }
 .system-status { display: flex; align-items: center; justify-content: center; gap: 8px; color: var(--text-primary); font-size: 11px; font-weight: 700; letter-spacing: 1px; margin-bottom: 6px; }
 .dot { width: 6px; height: 6px; background-color: #00ff66; border-radius: 50%; box-shadow: 0 0 8px #00ff66; animation: pulse 2s infinite; }
@@ -255,41 +251,30 @@ main::-webkit-scrollbar { display: none; }
 .later:hover { color: #fff; }
 
 /* ------------------------------------------------------------------
-   PREMIUM TRANSPARENT LOGIN CARD WITH WHITE GLOW (LIKE IMAGE)
+   PREMIUM TRANSPARENT LOGIN CARD - OPTIMIZED FOR LAPTOP & MOBILE
 ------------------------------------------------------------------ */
-.login-container { position: fixed; inset: 0; z-index: 99999; flex-direction: column; background: #050508; transition: opacity 0.5s ease; overflow-y: auto; }
-.login-content-wrapper { margin: auto; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 20px; width: 100%; max-width: 380px; }
-.login-logo-glow { width: 85px; height: 85px; background: #fff; border-radius: 22px; display: flex; justify-content: center; align-items: center; box-shadow: 0 0 40px rgba(138, 43, 226, 0.4), inset 0 0 10px rgba(0,0,0,0.1); margin-bottom: 20px; padding: 4px; }
-.login-logo-glow img { width: 100%; height: 100%; object-fit: cover; border-radius: 18px; border: 2px solid #52525b; }
-.login-title-small { color: #9d88ff; font-size: 13px; font-weight: 800; letter-spacing: 2px; text-transform: uppercase; }
-.login-title-large { color: #fff; font-size: 26px; font-weight: 900; margin-top: 5px; font-family: 'Poppins', sans-serif; letter-spacing: 1px; }
-.login-subtitle { color: #8c97ac; font-size: 12px; margin-top: 8px; margin-bottom: 30px; letter-spacing: 0.5px; }
+.login-container { position: fixed; inset: 0; z-index: 99999; display: flex; flex-direction: column; align-items: center; justify-content: center; background: #050508; transition: opacity 0.5s ease; overflow-y: auto; }
+.login-content-wrapper { margin: auto; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 15px; width: 100%; max-width: 380px; }
+.login-logo-glow { width: 75px; height: 75px; background: #fff; border-radius: 20px; display: flex; justify-content: center; align-items: center; box-shadow: 0 0 40px rgba(138, 43, 226, 0.4), inset 0 0 10px rgba(0,0,0,0.1); margin-bottom: 12px; padding: 4px; }
+.login-logo-glow img { width: 100%; height: 100%; object-fit: cover; border-radius: 16px; border: 2px solid #52525b; }
+.login-title-small { color: #9d88ff; font-size: 12px; font-weight: 800; letter-spacing: 2px; text-transform: uppercase; }
+.login-title-large { color: #fff; font-size: 24px; font-weight: 900; margin-top: 4px; font-family: 'Poppins', sans-serif; letter-spacing: 1px; }
+.login-subtitle { color: #8c97ac; font-size: 11px; margin-top: 6px; margin-bottom: 20px; letter-spacing: 0.5px; }
 
-/* TRANSPARENT GLASS EFFECT WITH WHITE GLOW */
-.login-card { 
-    background: rgba(255, 255, 255, 0.02); 
-    backdrop-filter: blur(12px); 
-    -webkit-backdrop-filter: blur(12px);
-    border: 1px solid rgba(255, 255, 255, 0.1); 
-    border-radius: 24px; 
-    padding: 30px 25px; 
-    width: 100%; 
-    box-shadow: 0 0 25px rgba(255, 255, 255, 0.05), inset 0 0 15px rgba(255, 255, 255, 0.05); 
-}
-.login-badge { background: rgba(26, 27, 38, 0.8); border: 1px solid rgba(255,255,255,0.08); border-radius: 12px; padding: 8px 18px; display: inline-flex; align-items: center; justify-content: center; gap: 8px; color: #fff; font-weight: 600; font-size: 13px; margin-bottom: 25px; box-shadow: 0 4px 10px rgba(0,0,0,0.2); }
+.login-card { background: rgba(255, 255, 255, 0.02); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 24px; padding: 25px 20px; width: 100%; box-shadow: 0 0 25px rgba(255, 255, 255, 0.05), inset 0 0 15px rgba(255, 255, 255, 0.05); }
+.login-badge { background: rgba(26, 27, 38, 0.8); border: 1px solid rgba(255,255,255,0.08); border-radius: 12px; padding: 8px 16px; display: inline-flex; align-items: center; justify-content: center; gap: 8px; color: #fff; font-weight: 600; font-size: 12px; margin-bottom: 18px; box-shadow: 0 4px 10px rgba(0,0,0,0.2); }
 
-.input-wrapper { position: relative; display: flex; align-items: center; margin-bottom: 15px; width: 100%; }
+.input-wrapper { position: relative; display: flex; align-items: center; margin-bottom: 12px; width: 100%; }
 .input-wrapper i.left-icon { position: absolute; left: 15px; color: #6b7280; font-size: 14px; }
 .input-wrapper .toggle-eye { position: absolute; right: 15px; color: #6b7280; cursor: pointer; padding: 5px;}
-.input-wrapper input { width: 100%; background: #1a1c24; border: 1px solid rgba(255,255,255,0.05); border-radius: 14px; padding: 16px 45px; color: #fff; outline: none; font-weight: 500; font-size: 14px; }
+.input-wrapper input { width: 100%; background: #1a1c24; border: 1px solid rgba(255,255,255,0.05); border-radius: 14px; padding: 14px 45px; color: #fff; outline: none; font-weight: 500; font-size: 13.5px; }
 .input-wrapper input:focus { border-color: #6d5dfc; }
 
-.btn-login { background: #6d5dfc; color: #fff; width: 100%; padding: 16px; border-radius: 14px; border: none; font-size: 15px; font-weight: 700; cursor: pointer; transition: 0.3s; margin-top: 10px; box-shadow: 0 8px 20px rgba(109, 93, 252, 0.3); display: flex; justify-content: center; align-items: center; gap: 10px;}
+.btn-login { background: #6d5dfc; color: #fff; width: 100%; padding: 14px; border-radius: 14px; border: none; font-size: 15px; font-weight: 700; cursor: pointer; transition: 0.3s; margin-top: 8px; box-shadow: 0 8px 20px rgba(109, 93, 252, 0.3); display: flex; justify-content: center; align-items: center; gap: 10px;}
 .btn-login:hover { background: #5a4bdf; }
-.btn-token-style { background: #1a1b26; color: #fff; width: 100%; padding: 16px; border-radius: 14px; border: 1px solid rgba(255,255,255,0.05); font-size: 14px; font-weight: 600; cursor: pointer; display: flex; justify-content: center; align-items: center; gap: 10px; transition: 0.3s; }
+.btn-token-style { background: #1a1b26; color: #fff; width: 100%; padding: 14px; border-radius: 14px; border: 1px solid rgba(255,255,255,0.05); font-size: 14px; font-weight: 600; cursor: pointer; display: flex; justify-content: center; align-items: center; gap: 10px; transition: 0.3s; }
 .btn-token-style:hover { background: rgba(255,255,255,0.05); }
 
-/* --- NEW PREMIUM DOTTED LOADER ANIMATION --- */
 .premium-loader {
     width: 18px;
     height: 18px;
