@@ -27,8 +27,8 @@ const SUPER_ADMIN_EMAIL = "princeyadav000261@gmail.com";
 
 let myLangChart = null; 
 let myDownloadsChart = null;
-let myBooksChart = null; // New graph variable
-window.currentDlData = [0,0,0,0,0,0,0,0,0,0,0,0]; // Graph data globally stored for sync fix
+let myBooksChart = null; 
+window.currentDlData = [0,0,0,0,0,0,0,0,0,0,0,0]; 
 
 let adminFilteredBooks = [];
 let adminCurrentPage = 1;
@@ -183,12 +183,12 @@ onAuthStateChanged(auth, async (user) => {
             switchAdminTab('add');
         }
 
-        // Fetch Tutorial Videos
+        // Fetch Tutorial Videos (Now passes full data)
         onSnapshot(query(collection(db, "tutorials"), orderBy("createdAt", "desc")), (snapshot) => {
             document.getElementById('adminTutorialsGrid').innerHTML = '';
             snapshot.forEach(doc => {
                 const data = doc.data();
-                renderTutorialCard(data.url, doc.id, 'adminTutorialsGrid', window.IS_SUPER_ADMIN);
+                renderTutorialCard(data, doc.id, 'adminTutorialsGrid', window.IS_SUPER_ADMIN);
             });
         });
 
@@ -241,17 +241,22 @@ onAuthStateChanged(auth, async (user) => {
     }
 });
 
-// LOGIN
+// LOGIN WITH NEW LOADER
 document.getElementById('loginForm').addEventListener('submit', async (e) => {
     e.preventDefault(); 
-    const email = document.getElementById('loginEmail').value; const pass = document.getElementById('loginPassword').value;
-    const btn = document.getElementById('loginBtn'); btn.innerHTML = `<i class="fas fa-circle-notch fa-spin"></i> Wait...`;
+    const email = document.getElementById('loginEmail').value; 
+    const pass = document.getElementById('loginPassword').value;
+    
+    const btn = document.getElementById('loginBtn'); 
+    const originalContent = btn.innerHTML;
+    // Inject Premium Loader
+    btn.innerHTML = `<span style="display:flex; align-items:center; gap:8px;"><div class="premium-loader"></div> Loading...</span>`;
     
     try { 
         await signInWithEmailAndPassword(auth, email, pass); 
         e.target.reset(); 
         showToast("Login Successful!"); 
-        btn.innerHTML = `Login`; 
+        btn.innerHTML = originalContent; 
         
         const loginOverlay = document.getElementById('loginOverlay');
         loginOverlay.style.opacity = '0';
@@ -266,13 +271,22 @@ document.getElementById('loginForm').addEventListener('submit', async (e) => {
             if(!window.isDeepLinkLoad) { setTimeout(showAppAndPopup, 2500); }
         }, 500);
 
-    } catch(err) { showToast("Failed: Invalid Credentials!"); btn.innerHTML = `Login`; } 
+    } catch(err) { 
+        showToast("Failed: Invalid Credentials!"); 
+        btn.innerHTML = originalContent; 
+    } 
 });
 
+// GOOGLE SIGN IN WITH NEW LOADER
 document.getElementById('googleSignInBtn').addEventListener('click', async () => { 
+    const btn = document.getElementById('googleSignInBtn');
+    const originalContent = btn.innerHTML;
+    btn.innerHTML = `<span style="display:flex; align-items:center; gap:8px;"><div class="premium-loader"></div> Connecting...</span>`;
+    
     try { 
         await signInWithPopup(auth, provider); 
         showToast("Google Login Successful!");
+        btn.innerHTML = originalContent;
         const loginOverlay = document.getElementById('loginOverlay');
         loginOverlay.style.opacity = '0';
         setTimeout(() => {
@@ -283,7 +297,10 @@ document.getElementById('googleSignInBtn').addEventListener('click', async () =>
             setTimeout(() => { loader.style.opacity = "1"; }, 50);
             if(!window.isDeepLinkLoad) { setTimeout(showAppAndPopup, 2500); }
         }, 500);
-    } catch(err) { showToast("Failed: Google Sign-In Error."); } 
+    } catch(err) { 
+        showToast("Failed: Google Sign-In Error."); 
+        btn.innerHTML = originalContent;
+    } 
 });
 
 document.getElementById('admin-logout-btn').addEventListener('click', () => { 
@@ -405,7 +422,6 @@ window.addEventListener('popstate', (e) => {
     else { document.getElementById("downloadModal").style.display = "none"; }
 });
 
-// FIXED DOWNLOAD GRAPH SYNC
 window.openDownloadPage = function(slug, skipPushState = false) {
     const book = window.booksData.find(b => b.slug === slug); if(!book) return;
     document.getElementById("downloadModal").style.display = "flex";
@@ -415,7 +431,6 @@ window.openDownloadPage = function(slug, skipPushState = false) {
         if(book.pdfLink) {
             window.open(book.pdfLink, '_blank'); 
             
-            // Increment Graph Logic
             try {
                 const currentMonth = new Date().toLocaleString('en-US', { month: 'short' }).toLowerCase();
                 const yearStr = new Date().getFullYear().toString();
@@ -423,7 +438,6 @@ window.openDownloadPage = function(slug, skipPushState = false) {
                     [currentMonth]: increment(1)
                 });
             } catch(e) {
-                // If doc doesn't exist yet, create it
                 try {
                     const currentMonth = new Date().toLocaleString('en-US', { month: 'short' }).toLowerCase();
                     const yearStr = new Date().getFullYear().toString();
@@ -497,9 +511,13 @@ function showToast(message) {
     setTimeout(() => { toast.classList.remove('show'); }, 3000);
 }
 
-// === PREMIUM YOUTUBE CARDS WITH FIXED HORIZONTAL STATS & LOGO ===
-async function renderTutorialCard(videoUrl, docId, containerId, isAdmin) {
+// === PREMIUM YOUTUBE CARDS WITH CUSTOM VIEWS LOGIC ===
+async function renderTutorialCard(data, docId, containerId, isAdmin) {
     try {
+        const videoUrl = data.url;
+        // USE SAVED VIEWS OR DEFAULT TO 10K
+        const customViews = data.views || "10.5K"; 
+        
         const videoIdMatch = videoUrl.match(/(?:youtu\.be\/|youtube\.com\/(?:[^\/]+\/.+\/|(?:v|e(?:mbed)?)\/|.*[?&]v=)|youtube\.com\/shorts\/)([^"&?\/\s]{11})/i);
         if (!videoIdMatch) return;
         const videoId = videoIdMatch[1];
@@ -510,32 +528,25 @@ async function renderTutorialCard(videoUrl, docId, containerId, isAdmin) {
         
         try {
             const response = await fetch(`https://noembed.com/embed?url=${standardUrl}`);
-            const data = await response.json();
-            if(data.title) title = data.title;
-            if(data.author_name) channelName = data.author_name;
+            const vidData = await response.json();
+            if(vidData.title) title = vidData.title;
+            if(vidData.author_name) channelName = vidData.author_name;
         } catch(e) {}
 
         const thumbnailUrl = `https://img.youtube.com/vi/${videoId}/maxresdefault.jpg`;
         const fallbackUrl = `https://img.youtube.com/vi/${videoId}/hqdefault.jpg`;
         
-        // Developer Image as Avatar
         const avatarUrl = `https://i.postimg.cc/D0BF1b77/file-000000000e847207a64f6711d825a859.png`;
-        
-        let hash = 0;
-        for (let i = 0; i < videoId.length; i++) { hash = videoId.charCodeAt(i) + ((hash << 5) - hash); }
-        const viewsNum = Math.abs(hash % 850) + 12; 
-        const fakeViews = viewsNum > 100 ? (viewsNum / 10).toFixed(1) + "K" : viewsNum + "K";
         
         let actionBtns = '';
         if(isAdmin) {
             actionBtns = `
             <div class="yt-action-btns">
-                <button class="yt-action-btn yt-edit" onclick="editTutorial('${docId}', '${videoUrl}')"><i class="fas fa-pen"></i></button>
+                <button class="yt-action-btn yt-edit" onclick="editTutorial('${docId}', '${videoUrl}', '${customViews}')"><i class="fas fa-pen"></i></button>
                 <button class="yt-action-btn yt-delete" onclick="deleteTutorial('${docId}')"><i class="fas fa-trash"></i></button>
             </div>`;
         }
 
-        // Horizontal Stacked Layout update
         const cardHTML = `
             <div class="yt-card">
                 ${actionBtns}
@@ -549,7 +560,7 @@ async function renderTutorialCard(videoUrl, docId, containerId, isAdmin) {
                         <div>
                             <div class="yt-video-title">${title}</div>
                             <div class="yt-channel-name">
-                                ${channelName} <i class="fas fa-check-circle yt-verified"></i> • ${fakeViews} Views
+                                ${channelName} <i class="fas fa-check-circle yt-verified"></i> • ${customViews} Views
                             </div>
                         </div>
                     </div>
@@ -563,20 +574,28 @@ async function renderTutorialCard(videoUrl, docId, containerId, isAdmin) {
 window.addTutorialLink = async function() {
     if(!window.IS_SUPER_ADMIN) return; 
     const url = document.getElementById('newTutorialUrl').value; 
+    const views = document.getElementById('newTutorialViews').value || "12K"; // Default 12K if empty
+
     if(!url) return showToast("Failed: Enter YouTube URL!"); 
     try { 
-        await addDoc(collection(db, "tutorials"), { url: url, createdAt: new Date().getTime() });
+        await addDoc(collection(db, "tutorials"), { url: url, views: views, createdAt: new Date().getTime() });
         showToast("Video Added Successfully!"); 
         document.getElementById('newTutorialUrl').value = ''; 
+        document.getElementById('newTutorialViews').value = ''; 
     } catch(e) { showToast("Failed: " + e.message); } 
 }
 
-window.editTutorial = async function(id, currentUrl) {
+window.editTutorial = async function(id, currentUrl, currentViews) {
     if(!window.IS_SUPER_ADMIN) return;
-    const newUrl = prompt("Enter new YouTube / Shorts URL:", currentUrl);
-    if(newUrl && newUrl.trim() !== "" && newUrl !== currentUrl) {
+    const newUrl = prompt("Enter new YouTube/Shorts URL:", currentUrl);
+    if(newUrl === null) return; // if canceled
+    
+    const newViews = prompt("Enter custom views (e.g. 2.1M, 500K):", currentViews);
+    if(newViews === null) return; // if canceled
+
+    if(newUrl.trim() !== "" && newViews.trim() !== "") {
         try {
-            await updateDoc(doc(db, "tutorials", id), { url: newUrl.trim() });
+            await updateDoc(doc(db, "tutorials", id), { url: newUrl.trim(), views: newViews.trim() });
             showToast("Video Updated Successfully!");
         } catch(e) {
             showToast("Failed to update video!");
@@ -591,7 +610,7 @@ window.deleteTutorial = async function(id) {
     }
 }
 
-// ADD BOOK
+// ADD BOOK (UPDATED TO USE PREMIUM LOADER)
 document.getElementById('addBookForm').addEventListener('submit', async (e) => {
     e.preventDefault(); 
     
@@ -610,7 +629,7 @@ document.getElementById('addBookForm').addEventListener('submit', async (e) => {
         }
     }
 
-    btn.innerHTML = `<i class="fas fa-circle-notch fa-spin"></i> Uploading...`;
+    btn.innerHTML = `<span class="btn-text" style="display: flex; align-items: center; justify-content: center; gap: 10px;"><div class="premium-loader" style="border-top-color:#000;"></div> Publishing...</span>`;
     btn.disabled = true;
 
     const newBook = { 
@@ -731,7 +750,7 @@ document.getElementById('editBookForm').addEventListener('submit', async (e) => 
         }
     }
 
-    btn.innerHTML = `<i class="fas fa-circle-notch fa-spin"></i> Saving...`;
+    btn.innerHTML = `<span class="btn-text" style="display: flex; align-items: center; justify-content: center; gap: 10px;"><div class="premium-loader"></div> Saving...</span>`;
     btn.disabled = true;
 
     const docId = document.getElementById('editDocId').value;
@@ -757,13 +776,11 @@ document.getElementById('editBookForm').addEventListener('submit', async (e) => 
     }
 });
 
-// AUTO UPDATE ALL ADMIN CHARTS (INCLUDING 7-DAY ROLLING GRAPH)
 function updateAdminCharts() {
     if(!window.IS_SUPER_ADMIN) return;
     
     Chart.defaults.color = '#a1a1aa';
 
-    // 1. Language Ratio Chart
     const langCounts = { 'Hindi': 0, 'English': 0, 'Bilingual': 0 }; 
     window.booksData.forEach(b => { if(langCounts[b.lang] !== undefined) { langCounts[b.lang]++; } });
     const ctxLang = document.getElementById('langChart');
@@ -776,7 +793,6 @@ function updateAdminCharts() {
         }); 
     }
 
-    // 2. Monthly Downloads Chart
     const ctxDownloads = document.getElementById('downloadsChart');
     if(ctxDownloads) { 
         if(myDownloadsChart) myDownloadsChart.destroy(); 
@@ -787,7 +803,6 @@ function updateAdminCharts() {
         }); 
     }
 
-    // 3. New 7-Day Books Added Auto-Graph
     const last7DaysLabels = [];
     const booksAddedData = [0, 0, 0, 0, 0, 0, 0];
     
