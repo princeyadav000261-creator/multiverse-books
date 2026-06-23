@@ -10,7 +10,20 @@
 </head>
 <body>
 
-    <!-- 1. PREMIUM COMPACT LOGIN OVERLAY -->
+    <div class="loader-screen" id="loaderScreen" style="display: flex; opacity: 1;">
+        <canvas id="networkCanvas"></canvas>
+        <div class="loader-logo"><img src="https://i.postimg.cc/cJdGqYHG/IMG-20260524-WA0004.jpg" alt="Logo" oncontextmenu="return false;" draggable="false"></div>
+        <div class="loader-title">MULTIVERSE BOOKS</div>
+        <div class="premium-tags">
+            <div class="tag"><i class="fa-solid fa-file-pdf"></i> PDF</div>
+            <div class="tag"><i class="fa-solid fa-note-sticky"></i> NOTES</div>
+            <div class="tag"><i class="fa-solid fa-square-root-variable"></i> FORMULA</div>
+            <div class="tag"><i class="fa-solid fa-layer-group"></i> MORE</div>
+        </div>
+        <div class="loader-bar"><div class="loader-fill"></div></div>
+        <div class="loader-powered-text">POWERED BY MADxPRINCE</div>
+    </div>
+
     <div id="loginOverlay" class="login-container">
         <div class="login-content-wrapper">
             <div class="login-logo-container"><img src="https://i.postimg.cc/cJdGqYHG/IMG-20260524-WA0004.jpg" alt="Multiverse Logo" class="login-logo" oncontextmenu="return false;" draggable="false"></div>
@@ -29,25 +42,8 @@
         </div>
     </div>
 
-    <!-- MAIN APP WRAPPER -->
     <div id="mainAppWrapper" style="display: none; width: 100%; height: 100%;">
         
-        <!-- 2. ORIGINAL CANVAS LOADER -->
-        <div class="loader-screen" id="loaderScreen">
-            <canvas id="networkCanvas"></canvas>
-            <div class="loader-logo"><img src="https://i.postimg.cc/cJdGqYHG/IMG-20260524-WA0004.jpg" alt="Logo" oncontextmenu="return false;" draggable="false"></div>
-            <div class="loader-title">MULTIVERSE BOOKS</div>
-            <div class="premium-tags">
-                <div class="tag"><i class="fa-solid fa-file-pdf"></i> PDF</div>
-                <div class="tag"><i class="fa-solid fa-note-sticky"></i> NOTES</div>
-                <div class="tag"><i class="fa-solid fa-square-root-variable"></i> FORMULA</div>
-                <div class="tag"><i class="fa-solid fa-layer-group"></i> MORE</div>
-            </div>
-            <div class="loader-bar"><div class="loader-fill"></div></div>
-            <div class="loader-powered-text">POWERED BY MADxPRINCE</div>
-        </div>
-
-        <!-- 3. ORIGINAL WHATSAPP POPUP -->
         <div class="popup-overlay" id="popupOverlay">
             <div class="popup">
                 <div class="popup-logo"><img src="https://upload.wikimedia.org/wikipedia/commons/6/6b/WhatsApp.svg" alt="WhatsApp" oncontextmenu="return false;" draggable="false"></div>
@@ -60,7 +56,6 @@
             </div>
         </div>
 
-        <!-- 4. ORIGINAL APP UI -->
         <div class="app-container">
             <header>
                 <div class="header-left">
@@ -80,7 +75,6 @@
             <div class="sidebar-overlay" id="sidebar-overlay"></div>
             <div class="sidebar" id="sidebar">
                 <div class="sidebar-header-new">
-                    <!-- Profile image remains fixed to original multiverse book logo -->
                     <img src="https://i.postimg.cc/cJdGqYHG/IMG-20260524-WA0004.jpg" alt="Profile" class="profile-img" id="sidebarProfileImg" oncontextmenu="return false;" draggable="false">
                     <div class="profile-info">
                         <div class="profile-name" id="sidebarProfileName">MULTIVERSE BOOKS</div>
@@ -125,13 +119,12 @@
                 <div class="section-header-title"><i class="fas fa-book-open" style="color: #10b981;"></i> Trending Books 🔥 </div>
                 <div class="book-container" id="bookContainer"></div>
 
-                <!-- PREMIUM BOOK NOT FOUND DESIGN RESTORED PERFECTLY -->
-                <div id="no-results-msg">
+                <div id="no-results-msg" style="display: none; padding-bottom: 30px;">
                     <div class="no-results-card">
-                        <div class="no-results-icon"><i class="fas fa-book-open" style="background: linear-gradient(135deg, #00d2ff 0%, #3a7bd5 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent;"></i></div>
+                        <div class="no-results-icon"><i class="fas fa-book-open"></i></div>
                         <h2>BOOK NOT FOUND</h2>
                         <p>Sorry, we couldn't find any book matching your search.</p>
-                        <div class="powered-badge">❀ POWERED BY : MADxPRINCE ❀</div>
+                        <div class="powered-badge"><i class="fab fa-centos" style="margin-right:4px;"></i> POWERED BY : MADxPRINCE <i class="fab fa-centos" style="margin-left:4px;"></i></div>
                     </div>
                 </div>
 
@@ -142,7 +135,6 @@
                 <div class="premium-copyright">© 2026 MULTIVERSE BOOKS <span style="margin: 0 5px;">|</span> MADE WITH <i class="fas fa-heart" style="color: #ff4757; margin: 0 3px; filter: drop-shadow(0 0 5px rgba(255,71,87,0.8));"></i> BY MADxPRINCE</div>
             </main>
 
-            <!-- Download Modal -->
             <div class="download-modal" id="downloadModal">
                 <div class="modal-header-fixed">
                     <button class="back-btn" onclick="closeDownloadPage()"><i class="fas fa-arrow-left"></i></button>
@@ -168,13 +160,11 @@
                 </div>
             </div>
 
-            <!-- Notifications Panel -->
             <div class="notifications-panel" id="noti-panel">
                 <div class="noti-header"><div class="noti-title-area"><div class="noti-icon"><i class="fas fa-bell"></i></div><div class="noti-text"><h2>Notifications</h2><p>Updates & News</p></div></div><div class="icon-box" id="close-noti"><i class="fas fa-times"></i></div></div>
                 <div class="noti-body" id="dynamic-noti-container"></div>
             </div>
 
-            <!-- About Dev Panel -->
             <div class="overlay-panel" id="about-dev-panel">
                 <div class="modal-header-fixed">
                     <div class="header-content-wrapper"><button class="back-btn" id="close-dev-btn"><i class="fas fa-arrow-left"></i></button><h1 class="modal-title">ABOUT DEVELOPER</h1></div>
@@ -205,7 +195,6 @@
                 <div class="premium-copyright">© 2026 MULTIVERSE BOOKS <span style="margin: 0 5px;">|</span> MADE WITH <i class="fas fa-heart" style="color: #ff4757; margin: 0 3px;"></i> BY MADxPRINCE</div>
             </div>
 
-            <!-- DMCA Panel -->
             <div class="overlay-panel" id="dmca-panel">
                 <div class="modal-header-fixed"><button class="back-btn" id="close-dmca-btn"><i class="fas fa-arrow-left"></i></button><h1 class="modal-title">DMCA REQUEST</h1></div>
                 <div class="dmca-content">
@@ -226,11 +215,18 @@
                         <a href="https://t.me/Multiverse_Contact_Bot" target="_blank" class="dmca-contact-link"><i class="fab fa-telegram-plane"></i> @Multiverse_Contact_Bot</a>
                         <p style="margin-top: 15px; font-weight: bold; color: #a1a1aa; font-size: 0.75rem;">⏱ Review Time: 24–48 Hours</p>
                     </div>
+                    <div class="dmca-section">
+                        <h2 class="dmca-section-title" style="color: #f59e0b;"><span class="dmca-mini-icon icon-shield"><i class="fas fa-shield-alt"></i></span>Important Notice</h2>
+                        <p>The materials shared on this platform are intended for educational, research, review and reference purposes only. Users are encouraged to support authors and publishers by purchasing original books whenever possible.</p>
+                    </div>
+                    <div class="dmca-section">
+                        <h2 class="dmca-section-title" style="color: #ec4899;"><span class="dmca-mini-icon" style="background: linear-gradient(135deg, #a855f7, #ec4899);"><i class="fas fa-user-shield"></i></span>User Responsibility</h2>
+                        <p>Users are solely responsible for how they access, download, share or use any content available through this platform. This website and its administrators cannot be held responsible for any misuse or unauthorized use of the materials.</p>
+                    </div>
                 </div>
                 <div class="premium-copyright">© 2026 MULTIVERSE BOOKS <span style="margin: 0 5px;">|</span> MADE WITH <i class="fas fa-heart" style="color: #ff4757; margin: 0 3px;"></i> BY MADxPRINCE</div>
             </div>
 
-            <!-- 5. ISOLATED ADMIN PANEL OVERLAY -->
             <div class="overlay-panel" id="admin-dashboard-panel" style="background: #0d0d12;">
                 <div class="modal-header-fixed" style="background: #09090b;">
                     <div class="header-content-wrapper">
@@ -242,7 +238,6 @@
                     </div>
                 </div>
                 
-                <!-- Added structural IDs to control visibility dynamically -->
                 <div class="adm-tabs">
                     <button class="adm-tab-btn active" id="admTabAdd" onclick="switchAdminTab('add')"><i class="fas fa-plus"></i> Add</button>
                     <button class="adm-tab-btn" id="admTabManage" onclick="switchAdminTab('manage')"><i class="fas fa-list"></i> Manage</button>
@@ -251,7 +246,6 @@
                 </div>
 
                 <div class="adm-content-area">
-                    <!-- ADD BOOK SECTION -->
                     <div id="sectionAddBook" class="adm-section active">
                         <div class="adm-card">
                             <div class="adm-card-title"><i class="fas fa-pen-nib"></i> Enter Book Details</div>
@@ -275,7 +269,6 @@
                         </div>
                     </div>
 
-                    <!-- MANAGE BOOKS SECTION -->
                     <div id="sectionManageBooks" class="adm-section">
                         <div class="adm-card">
                             <div class="adm-card-title"><i class="fas fa-list"></i> Manage Vault Inventory</div>
@@ -296,13 +289,12 @@
 
                             <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 20px;">
                                 <button class="adm-page-btn" id="admPrevPage" onclick="changeAdminPage(-1)"><i class="fas fa-chevron-left"></i> Prev</button>
-                                <span id="admPageInfo" style="color: #a1a1aa; font-size: 0.9rem; font-weight: 600;">Page 1 of 1</span>
+                                <span id="admPageInfo" style="color: #a1a1aa; font-size: 0.9rem; font-weight: 800;">Page 1 of 1</span>
                                 <button class="adm-page-btn" id="admNextPage" onclick="changeAdminPage(1)">Next <i class="fas fa-chevron-right"></i></button>
                             </div>
                         </div>
                     </div>
 
-                    <!-- TUTORIAL SECTION -->
                     <div id="sectionTutorial" class="adm-section">
                         <div class="adm-card">
                             <div class="adm-card-title"><i class="fas fa-video"></i> Upload Guide & Tutorial</div>
@@ -310,14 +302,13 @@
                                 <iframe id="tutorialIframe" src="" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; border: 0;" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen></iframe>
                             </div>
                             <div id="adminTutorialEdit" style="display: none; margin-top: 20px; padding-top:20px; border-top: 1px solid rgba(255,255,255,0.1);">
-                                <h4 style="margin-bottom: 10px; color: #10b981;"><i class="fas fa-cogs"></i> Super Admin Action</h4>
+                                <h4 style="margin-bottom: 10px; color: #10b981; font-weight: 800;"><i class="fas fa-cogs"></i> Super Admin Action</h4>
                                 <input type="url" id="newTutorialUrl" class="adm-input" placeholder="Paste YouTube OR Shorts URL Here" style="margin-bottom:10px;">
                                 <button type="button" class="adm-submit-btn" onclick="updateTutorialLink()" style="background:#10b981;">Update Video For All Users</button>
                             </div>
                         </div>
                     </div>
 
-                    <!-- ANALYTICS SECTION -->
                     <div id="sectionAnalytics" class="adm-section">
                         <div class="adm-card">
                             <div class="adm-card-title"><i class="fas fa-chart-pie"></i> Real-Time Stats</div>
@@ -326,16 +317,25 @@
                                 <div style="background: rgba(0,0,0,0.5); padding: 15px; border-radius: 12px; height: 250px;"><canvas id="downloadsChart"></canvas></div>
                             </div>
                         </div>
+
+                        <div class="adm-card" style="margin-top: 20px;">
+                            <div class="adm-card-title"><i class="fas fa-shield-alt"></i> System Activity Logs</div>
+                            <div style="overflow-x: auto;">
+                                <table class="adm-table">
+                                    <thead><tr><th>Action Taken</th><th>Modified File / Book</th><th>Admin Authority</th><th>Date & Recovery</th></tr></thead>
+                                    <tbody id="logsTableBody"><tr><td colspan="4" style="text-align:center; padding:20px; color:#a1a1aa; font-weight:800;">Loading Activity Logs...</td></tr></tbody>
+                                </table>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- ADMIN EDIT MODAL -->
     <div class="adm-modal-overlay" id="adminEditModal">
         <div class="adm-modal-box">
-            <h3 style="color: #fff; margin-bottom: 15px; font-size: 1.1rem; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 10px;">
+            <h3 style="color: #fff; margin-bottom: 15px; font-size: 1.1rem; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 10px; font-weight: 800;">
                 <span><i class="fas fa-pen"></i> Edit Vault Record</span>
                 <i class="fas fa-times" onclick="document.getElementById('adminEditModal').style.display='none'" style="cursor: pointer; color: #a1a1aa; padding: 5px;"></i>
             </h3>
@@ -361,7 +361,6 @@
         </div>
     </div>
 
-    <!-- DYNAMIC RED AND GREEN TOAST ELEMENT -->
     <div id="toast"></div>
 
     <script type="module" src="./app.js"></script>
