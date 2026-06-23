@@ -35,7 +35,6 @@ let adminCurrentPage = 1;
 const adminBooksPerPage = 10;
 let dbLogs = []; 
 
-// Deep Link Check
 const urlParamsCheck = new URLSearchParams(window.location.search);
 window.isDeepLinkLoad = urlParamsCheck.has('book'); 
 
@@ -121,19 +120,40 @@ window.addEventListener('resize', resizeCanvas); resizeCanvas(); animateHex(0);
 let isInitialLoad = true;
 const appStartTime = Date.now();
 
+// --- UPDATED SHOW WRAPPER AND POPUP INTERACTION FLOW ---
 function showAppAndPopup() {
-    document.getElementById('mainAppWrapper').style.display = 'block'; 
+    // 1. Loader screen ko pehle chupa dete hain
     const loader = document.getElementById("loaderScreen");
     loader.style.opacity = "0";
 
     setTimeout(() => { 
         loader.style.display = "none"; 
         cancelAnimationFrame(animationId);
+        
+        // 2. Main App wrapper ko activate karte hain back background ke liye
+        document.getElementById('mainAppWrapper').style.display = 'block'; 
+        
+        // 3. Agar deep link nahi hai toh WhatsApp Popup ko upar show karte hain
         if(!window.isDeepLinkLoad) {
             document.getElementById("popupOverlay").style.display = "flex";
+            document.getElementById("app-container-view").style.filter = "blur(4px)"; // Home screen ko blur rakhte hain jab tak popup hai
+        } else {
+            document.getElementById("app-container-view").style.filter = "none";
         }
     }, 600);
 }
+
+// CLOSE POPUP AND UNBLUR Sidha main page dikhega
+window.closePopup = function() { 
+    document.getElementById("popupOverlay").style.display = "none"; 
+    const appView = document.getElementById("app-container-view");
+    if(appView) { appView.style.filter = "none"; }
+};
+
+window.joinChannel = function() { 
+    window.open('https://whatsapp.com/channel/0029Vb6NBZx1yT2GByTTVf2A', '_blank'); 
+    window.closePopup();
+};
 
 onAuthStateChanged(auth, async (user) => {
     if (user) {
@@ -183,7 +203,6 @@ onAuthStateChanged(auth, async (user) => {
             switchAdminTab('add');
         }
 
-        // Fetch Tutorial Videos (Now passes full data)
         onSnapshot(query(collection(db, "tutorials"), orderBy("createdAt", "desc")), (snapshot) => {
             document.getElementById('adminTutorialsGrid').innerHTML = '';
             snapshot.forEach(doc => {
@@ -241,7 +260,7 @@ onAuthStateChanged(auth, async (user) => {
     }
 });
 
-// LOGIN WITH PREMIUM DOTTED LOADER
+// LOGIN WITH PREMIUM LOADER
 document.getElementById('loginForm').addEventListener('submit', async (e) => {
     e.preventDefault(); 
     const email = document.getElementById('loginEmail').value; 
@@ -249,7 +268,6 @@ document.getElementById('loginForm').addEventListener('submit', async (e) => {
     
     const btn = document.getElementById('loginBtn'); 
     const originalContent = btn.innerHTML;
-    // Inject Premium Dotted Loader with Authenticating Text
     btn.innerHTML = `<span style="display:flex; align-items:center; gap:8px;"><div class="premium-loader"></div> Authenticating...</span>`;
     
     try { 
@@ -277,7 +295,7 @@ document.getElementById('loginForm').addEventListener('submit', async (e) => {
     } 
 });
 
-// GOOGLE SIGN IN WITH PREMIUM DOTTED LOADER
+// GOOGLE SIGN IN
 document.getElementById('googleSignInBtn').addEventListener('click', async () => { 
     const btn = document.getElementById('googleSignInBtn');
     const originalContent = btn.innerHTML;
@@ -302,15 +320,6 @@ document.getElementById('googleSignInBtn').addEventListener('click', async () =>
         btn.innerHTML = originalContent;
     } 
 });
-
-document.getElementById('admin-logout-btn').addEventListener('click', () => { 
-    if(confirm("Are you sure you want to logout?")) {
-        signOut(auth).then(() => { document.getElementById('admin-dashboard-panel').classList.remove('active'); });
-    }
-});
-
-window.closePopup = function(){ document.getElementById("popupOverlay").style.display = "none"; };
-window.joinChannel = function(){ window.open('https://whatsapp.com/channel/0029Vb6NBZx1yT2GByTTVf2A', '_blank'); };
 
 // SEARCH
 let searchTimeout;
@@ -415,13 +424,6 @@ document.getElementById('menu-admin-panel').addEventListener('click', (e) => {
 });
 document.getElementById('close-admin-btn').addEventListener('click', () => { history.back(); });
 
-window.addEventListener('popstate', (e) => {
-    document.getElementById('noti-panel').classList.remove('active'); document.getElementById('sidebar').classList.remove('active'); document.getElementById('sidebar-overlay').classList.remove('active'); document.getElementById('about-dev-panel').classList.remove('active'); document.getElementById('dmca-panel').classList.remove('active'); document.getElementById('admin-dashboard-panel').classList.remove('active'); document.getElementById('search-box').classList.remove('active');
-    const sBook = new URLSearchParams(window.location.search).get('book');
-    if(sBook) { if(window.openDownloadPage) window.openDownloadPage(sBook, true); } 
-    else { document.getElementById("downloadModal").style.display = "none"; }
-});
-
 window.openDownloadPage = function(slug, skipPushState = false) {
     const book = window.booksData.find(b => b.slug === slug); if(!book) return;
     document.getElementById("downloadModal").style.display = "flex";
@@ -430,176 +432,108 @@ window.openDownloadPage = function(slug, skipPushState = false) {
     document.getElementById("dlPdfLinkBtn").onclick = async function() { 
         if(book.pdfLink) {
             window.open(book.pdfLink, '_blank'); 
-            
             try {
                 const currentMonth = new Date().toLocaleString('en-US', { month: 'short' }).toLowerCase();
                 const yearStr = new Date().getFullYear().toString();
-                await updateDoc(doc(db, "download_stats", yearStr), {
-                    [currentMonth]: increment(1)
-                });
+                await updateDoc(doc(db, "download_stats", yearStr), { [currentMonth]: increment(1) });
             } catch(e) {
                 try {
                     const currentMonth = new Date().toLocaleString('en-US', { month: 'short' }).toLowerCase();
                     const yearStr = new Date().getFullYear().toString();
-                    await setDoc(doc(db, "download_stats", yearStr), {
-                        [currentMonth]: 1
-                    }, { merge: true });
+                    await setDoc(doc(db, "download_stats", yearStr), { [currentMonth]: 1 }, { merge: true });
                 } catch(err) {}
             }
         }
     };
     
     document.getElementById("dlYoutubeLinkBtn").onclick = function() { 
-        if(book.ytLink && book.ytLink !== "#" && book.ytLink !== "") { 
-            window.open(book.ytLink, '_blank'); 
-        } else {
-            window.open('https://youtube.com/@madxprince', '_blank');
-        }
+        if(book.ytLink && book.ytLink !== "#" && book.ytLink !== "") { window.open(book.ytLink, '_blank'); } 
+        else { window.open('https://youtube.com/@madxprince', '_blank'); }
     };
 
     let examsArray = (book.exams || "General").split(',').map(item => item.trim());
     document.getElementById("dlModalTags").innerHTML = examsArray.map(exam => `<div class="dl-modal-tag">${exam}</div>`).join('');
     
-    activeBookSlug = book.slug;
-    activeBookTitle = book.title;
-    
+    activeBookSlug = book.slug; activeBookTitle = book.title;
     if (!skipPushState) { history.pushState({ popup: 'book' }, '', '?book=' + book.slug); }
 }
 
 window.closeDownloadPage = function() {
-    if (history.state && history.state.popup === 'book') { 
-        history.back(); 
-    } else { 
-        document.getElementById("downloadModal").style.display = "none"; 
-        window.history.replaceState({}, '', window.location.pathname); 
-    }
-
-    if(window.isDeepLinkLoad) {
-        window.isDeepLinkLoad = false;
-        const loader = document.getElementById("loaderScreen");
-        loader.style.display = "flex";
-        loader.style.opacity = "1";
-        resizeCanvas(); 
-        requestAnimationFrame(animateHex);
-
-        setTimeout(() => {
-            loader.style.opacity = "0";
-            setTimeout(() => {
-                loader.style.display = "none";
-                cancelAnimationFrame(animationId);
-                document.getElementById("popupOverlay").style.display = "flex";
-            }, 600);
-        }, 2000);
-    }
-}
-window.shareBook = function() {
-    const shareUrl = window.location.origin + window.location.pathname + "?book=" + activeBookSlug;
-    if (navigator.share) navigator.share({ title: activeBookTitle, text: "Download free book", url: shareUrl });
-    else { navigator.clipboard.writeText(shareUrl); alert("Link Copied!"); }
+    if (history.state && history.state.popup === 'book') { history.back(); } 
+    else { document.getElementById("downloadModal").style.display = "none"; window.history.replaceState({}, '', window.location.pathname); }
 }
 
 function showToast(message) {
     const toast = document.getElementById('toast'); 
     if (message.toLowerCase().includes('failed') || message.toLowerCase().includes('error') || message.toLowerCase().includes('invalid')) {
         toast.style.background = '#ef4444';
-        toast.innerHTML = `<i class="fas fa-exclamation-circle"></i> <span id="toastMsg">${message}</span>`;
+        toast.innerHTML = `<i class="fas fa-exclamation-circle"></i> <span>${message}</span>`;
     } else {
         toast.style.background = '#10b981';
-        toast.innerHTML = `<i class="fas fa-check-circle"></i> <span id="toastMsg">${message}</span>`;
+        toast.innerHTML = `<i class="fas fa-check-circle"></i> <span>${message}</span>`;
     }
-    toast.classList.add('show'); 
-    setTimeout(() => { toast.classList.remove('show'); }, 3000);
+    toast.classList.add('show'); setTimeout(() => { toast.classList.remove('show'); }, 3000);
 }
 
-// === PREMIUM YOUTUBE CARDS WITH CUSTOM VIEWS LOGIC ===
+// === PREMIUM YOUTUBE CARDS CUSTOM VIEWS ===
 async function renderTutorialCard(data, docId, containerId, isAdmin) {
     try {
-        const videoUrl = data.url;
-        // USE SAVED VIEWS OR DEFAULT TO 10K
-        const customViews = data.views || "10.5K"; 
-        
+        const videoUrl = data.url; const customViews = data.views || "10.5K"; 
         const videoIdMatch = videoUrl.match(/(?:youtu\.be\/|youtube\.com\/(?:[^\/]+\/.+\/|(?:v|e(?:mbed)?)\/|.*[?&]v=)|youtube\.com\/shorts\/)([^"&?\/\s]{11})/i);
         if (!videoIdMatch) return;
         const videoId = videoIdMatch[1];
         const standardUrl = `https://www.youtube.com/watch?v=${videoId}`;
-
-        let title = "YouTube Video";
-        let channelName = "Tutorial";
-        
+        let title = "YouTube Video"; let channelName = "Tutorial";
         try {
             const response = await fetch(`https://noembed.com/embed?url=${standardUrl}`);
             const vidData = await response.json();
-            if(vidData.title) title = vidData.title;
-            if(vidData.author_name) channelName = vidData.author_name;
+            if(vidData.title) title = vidData.title; if(vidData.author_name) channelName = vidData.author_name;
         } catch(e) {}
-
         const thumbnailUrl = `https://img.youtube.com/vi/${videoId}/maxresdefault.jpg`;
         const fallbackUrl = `https://img.youtube.com/vi/${videoId}/hqdefault.jpg`;
-        
         const avatarUrl = `https://i.postimg.cc/D0BF1b77/file-000000000e847207a64f6711d825a859.png`;
-        
         let actionBtns = '';
         if(isAdmin) {
-            actionBtns = `
-            <div class="yt-action-btns">
+            actionBtns = `<div class="yt-action-btns">
                 <button class="yt-action-btn yt-edit" onclick="editTutorial('${docId}', '${videoUrl}', '${customViews}')"><i class="fas fa-pen"></i></button>
                 <button class="yt-action-btn yt-delete" onclick="deleteTutorial('${docId}')"><i class="fas fa-trash"></i></button>
             </div>`;
         }
-
         const cardHTML = `
             <div class="yt-card">
                 ${actionBtns}
                 <div class="yt-thumbnail-wrapper" onclick="window.open('${videoUrl}', '_blank')">
                     <img src="${thumbnailUrl}" class="yt-thumbnail-img" alt="Thumbnail" onerror="this.src='${fallbackUrl}'">
-                    <div class="yt-play-icon"><i class="fas fa-play" style="margin-left: 3px;"></i></div>
+                    <div class="yt-play-icon"><i class="fas fa-play"></i></div>
                 </div>
                 <div class="yt-info-box" onclick="window.open('${videoUrl}', '_blank')">
                     <div style="display:flex; gap:12px; align-items:flex-start;">
                         <img src="${avatarUrl}" style="width:36px; height:36px; border-radius:50%; flex-shrink:0;">
                         <div>
                             <div class="yt-video-title">${title}</div>
-                            <div class="yt-channel-name">
-                                ${channelName} <i class="fas fa-check-circle yt-verified"></i> • ${customViews} Views
-                            </div>
+                            <div class="yt-channel-name">${channelName} <i class="fas fa-check-circle yt-verified"></i> • ${customViews} Views</div>
                         </div>
                     </div>
                 </div>
-            </div>
-        `;
+            </div>`;
         document.getElementById(containerId).innerHTML += cardHTML;
     } catch (error) {}
 }
 
 window.addTutorialLink = async function() {
-    if(!window.IS_SUPER_ADMIN) return; 
-    const url = document.getElementById('newTutorialUrl').value; 
-    const views = document.getElementById('newTutorialViews').value || "12K"; // Default 12K if empty
-
+    if(!window.IS_SUPER_ADMIN) return; const url = document.getElementById('newTutorialUrl').value; const views = document.getElementById('newTutorialViews').value || "12K";
     if(!url) return showToast("Failed: Enter YouTube URL!"); 
     try { 
         await addDoc(collection(db, "tutorials"), { url: url, views: views, createdAt: new Date().getTime() });
-        showToast("Video Added Successfully!"); 
-        document.getElementById('newTutorialUrl').value = ''; 
-        document.getElementById('newTutorialViews').value = ''; 
+        showToast("Video Added Successfully!"); document.getElementById('newTutorialUrl').value = ''; document.getElementById('newTutorialViews').value = ''; 
     } catch(e) { showToast("Failed: " + e.message); } 
 }
 
 window.editTutorial = async function(id, currentUrl, currentViews) {
-    if(!window.IS_SUPER_ADMIN) return;
-    const newUrl = prompt("Enter new YouTube/Shorts URL:", currentUrl);
-    if(newUrl === null) return; // if canceled
-    
-    const newViews = prompt("Enter custom views (e.g. 2.1M, 500K):", currentViews);
-    if(newViews === null) return; // if canceled
-
+    if(!window.IS_SUPER_ADMIN) return; const newUrl = prompt("Enter new YouTube/Shorts URL:", currentUrl); if(newUrl === null) return;
+    const newViews = prompt("Enter custom views (e.g. 2.1M, 500K):", currentViews); if(newViews === null) return;
     if(newUrl.trim() !== "" && newViews.trim() !== "") {
-        try {
-            await updateDoc(doc(db, "tutorials", id), { url: newUrl.trim(), views: newViews.trim() });
-            showToast("Video Updated Successfully!");
-        } catch(e) {
-            showToast("Failed to update video!");
-        }
+        try { await updateDoc(doc(db, "tutorials", id), { url: newUrl.trim(), views: newViews.trim() }); showToast("Video Updated Successfully!"); } catch(e) { showToast("Failed to update video!"); }
     }
 }
 
@@ -610,296 +544,72 @@ window.deleteTutorial = async function(id) {
     }
 }
 
-// ADD BOOK (UPDATED TO USE PREMIUM LOADER)
+// FORM SUBMISSIONS
 document.getElementById('addBookForm').addEventListener('submit', async (e) => {
-    e.preventDefault(); 
-    
-    const btn = document.getElementById('publishBtn');
-    const originalText = btn.innerHTML;
-    
-    const titleInput = document.getElementById('inTitle').value; 
-    const imgInput = document.getElementById('inImage').value;
-    const pdfUrlInput = document.getElementById('inPdfUrl').value;
-    const ytUrlInput = document.getElementById('inYtUrl').value;
+    e.preventDefault(); const btn = document.getElementById('publishBtn'); const originalText = btn.innerHTML;
+    const titleInput = document.getElementById('inTitle').value; const imgInput = document.getElementById('inImage').value;
+    const pdfUrlInput = document.getElementById('inPdfUrl').value; const ytUrlInput = document.getElementById('inYtUrl').value;
+    if (!window.IS_SUPER_ADMIN && !pdfUrlInput.includes('drive.google.com')) { return showToast("Failed: Normal users can only upload Google Drive links!"); }
+    btn.innerHTML = `<span class="btn-text" style="display: flex; align-items: center; justify-content: center; gap: 10px;"><div class="premium-loader" style="border-color:#000;"></div> Publishing...</span>`; btn.disabled = true;
+    const newBook = { title: titleInput, author: document.getElementById('inAuthor').value, image: imgInput, year: document.getElementById('inYear').value, lang: document.getElementById('inLang').value, exams: document.getElementById('inExams').value, pdfLink: pdfUrlInput, ytLink: window.IS_SUPER_ADMIN ? ytUrlInput : "", dateAdded: new Date().toLocaleDateString('en-GB').toUpperCase(), createdAt: new Date().getTime() };
+    try { await addDoc(collection(db, "books"), newBook); await logActivity("ADD", titleInput, imgInput); showToast("Book Published Successfully!"); e.target.reset(); } catch (error) { showToast("Failed: " + error.message); } finally { btn.innerHTML = originalText; btn.disabled = false; }
+});
 
-    if (!window.IS_SUPER_ADMIN) {
-        if (!pdfUrlInput.includes('drive.google.com')) {
-            showToast("Failed: Normal users can only upload Google Drive links!");
-            return;
-        }
-    }
-
-    // Publish button gets premium dotted loader
-    btn.innerHTML = `<span class="btn-text" style="display: flex; align-items: center; justify-content: center; gap: 10px;"><div class="premium-loader" style="border-color:#000;"></div> Publishing...</span>`;
-    btn.disabled = true;
-
-    const newBook = { 
-        title: titleInput, 
-        author: document.getElementById('inAuthor').value, 
-        image: imgInput, 
-        year: document.getElementById('inYear').value, 
-        lang: document.getElementById('inLang').value, 
-        exams: document.getElementById('inExams').value, 
-        pdfLink: pdfUrlInput, 
-        ytLink: window.IS_SUPER_ADMIN ? ytUrlInput : "", 
-        dateAdded: new Date().toLocaleDateString('en-GB').toUpperCase(), 
-        createdAt: new Date().getTime() 
-    };
-
-    try { 
-        await addDoc(collection(db, "books"), newBook); 
-        await logActivity("ADD", titleInput, imgInput);
-        showToast("Book Published Successfully!"); 
-        e.target.reset(); 
-    } catch (error) { 
-        if(error.message.includes("Missing or insufficient permissions")) { showToast("Failed: Firebase Security Rules Blocked Save!"); } 
-        else { showToast("Failed: " + error.message); }
-    } finally {
-        btn.innerHTML = originalText;
-        btn.disabled = false;
-    }
+document.getElementById('editBookForm').addEventListener('submit', async (e) => {
+    e.preventDefault(); const btn = document.getElementById('editSaveBtn'); const originalText = btn.innerHTML; const pdfUrlInput = document.getElementById('edPdfUrl').value;
+    if (!window.IS_SUPER_ADMIN && !pdfUrlInput.includes('drive.google.com')) { return showToast("Failed: You can only upload Google Drive links!"); }
+    btn.innerHTML = `<span class="btn-text" style="display: flex; align-items: center; justify-content: center; gap: 10px;"><div class="premium-loader"></div> Saving...</span>`; btn.disabled = true;
+    const docId = document.getElementById('editDocId').value;
+    const updatedData = { title: document.getElementById('edTitle').value, author: document.getElementById('edAuthor').value, year: document.getElementById('edYear').value, lang: document.getElementById('edLang').value, exams: document.getElementById('edExams').value, image: document.getElementById('edImage').value, pdfLink: pdfUrlInput, ytLink: window.IS_SUPER_ADMIN ? document.getElementById('edYtUrl').value : "" };
+    try { await updateDoc(doc(db, "books", docId), updatedData); try { await logActivity("EDIT", updatedData.title, updatedData.image); } catch(e){} document.getElementById('adminEditModal').style.display='none'; showToast("Updated Successfully!"); } catch (error) { showToast("Failed: Rules Blocked Update!"); } finally { btn.innerHTML = originalText; btn.disabled = false; }
 });
 
 document.getElementById('adminSearchBook').addEventListener('input', (e) => {
-    const term = e.target.value.toLowerCase().replace(/[^a-z0-9\s]/g, '');
-    const tokens = term.split(/\s+/).filter(t => t.length > 0);
-    adminFilteredBooks = window.booksData.filter(b => {
-        const str = (b.title + " " + b.author).toLowerCase().replace(/[^a-z0-9\s]/g, '');
-        return tokens.every(t => str.includes(t));
-    });
-    adminCurrentPage = 1;
-    renderAdminBooksTable();
+    const term = e.target.value.toLowerCase().replace(/[^a-z0-9\s]/g, ''); const tokens = term.split(/\s+/).filter(t => t.length > 0);
+    adminFilteredBooks = window.booksData.filter(b => { const str = (b.title + " " + b.author).toLowerCase().replace(/[^a-z0-9\s]/g, ''); return tokens.every(t => str.includes(t)); });
+    adminCurrentPage = 1; renderAdminBooksTable();
 });
 
-window.changeAdminPage = function(dir) {
-    adminCurrentPage += dir;
-    renderAdminBooksTable();
-}
+window.changeAdminPage = function(dir) { adminCurrentPage += dir; renderAdminBooksTable(); }
 
 function renderAdminBooksTable() {
-    if(!document.getElementById('adminBooksTableBody')) return;
-    if(document.getElementById('adminSearchBook').value.trim() === "") { adminFilteredBooks = [...window.booksData]; }
-
-    const totalPages = Math.ceil(adminFilteredBooks.length / adminBooksPerPage) || 1;
-    if(adminCurrentPage > totalPages) adminCurrentPage = totalPages;
-    if(adminCurrentPage < 1) adminCurrentPage = 1;
-
-    document.getElementById('admPageInfo').innerText = `Page ${adminCurrentPage} of ${totalPages}`;
-    document.getElementById('admPrevPage').disabled = adminCurrentPage === 1;
-    document.getElementById('admNextPage').disabled = adminCurrentPage === totalPages;
-
-    const startIdx = (adminCurrentPage - 1) * adminBooksPerPage;
-    const paginated = adminFilteredBooks.slice(startIdx, startIdx + adminBooksPerPage);
-    const tbody = document.getElementById('adminBooksTableBody');
-    let htmlString = "";
-    
-    if(paginated.length === 0) {
-         tbody.innerHTML = `<tr><td colspan="3" style="text-align:center; padding:20px; color:#a1a1aa; font-weight:800;">No books found matching search.</td></tr>`;
-         return;
-    }
-
-    paginated.forEach((book) => { 
-        htmlString += `<tr>
-            <td><img src="${book.image}" style="width:40px; border-radius:5px;"></td>
-            <td><strong style="color:#fff;">${book.title}</strong><br><span style="font-size:0.8rem; color:#a1a1aa;">${book.author}</span></td>
-            <td>
-                <button class="adm-btn-edit" onclick="openAdminEditModal('${book.id}')"><i class="fas fa-edit"></i></button>
-                <button class="adm-btn-delete" onclick="deleteBookRecord('${book.id}')"><i class="fas fa-trash"></i></button>
-            </td>
-        </tr>`; 
-    });
+    if(!document.getElementById('adminBooksTableBody')) return; if(document.getElementById('adminSearchBook').value.trim() === "") { adminFilteredBooks = [...window.booksData]; }
+    const totalPages = Math.ceil(adminFilteredBooks.length / adminBooksPerPage) || 1; if(adminCurrentPage > totalPages) adminCurrentPage = totalPages; if(adminCurrentPage < 1) adminCurrentPage = 1;
+    document.getElementById('admPageInfo').innerText = `Page ${adminCurrentPage} of ${totalPages}`; document.getElementById('admPrevPage').disabled = adminCurrentPage === 1; document.getElementById('admNextPage').disabled = adminCurrentPage === totalPages;
+    const startIdx = (adminCurrentPage - 1) * adminBooksPerPage; const paginated = adminFilteredBooks.slice(startIdx, startIdx + adminBooksPerPage); const tbody = document.getElementById('adminBooksTableBody'); let htmlString = "";
+    if(paginated.length === 0) { tbody.innerHTML = `<tr><td colspan="3" style="text-align:center; padding:20px; color:#a1a1aa; font-weight:800;">No books found matching search.</td></tr>`; return; }
+    paginated.forEach((book) => { htmlString += `<tr><td><img src="${book.image}" style="width:40px; border-radius:5px;"></td><td><strong style="color:#fff;">${book.title}</strong><br><span style="font-size:0.8rem; color:#a1a1aa;">${book.author}</span></td><td><button class="adm-btn-edit" onclick="openAdminEditModal('${book.id}')"><i class="fas fa-edit"></i></button><button class="adm-btn-delete" onclick="deleteBookRecord('${book.id}')"><i class="fas fa-trash"></i></button></td></tr>`; });
     tbody.innerHTML = htmlString;
 }
 
-window.deleteBookRecord = async function(id) { 
-    if(confirm("Delete this book permanently?")) { 
-        try { 
-            const book = window.booksData.find(x => x.id === id);
-            await deleteDoc(doc(db, "books", id)); 
-            try { await logActivity("DELETE", book.title, book.image, book); } catch(e){}
-            showToast("Deleted Successfully!"); 
-        } catch (error) { showToast("Failed: Rules Blocked Delete!"); } 
-    } 
-}
-
-window.openAdminEditModal = function(id) {
-    const book = window.booksData.find(x => x.id === id); 
-    document.getElementById('editDocId').value = book.id; 
-    document.getElementById('edTitle').value = book.title; 
-    document.getElementById('edAuthor').value = book.author || ""; 
-    document.getElementById('edYear').value = book.year || "2026"; 
-    document.getElementById('edLang').value = book.lang || "Hindi"; 
-    document.getElementById('edExams').value = book.exams || ""; 
-    document.getElementById('edImage').value = book.image; 
-    document.getElementById('edPdfUrl').value = book.pdfLink || ""; 
-    document.getElementById('edYtUrl').value = book.ytLink || ""; 
-    document.getElementById('adminEditModal').style.display = 'flex';
-}
-
-// EDIT BOOK (UPDATED TO USE PREMIUM LOADER)
-document.getElementById('editBookForm').addEventListener('submit', async (e) => {
-    e.preventDefault(); 
-    
-    const btn = document.getElementById('editSaveBtn');
-    const originalText = btn.innerHTML;
-    const pdfUrlInput = document.getElementById('edPdfUrl').value;
-
-    if (!window.IS_SUPER_ADMIN) {
-        if (!pdfUrlInput.includes('drive.google.com')) {
-            showToast("Failed: You can only upload Google Drive links!");
-            return;
-        }
-    }
-
-    // Save button gets premium dotted loader
-    btn.innerHTML = `<span class="btn-text" style="display: flex; align-items: center; justify-content: center; gap: 10px;"><div class="premium-loader"></div> Saving...</span>`;
-    btn.disabled = true;
-
-    const docId = document.getElementById('editDocId').value;
-    const updatedData = { 
-        title: document.getElementById('edTitle').value, 
-        author: document.getElementById('edAuthor').value, 
-        year: document.getElementById('edYear').value, 
-        lang: document.getElementById('edLang').value, 
-        exams: document.getElementById('edExams').value, 
-        image: document.getElementById('edImage').value, 
-        pdfLink: pdfUrlInput, 
-        ytLink: window.IS_SUPER_ADMIN ? document.getElementById('edYtUrl').value : ""
-    };
-
-    try { 
-        await updateDoc(doc(db, "books", docId), updatedData); 
-        try { await logActivity("EDIT", updatedData.title, updatedData.image); } catch(e){}
-        document.getElementById('adminEditModal').style.display='none'; 
-        showToast("Updated Successfully!"); 
-    } catch (error) { showToast("Failed: Rules Blocked Update!"); } finally {
-        btn.innerHTML = originalText;
-        btn.disabled = false;
-    }
-});
+window.deleteBookRecord = async function(id) { if(confirm("Delete this book permanently?")) { try { const book = window.booksData.find(x => x.id === id); await deleteDoc(doc(db, "books", id)); try { await logActivity("DELETE", book.title, book.image, book); } catch(e){} showToast("Deleted Successfully!"); } catch (error) { showToast("Failed: Rules Blocked Delete!"); } } }
+window.openAdminEditModal = function(id) { const book = window.booksData.find(x => x.id === id); document.getElementById('editDocId').value = book.id; document.getElementById('edTitle').value = book.title; document.getElementById('edAuthor').value = book.author || ""; document.getElementById('edYear').value = book.year || "2026"; document.getElementById('edLang').value = book.lang || "Hindi"; document.getElementById('edExams').value = book.exams || ""; document.getElementById('edImage').value = book.image; document.getElementById('edPdfUrl').value = book.pdfLink || ""; document.getElementById('edYtUrl').value = book.ytLink || ""; document.getElementById('adminEditModal').style.display = 'flex'; }
 
 function updateAdminCharts() {
-    if(!window.IS_SUPER_ADMIN) return;
-    
-    Chart.defaults.color = '#a1a1aa';
-
-    const langCounts = { 'Hindi': 0, 'English': 0, 'Bilingual': 0 }; 
-    window.booksData.forEach(b => { if(langCounts[b.lang] !== undefined) { langCounts[b.lang]++; } });
-    const ctxLang = document.getElementById('langChart');
-    if(ctxLang) { 
-        if(myLangChart) myLangChart.destroy(); 
-        myLangChart = new Chart(ctxLang, { 
-            type: 'doughnut', 
-            data: { labels: ['Hindi', 'English', 'Bilingual'], datasets: [{ data: [langCounts.Hindi, langCounts.English, langCounts.Bilingual], backgroundColor: ['#ef4444', '#3b82f6', '#8b5cf6'], borderColor: 'rgba(255,255,255,0.05)', borderWidth: 1 }] }, 
-            options: { responsive: true, maintainAspectRatio: false } 
-        }); 
-    }
-
-    const ctxDownloads = document.getElementById('downloadsChart');
-    if(ctxDownloads) { 
-        if(myDownloadsChart) myDownloadsChart.destroy(); 
-        myDownloadsChart = new Chart(ctxDownloads, { 
-            type: 'line', 
-            data: { labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'], datasets: [{ label: `Downloads`, data: window.currentDlData, borderColor: '#10b981', backgroundColor: 'rgba(16, 185, 129, 0.2)', borderWidth: 2, fill: true }] }, 
-            options: { responsive: true, maintainAspectRatio: false } 
-        }); 
-    }
-
-    const last7DaysLabels = [];
-    const booksAddedData = [0, 0, 0, 0, 0, 0, 0];
-    
-    const todayEnd = new Date();
-    todayEnd.setHours(23, 59, 59, 999);
-    
-    const sevenDaysAgoStart = new Date();
-    sevenDaysAgoStart.setDate(todayEnd.getDate() - 6);
-    sevenDaysAgoStart.setHours(0, 0, 0, 0);
-
-    for(let i=6; i>=0; i--) {
-        const d = new Date();
-        d.setDate(d.getDate() - i);
-        last7DaysLabels.push(d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }));
-    }
-
-    window.booksData.forEach(b => {
-        if(b.createdAt) {
-            const bDate = new Date(b.createdAt);
-            if(bDate >= sevenDaysAgoStart && bDate <= todayEnd) {
-                const diffTime = Math.abs(bDate.setHours(0,0,0,0) - sevenDaysAgoStart.getTime());
-                const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
-                if(diffDays >= 0 && diffDays <= 6) { booksAddedData[diffDays]++; }
-            }
-        }
-    });
-
-    const ctxBooks = document.getElementById('booksAddedChart');
-    if(ctxBooks) {
-        if(myBooksChart) myBooksChart.destroy();
-        myBooksChart = new Chart(ctxBooks, {
-            type: 'bar',
-            data: {
-                labels: last7DaysLabels,
-                datasets: [{
-                    label: 'Books Added (Last 7 Days)',
-                    data: booksAddedData,
-                    backgroundColor: 'rgba(139, 92, 246, 0.8)',
-                    borderColor: '#8b5cf6',
-                    borderWidth: 1,
-                    borderRadius: 4
-                }]
-            },
-            options: { 
-                responsive: true, 
-                maintainAspectRatio: false,
-                scales: { y: { beginAtZero: true, ticks: { precision: 0 } } }
-            }
-        });
-    }
+    if(!window.IS_SUPER_ADMIN) return; Chart.defaults.color = '#a1a1aa';
+    const langCounts = { 'Hindi': 0, 'English': 0, 'Bilingual': 0 }; window.booksData.forEach(b => { if(langCounts[b.lang] !== undefined) { langCounts[b.lang]++; } });
+    const ctxLang = document.getElementById('langChart'); if(ctxLang) { if(myLangChart) myLangChart.destroy(); myLangChart = new Chart(ctxLang, { type: 'doughnut', data: { labels: ['Hindi', 'English', 'Bilingual'], datasets: [{ data: [langCounts.Hindi, langCounts.English, langCounts.Bilingual], backgroundColor: ['#ef4444', '#3b82f6', '#8b5cf6'], borderColor: 'rgba(255,255,255,0.05)', borderWidth: 1 }] }, options: { responsive: true, maintainAspectRatio: false } }); }
+    const ctxDownloads = document.getElementById('downloadsChart'); if(ctxDownloads) { if(myDownloadsChart) myDownloadsChart.destroy(); myDownloadsChart = new Chart(ctxDownloads, { type: 'line', data: { labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'], datasets: [{ label: `Downloads`, data: window.currentDlData, borderColor: '#10b981', backgroundColor: 'rgba(16, 185, 129, 0.2)', borderWidth: 2, fill: true }] }, options: { responsive: true, maintainAspectRatio: false } }); }
+    const last7DaysLabels = []; const booksAddedData = [0, 0, 0, 0, 0, 0, 0]; const todayEnd = new Date(); todayEnd.setHours(23, 59, 59, 999); const sevenDaysAgoStart = new Date(); sevenDaysAgoStart.setDate(todayEnd.getDate() - 6); sevenDaysAgoStart.setHours(0, 0, 0, 0);
+    for(let i=6; i>=0; i--) { const d = new Date(); d.setDate(d.getDate() - i); last7DaysLabels.push(d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })); }
+    window.booksData.forEach(b => { if(b.createdAt) { const bDate = new Date(b.createdAt); if(bDate >= sevenDaysAgoStart && bDate <= todayEnd) { const diffTime = Math.abs(bDate.setHours(0,0,0,0) - sevenDaysAgoStart.getTime()); const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24)); if(diffDays >= 0 && diffDays <= 6) { booksAddedData[diffDays]++; } } } });
+    const ctxBooks = document.getElementById('booksAddedChart'); if(ctxBooks) { if(myBooksChart) myBooksChart.destroy(); myBooksChart = new Chart(ctxBooks, { type: 'bar', data: { labels: last7DaysLabels, datasets: [{ label: 'Books Added (Last 7 Days)', data: booksAddedData, backgroundColor: 'rgba(139, 92, 246, 0.8)', borderColor: '#8b5cf6', borderWidth: 1, borderRadius: 4 }] }, options: { responsive: true, maintainAspectRatio: false, scales: { y: { beginAtZero: true, ticks: { precision: 0 } } } } }); }
 }
 
 function renderLogs() {
-    const tbody = document.getElementById('logsTableBody'); 
-    if(!tbody) return;
-    if (dbLogs.length === 0) { tbody.innerHTML = `<tr><td colspan="4" style="text-align:center; padding:20px; color:#a1a1aa; font-weight:800;">No activity tracked yet.</td></tr>`; return; }
+    const tbody = document.getElementById('logsTableBody'); if(!tbody) return; if (dbLogs.length === 0) { tbody.innerHTML = `<tr><td colspan="4" style="text-align:center; padding:20px; color:#a1a1aa; font-weight:800;">No activity tracked yet.</td></tr>`; return; }
     let htmlString = "";
     dbLogs.forEach(log => {
-        let badge = ''; let recoveryBtn = '';
-        if(log.action === 'ADD') { badge = `<span class="log-badge log-add"><i class="fas fa-plus"></i> Uploaded</span>`; } 
-        else if(log.action === 'EDIT') { badge = `<span class="log-badge log-edit"><i class="fas fa-pen"></i> Modified</span>`; } 
-        else if(log.action === 'DELETE') { badge = `<span class="log-badge log-delete"><i class="fas fa-trash"></i> Deleted</span>`; if(log.deletedData) { recoveryBtn = `<br><button class="btn-recover" onclick="recoverBook('${log.id}')"><i class="fas fa-undo"></i> Recover Vault</button>`; } } 
-        else if (log.action === 'RESTORE') { badge = `<span class="log-badge log-restore"><i class="fas fa-trash-restore"></i> Restored</span>`; }
-        
-        let img = log.image ? `<img src="${log.image}" class="log-table-img" onerror="this.src='https://via.placeholder.com/40x55?text=Img'">` : ''; 
-        let displayEmail = log.adminEmail || "admin@multiverse.com";
-        
-        htmlString += `<tr>
-            <td>
-                <div class="log-admin-info">
-                    <img src="https://i.postimg.cc/cJdGqYHG/IMG-20260524-WA0004.jpg" alt="Admin">
-                    <div>
-                        <div style="font-weight: 800; color: #fff; text-transform: uppercase;">${log.adminName || "Admin"}</div>
-                        <div style="font-size: 10px; color: #a1a1aa; font-weight: 600;">${displayEmail}</div>
-                    </div>
-                </div>
-            </td>
-            <td>${badge}</td>
-            <td style="display: flex; align-items: center;">${img}<span style="color:#fff; font-weight: 800; font-size:1.05rem;">${log.bookTitle}</span></td>
-            <td><div style="color: #a1a1aa; font-size: 0.9rem; font-weight:700;"><i class="far fa-clock" style="margin-right:5px;"></i> ${log.dateStr}</div>${recoveryBtn}</td>
-        </tr>`;
+        let badge = ''; let recoveryBtn = ''; if(log.action === 'ADD') { badge = `<span class="log-badge log-add"><i class="fas fa-plus"></i> Uploaded</span>`; } else if(log.action === 'EDIT') { badge = `<span class="log-badge log-edit"><i class="fas fa-pen"></i> Modified</span>`; } else if(log.action === 'DELETE') { badge = `<span class="log-badge log-delete"><i class="fas fa-trash"></i> Deleted</span>`; if(log.deletedData) { recoveryBtn = `<br><button class="btn-recover" onclick="recoverBook('${log.id}')"><i class="fas fa-undo"></i> Recover Vault</button>`; } } else if (log.action === 'RESTORE') { badge = `<span class="log-badge log-restore"><i class="fas fa-trash-restore"></i> Restored</span>`; }
+        let img = log.image ? `<img src="${log.image}" class="log-table-img" onerror="this.src='https://via.placeholder.com/40x55?text=Img'">` : ''; let displayEmail = log.adminEmail || "admin@multiverse.com";
+        htmlString += `<tr><td><div class="log-admin-info"><img src="https://i.postimg.cc/cJdGqYHG/IMG-20260524-WA0004.jpg" alt="Admin"><div><div style="font-weight: 800; color: #fff; text-transform: uppercase;">${log.adminName || "Admin"}</div><div style="font-size: 10px; color: #a1a1aa; font-weight: 600;">${displayEmail}</div></div></div></td><td>${badge}</td><td style="display: flex; align-items: center;">${img}<span style="color:#fff; font-weight: 800; font-size:1.05rem;">${log.bookTitle}</span></td><td><div style="color: #a1a1aa; font-size: 0.9rem; font-weight:700;"><i class="far fa-clock" style="margin-right:5px;"></i> ${log.dateStr}</div>${recoveryBtn}</td></tr>`;
     }); 
     tbody.innerHTML = htmlString;
 }
 
 window.recoverBook = async function(logId) {
-    if(!window.IS_SUPER_ADMIN) return;
-    const log = dbLogs.find(l => l.id === logId);
-    if(!log || !log.deletedData) return;
+    if(!window.IS_SUPER_ADMIN) return; const log = dbLogs.find(l => l.id === logId); if(!log || !log.deletedData) return;
     if(confirm(`Recover "${log.bookTitle}"?`)) {
-        try {
-            await setDoc(doc(db, "books", log.deletedData.id), log.deletedData);
-            try { await logActivity("RESTORE", log.bookTitle, log.image); } catch(e){}
-            showToast("Book Restored Successfully!");
-        } catch(error) { showToast("Failed: Rules Blocked Restore!"); }
+        try { await setDoc(doc(db, "books", log.deletedData.id), log.deletedData); try { await logActivity("RESTORE", log.bookTitle, log.image); } catch(e){} showToast("Book Restored Successfully!"); } catch(error) { showToast("Failed: Rules Blocked Restore!"); }
     }
 }
-
