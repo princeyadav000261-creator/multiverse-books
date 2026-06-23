@@ -199,7 +199,7 @@ main::-webkit-scrollbar { display: none; }
 .dmca-contact-link { display: inline-block; color: #60a5fa; font-weight: 700; text-decoration: none; margin-top: 10px; padding: 10px 15px; background: rgba(96, 165, 250, 0.1); border-radius: 12px; }
 
 /* ------------------------------------------------------------------
-   ORIGINAL CANVAS LOADER CSS (Kept Exactly Same)
+   ORIGINAL CANVAS LOADER CSS
 ------------------------------------------------------------------ */
 .loader-screen { position: fixed; inset: 0; display: flex; justify-content: center; align-items: center; flex-direction: column; background-color: #050505; z-index: 9999999; overflow: hidden; transition: .6s; }
 #networkCanvas { position: absolute; top: 0; left: 0; width: 100vw; height: 100vh; z-index: 1; pointer-events: none; }
@@ -218,7 +218,7 @@ main::-webkit-scrollbar { display: none; }
 .loader-powered-text { position: absolute; bottom: 35px; left: 50%; transform: translateX(-50%); color: #ffffff; font-size: 11px; font-weight: 700; letter-spacing: 1.5px; font-family: 'Poppins', sans-serif; text-transform: uppercase; z-index: 10; white-space: nowrap; }
 
 /* ------------------------------------------------------------------
-   ORIGINAL WHATSAPP POPUP CSS (Kept Exactly Same)
+   ORIGINAL WHATSAPP POPUP CSS
 ------------------------------------------------------------------ */
 .popup-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.85); backdrop-filter: blur(5px); display: none; justify-content: center; align-items: center; z-index: 9999998; padding: 20px; }
 .popup { width: 100%; max-width: 380px; padding: 30px 20px 25px; border-radius: 32px; background: linear-gradient(180deg, rgba(0,255,85,.14), rgba(0,0,0,.98)); border: 1px solid rgba(255,255,255,.14); text-align: center; animation: popupAnim .35s ease; }
@@ -254,7 +254,7 @@ main::-webkit-scrollbar { display: none; }
 .btn-token-style { background: transparent; color: #fff; width: 100%; padding: 14px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.2); font-size: 0.95rem; font-weight: 600; cursor: pointer; display: flex; justify-content: center; align-items: center; gap: 10px; }
 
 /* ------------------------------------------------------------------
-   ISOLATED ADMIN PANEL STYLES (No CSS Clashes)
+   ISOLATED ADMIN PANEL STYLES (Fixed UI Clashes)
 ------------------------------------------------------------------ */
 .adm-top-header { display: flex; align-items: center; justify-content: space-between; padding: 15px 20px; background: rgba(20,20,25,0.9); border-bottom: 1px solid rgba(255,255,255,0.1); }
 .adm-header-title { font-family: 'Poppins', sans-serif; font-size: 16px; font-weight: 800; color: #fff; text-transform: uppercase; margin: 0; }
@@ -283,15 +283,21 @@ main::-webkit-scrollbar { display: none; }
 .adm-table th { padding: 12px; background: rgba(255,255,255,0.05); color: #a1a1aa; font-size: 0.8rem; }
 .adm-table td { padding: 12px; border-bottom: 1px solid rgba(255,255,255,0.05); }
 
-/* ISOLATED MODAL (Fix for the bottom-stuck issue) */
+/* FIX 5: Attractive Edit & Delete Buttons */
+.adm-btn-edit { background: linear-gradient(135deg, #3b82f6, #2563eb); color: #fff; border: none; padding: 8px 12px; border-radius: 8px; cursor: pointer; transition: 0.3s; box-shadow: 0 4px 10px rgba(59,130,246,0.3); margin-right: 8px; }
+.adm-btn-edit:hover { transform: translateY(-2px); box-shadow: 0 6px 15px rgba(59,130,246,0.5); }
+.adm-btn-delete { background: linear-gradient(135deg, #ef4444, #dc2626); color: #fff; border: none; padding: 8px 12px; border-radius: 8px; cursor: pointer; transition: 0.3s; box-shadow: 0 4px 10px rgba(239,68,68,0.3); }
+.adm-btn-delete:hover { transform: translateY(-2px); box-shadow: 0 6px 15px rgba(239,68,68,0.5); }
+
+
+/* FIX 4: Isolated Edit Modal with scrollable area for all fields */
 .adm-modal-overlay { position: fixed; inset: 0; z-index: 9999999; background: rgba(0,0,0,0.85); display: none; align-items: center; justify-content: center; padding: 20px; }
-.adm-modal-box { background: #1a1a24; border: 1px solid rgba(255,255,255,0.1); border-radius: 20px; width: 100%; max-width: 400px; padding: 25px; box-shadow: 0 10px 40px rgba(0,0,0,0.8); }
+.adm-modal-box { background: #1a1a24; border: 1px solid rgba(255,255,255,0.1); border-radius: 20px; width: 100%; max-width: 450px; padding: 25px; box-shadow: 0 10px 40px rgba(0,0,0,0.8); max-height: 85vh; overflow-y: auto; }
+.adm-modal-box::-webkit-scrollbar { display: none; }
 
 #toast { position: fixed; bottom: 30px; right: 20px; background: #10b981; color: #fff; padding: 15px 25px; border-radius: 10px; font-weight: 700; transform: translateX(150%); transition: 0.4s ease; z-index: 9999999; display: flex; align-items: center; gap: 10px; }
 #toast.show { transform: translateX(0); }
-
-/* No Results Card Fix */
-#no-results-msg { padding: 20px 10px; }
+#no-results-msg { padding: 20px 10px; display: none; }
 .no-results-card { background: rgba(20,20,25,0.8); border: 1px solid rgba(255,255,255,0.1); padding: 30px; border-radius: 20px; text-align: center; }
 
 @media screen and (min-width: 768px) {
@@ -313,4 +319,6 @@ main::-webkit-scrollbar { display: none; }
     .icon-box { width: 38px; height: 38px; }
     .premium-tags { flex-wrap: nowrap; gap: 6px; padding: 0 5px; }
     .tag { padding: 8px 10px; font-size: 10px; }
+    .adm-card { padding: 15px; }
 }
+
