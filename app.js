@@ -30,7 +30,7 @@ let isAppInitialized = false;
 let adminFilteredBooks = [];
 let adminCurrentPage = 1;
 const adminBooksPerPage = 10;
-let dbLogs = []; // Logs array added back
+let dbLogs = []; 
 
 // 1. ORIGINAL CANVAS LOADER
 const canvas = document.getElementById('networkCanvas');
@@ -115,25 +115,26 @@ const currentQuoteIndex = todayDays % quotes.length;
 document.getElementById('daily-quote-text').innerHTML = `<i class="fas fa-quote-left" style="color: rgba(255,255,255,0.3); margin-right:5px;"></i> ${quotes[currentQuoteIndex].text}`;
 document.getElementById('daily-quote-author').innerText = `— ${quotes[currentQuoteIndex].author}`;
 
-// LOG ACTIVITY FUNCTION RESTORED
+// LOG ACTIVITY FUNCTION RESTORED (With Email & Name)
 async function logActivity(actionType, bookTitle, imageUrl = "", deletedBookData = null) {
     try {
+        const user = auth.currentUser;
         await addDoc(collection(db, "activity_logs"), {
             action: actionType,
             bookTitle: bookTitle,
             image: imageUrl,
             deletedData: deletedBookData,
-            adminName: document.getElementById('sidebarProfileName').innerText,
+            adminName: user ? (user.displayName || user.email.split('@')[0]) : "Unknown",
+            adminEmail: user ? user.email : "Unknown",
             timestamp: new Date().getTime(),
             dateStr: new Date().toLocaleString('en-GB', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute:'2-digit' })
         });
     } catch(e) { console.error(e); }
 }
 
-// Ensure Canvas is ready early
 window.addEventListener('resize', resizeCanvas); resizeCanvas(); animateHex(0);
 
-// 3. AUTH FLOW (No Black Screen)
+// 3. AUTH FLOW
 let authChecked = false;
 onAuthStateChanged(auth, async (user) => {
     authChecked = true;
@@ -152,6 +153,10 @@ onAuthStateChanged(auth, async (user) => {
             document.getElementById('admTabAnalytics').style.display = 'inline-flex';
             document.getElementById('adminTutorialEdit').style.display = 'block';
             
+            // SUPER ADMIN PRIVILEGE FIX
+            document.getElementById('addYtLinkContainer').style.display = 'flex';
+            document.getElementById('inPdfUrl').placeholder = "Google Drive or Direct Link";
+            
             const currentYearStr = new Date().getFullYear().toString();
             onSnapshot(doc(db, "download_stats", currentYearStr), (docSnap) => {
                 let dlData = [0,0,0,0,0,0,0,0,0,0,0,0];
@@ -159,7 +164,6 @@ onAuthStateChanged(auth, async (user) => {
                 updateAdminCharts(dlData);
             });
 
-            // Activity Logs Listener for Super Admin
             onSnapshot(query(collection(db, "activity_logs"), orderBy("timestamp", "desc")), (snapshot) => {
                 dbLogs = [];
                 snapshot.forEach(doc => { let l = doc.data(); l.id = doc.id; dbLogs.push(l); });
@@ -173,6 +177,11 @@ onAuthStateChanged(auth, async (user) => {
             document.getElementById('admTabManage').style.display = 'none';
             document.getElementById('admTabAnalytics').style.display = 'none';
             document.getElementById('adminTutorialEdit').style.display = 'none';
+            
+            // NORMAL ADMIN PRIVILEGE FIX (Hide YT link, Force Google Drive)
+            document.getElementById('addYtLinkContainer').style.display = 'none';
+            document.getElementById('inPdfUrl').placeholder = "Paste Google Drive Link Only";
+            
             switchAdminTab('add');
         }
 
@@ -219,7 +228,6 @@ window.addEventListener("load", () => {
             cancelAnimationFrame(animationId); 
             loader.style.display = "none"; 
             
-            // Check auth state routing
             if (auth.currentUser) {
                 document.getElementById('mainAppWrapper').style.display = 'block';
                 document.getElementById("popupOverlay").style.display = "flex";
@@ -428,20 +436,31 @@ function getYouTubeEmbedUrl(url) {
     return videoId ? `https://www.youtube.com/embed/${videoId}?controls=1&rel=0&modestbranding=1` : url;
 }
 window.updateTutorialLink = async function() { 
-    if(!window.IS_SUPER_ADMIN) return; const newUrl = document.getElementById('newTutorialUrl').value; if(!newUrl) return showToast("Failed: Enter URL!"); 
+    if(!window.IS_SUPER_ADMIN) return; 
+    const newUrl = document.getElementById('newTutorialUrl').value; 
+    if(!newUrl) return showToast("Failed: Enter URL!"); 
     try { 
         await setDoc(doc(db, "settings", "global"), { tutorialVideoUrl: newUrl }, { merge: true }); 
         showToast("Video Updated Successfully!"); 
         document.getElementById('newTutorialUrl').value = ''; 
     } catch(e) { 
-        showToast("Failed: Check Firebase Rules or Data - " + e.message); 
+        showToast("Failed: " + e.message); 
     } 
 }
 
 document.getElementById('addBookForm').addEventListener('submit', async (e) => {
     e.preventDefault(); 
-    const titleInput = document.getElementById('inTitle').value; const imgInput = document.getElementById('inImage').value;
-    const newBook = { title: titleInput, author: document.getElementById('inAuthor').value, image: imgInput, year: document.getElementById('inYear').value, lang: document.getElementById('inLang').value, exams: document.getElementById('inExams').value, pdfLink: document.getElementById('inPdfUrl').value, ytLink: document.getElementById('inYtUrl').value, dateAdded: new Date().toLocaleDateString('en-GB').toUpperCase(), createdAt: new Date().getTime() };
+    const titleInput = document.getElementById('inTitle').value; 
+    const imgInput = document.getElementById('inImage').value;
+    const pdfInput = document.getElementById('inPdfUrl').value;
+
+    // Normal Admin Drive Link Verification
+    if(!window.IS_SUPER_ADMIN && !pdfInput.includes("drive.google.com")) {
+        showToast("Failed: Admins can only add Google Drive links!");
+        return;
+    }
+
+    const newBook = { title: titleInput, author: document.getElementById('inAuthor').value, image: imgInput, year: document.getElementById('inYear').value, lang: document.getElementById('inLang').value, exams: document.getElementById('inExams').value, pdfLink: pdfInput, ytLink: document.getElementById('inYtUrl').value || "", dateAdded: new Date().toLocaleDateString('en-GB').toUpperCase(), createdAt: new Date().getTime() };
     try { 
         await addDoc(collection(db, "books"), newBook); 
         await logActivity("ADD", titleInput, imgInput);
@@ -557,7 +576,7 @@ function updateAdminCharts(dlDataArray = [0,0,0,0,0,0,0,0,0,0,0,0]) {
     if(ctxDownloads) { if(myDownloadsChart) myDownloadsChart.destroy(); myDownloadsChart = new Chart(ctxDownloads, { type: 'line', data: { labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'], datasets: [{ label: `Downloads`, data: dlDataArray, borderColor: '#10b981', backgroundColor: 'rgba(16, 185, 129, 0.2)', borderWidth: 2, fill: true }] }, options: { responsive: true, maintainAspectRatio: false } }); }
 }
 
-// RESTORED ACTIVITY LOGS RENDER FUNCTION
+// LOG RENDER FUNCTION WITH NAME & EMAIL
 function renderLogs() {
     const tbody = document.getElementById('logsTableBody'); 
     if(!tbody) return;
@@ -567,11 +586,18 @@ function renderLogs() {
         let badge = ''; let recoveryBtn = '';
         if(log.action === 'ADD') { badge = `<span class="log-badge log-add"><i class="fas fa-plus"></i> Uploaded</span>`; } 
         else if(log.action === 'EDIT') { badge = `<span class="log-badge log-edit"><i class="fas fa-pen"></i> Modified</span>`; } 
-        else if(log.action === 'DELETE') { badge = `<span class="log-badge log-delete"><i class="fas fa-trash"></i> Deleted</span>`; if(log.deletedData) { recoveryBtn = `<br><button class="btn-recover" onclick="recoverBook('${log.id}')"><i class="fas fa-undo"></i> Recover Vault</button>`; } } 
+        else if(log.action === 'DELETE') { badge = `<span class="log-badge log-delete"><i class="fas fa-trash"></i> Deleted</span>`; if(log.deletedData) { recoveryBtn = `<br><button class="btn-recover" onclick="recoverBook('${log.id}')"><i class="fas fa-undo"></i> Recover</button>`; } } 
         else if (log.action === 'RESTORE') { badge = `<span class="log-badge log-restore"><i class="fas fa-trash-restore"></i> Restored</span>`; }
         
         let img = log.image ? `<img src="${log.image}" class="log-table-img" onerror="this.src='https://via.placeholder.com/40x55?text=Img'">` : ''; 
-        htmlString += `<tr><td>${badge}</td><td style="display: flex; align-items: center;">${img}<span style="color:#fff; font-weight: 800; font-size:1.05rem;">${log.bookTitle}</span></td><td><div style="font-weight: 800; color: #fff; text-transform: uppercase;">${log.adminName}</div></td><td><div style="color: #a1a1aa; font-size: 0.9rem; font-weight:700;"><i class="far fa-clock" style="margin-right:5px;"></i> ${log.dateStr}</div>${recoveryBtn}</td></tr>`;
+        let adminInfo = `<div style="font-weight: 800; color: #fff;">${log.adminName}</div><div style="font-size: 0.75rem; color: #a1a1aa; word-break: break-all;">${log.adminEmail || ''}</div>`;
+
+        htmlString += `<tr>
+            <td>${badge}</td>
+            <td style="display: flex; align-items: center;">${img}<span style="color:#fff; font-weight: 800; font-size:1.05rem;">${log.bookTitle}</span></td>
+            <td>${adminInfo}</td>
+            <td><div style="color: #a1a1aa; font-size: 0.9rem; font-weight:700;"><i class="far fa-clock"></i> ${log.dateStr}</div>${recoveryBtn}</td>
+        </tr>`;
     }); 
     tbody.innerHTML = htmlString;
 }
