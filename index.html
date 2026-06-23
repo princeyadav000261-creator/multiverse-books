@@ -26,18 +26,33 @@
 
     <div id="loginOverlay" class="login-container">
         <div class="login-content-wrapper">
-            <div class="login-logo-container"><img src="https://i.postimg.cc/cJdGqYHG/IMG-20260524-WA0004.jpg" alt="Multiverse Logo" class="login-logo" oncontextmenu="return false;" draggable="false"></div>
-            <div class="welcome-header"><span class="welcome-top">Welcome To</span><h2 class="welcome-title">MULTIVERSE BOOKS</h2></div>
-            <p class="welcome-subtitle">Premium Study Material | Smart Vault Access</p>
+            <div class="login-logo-glow">
+                <i class="fas fa-book-open"></i>
+            </div>
+            <div class="login-title-small">WELCOME TO</div>
+            <div class="login-title-large">MULTIVERSE BOOKS</div>
+            <div class="login-subtitle">Best Content | Vault Management | System Analytics</div>
+            
             <div class="login-card">
-                <div style="text-align: center;"><div class="multiverse-badge"><i class="fas fa-graduation-cap" style="color: #8b5cf6; font-size: 1.2rem;"></i> Multiverse Books</div></div>
+                <div class="login-badge">
+                    <i class="fas fa-graduation-cap" style="color: #9d88ff; font-size: 1.2rem;"></i> Multiverse Books
+                </div>
                 <form id="loginForm">
-                    <div class="input-wrapper"><i class="fas fa-envelope left-icon"></i><input type="email" id="loginEmail" placeholder="Enter Admin Email" required autocomplete="off"></div>
-                    <div class="input-wrapper"><i class="fas fa-lock left-icon"></i><input type="password" id="loginPassword" placeholder="Enter Password" required><i class="fas fa-eye toggle-eye" id="toggleEye" onclick="togglePasswordVisibility()"></i></div>
-                    <button type="submit" id="loginBtn" class="btn-login">Login Securely</button>
+                    <div class="input-wrapper">
+                        <i class="fas fa-envelope left-icon"></i>
+                        <input type="email" id="loginEmail" placeholder="Enter Admin Email" required autocomplete="off">
+                    </div>
+                    <div class="input-wrapper">
+                        <i class="fas fa-lock left-icon"></i>
+                        <input type="password" id="loginPassword" placeholder="Enter Password" required>
+                        <i class="fas fa-eye toggle-eye" id="toggleEye" onclick="togglePasswordVisibility()"></i>
+                    </div>
+                    <button type="submit" id="loginBtn" class="btn-login">Login</button>
                 </form>
-                <div style="height: 10px;"></div>
-                <button type="button" id="googleSignInBtn" class="btn-token-style"><img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" alt="G" style="width: 20px;"> Login with Google</button>
+                <div style="height: 15px;"></div>
+                <button type="button" id="googleSignInBtn" class="btn-token-style">
+                    <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" alt="G" style="width: 20px;"> Login with Google
+                </button>
             </div>
         </div>
     </div>
@@ -122,9 +137,9 @@
                 <div id="no-results-msg" style="display: none; padding-bottom: 30px;">
                     <div class="no-results-card">
                         <div class="no-results-icon"><i class="fas fa-book-open"></i></div>
-                        <h2>BOOK NOT FOUND</h2>
-                        <p>Sorry, we couldn't find any book matching your search.</p>
-                        <div class="powered-badge"><i class="fab fa-centos" style="margin-right:4px;"></i> POWERED BY : MADxPRINCE <i class="fab fa-centos" style="margin-left:4px;"></i></div>
+                        <h2 class="no-results-title">BOOK NOT FOUND</h2>
+                        <p class="no-results-desc">Sorry, we couldn't find any book matching your search.</p>
+                        <div class="no-results-badge">❁ POWERED BY : MADxPRINCE ❁</div>
                     </div>
                 </div>
 
@@ -242,7 +257,7 @@
                     <button class="adm-tab-btn active" id="admTabAdd" onclick="switchAdminTab('add')"><i class="fas fa-plus"></i> Add</button>
                     <button class="adm-tab-btn" id="admTabManage" onclick="switchAdminTab('manage')"><i class="fas fa-list"></i> Manage</button>
                     <button class="adm-tab-btn" id="admTabVideo" onclick="switchAdminTab('tutorial')"><i class="fas fa-video"></i> Video</button>
-                    <button class="adm-tab-btn" id="admTabAnalytics" onclick="switchAdminTab('analytics')"><i class="fas fa-chart-pie"></i> Stats</button>
+                    <button class="adm-tab-btn" id="admTabAnalytics" onclick="switchAdminTab('analytics')"><i class="fas fa-chart-pie"></i> Stats & Logs</button>
                 </div>
 
                 <div class="adm-content-area">
@@ -322,7 +337,7 @@
                             <div class="adm-card-title"><i class="fas fa-shield-alt"></i> System Activity Logs</div>
                             <div style="overflow-x: auto;">
                                 <table class="adm-table">
-                                    <thead><tr><th>Action Taken</th><th>Modified File / Book</th><th>Admin Authority</th><th>Date & Recovery</th></tr></thead>
+                                    <thead><tr><th>Admin Profile</th><th>Action Taken</th><th>Modified File / Book</th><th>Date & Recovery</th></tr></thead>
                                     <tbody id="logsTableBody"><tr><td colspan="4" style="text-align:center; padding:20px; color:#a1a1aa; font-weight:800;">Loading Activity Logs...</td></tr></tbody>
                                 </table>
                             </div>
