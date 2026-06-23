@@ -147,6 +147,7 @@ main::-webkit-scrollbar { display: none; }
 .exam-tags { display: flex; flex-wrap: wrap; gap: 8px; }
 .dl-modal-tag { background: transparent; border: 1px solid rgba(59, 130, 246, 0.4); color: #93c5fd; font-size: 12px; font-weight: 500; padding: 6px 12px; border-radius: 16px; }
 
+/* FIX: Social Icons */
 .dl-social-container { margin-top: 30px; margin-bottom: 30px; display: flex; justify-content: center; padding: 0 5px; }
 .dev-social-row { display: flex; justify-content: center; gap: 18px; width: 100%; }
 .dev-soc-btn { width: 56px; height: 56px; border-radius: 16px; display: flex; justify-content: center; align-items: center; font-size: 24px; text-decoration: none; transition: all 0.2s ease; }
@@ -244,30 +245,17 @@ main::-webkit-scrollbar { display: none; }
 .later:hover { color: #fff; }
 
 /* ------------------------------------------------------------------
-   FIX 1: PREMIUM COMPACT LOGIN CARD
+   PREMIUM COMPACT LOGIN CARD
 ------------------------------------------------------------------ */
 .login-container { display: none; position: fixed; inset: 0; z-index: 99999; flex-direction: column; background: #050508; transition: opacity 0.5s ease; opacity: 0; overflow-y: auto; }
-.login-content-wrapper { margin: auto; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 20px; width: 100%; max-width: 360px; /* Made compact */ }
-.login-logo { 
-    width: 85px; height: 85px; border-radius: 20px; 
-    margin-bottom: 20px;
-    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.6); /* Removed blue/purple glow */
-    border: 1px solid rgba(255, 255, 255, 0.2); /* Added subtle gray border */
-    background: #0d0d12;
-}
+.login-content-wrapper { margin: auto; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 20px; width: 100%; max-width: 360px; }
+.login-logo { width: 85px; height: 85px; border-radius: 20px; margin-bottom: 20px; box-shadow: 0 10px 30px rgba(0, 0, 0, 0.6); border: 1px solid rgba(255, 255, 255, 0.2); background: #0d0d12; }
 .welcome-header { text-align: center; margin-bottom: 12px; }
 .welcome-top { color: #8b5cf6; font-size: 0.8rem; font-weight: 700; letter-spacing: 2px; text-transform: uppercase; }
 .welcome-title { font-size: 1.6rem; font-weight: 800; color: #fff; letter-spacing: 1px; margin-top: 8px;}
 .welcome-subtitle { font-size: 0.85rem; color: #a1a1aa; text-align: center; margin-bottom: 30px; letter-spacing: 0.5px; position: relative; z-index: 10; }
 
-.login-card { 
-    background: rgba(20, 20, 25, 0.9); 
-    border: 1px solid rgba(255, 255, 255, 0.1); 
-    border-radius: 24px; 
-    padding: 30px 25px; 
-    width: 100%; 
-    box-shadow: 0 20px 50px rgba(0,0,0,0.8), inset 0 0 25px rgba(255,255,255,0.06); /* Added white inset glow */
-}
+.login-card { background: rgba(20, 20, 25, 0.9); border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 24px; padding: 30px 25px; width: 100%; box-shadow: 0 20px 50px rgba(0,0,0,0.8), inset 0 0 25px rgba(255,255,255,0.06); }
 .multiverse-badge { background: rgba(20, 20, 30, 0.9); border: 1px solid rgba(88, 101, 242, 0.4); color: #ffffff; padding: 12px 26px; border-radius: 14px; display: inline-flex; align-items: center; gap: 12px; font-weight: 600; font-size: 1.05rem; margin-bottom: 25px; box-shadow: 0 10px 20px rgba(0, 0, 0, 0.4), 0 0 15px rgba(88, 101, 242, 0.15); }
 
 .input-wrapper { position: relative; display: flex; align-items: center; margin-bottom: 15px; width: 100%; }
@@ -277,6 +265,13 @@ main::-webkit-scrollbar { display: none; }
 .input-wrapper input:focus { border-color: #8b5cf6; }
 .btn-login { background: #6d5dfc; color: #fff; width: 100%; padding: 15px; border-radius: 12px; border: none; font-size: 1rem; font-weight: 700; cursor: pointer; transition: 0.3s; }
 .btn-token-style { background: transparent; color: #fff; width: 100%; padding: 14px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.2); font-size: 0.95rem; font-weight: 600; cursor: pointer; display: flex; justify-content: center; align-items: center; gap: 10px; }
+
+
+/* FIX: BOOK NOT FOUND DESIGN */
+#no-results-msg { padding: 20px 10px; display: none; }
+.no-results-card { background: rgba(20,20,25,0.8); border: 1px solid rgba(255,255,255,0.1); padding: 30px; border-radius: 20px; text-align: center; }
+.no-results-icon { font-size: 40px; margin-bottom: 15px; }
+.powered-badge { display: inline-flex; align-items: center; justify-content: center; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); padding: 8px 18px; border-radius: 30px; font-size: 10px; font-weight: 800; color: #f1f5f9; letter-spacing: 1px; text-transform: uppercase; margin-top: 10px;}
 
 /* ------------------------------------------------------------------
    ISOLATED ADMIN PANEL STYLES
@@ -303,16 +298,7 @@ main::-webkit-scrollbar { display: none; }
 .adm-input { width: 100%; background: rgba(0,0,0,0.5); border: 1px solid rgba(255,255,255,0.1); padding: 14px; border-radius: 10px; color: #fff; outline: none; font-family: 'Inter', sans-serif; }
 .adm-input:focus { border-color: #8b5cf6; }
 
-/* FIX 3: Select Arrow Overlapping Fix */
-select.adm-input {
-    appearance: none;
-    -webkit-appearance: none;
-    padding-right: 40px;
-    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' fill='%23a1a1aa' viewBox='0 0 16 16'%3E%3Cpath d='M7.247 11.14 2.451 5.658C1.885 5.013 2.345 4 3.204 4h9.592a1 1 0 0 1 .753 1.659l-4.796 5.48a1 1 0 0 1-1.506 0z'/%3E%3C/svg%3E");
-    background-repeat: no-repeat;
-    background-position: right 15px center;
-    cursor: pointer;
-}
+select.adm-input { appearance: none; -webkit-appearance: none; padding-right: 40px; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' fill='%23a1a1aa' viewBox='0 0 16 16'%3E%3Cpath d='M7.247 11.14 2.451 5.658C1.885 5.013 2.345 4 3.204 4h9.592a1 1 0 0 1 .753 1.659l-4.796 5.48a1 1 0 0 1-1.506 0z'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 15px center; cursor: pointer; }
 
 .adm-submit-btn { width: 100%; background: #fff; color: #000; padding: 15px; border: none; border-radius: 10px; font-weight: 700; cursor: pointer; margin-top: 10px; display: flex; align-items: center; justify-content: center; gap: 10px; }
 
@@ -325,7 +311,6 @@ select.adm-input {
 .adm-btn-delete { background: linear-gradient(135deg, #ef4444, #dc2626); color: #fff; border: none; padding: 8px 12px; border-radius: 8px; cursor: pointer; transition: 0.3s; box-shadow: 0 4px 10px rgba(239,68,68,0.3); }
 .adm-btn-delete:hover { transform: translateY(-2px); box-shadow: 0 6px 15px rgba(239,68,68,0.5); }
 
-/* FIX 2: Admin Pagination Buttons */
 .adm-page-btn { background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); color: #fff; padding: 8px 16px; border-radius: 8px; cursor: pointer; transition: 0.3s; font-weight: 600; }
 .adm-page-btn:hover:not(:disabled) { background: #8b5cf6; border-color: #8b5cf6; }
 .adm-page-btn:disabled { opacity: 0.5; cursor: not-allowed; }
@@ -334,10 +319,9 @@ select.adm-input {
 .adm-modal-box { background: #1a1a24; border: 1px solid rgba(255,255,255,0.1); border-radius: 20px; width: 100%; max-width: 450px; padding: 25px; box-shadow: 0 10px 40px rgba(0,0,0,0.8); max-height: 85vh; overflow-y: auto; }
 .adm-modal-box::-webkit-scrollbar { display: none; }
 
-#toast { position: fixed; bottom: 30px; right: 20px; background: #10b981; color: #fff; padding: 15px 25px; border-radius: 10px; font-weight: 700; transform: translateX(150%); transition: 0.4s ease; z-index: 9999999; display: flex; align-items: center; gap: 10px; }
+/* FIX: TOAST COLOR IS NOW HANDLED BY JS, REMOVED DEFAULT GREEN */
+#toast { position: fixed; bottom: 30px; right: 20px; color: #fff; padding: 15px 25px; border-radius: 10px; font-weight: 700; transform: translateX(150%); transition: 0.4s ease; z-index: 9999999; display: flex; align-items: center; gap: 10px; box-shadow: 0 5px 15px rgba(0,0,0,0.4); }
 #toast.show { transform: translateX(0); }
-#no-results-msg { padding: 20px 10px; display: none; }
-.no-results-card { background: rgba(20,20,25,0.8); border: 1px solid rgba(255,255,255,0.1); padding: 30px; border-radius: 20px; text-align: center; }
 
 @media screen and (min-width: 768px) {
     .app-container { max-width: 100%; border-radius: 0; box-shadow: none; }
