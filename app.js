@@ -78,6 +78,7 @@ function resizeCanvas() {
     const dpr = window.devicePixelRatio || 1; width = window.innerWidth; height = window.innerHeight;
     canvas.width = width * dpr; canvas.height = height * dpr; ctx.scale(dpr, dpr); initHex(); 
 }
+window.addEventListener('resize', resizeCanvas); resizeCanvas(); animateHex(0);
 
 // 2. DAILY QUOTES LOGIC
 const quotes = [
@@ -115,7 +116,7 @@ const currentQuoteIndex = todayDays % quotes.length;
 document.getElementById('daily-quote-text').innerHTML = `<i class="fas fa-quote-left" style="color: rgba(255,255,255,0.3); margin-right:5px;"></i> ${quotes[currentQuoteIndex].text}`;
 document.getElementById('daily-quote-author').innerText = `— ${quotes[currentQuoteIndex].author}`;
 
-// LOG ACTIVITY FUNCTION RESTORED (With Email & Name)
+// LOG ACTIVITY FUNCTION
 async function logActivity(actionType, bookTitle, imageUrl = "", deletedBookData = null) {
     try {
         const user = auth.currentUser;
@@ -132,17 +133,22 @@ async function logActivity(actionType, bookTitle, imageUrl = "", deletedBookData
     } catch(e) { console.error(e); }
 }
 
-window.addEventListener('resize', resizeCanvas); resizeCanvas(); animateHex(0);
-
-// 3. AUTH FLOW
-let authChecked = false;
+// 3. AUTH FLOW (Instant logic)
 onAuthStateChanged(auth, async (user) => {
-    authChecked = true;
     if (user) {
+        document.getElementById('loginOverlay').style.display = 'none';
+        
+        if(!isAppInitialized) {
+            document.getElementById('mainAppWrapper').style.display = 'flex';
+            startAppFlow();
+            isAppInitialized = true;
+        }
+
         let dName = user.displayName;
         if (!dName || dName.trim() === "") { dName = user.email.split('@')[0]; }
         document.getElementById('sidebarProfileName').innerText = dName;
         document.getElementById('sidebarProfileImg').src = "https://i.postimg.cc/cJdGqYHG/IMG-20260524-WA0004.jpg";
+
         document.getElementById('menu-admin-panel').style.display = 'flex';
 
         if (user.email === SUPER_ADMIN_EMAIL) {
@@ -178,7 +184,7 @@ onAuthStateChanged(auth, async (user) => {
             document.getElementById('admTabAnalytics').style.display = 'none';
             document.getElementById('adminTutorialEdit').style.display = 'none';
             
-            // NORMAL ADMIN PRIVILEGE FIX (Hide YT link, Force Google Drive)
+            // NORMAL ADMIN PRIVILEGE FIX
             document.getElementById('addYtLinkContainer').style.display = 'none';
             document.getElementById('inPdfUrl').placeholder = "Paste Google Drive Link Only";
             
@@ -211,33 +217,27 @@ onAuthStateChanged(auth, async (user) => {
             
             if(window.IS_SUPER_ADMIN) updateAdminCharts();
             
-            const sBook = new URLSearchParams(window.location.search).get('book');
+            const sBook = newSearchParams(window.location.search).get('book');
             if(sBook) window.openDownloadPage(sBook, true);
         });
     } else {
-        window.IS_SUPER_ADMIN = false;
+        // HIDE LOADER IMMEDIATELY IF NO USER
+        document.getElementById('loaderScreen').style.display = "none";
+        document.getElementById('mainAppWrapper').style.display = 'none';
+        document.getElementById('loginOverlay').style.display = 'flex';
+        setTimeout(() => { document.getElementById('loginOverlay').style.opacity = '1'; }, 50); 
     }
 });
 
-// Remove loader smoothly and route properly
-window.addEventListener("load", () => {
+function startAppFlow() {
+    const loader = document.getElementById("loaderScreen");
+    // NO BLACK SCREEN - Loader finishes its natural 3 sec animation then hides
     setTimeout(() => {
-        const loader = document.getElementById("loaderScreen");
+        document.getElementById("popupOverlay").style.display = "flex"; 
         loader.style.opacity = "0";
-        setTimeout(() => { 
-            cancelAnimationFrame(animationId); 
-            loader.style.display = "none"; 
-            
-            if (auth.currentUser) {
-                document.getElementById('mainAppWrapper').style.display = 'block';
-                document.getElementById("popupOverlay").style.display = "flex";
-            } else {
-                document.getElementById('loginOverlay').style.display = 'flex';
-                setTimeout(() => { document.getElementById('loginOverlay').style.opacity = '1'; }, 50); 
-            }
-        }, 600); 
+        setTimeout(() => { cancelAnimationFrame(animationId); loader.style.display = "none"; }, 600); 
     }, 3000); 
-});
+}
 
 document.getElementById('loginForm').addEventListener('submit', async (e) => {
     e.preventDefault(); 
@@ -248,7 +248,7 @@ document.getElementById('loginForm').addEventListener('submit', async (e) => {
         e.target.reset(); 
         showToast("Login Successful!"); 
         document.getElementById('loginOverlay').style.opacity = '0'; 
-        setTimeout(() => { document.getElementById('loginOverlay').style.display = 'none'; document.getElementById('mainAppWrapper').style.display = 'block'; document.getElementById("popupOverlay").style.display = "flex"; }, 500); 
+        setTimeout(() => { document.getElementById('loginOverlay').style.display = 'none'; }, 500); 
     } catch(err) { 
         showToast("Failed: Invalid Credentials!"); 
         btn.innerHTML = `Login Securely`; 
@@ -259,21 +259,16 @@ document.getElementById('googleSignInBtn').addEventListener('click', async () =>
     try { 
         await signInWithPopup(auth, provider); 
         document.getElementById('loginOverlay').style.opacity = '0'; 
-        setTimeout(() => { document.getElementById('loginOverlay').style.display = 'none'; document.getElementById('mainAppWrapper').style.display = 'block'; document.getElementById("popupOverlay").style.display = "flex"; }, 500); 
+        setTimeout(() => { document.getElementById('loginOverlay').style.display = 'none'; }, 500); 
         showToast("Google Login Successful!");
     } catch(err) { 
-        showToast("Failed: Google Sign-In Error. Check Rules."); 
+        showToast("Failed: Google Sign-In Error."); 
     } 
 });
 
 document.getElementById('admin-logout-btn').addEventListener('click', () => { 
     if(confirm("Are you sure you want to logout?")) {
-        signOut(auth).then(() => { 
-            document.getElementById('admin-dashboard-panel').classList.remove('active');
-            document.getElementById('mainAppWrapper').style.display = 'none';
-            document.getElementById('loginOverlay').style.display = 'flex';
-            setTimeout(() => { document.getElementById('loginOverlay').style.opacity = '1'; }, 50); 
-        });
+        signOut(auth).then(() => { isAppInitialized = false; window.location.reload(); });
     }
 });
 
@@ -415,8 +410,7 @@ window.shareBook = function() {
     else { navigator.clipboard.writeText(shareUrl); alert("Link Copied!"); }
 }
 
-
-// 6. ADMIN FUNCTIONS & PAGINATION
+// 6. ADMIN FUNCTIONS & LOGS
 function showToast(message) {
     const toast = document.getElementById('toast'); 
     if (message.toLowerCase().includes('failed') || message.toLowerCase().includes('error') || message.toLowerCase().includes('invalid')) {
@@ -444,7 +438,7 @@ window.updateTutorialLink = async function() {
         showToast("Video Updated Successfully!"); 
         document.getElementById('newTutorialUrl').value = ''; 
     } catch(e) { 
-        showToast("Failed: " + e.message); 
+        showToast("Failed: Output Format Error or Rules Blocked - " + e.message); 
     } 
 }
 
@@ -454,7 +448,6 @@ document.getElementById('addBookForm').addEventListener('submit', async (e) => {
     const imgInput = document.getElementById('inImage').value;
     const pdfInput = document.getElementById('inPdfUrl').value;
 
-    // Normal Admin Drive Link Verification
     if(!window.IS_SUPER_ADMIN && !pdfInput.includes("drive.google.com")) {
         showToast("Failed: Admins can only add Google Drive links!");
         return;
@@ -576,7 +569,6 @@ function updateAdminCharts(dlDataArray = [0,0,0,0,0,0,0,0,0,0,0,0]) {
     if(ctxDownloads) { if(myDownloadsChart) myDownloadsChart.destroy(); myDownloadsChart = new Chart(ctxDownloads, { type: 'line', data: { labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'], datasets: [{ label: `Downloads`, data: dlDataArray, borderColor: '#10b981', backgroundColor: 'rgba(16, 185, 129, 0.2)', borderWidth: 2, fill: true }] }, options: { responsive: true, maintainAspectRatio: false } }); }
 }
 
-// LOG RENDER FUNCTION WITH NAME & EMAIL
 function renderLogs() {
     const tbody = document.getElementById('logsTableBody'); 
     if(!tbody) return;
