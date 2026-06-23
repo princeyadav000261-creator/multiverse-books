@@ -25,7 +25,6 @@ let activeBookTitle = "";
 window.IS_SUPER_ADMIN = false;
 const SUPER_ADMIN_EMAIL = "princeyadav000261@gmail.com"; 
 let myLangChart = null; let myDownloadsChart = null;
-let isAppInitialized = false;
 
 let adminFilteredBooks = [];
 let adminCurrentPage = 1;
@@ -93,7 +92,6 @@ const currentQuoteIndex = todayDays % quotes.length;
 document.getElementById('daily-quote-text').innerHTML = `<i class="fas fa-quote-left" style="color: rgba(255,255,255,0.3); margin-right:5px;"></i> ${quotes[currentQuoteIndex].text}`;
 document.getElementById('daily-quote-author').innerText = `— ${quotes[currentQuoteIndex].author}`;
 
-// UPDATED LOG ACTIVITY FUNCTION (ALWAYS CATCHES CORRECT EMAIL)
 async function logActivity(actionType, bookTitle, imageUrl = "", deletedBookData = null) {
     try {
         const userEmail = (auth.currentUser && auth.currentUser.email) ? auth.currentUser.email : "admin@multiverse.com";
@@ -104,7 +102,7 @@ async function logActivity(actionType, bookTitle, imageUrl = "", deletedBookData
             deletedData: deletedBookData,
             adminName: document.getElementById('sidebarProfileName').innerText,
             adminEmail: userEmail,
-            adminPhoto: "https://i.postimg.cc/cJdGqYHG/IMG-20260524-WA0004.jpg", // Force the multiverse logo always
+            adminPhoto: "https://i.postimg.cc/cJdGqYHG/IMG-20260524-WA0004.jpg",
             timestamp: new Date().getTime(),
             dateStr: new Date().toLocaleString('en-GB', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute:'2-digit' })
         });
@@ -113,33 +111,23 @@ async function logActivity(actionType, bookTitle, imageUrl = "", deletedBookData
 
 window.addEventListener('resize', resizeCanvas); resizeCanvas(); animateHex(0);
 
-// 3. AUTH FLOW (FIXED: NO BLACK SCREEN, NEVER OVERWRITES SIDEBAR LOGO)
-let authChecked = false;
-let initialLoadDone = false;
+
+// 3. AUTH FLOW, LOADER, POPUP & RESTRICTIONS LOGIC
+let hasHandledInitialAuth = false;
 
 onAuthStateChanged(auth, async (user) => {
-    authChecked = true;
     
-    if (!initialLoadDone) {
-        const loader = document.getElementById("loaderScreen");
-        loader.style.opacity = "0";
-        setTimeout(() => { 
-            cancelAnimationFrame(animationId); 
-            loader.style.display = "none"; 
-        }, 600);
-        initialLoadDone = true;
-    }
-
     if (user) {
+        // User logged in
         let dName = user.displayName;
         if (!dName || dName.trim() === "") { dName = user.email.split('@')[0]; }
         document.getElementById('sidebarProfileName').innerText = dName;
-        // DELIBERATELY OMITTED user.photoURL so it ALWAYS STAYS AS THE DEFAULT MULTIVERSE LOGO.
         
         document.getElementById('menu-admin-panel').style.display = 'flex';
-        document.getElementById('loginOverlay').style.display = 'none'; 
-        document.getElementById('mainAppWrapper').style.display = 'block'; 
-        document.getElementById("popupOverlay").style.display = "flex";
+        
+        // Hide Login Overlay (if visible)
+        document.getElementById('loginOverlay').style.opacity = '0';
+        setTimeout(() => { document.getElementById('loginOverlay').style.display = 'none'; }, 500);
 
         if (user.email === SUPER_ADMIN_EMAIL) {
             window.IS_SUPER_ADMIN = true;
@@ -148,6 +136,7 @@ onAuthStateChanged(auth, async (user) => {
             document.getElementById('admTabManage').style.display = 'inline-flex';
             document.getElementById('admTabAnalytics').style.display = 'inline-flex';
             document.getElementById('adminTutorialEdit').style.display = 'block';
+            document.getElementById('addYtLinkContainer').style.display = 'flex'; // SUPER ADMIN SEES YT LINK
             
             const currentYearStr = new Date().getFullYear().toString();
             onSnapshot(doc(db, "download_stats", currentYearStr), (docSnap) => {
@@ -163,15 +152,35 @@ onAuthStateChanged(auth, async (user) => {
             });
 
         } else {
+            // NORMAL USER RESTRICTIONS APPLIED HERE
             window.IS_SUPER_ADMIN = false;
             document.getElementById('sidebarRoleText').innerText = "Verified User";
             
             document.getElementById('admTabManage').style.display = 'none';
             document.getElementById('admTabAnalytics').style.display = 'none';
             document.getElementById('adminTutorialEdit').style.display = 'none';
+            document.getElementById('addYtLinkContainer').style.display = 'none'; // NORMAL USER WONT SEE YT LINK
             switchAdminTab('add');
         }
 
+        // Fire Loader -> then App -> then WhatsApp Popup
+        if(!hasHandledInitialAuth) {
+            const loader = document.getElementById("loaderScreen");
+            loader.style.display = "flex";
+            setTimeout(() => { loader.style.opacity = "1"; }, 50);
+
+            setTimeout(() => {
+                loader.style.opacity = "0";
+                setTimeout(() => { 
+                    loader.style.display = "none"; 
+                    document.getElementById('mainAppWrapper').style.display = 'block'; 
+                    document.getElementById("popupOverlay").style.display = "flex";
+                    hasHandledInitialAuth = true;
+                }, 600);
+            }, 2500); // 2.5 seconds loader animation time
+        }
+
+        // Setup db listeners
         onSnapshot(doc(db, "settings", "global"), (docSnap) => {
             if (docSnap.exists() && docSnap.data().tutorialVideoUrl) {
                 const embedUrl = getYouTubeEmbedUrl(docSnap.data().tutorialVideoUrl);
@@ -201,14 +210,20 @@ onAuthStateChanged(auth, async (user) => {
             const sBook = new URLSearchParams(window.location.search).get('book');
             if(sBook) window.openDownloadPage(sBook, true);
         });
+
     } else {
+        // USER IS NOT LOGGED IN -> IMMEDIATELY SHOW LOGIN PAGE
         window.IS_SUPER_ADMIN = false;
+        hasHandledInitialAuth = false;
+        
+        document.getElementById('loaderScreen').style.display = 'none';
         document.getElementById('mainAppWrapper').style.display = 'none';
-        document.getElementById('loginOverlay').style.display = 'flex';
-        setTimeout(() => { document.getElementById('loginOverlay').style.opacity = '1'; }, 50); 
+        
+        const loginOverlay = document.getElementById('loginOverlay');
+        loginOverlay.style.display = 'flex';
+        setTimeout(() => { loginOverlay.style.opacity = '1'; }, 50); 
     }
 });
-
 
 document.getElementById('loginForm').addEventListener('submit', async (e) => {
     e.preventDefault(); 
@@ -230,7 +245,7 @@ document.getElementById('googleSignInBtn').addEventListener('click', async () =>
         await signInWithPopup(auth, provider); 
         showToast("Google Login Successful!");
     } catch(err) { 
-        showToast("Failed: Google Sign-In Error. Check Rules."); 
+        showToast("Failed: Google Sign-In Error."); 
     } 
 });
 
@@ -410,10 +425,34 @@ window.updateTutorialLink = async function() {
     } 
 }
 
+// SUBMIT RESTRICTIONS FOR NORMAL USERS IMPLEMENTED HERE
 document.getElementById('addBookForm').addEventListener('submit', async (e) => {
     e.preventDefault(); 
-    const titleInput = document.getElementById('inTitle').value; const imgInput = document.getElementById('inImage').value;
-    const newBook = { title: titleInput, author: document.getElementById('inAuthor').value, image: imgInput, year: document.getElementById('inYear').value, lang: document.getElementById('inLang').value, exams: document.getElementById('inExams').value, pdfLink: document.getElementById('inPdfUrl').value, ytLink: document.getElementById('inYtUrl').value, dateAdded: new Date().toLocaleDateString('en-GB').toUpperCase(), createdAt: new Date().getTime() };
+    const titleInput = document.getElementById('inTitle').value; 
+    const imgInput = document.getElementById('inImage').value;
+    const pdfUrlInput = document.getElementById('inPdfUrl').value;
+    const ytUrlInput = document.getElementById('inYtUrl').value;
+
+    // Google Drive Link Check for normal users
+    if (!window.IS_SUPER_ADMIN) {
+        if (!pdfUrlInput.includes('drive.google.com')) {
+            showToast("Failed: You can only upload Google Drive links!");
+            return;
+        }
+    }
+
+    const newBook = { 
+        title: titleInput, 
+        author: document.getElementById('inAuthor').value, 
+        image: imgInput, 
+        year: document.getElementById('inYear').value, 
+        lang: document.getElementById('inLang').value, 
+        exams: document.getElementById('inExams').value, 
+        pdfLink: pdfUrlInput, 
+        ytLink: window.IS_SUPER_ADMIN ? ytUrlInput : "", // normal users can't upload yt link
+        dateAdded: new Date().toLocaleDateString('en-GB').toUpperCase(), 
+        createdAt: new Date().getTime() 
+    };
     try { 
         await addDoc(collection(db, "books"), newBook); 
         await logActivity("ADD", titleInput, imgInput);
@@ -529,7 +568,6 @@ function updateAdminCharts(dlDataArray = [0,0,0,0,0,0,0,0,0,0,0,0]) {
     if(ctxDownloads) { if(myDownloadsChart) myDownloadsChart.destroy(); myDownloadsChart = new Chart(ctxDownloads, { type: 'line', data: { labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'], datasets: [{ label: `Downloads`, data: dlDataArray, borderColor: '#10b981', backgroundColor: 'rgba(16, 185, 129, 0.2)', borderWidth: 2, fill: true }] }, options: { responsive: true, maintainAspectRatio: false } }); }
 }
 
-// RESTORED & ENHANCED ACTIVITY LOGS RENDER FUNCTION
 function renderLogs() {
     const tbody = document.getElementById('logsTableBody'); 
     if(!tbody) return;
@@ -543,8 +581,6 @@ function renderLogs() {
         else if (log.action === 'RESTORE') { badge = `<span class="log-badge log-restore"><i class="fas fa-trash-restore"></i> Restored</span>`; }
         
         let img = log.image ? `<img src="${log.image}" class="log-table-img" onerror="this.src='https://via.placeholder.com/40x55?text=Img'">` : ''; 
-        
-        // Use static fallback for email if not present, but use the saved correct email if available.
         let displayEmail = log.adminEmail || "admin@multiverse.com";
         
         htmlString += `<tr>
