@@ -93,18 +93,18 @@ const currentQuoteIndex = todayDays % quotes.length;
 document.getElementById('daily-quote-text').innerHTML = `<i class="fas fa-quote-left" style="color: rgba(255,255,255,0.3); margin-right:5px;"></i> ${quotes[currentQuoteIndex].text}`;
 document.getElementById('daily-quote-author').innerText = `— ${quotes[currentQuoteIndex].author}`;
 
-// UPDATED LOG ACTIVITY FUNCTION (WITH PHOTO & EMAIL)
+// UPDATED LOG ACTIVITY FUNCTION (ALWAYS CATCHES CORRECT EMAIL)
 async function logActivity(actionType, bookTitle, imageUrl = "", deletedBookData = null) {
     try {
-        const user = auth.currentUser;
+        const userEmail = (auth.currentUser && auth.currentUser.email) ? auth.currentUser.email : "admin@multiverse.com";
         await addDoc(collection(db, "activity_logs"), {
             action: actionType,
             bookTitle: bookTitle,
             image: imageUrl,
             deletedData: deletedBookData,
             adminName: document.getElementById('sidebarProfileName').innerText,
-            adminEmail: user ? user.email : "Unknown",
-            adminPhoto: user && user.photoURL ? user.photoURL : "https://i.postimg.cc/cJdGqYHG/IMG-20260524-WA0004.jpg",
+            adminEmail: userEmail,
+            adminPhoto: "https://i.postimg.cc/cJdGqYHG/IMG-20260524-WA0004.jpg", // Force the multiverse logo always
             timestamp: new Date().getTime(),
             dateStr: new Date().toLocaleString('en-GB', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute:'2-digit' })
         });
@@ -113,14 +113,13 @@ async function logActivity(actionType, bookTitle, imageUrl = "", deletedBookData
 
 window.addEventListener('resize', resizeCanvas); resizeCanvas(); animateHex(0);
 
-// 3. AUTH FLOW (FIXED: NO BLACK SCREEN)
+// 3. AUTH FLOW (FIXED: NO BLACK SCREEN, NEVER OVERWRITES SIDEBAR LOGO)
 let authChecked = false;
 let initialLoadDone = false;
 
 onAuthStateChanged(auth, async (user) => {
     authChecked = true;
     
-    // Remove loader immediately and smoothly upon checking auth state
     if (!initialLoadDone) {
         const loader = document.getElementById("loaderScreen");
         loader.style.opacity = "0";
@@ -135,10 +134,9 @@ onAuthStateChanged(auth, async (user) => {
         let dName = user.displayName;
         if (!dName || dName.trim() === "") { dName = user.email.split('@')[0]; }
         document.getElementById('sidebarProfileName').innerText = dName;
-        document.getElementById('sidebarProfileImg').src = user.photoURL || "https://i.postimg.cc/cJdGqYHG/IMG-20260524-WA0004.jpg";
+        // DELIBERATELY OMITTED user.photoURL so it ALWAYS STAYS AS THE DEFAULT MULTIVERSE LOGO.
+        
         document.getElementById('menu-admin-panel').style.display = 'flex';
-
-        // Set layout directly to app
         document.getElementById('loginOverlay').style.display = 'none'; 
         document.getElementById('mainAppWrapper').style.display = 'block'; 
         document.getElementById("popupOverlay").style.display = "flex";
@@ -158,7 +156,6 @@ onAuthStateChanged(auth, async (user) => {
                 updateAdminCharts(dlData);
             });
 
-            // Activity Logs Listener for Super Admin
             onSnapshot(query(collection(db, "activity_logs"), orderBy("timestamp", "desc")), (snapshot) => {
                 dbLogs = [];
                 snapshot.forEach(doc => { let l = doc.data(); l.id = doc.id; dbLogs.push(l); });
@@ -546,15 +543,17 @@ function renderLogs() {
         else if (log.action === 'RESTORE') { badge = `<span class="log-badge log-restore"><i class="fas fa-trash-restore"></i> Restored</span>`; }
         
         let img = log.image ? `<img src="${log.image}" class="log-table-img" onerror="this.src='https://via.placeholder.com/40x55?text=Img'">` : ''; 
-        let adminImg = log.adminPhoto ? log.adminPhoto : "https://i.postimg.cc/cJdGqYHG/IMG-20260524-WA0004.jpg";
+        
+        // Use static fallback for email if not present, but use the saved correct email if available.
+        let displayEmail = log.adminEmail || "admin@multiverse.com";
         
         htmlString += `<tr>
             <td>
                 <div class="log-admin-info">
-                    <img src="${adminImg}">
+                    <img src="https://i.postimg.cc/cJdGqYHG/IMG-20260524-WA0004.jpg" alt="Admin">
                     <div>
                         <div style="font-weight: 800; color: #fff; text-transform: uppercase;">${log.adminName || "Admin"}</div>
-                        <div style="font-size: 10px; color: #a1a1aa; font-weight: 600;">${log.adminEmail || "Unknown Email"}</div>
+                        <div style="font-size: 10px; color: #a1a1aa; font-weight: 600;">${displayEmail}</div>
                     </div>
                 </div>
             </td>
