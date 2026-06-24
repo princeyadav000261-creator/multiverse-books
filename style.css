@@ -57,19 +57,23 @@ header { display: flex; align-items: center; justify-content: space-between; pad
 
 .sidebar { position: absolute; top: 0; left: 0; width: 85%; max-width: 330px; height: 100%; height: 100dvh; background-color: var(--spidy-sidebar-bg); z-index: 30; transform: translateX(-100%); transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1); display: flex; flex-direction: column; box-shadow: 5px 0 15px rgba(0,0,0,0.5); overflow: hidden; border-right: 1px solid var(--border-color); }
 .sidebar.active { transform: translateX(0); } 
-.sidebar-header-new { display: flex; align-items: center; padding: 20px 20px; border-bottom: 1px solid var(--border-color); flex-shrink: 0; }
-.profile-img { width: 46px; height: 46px; border-radius: 12px; object-fit: cover; box-shadow: 0 0 15px rgba(123, 138, 255, 0.4); flex-shrink: 0; background: #fff;}
-.profile-info { margin-left: 14px; flex-grow: 1; min-width: 0; display: flex; flex-direction: column; justify-content: center; }
-.profile-name { color: var(--text-primary); font-size: 18px; font-weight: 1000; letter-spacing: 0.5px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 
-.sidebar-scroll-area { flex: 1; overflow-y: auto; overflow-x: hidden; padding-bottom: 15px; }
+/* Sized down Sidebar header to save space */
+.sidebar-header-new { display: flex; align-items: center; padding: 15px 20px; border-bottom: 1px solid var(--border-color); flex-shrink: 0; }
+.profile-img { width: 42px; height: 42px; border-radius: 12px; object-fit: cover; box-shadow: 0 0 15px rgba(123, 138, 255, 0.4); flex-shrink: 0; background: #fff;}
+.profile-info { margin-left: 14px; flex-grow: 1; min-width: 0; display: flex; flex-direction: column; justify-content: center; }
+.profile-name { color: var(--text-primary); font-size: 16px; font-weight: 1000; letter-spacing: 0.5px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+.sidebar-scroll-area { flex: 1; overflow-y: auto; overflow-x: hidden; padding-bottom: 10px; }
 .sidebar-scroll-area::-webkit-scrollbar { display: none; }
 
-.menu-section { padding: 18px 20px 8px; }
-.section-title { color: var(--spidy-text-small); font-size: 11px; font-weight: 700; letter-spacing: 1px; margin-bottom: 12px; }
-.menu-item { display: flex; align-items: center; padding: 14px 18px; border-radius: 14px; text-decoration: none; margin-bottom: 10px; cursor: pointer; transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); border: 1px solid transparent; }
-.menu-item i { font-size: 18px; width: 30px; color: var(--spidy-text-muted); transition: 0.3s; }
-.menu-item span { font-size: 14.5px; font-weight: 600; color: var(--spidy-text-muted); transition: 0.3s; }
+/* Adjusted Menu item padding, margins and sizes so all items fit on screen */
+.menu-section { padding: 12px 20px 4px; }
+.section-title { color: var(--spidy-text-small); font-size: 10.5px; font-weight: 700; letter-spacing: 1px; margin-bottom: 8px; }
+.menu-item { display: flex; align-items: center; padding: 12px 16px; border-radius: 12px; text-decoration: none; margin-bottom: 8px; cursor: pointer; transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); border: 1px solid transparent; }
+.menu-item i { font-size: 16px; width: 26px; color: var(--spidy-text-muted); transition: 0.3s; }
+.menu-item span { font-size: 13.5px; font-weight: 600; color: var(--spidy-text-muted); transition: 0.3s; }
+
 .menu-item.normal { background-color: rgba(255, 255, 255, 0.02); border: 1px solid rgba(255, 255, 255, 0.04); box-shadow: inset 0 0 10px rgba(255, 255, 255, 0.01); }
 .menu-item.normal:hover { background-color: rgba(255, 255, 255, 0.06); border-color: rgba(255, 255, 255, 0.15); transform: translateX(4px); box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3); } 
 .menu-item.normal:hover span, .menu-item.normal:hover i { color: var(--text-primary); }
@@ -77,18 +81,18 @@ header { display: flex; align-items: center; justify-content: space-between; pad
 .menu-item.active i { color: var(--spidy-accent-blue); text-shadow: 0 0 10px rgba(123, 138, 255, 0.5); }
 .menu-item.active span { color: var(--text-primary); text-shadow: 0 0 8px rgba(255, 255, 255, 0.3); }
 
-.pro-badge { margin-left: auto; background-color: #2D1B4E; color: #C28BFF !important; font-size: 8.5px; font-weight: 800 !important; padding: 3px 8px; border-radius: 6px; letter-spacing: 0.8px; text-transform: uppercase; border: none; box-shadow: none; }
+.pro-badge { margin-left: auto; background-color: #2D1B4E; color: #C28BFF !important; font-size: 8px; font-weight: 800 !important; padding: 3px 6px; border-radius: 6px; letter-spacing: 0.8px; text-transform: uppercase; border: none; box-shadow: none; }
 
-.card-link i.external { margin-left: auto; font-size: 12px; width: auto; opacity: 0.7; }
+.card-link i.external { margin-left: auto; font-size: 11px; width: auto; opacity: 0.7; }
 .card-whatsapp { background-color: var(--whatsapp-bg); box-shadow: inset 0 0 0 1px rgba(37, 211, 102, 0.1); } .card-whatsapp i, .card-whatsapp span { color: var(--whatsapp-green); }
 .card-telegram { background-color: var(--telegram-bg); box-shadow: inset 0 0 0 1px rgba(0, 136, 204, 0.1); } .card-telegram i, .card-telegram span { color: var(--telegram-blue); }
 .card-insta { background-color: var(--insta-bg); box-shadow: inset 0 0 0 1px rgba(225, 48, 108, 0.1); } .card-insta i, .card-insta span { color: var(--insta-pink); }
 .card-youtube { background-color: var(--youtube-bg); box-shadow: inset 0 0 0 1px rgba(255, 0, 0, 0.1); } .card-youtube i, .card-youtube span { color: var(--youtube-red); }
 
-.sidebar-footer { margin-top: 0; padding: 15px 20px 25px 20px; text-align: center; border-top: 1px solid rgba(255,255,255,0.03); flex-shrink: 0; background-color: var(--spidy-sidebar-bg); z-index: 10; position: relative; box-shadow: 0 -5px 15px rgba(0,0,0,0.2); }
-.system-status { display: flex; align-items: center; justify-content: center; gap: 8px; color: var(--text-primary); font-size: 11px; font-weight: 700; letter-spacing: 1px; margin-bottom: 6px; }
+.sidebar-footer { margin-top: 0; padding: 10px 20px 15px 20px; text-align: center; border-top: 1px solid rgba(255,255,255,0.03); flex-shrink: 0; background-color: var(--spidy-sidebar-bg); z-index: 10; position: relative; box-shadow: 0 -5px 15px rgba(0,0,0,0.2); }
+.system-status { display: flex; align-items: center; justify-content: center; gap: 8px; color: var(--text-primary); font-size: 10px; font-weight: 700; letter-spacing: 1px; margin-bottom: 6px; }
 .dot { width: 6px; height: 6px; background-color: #00ff66; border-radius: 50%; box-shadow: 0 0 8px #00ff66; animation: pulse 2s infinite; }
-.credits { color: var(--spidy-text-small); font-size: 9px; font-weight: 600; letter-spacing: 1px; }
+.credits { color: var(--spidy-text-small); font-size: 8.5px; font-weight: 600; letter-spacing: 1px; }
 @keyframes pulse { 0% { box-shadow: 0 0 0 0 rgba(0, 255, 102, 0.4); } 70% { box-shadow: 0 0 0 6px rgba(0, 255, 102, 0); } 100% { box-shadow: 0 0 0 0 rgba(0, 255, 102, 0); } }
 
 .premium-copyright { margin-top: auto; padding: 15px 10px; text-align: center; font-size: 9px; font-weight: 700; color: #ffffff; letter-spacing: 0.8px; text-transform: uppercase; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; display: flex; justify-content: center; align-items: center; background: linear-gradient(90deg, transparent, rgba(255,255,255,0.06), transparent); border-top: 1px solid var(--border-color); width: 100%; flex-shrink: 0; text-shadow: 0px 0px 8px rgba(255, 255, 255, 0.3); }
@@ -253,11 +257,11 @@ main::-webkit-scrollbar { display: none; }
 /* ------------------------------------------------------------------
    PREMIUM TRANSPARENT LOGIN CARD - CLOSABLE & CLEAN
 ------------------------------------------------------------------ */
-.close-login-btn { position: absolute; top: 25px; right: 25px; color: #fff; font-size: 26px; cursor: pointer; z-index: 1000; opacity: 0.7; transition: 0.3s; }
-.close-login-btn:hover { opacity: 1; transform: scale(1.1); }
+.close-login-btn { position: absolute; top: 20px; right: 20px; width: 42px; height: 42px; border-radius: 50%; background-color: transparent; border: 1px solid rgba(255, 255, 255, 0.15); color: #ffffff; font-size: 18px; display: flex; justify-content: center; align-items: center; cursor: pointer; z-index: 1000; transition: 0.2s ease; }
+.close-login-btn:hover { background-color: rgba(255, 255, 255, 0.08); transform: scale(1.05); }
 .login-container { position: fixed; inset: 0; z-index: 99999; display: flex; flex-direction: column; align-items: center; justify-content: center; background: rgba(5, 5, 8, 0.95); backdrop-filter: blur(10px); transition: opacity 0.5s ease; overflow-y: auto; }
-.login-content-wrapper { margin: auto; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 15px; width: 100%; max-width: 380px; position: relative; }
-.login-logo-glow { width: 75px; height: 75px; background: #fff; border-radius: 20px; display: flex; justify-content: center; align-items: center; box-shadow: 0 0 40px rgba(138, 43, 226, 0.4), inset 0 0 10px rgba(0,0,0,0.1); margin-bottom: 12px; padding: 4px; }
+.login-content-wrapper { margin: auto; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 15px; padding-top: 25px; width: 100%; max-width: 380px; position: relative; }
+.login-logo-glow { margin-top: -30px; width: 75px; height: 75px; background: #fff; border-radius: 20px; display: flex; justify-content: center; align-items: center; box-shadow: 0 0 40px rgba(138, 43, 226, 0.4), inset 0 0 10px rgba(0,0,0,0.1); margin-bottom: 12px; padding: 4px; }
 .login-logo-glow img { width: 100%; height: 100%; object-fit: cover; border-radius: 16px; border: 2px solid #52525b; }
 .login-title-small { color: #9d88ff; font-size: 12px; font-weight: 800; letter-spacing: 2px; text-transform: uppercase; }
 .login-title-large { color: #fff; font-size: 24px; font-weight: 900; margin-top: 4px; font-family: 'Poppins', sans-serif; letter-spacing: 1px; }
@@ -386,18 +390,18 @@ select.adm-input { appearance: none; -webkit-appearance: none; padding-right: 40
 }
 
 /* ------------------------------------------------------------------
-   YOUTUBE TUTORIAL CARDS (NATIVE LOOK)
+   YOUTUBE TUTORIAL CARDS (Clean Bordered Layout)
 ------------------------------------------------------------------ */
 .yt-card {
-    background-color: transparent;
-    border: none;
-    border-radius: 0; 
-    overflow: visible;
+    background-color: var(--bg-card);
+    border: 1px solid var(--border-color);
+    border-radius: 12px; 
+    overflow: hidden;
     cursor: pointer;
-    transition: transform 0.2s, opacity 0.2s;
+    transition: transform 0.2s, box-shadow 0.2s;
     display: flex;
     flex-direction: column;
-    box-shadow: none;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.2);
     width: 100%;
     max-width: 350px; 
     flex-shrink: 0;
@@ -405,15 +409,14 @@ select.adm-input { appearance: none; -webkit-appearance: none; padding-right: 40
     margin-bottom: 20px;
 }
 
-.yt-card:active { transform: scale(0.97); opacity: 0.8; }
+.yt-card:active { transform: scale(0.97); }
 
 .yt-thumbnail-wrapper {
     position: relative;
     width: 100%;
     padding-top: 56.25%; /* 16:9 Aspect Ratio */
-    background: #111;
-    border-radius: 12px; /* Native rounded thumbnail */
-    overflow: hidden;
+    background: #000;
+    border-radius: 0; /* Reset since parent container holds radius */
 }
 
 .yt-thumbnail-img {
@@ -439,7 +442,7 @@ select.adm-input { appearance: none; -webkit-appearance: none; padding-right: 40
 }
 
 .yt-info-box {
-    padding: 12px 5px 0 5px; /* Aligned with image edges */
+    padding: 12px;
     background: transparent;
 }
 
