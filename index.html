@@ -5,7 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>MULTIVERSE BOOKS</title>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" rel="stylesheet">
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <link rel="stylesheet" href="./style.css">
 </head>
 <body>
@@ -25,6 +24,7 @@
     </div>
 
     <div id="loginOverlay" class="login-container" style="display: none; opacity: 0;">
+        <div class="close-login-btn" onclick="closeLoginOverlay()"><i class="fas fa-times"></i></div>
         <div class="login-content-wrapper">
             <div class="login-logo-glow">
                 <img src="https://i.postimg.cc/cJdGqYHG/IMG-20260524-WA0004.jpg" alt="Multiverse Logo">
@@ -69,7 +69,7 @@
                 <h1> 𝗠𝘂𝗹𝘁𝗶𝘃𝗲𝗿𝘀𝗲 𝗕𝗼𝗼𝗸𝘀 𝗢𝗳𝗳𝗶𝗰𝗶𝗮𝗹
                     <svg class="verified-badge-ui" viewBox="0 0 100 100"><defs><linearGradient id="pG1" x1="0%" y1="0%" x2="0%" y2="100%"><stop offset="0%" stop-color="#55bbf8" /><stop offset="100%" stop-color="#0a7bd2" /></linearGradient></defs><g fill="url(#pG1)"><circle cx="50" cy="15" r="14" /><circle cx="50" cy="15" r="14" transform="rotate(30 50 50)" /><circle cx="50" cy="15" r="14" transform="rotate(60 50 50)" /><circle cx="50" cy="15" r="14" transform="rotate(90 50 50)" /><circle cx="50" cy="15" r="14" transform="rotate(120 50 50)" /><circle cx="50" cy="15" r="14" transform="rotate(150 50 50)" /><circle cx="50" cy="15" r="14" transform="rotate(180 50 50)" /><circle cx="50" cy="15" r="14" transform="rotate(210 50 50)" /><circle cx="50" cy="15" r="14" transform="rotate(240 50 50)" /><circle cx="50" cy="15" r="14" transform="rotate(270 50 50)" /><circle cx="50" cy="15" r="14" transform="rotate(300 50 50)" /><circle cx="50" cy="15" r="14" transform="rotate(330 50 50)" /><circle cx="50" cy="50" r="33" /></g><path d="M33 52 L43 62 L67 36" fill="none" stroke="#ffffff" stroke-width="8" stroke-linecap="round" stroke-linejoin="round" filter="drop-shadow(0px 3px 2px rgba(0,0,0,0.3))" /></svg>
                 </h1>
-                <p> 𝐒𝐭𝐮𝐝𝐲 𝐦𝐚𝐭𝐞𝐫𝐢𝐚𝐥 𝐤𝐞 𝐥𝐢𝐲𝐞 𝐢𝐝𝐡𝐚𝐫-𝐮𝐝𝐡𝐚𝐫 𝐛𝐡𝐚𝐭𝐚𝐤𝐧𝐚 𝐜𝐡𝐡𝐨𝐝𝐨! 📚 𝐀𝐛 𝐦𝐢𝐥𝐞𝐠𝐚 𝐬𝐚𝐚𝐫𝐚 𝐜𝐨𝐧𝐭𝐞𝐧𝐭 𝐛𝐢𝐥𝐤𝐮𝐥 𝐅𝐑𝐄𝐄. 𝐈𝐧𝐬𝐭𝐚𝐧𝐭 𝐮𝐩𝐝𝐚𝐭𝐞𝐬 𝐚𝐮𝐫 𝐛𝐞𝐬𝐭 𝐛𝐨𝐨𝐤𝐬 𝐩𝐚𝐚𝐧𝐞 𝐤𝐞 𝐥𝐢𝐲𝐞 𝐚𝐚𝐣 𝐡𝐢 𝐡𝐮𝐦𝐚𝐫𝐚 𝐖𝐡𝐚𝐭𝐬𝐀𝐩হাম্ম 𝐜𝐡𝐚𝐧𝐧𝐞𝐥 𝐣𝐨𝐢𝐧 𝐤𝐚𝐫𝐞. ☟☟</p>
+                <p> 𝐒𝐭𝐮𝐝𝐲 𝐦𝐚𝐭𝐞𝐫𝐢𝐚𝐥 𝐤𝐞 𝐥𝐢𝐲𝐞 𝐢𝐝𝐡𝐚𝐫-𝐮𝐝𝐡𝐚𝐫 𝐛𝐡𝐚𝐭𝐚𝐤𝐧𝐚 𝐜𝐡𝐡𝐨𝐝𝐨! 📚 𝐀𝐛 𝐦𝐢𝐥𝐞𝐠𝐚 𝐬𝐚𝐚𝐫𝐚 𝐜𝐨𝐧𝐭𝐞𝐧𝐭 𝐛𝐢𝐥𝐤𝐮𝐥 𝐅𝐑𝐄𝐄. 𝐈𝐧𝐬𝐭𝐚𝐧𝐭 𝐮𝐩𝐝𝐚𝐭𝐞𝐬 𝐚𝐮𝐫 𝐛𝐞𝐬𝐭 𝐛𝐨𝐨𝐤𝐬 𝐩𝐚𝐚𝐧𝐞 𝐤𝐞 𝐥𝐢𝐲𝐞 𝐚𝐚𝐣 𝐡𝐢 𝐡𝐮𝐦𝐚𝐫𝐚 𝐖𝐡𝐚𝐭𝐬𝐀𝐩𝐩 𝐜𝐡𝐚𝐧𝐧𝐞𝐥 𝐣𝐨𝐢𝐧 𝐤𝐚𝐫𝐞. ☟☟</p>
                 <button class="join-btn" onclick="joinChannel()"><img src="https://upload.wikimedia.org/wikipedia/commons/6/6b/WhatsApp.svg" alt="WhatsApp" oncontextmenu="return false;" draggable="false"> WhatsApp Channel</button>
                 <div class="later" onclick="closePopup()">MAYBE LATER</div>
             </div>
@@ -96,8 +96,8 @@
                 <div class="sidebar-header-new">
                     <img src="https://i.postimg.cc/cJdGqYHG/IMG-20260524-WA0004.jpg" alt="Profile" class="profile-img" id="sidebarProfileImg" oncontextmenu="return false;" draggable="false">
                     <div class="profile-info">
-                        <div class="profile-name" id="sidebarProfileName">MULTIVERSE BOOKS</div>
-                        <div style="font-size: 10px; color: #10b981; font-weight: bold; margin-top: 2px;" id="sidebarRoleText">Active User</div>
+                        <div class="profile-name" id="sidebarProfileName">Guest User</div>
+                        <div style="font-size: 10px; color: #10b981; font-weight: bold; margin-top: 2px;" id="sidebarRoleText">Please Login</div>
                     </div>
                 </div>
 
@@ -106,7 +106,7 @@
                         <div class="section-title">MAIN MENU</div>
                         <a href="#" class="menu-item active" id="menu-home"><i class="fas fa-home"></i><span>Home</span></a>
                         <a href="#" class="menu-item normal" id="menu-about-dev"><i class="fas fa-user-tie"></i><span>About Developer</span><span class="pro-badge">PRO</span></a>
-                        <a href="#" class="menu-item normal" id="menu-admin-panel" style="display: none;"><i class="fas fa-cloud-upload-alt"></i><span id="uploadMenuText">Upload Books</span></a>
+                        <a href="#" class="menu-item normal" id="menu-admin-panel"><i class="fas fa-cloud-upload-alt"></i><span id="uploadMenuText">Upload Books</span></a>
                         <a href="#" class="menu-item normal" id="menu-dmca"><i class="fas fa-shield-halved"></i><span>DMCA Request</span></a>
                     </div>
 
@@ -236,14 +236,6 @@
                         <a href="https://t.me/Multiverse_Contact_Bot" target="_blank" class="dmca-contact-link"><i class="fab fa-telegram-plane"></i> @Multiverse_Contact_Bot</a>
                         <p style="margin-top: 15px; font-weight: bold; color: #a1a1aa; font-size: 0.75rem;">⏱ Review Time: 24–48 Hours</p>
                     </div>
-                    <div class="dmca-section">
-                        <h2 class="dmca-section-title" style="color: #f59e0b;"><span class="dmca-mini-icon icon-shield"><i class="fas fa-shield-alt"></i></span>Important Notice</h2>
-                        <p>The materials shared on this platform are intended for educational, research, review and reference purposes only. Users are encouraged to support authors and publishers by purchasing original books whenever possible.</p>
-                    </div>
-                    <div class="dmca-section">
-                        <h2 class="dmca-section-title" style="color: #ec4899;"><span class="dmca-mini-icon" style="background: linear-gradient(135deg, #a855f7, #ec4899);"><i class="fas fa-user-shield"></i></span>User Responsibility</h2>
-                        <p>Users are solely responsible for how they access, download, share or use any content available through this platform. This website and its administrators cannot be held responsible for any misuse or unauthorized use of the materials.</p>
-                    </div>
                 </div>
                 <div class="premium-copyright">© 2026 MULTIVERSE BOOKS <span style="margin: 0 5px;">|</span> MADE WITH <i class="fas fa-heart" style="color: #ff4757; margin: 0 3px;"></i> BY MADxPRINCE</div>
             </div>
@@ -263,7 +255,7 @@
                     <button class="adm-tab-btn active" id="admTabAdd" onclick="switchAdminTab('add')"><i class="fas fa-plus"></i> Add Book</button>
                     <button class="adm-tab-btn" id="admTabVideo" onclick="switchAdminTab('tutorial')"><i class="fas fa-video"></i> Tutorial Video</button>
                     <button class="adm-tab-btn" id="admTabManage" onclick="switchAdminTab('manage')" style="display:none;"><i class="fas fa-list"></i> Manage</button>
-                    <button class="adm-tab-btn" id="admTabAnalytics" onclick="switchAdminTab('analytics')" style="display:none;"><i class="fas fa-chart-pie"></i> Stats & Logs</button>
+                    <button class="adm-tab-btn" id="admTabAnalytics" onclick="switchAdminTab('analytics')" style="display:none;"><i class="fas fa-list-alt"></i> System Logs</button>
                 </div>
 
                 <div class="adm-content-area">
@@ -295,18 +287,17 @@
                     </div>
 
                     <div id="sectionTutorial" class="adm-section">
-                        <div class="adm-card">
-                            <div class="adm-card-title"><i class="fas fa-video"></i> Tutorial Videos Collection</div>
-                            
-                            <div id="adminTutorialEdit" style="display: none; padding-bottom:20px; border-bottom: 1px solid rgba(255,255,255,0.1);">
-                                <h4 style="margin-bottom: 10px; color: #10b981; font-weight: 800;"><i class="fas fa-plus-circle"></i> Add New YouTube/Shorts Video</h4>
-                                <input type="url" id="newTutorialUrl" class="adm-input" placeholder="Paste YouTube OR Shorts URL Here" style="margin-bottom:10px;">
-                                <input type="text" id="newTutorialViews" class="adm-input" placeholder="Custom Views (e.g. 1.2M, 500K)" style="margin-bottom:10px;">
-                                <button type="button" class="adm-submit-btn" onclick="addTutorialLink()" style="background:#10b981; color: #fff;"><i class="fas fa-upload"></i> Add Video Card</button>
-                            </div>
+                        <div class="adm-card" style="margin-bottom: 10px; border-bottom: none;">
+                            <div class="adm-card-title" style="border-bottom:none; margin-bottom: 0; padding-bottom: 0;"><i class="fas fa-video"></i> Tutorial Videos Collection</div>
+                        </div>
+                        <div class="adm-card" id="adminTutorialEdit" style="display: none; margin-bottom: 20px;">
+                            <h4 style="margin-bottom: 10px; color: #10b981; font-weight: 800;"><i class="fas fa-plus-circle"></i> Add New YouTube/Shorts Video</h4>
+                            <input type="url" id="newTutorialUrl" class="adm-input" placeholder="Paste YouTube OR Shorts URL Here" style="margin-bottom:10px;">
+                            <input type="text" id="newTutorialViews" class="adm-input" placeholder="Custom Views (e.g. 1.2M, 500K)" style="margin-bottom:10px;">
+                            <button type="button" class="adm-submit-btn" onclick="addTutorialLink()" style="background:#10b981; color: #fff;"><i class="fas fa-upload"></i> Add Video Card</button>
+                        </div>
 
-                            <div id="adminTutorialsGrid" style="display: flex; gap: 15px; flex-wrap: wrap; margin-top: 20px; justify-content: center;">
-                                </div>
+                        <div id="adminTutorialsGrid" style="display: flex; gap: 15px; flex-wrap: wrap; margin-top: 15px; justify-content: center; padding: 0 10px;">
                         </div>
                     </div>
 
@@ -338,17 +329,6 @@
 
                     <div id="sectionAnalytics" class="adm-section">
                         <div class="adm-card">
-                            <div class="adm-card-title"><i class="fas fa-chart-pie"></i> Real-Time Stats</div>
-                            <div style="display:flex; flex-direction:column; gap:20px;">
-                                <div style="background: rgba(0,0,0,0.5); padding: 15px; border-radius: 12px; height: 250px;">
-                                    <canvas id="booksAddedChart"></canvas>
-                                </div>
-                                <div style="background: rgba(0,0,0,0.5); padding: 15px; border-radius: 12px; height: 250px;"><canvas id="langChart"></canvas></div>
-                                <div style="background: rgba(0,0,0,0.5); padding: 15px; border-radius: 12px; height: 250px;"><canvas id="downloadsChart"></canvas></div>
-                            </div>
-                        </div>
-
-                        <div class="adm-card" style="margin-top: 20px;">
                             <div class="adm-card-title"><i class="fas fa-shield-alt"></i> System Activity Logs</div>
                             <div style="overflow-x: auto;">
                                 <table class="adm-table">
@@ -397,19 +377,21 @@
 
     <script>
         (function() {
-            const isLogged = localStorage.getItem('isUserLoggedIn') === 'true';
+            // Initial load check for deep link
             const isDeepLink = new URLSearchParams(window.location.search).has('book');
-
-            if (!isLogged) {
-                document.getElementById('loaderScreen').style.display = 'none';
-                document.getElementById('loginOverlay').style.display = 'flex';
-                setTimeout(() => document.getElementById('loginOverlay').style.opacity = '1', 10);
-            } else if (isDeepLink) {
+            if (isDeepLink) {
                 document.getElementById('loaderScreen').style.display = 'none';
                 document.getElementById('mainAppWrapper').style.display = 'block';
                 document.getElementById('downloadModal').style.display = 'flex';
             }
         })();
+
+        // Add a simple function to close the login overlay
+        window.closeLoginOverlay = function() {
+            const loginOverlay = document.getElementById('loginOverlay');
+            loginOverlay.style.opacity = '0';
+            setTimeout(() => { loginOverlay.style.display = 'none'; }, 500);
+        };
     </script>
 
     <script type="module" src="./app.js"></script>
