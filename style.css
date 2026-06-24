@@ -300,7 +300,7 @@ main::-webkit-scrollbar { display: none; }
 .no-results-card { 
     background: var(--bg-card); /* Matched Premium Blue background */
     border: 1px solid var(--border-color); 
-    padding: 25px 20px 15px; /* Reduced bottom padding/height */
+    padding: 15px 20px 10px; /* Reduced bottom padding/height */
     border-radius: 20px; 
     text-align: center; 
     width: 100%; 
@@ -312,7 +312,7 @@ main::-webkit-scrollbar { display: none; }
 }
 .no-results-icon { font-size: 55px; margin-bottom: 20px; display: inline-block; background: linear-gradient(180deg, #60a5fa, #2563eb); -webkit-background-clip: text; -webkit-text-fill-color: transparent; filter: drop-shadow(0 10px 15px rgba(59, 130, 246, 0.4)); }
 .no-results-title { font-size: 18px; font-weight: 800; color: #ffffff; margin-bottom: 12px; letter-spacing: 0.5px; }
-.no-results-desc { font-size: 13px; color: #8c97ac; line-height: 1.5; margin-bottom: 12px; max-width: 250px; } /* Reduced margin */
+.no-results-desc { font-size: 13px; color: #8c97ac; line-height: 1.5; margin-bottom: 6px; max-width: 250px; } /* Reduced margin */
 .no-results-badge { display: inline-flex; align-items: center; justify-content: center; background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.08); padding: 10px 20px; border-radius: 25px; font-size: 10px; font-weight: 800; color: #fff; letter-spacing: 1px; text-transform: uppercase; }
 
 /* ------------------------------------------------------------------
