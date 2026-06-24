@@ -23,12 +23,8 @@ let activeBookSlug = "";
 let activeBookTitle = "";
 
 window.IS_SUPER_ADMIN = false;
+window.isUserLoggedIn = false; // New Global State
 const SUPER_ADMIN_EMAIL = "princeyadav000261@gmail.com"; 
-
-let myLangChart = null; 
-let myDownloadsChart = null;
-let myBooksChart = null; 
-window.currentDlData = [0,0,0,0,0,0,0,0,0,0,0,0]; 
 
 let adminFilteredBooks = [];
 let adminCurrentPage = 1;
@@ -39,7 +35,7 @@ let dbLogs = [];
 const urlParamsCheck = new URLSearchParams(window.location.search);
 window.isDeepLinkLoad = urlParamsCheck.has('book'); 
 
-// CANVAS LOADER
+// CANVAS LOADER (Original implementation remains)
 const canvas = document.getElementById('networkCanvas');
 const ctx = canvas.getContext('2d');
 let width, height;
@@ -120,6 +116,15 @@ window.addEventListener('resize', resizeCanvas); resizeCanvas(); animateHex(0);
 
 let isInitialLoad = true;
 const appStartTime = Date.now();
+let popupShown = false;
+
+// Popup Function Logic (Smart Scroll/Time Based)
+function triggerWhatsAppPopup() {
+    if(!popupShown && !window.isDeepLinkLoad) {
+        popupShown = true;
+        document.getElementById("popupOverlay").style.display = "flex";
+    }
+}
 
 function showAppAndPopup() {
     document.getElementById('mainAppWrapper').style.display = 'block'; 
@@ -129,20 +134,21 @@ function showAppAndPopup() {
     setTimeout(() => { 
         loader.style.display = "none"; 
         cancelAnimationFrame(animationId);
-        if(!window.isDeepLinkLoad) {
-            document.getElementById("popupOverlay").style.display = "flex";
-        }
+        
+        // Agar user pehle 4 sec me scroll nahi karta, automatically dikha do.
+        setTimeout(triggerWhatsAppPopup, 4000); 
     }, 600);
 }
 
+// Global Auth State
 onAuthStateChanged(auth, async (user) => {
     if (user) {
+        window.isUserLoggedIn = true;
         localStorage.setItem('isUserLoggedIn', 'true');
 
         let dName = user.displayName;
         if (!dName || dName.trim() === "") { dName = user.email.split('@')[0]; }
         document.getElementById('sidebarProfileName').innerText = dName;
-        document.getElementById('menu-admin-panel').style.display = 'flex';
 
         if (user.email === SUPER_ADMIN_EMAIL) {
             window.IS_SUPER_ADMIN = true;
@@ -155,15 +161,6 @@ onAuthStateChanged(auth, async (user) => {
             document.getElementById('addYtLinkContainer').style.display = 'flex'; 
             document.getElementById('editYtLinkContainer').style.display = 'flex'; 
             
-            const currentYearStr = new Date().getFullYear().toString();
-            onSnapshot(doc(db, "download_stats", currentYearStr), (docSnap) => {
-                if (docSnap.exists()) { 
-                    const d = docSnap.data(); 
-                    window.currentDlData = [ d.jan||0, d.feb||0, d.mar||0, d.apr||0, d.may||0, d.jun||0, d.jul||0, d.aug||0, d.sep||0, d.oct||0, d.nov||0, d.dec||0 ]; 
-                }
-                updateAdminCharts();
-            });
-
             onSnapshot(query(collection(db, "activity_logs"), orderBy("timestamp", "desc")), (snapshot) => {
                 dbLogs = [];
                 snapshot.forEach(doc => { let l = doc.data(); l.id = doc.id; dbLogs.push(l); });
@@ -183,65 +180,59 @@ onAuthStateChanged(auth, async (user) => {
             switchAdminTab('add');
         }
 
-        // Fetch Tutorial Videos (Now passes full data)
-        onSnapshot(query(collection(db, "tutorials"), orderBy("createdAt", "desc")), (snapshot) => {
-            document.getElementById('adminTutorialsGrid').innerHTML = '';
-            snapshot.forEach(doc => {
-                const data = doc.data();
-                renderTutorialCard(data, doc.id, 'adminTutorialsGrid', window.IS_SUPER_ADMIN);
-            });
-        });
-
-        const q = query(collection(db, "books"), orderBy("createdAt", "desc"));
-        onSnapshot(q, (snapshot) => {
-            window.booksData = [];
-            snapshot.forEach((doc) => {
-                let data = doc.data(); data.id = doc.id;
-                data.slug = data.title.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)+/g, '');
-                window.booksData.push(data);
-            });
-            loadedCount = 0;
-            const searchInput = document.getElementById('app-search-input').value;
-            if(searchInput.trim() === "") { window.renderBooksUI(0, getBatchSize() * 2); } else { performFuzzySearch(searchInput); }
-            window.generateNotifications();
-            
-            adminFilteredBooks = [...window.booksData];
-            document.getElementById('adminSearchBook').value = '';
-            renderAdminBooksTable(); 
-            
-            if(window.IS_SUPER_ADMIN) updateAdminCharts();
-            
-            const sBook = new URLSearchParams(window.location.search).get('book');
-            if(sBook && window.isDeepLinkLoad) { 
-                window.openDownloadPage(sBook, true);
-            }
-        });
-
-        if (isInitialLoad && !window.isDeepLinkLoad) {
-            const elapsed = Date.now() - appStartTime;
-            const remainingTime = Math.max(0, 2500 - elapsed); 
-            setTimeout(showAppAndPopup, remainingTime);
-            isInitialLoad = false;
-        }
-
     } else {
-        localStorage.removeItem('isUserLoggedIn');
+        window.isUserLoggedIn = false;
         window.IS_SUPER_ADMIN = false;
+        localStorage.removeItem('isUserLoggedIn');
         
-        const loader = document.getElementById("loaderScreen");
-        loader.style.display = "none"; 
-        cancelAnimationFrame(animationId);
+        // No forced login view - Just basic view setup
+        document.getElementById('sidebarProfileName').innerText = "Guest User";
+        document.getElementById('sidebarRoleText').innerText = "Please Login";
+        document.getElementById('uploadMenuText').innerText = "Upload Books";
+    }
+
+    // Fetches (Load irrespective of auth status)
+    onSnapshot(query(collection(db, "tutorials"), orderBy("createdAt", "desc")), (snapshot) => {
+        document.getElementById('adminTutorialsGrid').innerHTML = '';
+        snapshot.forEach(doc => {
+            const data = doc.data();
+            renderTutorialCard(data, doc.id, 'adminTutorialsGrid', window.IS_SUPER_ADMIN);
+        });
+    });
+
+    const q = query(collection(db, "books"), orderBy("createdAt", "desc"));
+    onSnapshot(q, (snapshot) => {
+        window.booksData = [];
+        snapshot.forEach((doc) => {
+            let data = doc.data(); data.id = doc.id;
+            data.slug = data.title.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)+/g, '');
+            window.booksData.push(data);
+        });
+        loadedCount = 0;
+        const searchInput = document.getElementById('app-search-input').value;
+        if(searchInput.trim() === "") { window.renderBooksUI(0, getBatchSize() * 2); } else { performFuzzySearch(searchInput); }
+        window.generateNotifications();
         
-        document.getElementById('mainAppWrapper').style.display = 'none';
-        const loginOverlay = document.getElementById('loginOverlay');
-        loginOverlay.style.display = 'flex';
-        setTimeout(() => { loginOverlay.style.opacity = '1'; }, 50); 
+        adminFilteredBooks = [...window.booksData];
+        document.getElementById('adminSearchBook').value = '';
+        renderAdminBooksTable(); 
         
+        const sBook = new URLSearchParams(window.location.search).get('book');
+        if(sBook && window.isDeepLinkLoad) { 
+            window.openDownloadPage(sBook, true);
+        }
+    });
+
+    // Both logged in and guests go straight to app
+    if (isInitialLoad && !window.isDeepLinkLoad) {
+        const elapsed = Date.now() - appStartTime;
+        const remainingTime = Math.max(0, 2500 - elapsed); 
+        setTimeout(showAppAndPopup, remainingTime);
         isInitialLoad = false;
     }
 });
 
-// LOGIN WITH PREMIUM DOTTED LOADER
+// LOGIN LOGIC
 document.getElementById('loginForm').addEventListener('submit', async (e) => {
     e.preventDefault(); 
     const email = document.getElementById('loginEmail').value; 
@@ -249,7 +240,6 @@ document.getElementById('loginForm').addEventListener('submit', async (e) => {
     
     const btn = document.getElementById('loginBtn'); 
     const originalContent = btn.innerHTML;
-    // Inject Premium Dotted Loader with Authenticating Text
     btn.innerHTML = `<span style="display:flex; align-items:center; gap:8px;"><div class="premium-loader"></div> Authenticating...</span>`;
     
     try { 
@@ -258,26 +248,13 @@ document.getElementById('loginForm').addEventListener('submit', async (e) => {
         showToast("Login Successful!"); 
         btn.innerHTML = originalContent; 
         
-        const loginOverlay = document.getElementById('loginOverlay');
-        loginOverlay.style.opacity = '0';
-        
-        setTimeout(() => {
-            loginOverlay.style.display = 'none';
-            const loader = document.getElementById("loaderScreen");
-            loader.style.display = "flex";
-            resizeCanvas(); requestAnimationFrame(animateHex); 
-            setTimeout(() => { loader.style.opacity = "1"; }, 50);
-
-            if(!window.isDeepLinkLoad) { setTimeout(showAppAndPopup, 2500); }
-        }, 500);
-
+        window.closeLoginOverlay();
     } catch(err) { 
         showToast("Failed: Invalid Credentials!"); 
         btn.innerHTML = originalContent; 
     } 
 });
 
-// GOOGLE SIGN IN WITH PREMIUM DOTTED LOADER
 document.getElementById('googleSignInBtn').addEventListener('click', async () => { 
     const btn = document.getElementById('googleSignInBtn');
     const originalContent = btn.innerHTML;
@@ -287,16 +264,8 @@ document.getElementById('googleSignInBtn').addEventListener('click', async () =>
         await signInWithPopup(auth, provider); 
         showToast("Google Login Successful!");
         btn.innerHTML = originalContent;
-        const loginOverlay = document.getElementById('loginOverlay');
-        loginOverlay.style.opacity = '0';
-        setTimeout(() => {
-            loginOverlay.style.display = 'none';
-            const loader = document.getElementById("loaderScreen");
-            loader.style.display = "flex";
-            resizeCanvas(); requestAnimationFrame(animateHex);
-            setTimeout(() => { loader.style.opacity = "1"; }, 50);
-            if(!window.isDeepLinkLoad) { setTimeout(showAppAndPopup, 2500); }
-        }, 500);
+        
+        window.closeLoginOverlay();
     } catch(err) { 
         showToast("Failed: Google Sign-In Error."); 
         btn.innerHTML = originalContent;
@@ -305,7 +274,10 @@ document.getElementById('googleSignInBtn').addEventListener('click', async () =>
 
 document.getElementById('admin-logout-btn').addEventListener('click', () => { 
     if(confirm("Are you sure you want to logout?")) {
-        signOut(auth).then(() => { document.getElementById('admin-dashboard-panel').classList.remove('active'); });
+        signOut(auth).then(() => { 
+            document.getElementById('admin-dashboard-panel').classList.remove('active'); 
+            showToast("Logged out successfully");
+        });
     }
 });
 
@@ -353,6 +325,9 @@ function getBatchSize() {
 
 const mainElement = document.getElementById('mainContentArea');
 mainElement.addEventListener('scroll', () => {
+    // Show Popup naturally via Scroll
+    if(mainElement.scrollTop > 200) triggerWhatsAppPopup();
+
     if(document.getElementById('app-search-input').value.trim() !== "") return;
     if (mainElement.scrollTop + mainElement.clientHeight >= mainElement.scrollHeight - 50) {
         const noResultsMsg = document.getElementById('no-results-msg');
@@ -407,8 +382,16 @@ document.getElementById('close-dev-btn').addEventListener('click', () => { histo
 document.getElementById('menu-dmca').addEventListener('click', (e) => { e.preventDefault(); history.replaceState({ popup: 'dmca' }, ''); document.getElementById('dmca-panel').classList.add('active'); sidebar.classList.remove('active'); sidebarOverlay.classList.remove('active'); });
 document.getElementById('close-dmca-btn').addEventListener('click', () => { history.back(); });
 
+// Admin panel menu logic handles auth
 document.getElementById('menu-admin-panel').addEventListener('click', (e) => {
     e.preventDefault();
+    if(!window.isUserLoggedIn) {
+        // Close sidebar and ask to log in
+        sidebar.classList.remove('active'); sidebarOverlay.classList.remove('active');
+        document.getElementById('loginOverlay').style.display = 'flex';
+        setTimeout(() => document.getElementById('loginOverlay').style.opacity = '1', 10);
+        return;
+    }
     history.pushState({ popup: 'admin' }, '');
     document.getElementById('admin-dashboard-panel').classList.add('active');
     sidebar.classList.remove('active'); sidebarOverlay.classList.remove('active');
@@ -423,6 +406,13 @@ window.addEventListener('popstate', (e) => {
 });
 
 window.openDownloadPage = function(slug, skipPushState = false) {
+    if(!window.isUserLoggedIn) {
+        // Intercept Book opening if user is not logged in
+        document.getElementById('loginOverlay').style.display = 'flex';
+        setTimeout(() => document.getElementById('loginOverlay').style.opacity = '1', 10);
+        return;
+    }
+
     const book = window.booksData.find(b => b.slug === slug); if(!book) return;
     document.getElementById("downloadModal").style.display = "flex";
     document.getElementById("dlPreviewImage").src = book.image; document.getElementById("dlBookTitle").innerText = book.title; document.getElementById("dlBookAuthor").innerText = book.author;
@@ -430,22 +420,6 @@ window.openDownloadPage = function(slug, skipPushState = false) {
     document.getElementById("dlPdfLinkBtn").onclick = async function() { 
         if(book.pdfLink) {
             window.open(book.pdfLink, '_blank'); 
-            
-            try {
-                const currentMonth = new Date().toLocaleString('en-US', { month: 'short' }).toLowerCase();
-                const yearStr = new Date().getFullYear().toString();
-                await updateDoc(doc(db, "download_stats", yearStr), {
-                    [currentMonth]: increment(1)
-                });
-            } catch(e) {
-                try {
-                    const currentMonth = new Date().toLocaleString('en-US', { month: 'short' }).toLowerCase();
-                    const yearStr = new Date().getFullYear().toString();
-                    await setDoc(doc(db, "download_stats", yearStr), {
-                        [currentMonth]: 1
-                    }, { merge: true });
-                } catch(err) {}
-            }
         }
     };
     
@@ -515,7 +489,6 @@ function showToast(message) {
 async function renderTutorialCard(data, docId, containerId, isAdmin) {
     try {
         const videoUrl = data.url;
-        // USE SAVED VIEWS OR DEFAULT TO 10K
         const customViews = data.views || "10.5K"; 
         
         const videoIdMatch = videoUrl.match(/(?:youtu\.be\/|youtube\.com\/(?:[^\/]+\/.+\/|(?:v|e(?:mbed)?)\/|.*[?&]v=)|youtube\.com\/shorts\/)([^"&?\/\s]{11})/i);
@@ -574,7 +547,7 @@ async function renderTutorialCard(data, docId, containerId, isAdmin) {
 window.addTutorialLink = async function() {
     if(!window.IS_SUPER_ADMIN) return; 
     const url = document.getElementById('newTutorialUrl').value; 
-    const views = document.getElementById('newTutorialViews').value || "12K"; // Default 12K if empty
+    const views = document.getElementById('newTutorialViews').value || "12K"; 
 
     if(!url) return showToast("Failed: Enter YouTube URL!"); 
     try { 
@@ -588,10 +561,10 @@ window.addTutorialLink = async function() {
 window.editTutorial = async function(id, currentUrl, currentViews) {
     if(!window.IS_SUPER_ADMIN) return;
     const newUrl = prompt("Enter new YouTube/Shorts URL:", currentUrl);
-    if(newUrl === null) return; // if canceled
+    if(newUrl === null) return;
     
     const newViews = prompt("Enter custom views (e.g. 2.1M, 500K):", currentViews);
-    if(newViews === null) return; // if canceled
+    if(newViews === null) return;
 
     if(newUrl.trim() !== "" && newViews.trim() !== "") {
         try {
@@ -610,7 +583,7 @@ window.deleteTutorial = async function(id) {
     }
 }
 
-// ADD BOOK (UPDATED TO USE PREMIUM LOADER)
+// ADD BOOK
 document.getElementById('addBookForm').addEventListener('submit', async (e) => {
     e.preventDefault(); 
     
@@ -629,7 +602,6 @@ document.getElementById('addBookForm').addEventListener('submit', async (e) => {
         }
     }
 
-    // Publish button gets premium dotted loader
     btn.innerHTML = `<span class="btn-text" style="display: flex; align-items: center; justify-content: center; gap: 10px;"><div class="premium-loader" style="border-color:#000;"></div> Publishing...</span>`;
     btn.disabled = true;
 
@@ -736,7 +708,7 @@ window.openAdminEditModal = function(id) {
     document.getElementById('adminEditModal').style.display = 'flex';
 }
 
-// EDIT BOOK (UPDATED TO USE PREMIUM LOADER)
+// EDIT BOOK
 document.getElementById('editBookForm').addEventListener('submit', async (e) => {
     e.preventDefault(); 
     
@@ -751,7 +723,6 @@ document.getElementById('editBookForm').addEventListener('submit', async (e) => 
         }
     }
 
-    // Save button gets premium dotted loader
     btn.innerHTML = `<span class="btn-text" style="display: flex; align-items: center; justify-content: center; gap: 10px;"><div class="premium-loader"></div> Saving...</span>`;
     btn.disabled = true;
 
@@ -777,85 +748,6 @@ document.getElementById('editBookForm').addEventListener('submit', async (e) => 
         btn.disabled = false;
     }
 });
-
-function updateAdminCharts() {
-    if(!window.IS_SUPER_ADMIN) return;
-    
-    Chart.defaults.color = '#a1a1aa';
-
-    const langCounts = { 'Hindi': 0, 'English': 0, 'Bilingual': 0 }; 
-    window.booksData.forEach(b => { if(langCounts[b.lang] !== undefined) { langCounts[b.lang]++; } });
-    const ctxLang = document.getElementById('langChart');
-    if(ctxLang) { 
-        if(myLangChart) myLangChart.destroy(); 
-        myLangChart = new Chart(ctxLang, { 
-            type: 'doughnut', 
-            data: { labels: ['Hindi', 'English', 'Bilingual'], datasets: [{ data: [langCounts.Hindi, langCounts.English, langCounts.Bilingual], backgroundColor: ['#ef4444', '#3b82f6', '#8b5cf6'], borderColor: 'rgba(255,255,255,0.05)', borderWidth: 1 }] }, 
-            options: { responsive: true, maintainAspectRatio: false } 
-        }); 
-    }
-
-    const ctxDownloads = document.getElementById('downloadsChart');
-    if(ctxDownloads) { 
-        if(myDownloadsChart) myDownloadsChart.destroy(); 
-        myDownloadsChart = new Chart(ctxDownloads, { 
-            type: 'line', 
-            data: { labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'], datasets: [{ label: `Downloads`, data: window.currentDlData, borderColor: '#10b981', backgroundColor: 'rgba(16, 185, 129, 0.2)', borderWidth: 2, fill: true }] }, 
-            options: { responsive: true, maintainAspectRatio: false } 
-        }); 
-    }
-
-    const last7DaysLabels = [];
-    const booksAddedData = [0, 0, 0, 0, 0, 0, 0];
-    
-    const todayEnd = new Date();
-    todayEnd.setHours(23, 59, 59, 999);
-    
-    const sevenDaysAgoStart = new Date();
-    sevenDaysAgoStart.setDate(todayEnd.getDate() - 6);
-    sevenDaysAgoStart.setHours(0, 0, 0, 0);
-
-    for(let i=6; i>=0; i--) {
-        const d = new Date();
-        d.setDate(d.getDate() - i);
-        last7DaysLabels.push(d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }));
-    }
-
-    window.booksData.forEach(b => {
-        if(b.createdAt) {
-            const bDate = new Date(b.createdAt);
-            if(bDate >= sevenDaysAgoStart && bDate <= todayEnd) {
-                const diffTime = Math.abs(bDate.setHours(0,0,0,0) - sevenDaysAgoStart.getTime());
-                const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
-                if(diffDays >= 0 && diffDays <= 6) { booksAddedData[diffDays]++; }
-            }
-        }
-    });
-
-    const ctxBooks = document.getElementById('booksAddedChart');
-    if(ctxBooks) {
-        if(myBooksChart) myBooksChart.destroy();
-        myBooksChart = new Chart(ctxBooks, {
-            type: 'bar',
-            data: {
-                labels: last7DaysLabels,
-                datasets: [{
-                    label: 'Books Added (Last 7 Days)',
-                    data: booksAddedData,
-                    backgroundColor: 'rgba(139, 92, 246, 0.8)',
-                    borderColor: '#8b5cf6',
-                    borderWidth: 1,
-                    borderRadius: 4
-                }]
-            },
-            options: { 
-                responsive: true, 
-                maintainAspectRatio: false,
-                scales: { y: { beginAtZero: true, ticks: { precision: 0 } } }
-            }
-        });
-    }
-}
 
 function renderLogs() {
     const tbody = document.getElementById('logsTableBody'); 
