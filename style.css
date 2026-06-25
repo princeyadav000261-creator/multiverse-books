@@ -142,14 +142,14 @@ main .premium-copyright { width: calc(100% + 40px); margin-left: -20px; margin-r
 /* PREMIUM DOWNLOAD MODAL STYLES */
 .download-modal { 
     position: absolute; inset: 0; 
-    background: linear-gradient(180deg, #1c1c1e 0%, #000000 100%); /* Gray to Black gradient */
+    background-color: #000000; /* Dark black background */
     z-index: 99999; overflow-y: auto; display: none; flex-direction: column; 
 }
 .download-modal::-webkit-scrollbar { display: none; }
 
 /* ================= FIX: HEADER TRANSPARENCY ON DOWNLOAD PAGE ================= */
 .download-modal .modal-header-fixed { 
-    background-color: #1c1c1e !important; /* Made Solid to match modal background */
+    background-color: #000000 !important; /* Solid black to match modal background */
     border-bottom: 1px solid rgba(255, 255, 255, 0.1) !important; 
 }
 
