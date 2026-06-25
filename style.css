@@ -205,6 +205,7 @@ main .premium-copyright { width: calc(100% + 40px); margin-left: -20px; margin-r
     flex: 1;
     width: 100%; 
     overflow-y: auto; 
+    padding-bottom: 75px; /* Added to clear fixed footer */
     display: flex; 
     flex-direction: column; 
     background-color: #000000; 
@@ -252,9 +253,12 @@ main .premium-copyright { width: calc(100% + 40px); margin-left: -20px; margin-r
 
 /* FIXED FOOTER MAGIC CSS to permanently remove gap */
 .panel-fixed-footer {
+    position: absolute; /* FIX APPLIED HERE */
+    bottom: 0;
+    left: 0;
     width: 100%;
     padding: 15px 10px;
-    padding-bottom: calc(15px + env(safe-area-inset-bottom, 0px)); /* Removes physical phone gap */
+    padding-bottom: calc(15px + env(safe-area-inset-bottom, 0px));
     text-align: center;
     font-size: 9px;
     font-weight: 700;
@@ -264,12 +268,22 @@ main .premium-copyright { width: calc(100% + 40px); margin-left: -20px; margin-r
     background: #000000;
     border-top: 1px solid rgba(255, 255, 255, 0.1);
     flex-shrink: 0;
-    z-index: 10;
+    z-index: 100; /* Ensured it stays at the top */
 }
 
 
 /* DMCA SCROLL FIX & FOOTER */
-.dmca-content { flex: 1; overflow-y: auto; padding: 15px 20px 20px; display: flex; flex-direction: column; -webkit-overflow-scrolling: touch; transform: translateZ(0); will-change: transform; overscroll-behavior-y: contain; }
+.dmca-content { 
+    flex: 1; 
+    overflow-y: auto; 
+    padding: 15px 20px 75px; /* Added bottom padding to clear fixed footer */
+    display: flex; 
+    flex-direction: column; 
+    -webkit-overflow-scrolling: touch; 
+    transform: translateZ(0); 
+    will-change: transform; 
+    overscroll-behavior-y: contain; 
+}
 .dmca-hero { text-align: center; margin-bottom: 25px; flex-shrink: 0;}
 .dmca-hero-title { font-size: 22px; font-weight: 900; letter-spacing: 1px; text-transform: uppercase; background: linear-gradient(90deg, #ffffff, #d1d5db, #9ca3af); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
 .dmca-hero-subtitle { display: flex; justify-content: center; gap: 8px; flex-wrap: wrap; margin-top: 15px; }
