@@ -167,7 +167,7 @@ main .premium-copyright { width: calc(100% + 40px); margin-left: -20px; margin-r
 /* White Borders for Download Page Cards */
 .dl-box { 
     width: 100%; margin-top: 12px; padding: 14px 16px; border-radius: 16px; display: flex; align-items: center; gap: 14px; 
-    background: rgba(20, 20, 25, 0.85); border: 1px solid #ffffff; /* White border */
+    background: rgba(20, 20, 25, 0.85); border: 0.2px solid #ffffff; /* White border */
     text-decoration: none; color: #fff; cursor: pointer; transition: 0.2s ease; box-shadow: 0 2px 5px rgba(0,0,0,0.4);
 }
 .dl-box:active { transform: scale(0.96); }
