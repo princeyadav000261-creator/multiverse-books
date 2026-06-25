@@ -158,8 +158,11 @@
 
             <div class="download-modal" id="downloadModal">
                 <div class="modal-header-fixed">
-                    <button class="back-btn" onclick="closeDownloadPage()"><i class="fas fa-arrow-left"></i></button>
-                    <h1 class="modal-title">MULTIVERSE BOOKS</h1>
+                    <div class="header-content-wrapper" style="display: flex; align-items: center; gap: 15px; flex-grow: 1;">
+                        <button class="back-btn" onclick="closeDownloadPage()"><i class="fas fa-arrow-left"></i></button>
+                        <h1 class="modal-title">MULTIVERSE BOOKS</h1>
+                    </div>
+                    <img src="https://i.postimg.cc/cJdGqYHG/IMG-20260524-WA0004.jpg" class="header-right-logo" alt="Logo" oncontextmenu="return false;" draggable="false">
                 </div>
                 <div class="dl-content-wrapper">
                     <div class="dl-img-wrapper-outer"><div class="dl-img-container"><img id="dlPreviewImage" class="dl-preview-image" src="" oncontextmenu="return false;" draggable="false"><div class="dl-powered-badge disable-long-press">POWERED BY : MADxPRINCE</div></div></div>
@@ -180,8 +183,6 @@
                     <div class="premium-copyright">© 2026 MULTIVERSE BOOKS <span style="margin: 0 5px;">|</span> MADE WITH <i class="fas fa-heart" style="color: #ff4757; margin: 0 3px; filter: drop-shadow(0 0 5px rgba(255,71,87,0.8));"></i> BY MADxPRINCE</div>
                 </div>
             </div>
-
-            <!-- PREMIUM NOTIFICATIONS PANEL -->
             <div class="notifications-panel" id="noti-panel">
                 <div class="noti-header-premium">
                     <div class="noti-header-left">
@@ -203,7 +204,6 @@
                 <div class="noti-body" id="dynamic-noti-container"></div>
             </div>
 
-            <!-- NEW PREMIUM ABOUT DEVELOPER PANEL WITH SMOOTH SCROLL FOOTER -->
             <div class="overlay-panel" id="about-dev-panel">
                 <div class="dev-scroll-area">
                     <button class="back-btn dev-back-btn" id="close-dev-btn"><i class="fas fa-arrow-left"></i></button>
@@ -275,9 +275,14 @@
                 </div>
             </div>
 
-            <!-- DMCA PANEL WITH NEW COLORFUL STYLES -->
             <div class="overlay-panel" id="dmca-panel">
-                <div class="modal-header-fixed"><button class="back-btn" id="close-dmca-btn"><i class="fas fa-arrow-left"></i></button><h1 class="modal-title">DMCA REQUEST</h1></div>
+                <div class="modal-header-fixed">
+                    <div class="header-content-wrapper" style="display: flex; align-items: center; gap: 15px; flex-grow: 1;">
+                        <button class="back-btn" id="close-dmca-btn"><i class="fas fa-arrow-left"></i></button>
+                        <h1 class="modal-title">DMCA REQUEST</h1>
+                    </div>
+                    <img src="https://i.postimg.cc/cJdGqYHG/IMG-20260524-WA0004.jpg" class="header-right-logo" alt="Logo" oncontextmenu="return false;" draggable="false">
+                </div>
                 <div class="dmca-content">
                     <div class="dmca-hero">
                         <h1 class="dmca-hero-title">COPYRIGHT DISCLAIMER</h1>
@@ -315,8 +320,6 @@
 
                 </div>
             </div>
-
-            <!-- ADMIN DASHBOARD PANEL FIX -->
             <div class="overlay-panel" id="admin-dashboard-panel" style="background: #0d0d12;">
                 <div class="modal-header-fixed" style="background: #09090b;">
                     <div class="header-content-wrapper">
