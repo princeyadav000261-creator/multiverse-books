@@ -23,7 +23,7 @@ let activeBookSlug = "";
 let activeBookTitle = "";
 
 window.IS_SUPER_ADMIN = false;
-window.isUserLoggedIn = false; // New Global State
+window.isUserLoggedIn = false; 
 const SUPER_ADMIN_EMAIL = "princeyadav000261@gmail.com"; 
 
 let adminFilteredBooks = [];
@@ -31,11 +31,9 @@ let adminCurrentPage = 1;
 const adminBooksPerPage = 10;
 let dbLogs = []; 
 
-// Deep Link Check
 const urlParamsCheck = new URLSearchParams(window.location.search);
 window.isDeepLinkLoad = urlParamsCheck.has('book'); 
 
-// CANVAS LOADER (Original implementation remains)
 const canvas = document.getElementById('networkCanvas');
 const ctx = canvas.getContext('2d');
 let width, height;
@@ -118,7 +116,6 @@ let isInitialLoad = true;
 const appStartTime = Date.now();
 let popupShown = false;
 
-// Popup Function Logic (Smart Scroll/Time Based)
 function triggerWhatsAppPopup() {
     if(!popupShown && !window.isDeepLinkLoad) {
         popupShown = true;
@@ -134,13 +131,10 @@ function showAppAndPopup() {
     setTimeout(() => { 
         loader.style.display = "none"; 
         cancelAnimationFrame(animationId);
-        
-        // Agar user pehle 4 sec me scroll nahi karta, automatically dikha do.
         setTimeout(triggerWhatsAppPopup, 4000); 
     }, 600);
 }
 
-// Global Auth State
 onAuthStateChanged(auth, async (user) => {
     if (user) {
         window.isUserLoggedIn = true;
@@ -185,13 +179,11 @@ onAuthStateChanged(auth, async (user) => {
         window.IS_SUPER_ADMIN = false;
         localStorage.removeItem('isUserLoggedIn');
         
-        // No forced login view - Just basic view setup
         document.getElementById('sidebarProfileName').innerText = "Guest User";
         document.getElementById('sidebarRoleText').innerText = "Please Login";
         document.getElementById('uploadMenuText').innerText = "Upload Books";
     }
 
-    // Fetches (Load irrespective of auth status)
     onSnapshot(query(collection(db, "tutorials"), orderBy("createdAt", "desc")), (snapshot) => {
         document.getElementById('adminTutorialsGrid').innerHTML = '';
         snapshot.forEach(doc => {
@@ -223,7 +215,6 @@ onAuthStateChanged(auth, async (user) => {
         }
     });
 
-    // Both logged in and guests go straight to app
     if (isInitialLoad && !window.isDeepLinkLoad) {
         const elapsed = Date.now() - appStartTime;
         const remainingTime = Math.max(0, 2500 - elapsed); 
@@ -232,7 +223,6 @@ onAuthStateChanged(auth, async (user) => {
     }
 });
 
-// LOGIN LOGIC
 document.getElementById('loginForm').addEventListener('submit', async (e) => {
     e.preventDefault(); 
     const email = document.getElementById('loginEmail').value; 
@@ -284,7 +274,6 @@ document.getElementById('admin-logout-btn').addEventListener('click', () => {
 window.closePopup = function(){ document.getElementById("popupOverlay").style.display = "none"; };
 window.joinChannel = function(){ window.open('https://whatsapp.com/channel/0029Vb6NBZx1yT2GByTTVf2A', '_blank'); };
 
-// SEARCH
 let searchTimeout;
 const searchInputEl = document.getElementById('app-search-input');
 const closeSearchBtn = document.getElementById('close-search');
@@ -325,7 +314,6 @@ function getBatchSize() {
 
 const mainElement = document.getElementById('mainContentArea');
 mainElement.addEventListener('scroll', () => {
-    // Show Popup naturally via Scroll
     if(mainElement.scrollTop > 200) triggerWhatsAppPopup();
 
     if(document.getElementById('app-search-input').value.trim() !== "") return;
@@ -382,11 +370,9 @@ document.getElementById('close-dev-btn').addEventListener('click', () => { histo
 document.getElementById('menu-dmca').addEventListener('click', (e) => { e.preventDefault(); history.replaceState({ popup: 'dmca' }, ''); document.getElementById('dmca-panel').classList.add('active'); sidebar.classList.remove('active'); sidebarOverlay.classList.remove('active'); });
 document.getElementById('close-dmca-btn').addEventListener('click', () => { history.back(); });
 
-// Admin panel menu logic handles auth
 document.getElementById('menu-admin-panel').addEventListener('click', (e) => {
     e.preventDefault();
     if(!window.isUserLoggedIn) {
-        // Close sidebar and ask to log in
         sidebar.classList.remove('active'); sidebarOverlay.classList.remove('active');
         document.getElementById('loginOverlay').style.display = 'flex';
         setTimeout(() => document.getElementById('loginOverlay').style.opacity = '1', 10);
@@ -407,7 +393,6 @@ window.addEventListener('popstate', (e) => {
 
 window.openDownloadPage = function(slug, skipPushState = false) {
     if(!window.isUserLoggedIn) {
-        // Intercept Book opening if user is not logged in
         document.getElementById('loginOverlay').style.display = 'flex';
         setTimeout(() => document.getElementById('loginOverlay').style.opacity = '1', 10);
         return;
@@ -485,7 +470,6 @@ function showToast(message) {
     setTimeout(() => { toast.classList.remove('show'); }, 3000);
 }
 
-// === PREMIUM YOUTUBE CARDS WITH CUSTOM VIEWS LOGIC ===
 async function renderTutorialCard(data, docId, containerId, isAdmin) {
     try {
         const videoUrl = data.url;
@@ -583,7 +567,6 @@ window.deleteTutorial = async function(id) {
     }
 }
 
-// ADD BOOK
 document.getElementById('addBookForm').addEventListener('submit', async (e) => {
     e.preventDefault(); 
     
@@ -708,7 +691,6 @@ window.openAdminEditModal = function(id) {
     document.getElementById('adminEditModal').style.display = 'flex';
 }
 
-// EDIT BOOK
 document.getElementById('editBookForm').addEventListener('submit', async (e) => {
     e.preventDefault(); 
     
