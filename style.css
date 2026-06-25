@@ -131,18 +131,24 @@ main .premium-copyright { width: calc(100% + 40px); margin-left: -20px; margin-r
 
 /* Common Modal Header */
 .modal-header-fixed { display: flex; align-items: center; gap: 15px; padding: 12px 20px; position: sticky; top: 0; z-index: 999; border-bottom: 1px solid rgba(255, 255, 255, 0.05); flex-shrink: 0; background-color: var(--dev-bg-main); }
-.download-modal .modal-header-fixed { background-color: var(--bg-main); }
 .header-content-wrapper { display: flex; align-items: center; gap: 15px; flex-grow: 1; }
 .modal-header-fixed .back-btn { width: 42px; height: 42px; border-radius: 50%; background-color: transparent; border: 1px solid rgba(255, 255, 255, 0.15); color: #ffffff; font-size: 18px; display: flex; justify-content: center; align-items: center; cursor: pointer; flex-shrink: 0; outline: none; transition: 0.2s ease; }
 .modal-header-fixed .back-btn:active { transform: scale(0.95); }
 .modal-header-fixed .modal-title { font-family: 'Poppins', sans-serif; font-size: 17px; font-weight: 800; color: var(--text-primary); text-transform: uppercase; letter-spacing: 0px; margin: 0; }
-.header-active-badge { display: inline-flex; align-items: center; gap: 6px; background: rgba(16, 185, 129, 0.15); border: 1px solid rgba(16, 185, 129, 0.3); color: #10b981; padding: 5px 12px; border-radius: 20px; font-size: 11px; font-weight: 700; letter-spacing: 0.5px; margin-right: 10px; }
-.header-active-badge .dot { width: 6px; height: 6px; background-color: #10b981; border-radius: 50%; box-shadow: 0 0 8px #10b981; }
 
-.download-modal { position: absolute; inset: 0; background-color: var(--bg-main); z-index: 99999; overflow-y: auto; display: none; flex-direction: column; }
+/* NEW: Top Right Header Logo */
+.header-right-logo { width: 42px; height: 42px; border-radius: 50%; object-fit: cover; border: 1.5px solid #ffffff; box-shadow: 0 0 10px rgba(255, 255, 255, 0.2); flex-shrink: 0; }
+
+/* PREMIUM DOWNLOAD MODAL STYLES */
+.download-modal { 
+    position: absolute; inset: 0; 
+    background: linear-gradient(180deg, #1c1c1e 0%, #000000 100%); /* Gray to Black gradient */
+    z-index: 99999; overflow-y: auto; display: none; flex-direction: column; 
+}
 .download-modal::-webkit-scrollbar { display: none; }
-.dl-content-wrapper { padding: 5px 20px 0; display: flex; flex-direction: column; min-height: 100%; }
+.download-modal .modal-header-fixed { background-color: transparent !important; border-bottom: 1px solid rgba(255, 255, 255, 0.1) !important; }
 
+.dl-content-wrapper { padding: 5px 20px 0; display: flex; flex-direction: column; min-height: 100%; }
 .dl-img-wrapper-outer { display: flex; justify-content: center; width: 100%; margin-top: 10px; margin-bottom: 30px; }
 .dl-img-container { position: relative; display: inline-block; padding: 6px; border-radius: 18px; border: 2px solid #ffffff; background: transparent; box-shadow: inset 0 0 18px rgba(255, 255, 255, 0.9), 0 10px 25px rgba(0, 0, 0, 0.6); }
 .dl-preview-image { width: 100%; max-width: 320px; height: auto; max-height: 420px; object-fit: contain; border-radius: 12px; background: #fff; display: block; }
@@ -152,15 +158,27 @@ main .premium-copyright { width: calc(100% + 40px); margin-left: -20px; margin-r
 .dl-author { font-size: 13px; color: var(--text-secondary); margin-top: 4px; }
 .dl-main-btn { width: 100%; min-height: 58px; padding: 16px 20px; border: none; border-radius: 16px; margin-top: 20px; background: #10b981; color: #ffffff; font-size: 18px; font-weight: 800; display: flex; justify-content: center; align-items: center; gap: 10px; cursor: pointer; box-shadow: 0 6px 20px rgba(16, 185, 129, 0.25); outline: none; transition: 0.2s ease;}
 .dl-main-btn:active { transform: scale(0.96); }
-.dl-box { width: 100%; margin-top: 12px; padding: 14px 16px; border-radius: 16px; display: flex; align-items: center; gap: 14px; background: var(--bg-card); text-decoration: none; color: #fff; cursor: pointer; border: 1px solid var(--border-color); transition: 0.2s ease; }
+
+/* White Borders for Download Page Cards */
+.dl-box { 
+    width: 100%; margin-top: 12px; padding: 14px 16px; border-radius: 16px; display: flex; align-items: center; gap: 14px; 
+    background: rgba(20, 20, 25, 0.85); border: 1px solid #ffffff; /* White border */
+    text-decoration: none; color: #fff; cursor: pointer; transition: 0.2s ease; box-shadow: 0 4px 15px rgba(0,0,0,0.4);
+}
 .dl-box:active { transform: scale(0.96); }
 .dl-box i.icon { font-size: 20px; width: 42px; height: 42px; display: flex; justify-content: center; align-items: center; border-radius: 12px; background: rgba(255,255,255,0.04); flex-shrink: 0; }
 .dl-box-title { font-size: 14px; font-weight: 600; }
 .dl-box-sub { font-size: 12px; color: var(--text-secondary); margin-top: 2px; }
-.exam-rel-box { margin-top: 20px; background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 16px; padding: 18px; }
+
+.exam-rel-box { 
+    margin-top: 20px; 
+    background: rgba(20, 20, 25, 0.85); border: 1px solid #ffffff; /* White border */
+    border-radius: 16px; padding: 18px; box-shadow: 0 4px 15px rgba(0,0,0,0.4);
+}
 .exam-header { display: flex; align-items: center; gap: 10px; font-size: 14px; font-weight: 800; margin-bottom: 15px; color: #fff; }
 .exam-tags { display: flex; flex-wrap: wrap; gap: 8px; }
 .dl-modal-tag { background: transparent; border: 1px solid rgba(59, 130, 246, 0.4); color: #93c5fd; font-size: 12px; font-weight: 500; padding: 6px 12px; border-radius: 16px; }
+
 .dl-social-container { margin-top: 30px; margin-bottom: 30px; display: flex; justify-content: center; padding: 0 5px; }
 .dev-social-row { display: flex; justify-content: center; gap: 18px; width: 100%; }
 .dev-soc-btn { width: 56px; height: 56px; border-radius: 16px; display: flex; justify-content: center; align-items: center; font-size: 24px; text-decoration: none; transition: all 0.2s ease; }
@@ -238,60 +256,34 @@ main .premium-copyright { width: calc(100% + 40px); margin-left: -20px; margin-r
 
 /* ================= NEW PREMIUM DMCA STYLES & FIX ================= */
 .dmca-content { 
-    flex: 1; 
-    width: 100%;
-    overflow-y: auto; 
-    overflow-x: hidden; 
-    padding: 20px 0px 0px; 
-    display: flex; 
-    flex-direction: column; 
-    background-color: #000000; 
-    -webkit-overflow-scrolling: touch; 
-    transform: translateZ(0); 
-    will-change: transform; 
-    overscroll-behavior-y: contain; 
-    overscroll-behavior-x: none;
+    flex: 1; width: 100%; overflow-y: auto; overflow-x: hidden; padding: 20px 0px 0px; display: flex; flex-direction: column; background-color: #000000; -webkit-overflow-scrolling: touch; transform: translateZ(0); will-change: transform; overscroll-behavior-y: contain; overscroll-behavior-x: none;
 }
 
 .dmca-hero { text-align: center; margin-bottom: 25px; flex-shrink: 0; padding: 0 20px; }
 .dmca-hero-title { font-size: 22px; font-weight: 900; letter-spacing: 1px; text-transform: uppercase; background: linear-gradient(90deg, #ffffff, #d4d4d8, #71717a); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
 .dmca-hero-subtitle { display: flex; justify-content: center; gap: 8px; flex-wrap: wrap; margin-top: 15px; }
 
-/* Premium gray badges */
-.dmca-badge { padding: 6px 14px; border-radius: 999px; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); font-size: 10px; font-weight: 700; color: #e4e4e7; }
-/* Badge Colorful Icons */
-.badge-edu i { color: #3b82f6 !important; } /* Blue */
-.badge-res i { color: #a855f7 !important; } /* Purple */
-.badge-ref i { color: #10b981 !important; } /* Green */
+/* Premium gray badges with White Border */
+.dmca-badge { padding: 6px 14px; border-radius: 999px; background: rgba(255,255,255,0.05); border: 1px solid #ffffff; font-size: 10px; font-weight: 700; color: #e4e4e7; box-shadow: 0 2px 8px rgba(0,0,0,0.3); }
+.badge-edu i { color: #3b82f6 !important; }
+.badge-res i { color: #a855f7 !important; }
+.badge-ref i { color: #10b981 !important; }
 
 /* Premium Card Design with White Borders */
 .dmca-section { 
-    flex-shrink: 0; 
-    text-align: center; 
-    margin: 0 20px 20px; 
-    background: rgba(20, 20, 25, 0.85); 
-    backdrop-filter: blur(4px); 
-    -webkit-backdrop-filter: blur(4px); 
-    padding: 24px 20px; 
-    border-radius: 24px; 
-    border: 1px solid #ffffff !important; /* Made Card Border Solid White */
-    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5); 
+    flex-shrink: 0; text-align: center; margin: 0 20px 20px; background: rgba(20, 20, 25, 0.85); backdrop-filter: blur(4px); -webkit-backdrop-filter: blur(4px); padding: 24px 20px; border-radius: 24px; border: 1px solid #ffffff !important; box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5); 
 }
 
 .dmca-section-title { display: flex; justify-content: center; align-items: center; gap: 14px; font-size: 1.1rem; font-weight: 800; margin-bottom: 12px; color: #ffffff !important; }
 .dmca-section p { line-height: 1.6; color: #a1a1aa; font-size: 0.85rem; font-weight: 500; }
 
-/* Base Mini Icon Structure */
 .dmca-mini-icon { width: 44px; height: 44px; display: flex; justify-content: center; align-items: center; border-radius: 12px; color: #ffffff; font-size: 1.1rem; }
+.icon-ownership { background: linear-gradient(135deg, #3b82f6, #2563eb) !important; box-shadow: 0 4px 15px rgba(59, 130, 246, 0.4); } 
+.icon-concerns { background: linear-gradient(135deg, #a855f7, #7e22ce) !important; box-shadow: 0 4px 15px rgba(168, 85, 247, 0.4); } 
+.icon-contact { background: linear-gradient(135deg, #10b981, #059669) !important; box-shadow: 0 4px 15px rgba(16, 185, 129, 0.4); } 
+.icon-notice { background: linear-gradient(135deg, #f59e0b, #d97706) !important; box-shadow: 0 4px 15px rgba(245, 158, 11, 0.4); } 
+.icon-resp { background: linear-gradient(135deg, #ef4444, #dc2626) !important; box-shadow: 0 4px 15px rgba(239, 68, 68, 0.4); } 
 
-/* Colorful Section Icons */
-.icon-ownership { background: linear-gradient(135deg, #3b82f6, #2563eb) !important; box-shadow: 0 4px 15px rgba(59, 130, 246, 0.4); } /* Blue */
-.icon-concerns { background: linear-gradient(135deg, #a855f7, #7e22ce) !important; box-shadow: 0 4px 15px rgba(168, 85, 247, 0.4); } /* Purple */
-.icon-contact { background: linear-gradient(135deg, #10b981, #059669) !important; box-shadow: 0 4px 15px rgba(16, 185, 129, 0.4); } /* Green */
-.icon-notice { background: linear-gradient(135deg, #f59e0b, #d97706) !important; box-shadow: 0 4px 15px rgba(245, 158, 11, 0.4); } /* Orange */
-.icon-resp { background: linear-gradient(135deg, #ef4444, #dc2626) !important; box-shadow: 0 4px 15px rgba(239, 68, 68, 0.4); } /* Red */
-
-/* Premium button link style */
 .dmca-contact-link { display: inline-flex; align-items: center; gap: 8px; color: #ffffff; font-weight: 700; text-decoration: none; margin-top: 15px; padding: 12px 20px; background: rgba(255, 255, 255, 0.05); border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 14px; font-size: 0.9rem; transition: all 0.2s ease; }
 .dmca-contact-link:active { transform: scale(0.95); background: rgba(255, 255, 255, 0.1); }
 
