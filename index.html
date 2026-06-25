@@ -181,7 +181,6 @@
                 </div>
             </div>
 
-            <!-- PREMIUM NOTIFICATIONS PANEL -->
             <div class="notifications-panel" id="noti-panel">
                 <div class="noti-header-premium">
                     <div class="noti-header-left">
@@ -196,7 +195,6 @@
                             <div class="noti-sub-title">Official Announcements</div>
                         </div>
                     </div>
-                    <!-- Right Side Circular Back Button (ULTEE TARAF MUA) -->
                     <div class="noti-circle-btn" id="close-noti">
                         <i class="fas fa-arrow-right"></i>
                     </div>
@@ -204,7 +202,6 @@
                 <div class="noti-body" id="dynamic-noti-container"></div>
             </div>
 
-            <!-- NEW PREMIUM ABOUT DEVELOPER PANEL WITH FIXED FOOTER -->
             <div class="overlay-panel" id="about-dev-panel">
                 <div class="dev-scroll-area">
                     <button class="back-btn dev-back-btn" id="close-dev-btn"><i class="fas fa-arrow-left"></i></button>
@@ -269,13 +266,11 @@
                         </div>
                     </div>
                 </div>
-                <!-- FIXED FOOTER AT THE VERY BOTTOM, OUTSIDE SCROLL -->
                 <div class="panel-fixed-footer">
                     © 2026 MULTIVERSE BOOKS <span style="margin: 0 5px;">|</span> MADE WITH <i class="fas fa-heart" style="color: #ff4757; margin: 0 3px;"></i> BY MADxPRINCE
                 </div>
             </div>
 
-            <!-- DMCA PANEL WITH FIXED FOOTER & SMOOTH SCROLL -->
             <div class="overlay-panel" id="dmca-panel">
                 <div class="modal-header-fixed"><button class="back-btn" id="close-dmca-btn"><i class="fas fa-arrow-left"></i></button><h1 class="modal-title">DMCA REQUEST</h1></div>
                 <div class="dmca-content">
@@ -309,13 +304,11 @@
                         <p>Users are solely responsible for how they access, download, share or use any content available through this platform. This website and its administrators cannot be held responsible for any misuse or unauthorized use of the materials.</p>
                     </div>
                 </div>
-                <!-- FIXED FOOTER AT THE VERY BOTTOM, OUTSIDE SCROLL -->
                 <div class="panel-fixed-footer">
                     © 2026 MULTIVERSE BOOKS <span style="margin: 0 5px;">|</span> MADE WITH <i class="fas fa-heart" style="color: #ff4757; margin: 0 3px;"></i> BY MADxPRINCE
                 </div>
             </div>
 
-            <!-- ADMIN DASHBOARD PANEL FIX -->
             <div class="overlay-panel" id="admin-dashboard-panel" style="background: #0d0d12;">
                 <div class="modal-header-fixed" style="background: #09090b;">
                     <div class="header-content-wrapper">
@@ -466,10 +459,7 @@
             loginOverlay.style.opacity = '0';
             setTimeout(() => { loginOverlay.style.display = 'none'; }, 500);
         };
-    </script>
 
-    <script type="module" src="./app.js"></script>
-    <script>
         function togglePasswordVisibility() {
             const passInput = document.getElementById('loginPassword'); const eyeIcon = document.getElementById('toggleEye');
             if (passInput.type === 'password') { passInput.type = 'text'; eyeIcon.classList.remove('fa-eye'); eyeIcon.classList.add('fa-eye-slash'); eyeIcon.style.color = '#8b5cf6'; } 
@@ -484,5 +474,7 @@
             else if(tabName === 'analytics') { document.getElementById('sectionAnalytics').classList.add('active'); document.getElementById('admTabAnalytics').classList.add('active'); }
         }
     </script>
+    
+    <script type="module" src="./app.js"></script>
 </body>
 </html>
