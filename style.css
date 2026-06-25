@@ -146,7 +146,12 @@ main .premium-copyright { width: calc(100% + 40px); margin-left: -20px; margin-r
     z-index: 99999; overflow-y: auto; display: none; flex-direction: column; 
 }
 .download-modal::-webkit-scrollbar { display: none; }
-.download-modal .modal-header-fixed { background-color: transparent !important; border-bottom: 1px solid rgba(255, 255, 255, 0.1) !important; }
+
+/* ================= FIX: HEADER TRANSPARENCY ON DOWNLOAD PAGE ================= */
+.download-modal .modal-header-fixed { 
+    background-color: #1c1c1e !important; /* Made Solid to match modal background */
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1) !important; 
+}
 
 .dl-content-wrapper { padding: 5px 20px 0; display: flex; flex-direction: column; min-height: 100%; }
 .dl-img-wrapper-outer { display: flex; justify-content: center; width: 100%; margin-top: 10px; margin-bottom: 30px; }
@@ -177,7 +182,15 @@ main .premium-copyright { width: calc(100% + 40px); margin-left: -20px; margin-r
 }
 .exam-header { display: flex; align-items: center; gap: 10px; font-size: 14px; font-weight: 800; margin-bottom: 15px; color: #fff; }
 .exam-tags { display: flex; flex-wrap: wrap; gap: 8px; }
-.dl-modal-tag { background: transparent; border: 1px solid rgba(59, 130, 246, 0.4); color: #93c5fd; font-size: 12px; font-weight: 500; padding: 6px 12px; border-radius: 16px; }
+
+/* ================= FIX: EXAM RELEVANCE TAGS BLACK/GRAY/WHITE THEME ================= */
+.dl-modal-tag { 
+    background: rgba(255, 255, 255, 0.05); /* Slight transparent gray/white */
+    border: 1px solid rgba(255, 255, 255, 0.2); /* White-ish border */
+    color: #ffffff; /* White text */
+    font-size: 12px; font-weight: 600; padding: 6px 12px; border-radius: 16px; 
+    box-shadow: 0 2px 5px rgba(0,0,0,0.2); 
+}
 
 .dl-social-container { margin-top: 30px; margin-bottom: 30px; display: flex; justify-content: center; padding: 0 5px; }
 .dev-social-row { display: flex; justify-content: center; gap: 18px; width: 100%; }
@@ -246,13 +259,19 @@ main .premium-copyright { width: calc(100% + 40px); margin-left: -20px; margin-r
 .bio-quote { font-size: 0.95rem; font-style: italic; font-weight: 500; color: #8c97ac; line-height: 1.5; }
 
 .dev-cards-container { padding: 20px 15px 25px; display: flex; flex-direction: column; gap: 16px; }
-.dev-info-card { background: rgba(20, 20, 25, 0.85); backdrop-filter: blur(4px); -webkit-backdrop-filter: blur(4px); border-radius: 24px; padding: 20px; display: flex; align-items: center; gap: 18px; border: 1px solid rgba(255, 255, 255, 0.1); box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5); }
+
+/* ================= FIX: REMOVED BLUR FOR BUTTER SMOOTH SCROLLING ================= */
+.dev-info-card { 
+    background: rgba(20, 20, 25, 0.95); /* More opaque, blur removed */
+    border-radius: 24px; padding: 20px; display: flex; align-items: center; gap: 18px; 
+    border: 1px solid rgba(255, 255, 255, 0.1); box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5); 
+    transform: translateZ(0); /* Hardware acceleration enabled */
+}
 .dev-icon-box { width: 52px; height: 52px; border-radius: 16px; background: #1c1c1e; border: 1px solid rgba(255, 255, 255, 0.05); display: flex; justify-content: center; align-items: center; color: #ffffff; font-size: 1.3rem; flex-shrink: 0; box-shadow: inset 0 0 10px rgba(255,255,255,0.03); }
 .dev-card-content { display: flex; flex-direction: column; gap: 4px; }
 .dev-card-title { font-size: 1.05rem; font-weight: 700; color: #ffffff; }
 .dev-card-desc { font-size: 0.85rem; font-weight: 500; color: #a1a1aa; }
 .dev-small-caps { font-variant: small-caps; font-size: 0.95rem; font-weight: 700; color: #d4d4d8;}
-
 
 /* ================= NEW PREMIUM DMCA STYLES & FIX ================= */
 .dmca-content { 
@@ -269,9 +288,13 @@ main .premium-copyright { width: calc(100% + 40px); margin-left: -20px; margin-r
 .badge-res i { color: #a855f7 !important; }
 .badge-ref i { color: #10b981 !important; }
 
-/* Premium Card Design with White Borders */
+/* ================= FIX: REMOVED BLUR FOR BUTTER SMOOTH SCROLLING ================= */
 .dmca-section { 
-    flex-shrink: 0; text-align: center; margin: 0 20px 20px; background: rgba(20, 20, 25, 0.85); backdrop-filter: blur(4px); -webkit-backdrop-filter: blur(4px); padding: 24px 20px; border-radius: 24px; border: 1px solid #ffffff !important; box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5); 
+    flex-shrink: 0; text-align: center; margin: 0 20px 20px; 
+    background: rgba(20, 20, 25, 0.95); /* More opaque, blur removed */
+    padding: 24px 20px; border-radius: 24px; border: 1px solid #ffffff !important; 
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5); 
+    transform: translateZ(0); /* Hardware acceleration enabled */
 }
 
 .dmca-section-title { display: flex; justify-content: center; align-items: center; gap: 14px; font-size: 1.1rem; font-weight: 800; margin-bottom: 12px; color: #ffffff !important; }
