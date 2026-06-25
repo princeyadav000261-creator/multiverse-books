@@ -182,38 +182,93 @@
             </div>
 
             <div class="notifications-panel" id="noti-panel">
-                <div class="noti-header"><div class="noti-title-area"><div class="noti-icon"><i class="fas fa-bell"></i></div><div class="noti-text"><h2>Notifications</h2><p>Updates & News</p></div></div><div class="icon-box" id="close-noti"><i class="fas fa-times"></i></div></div>
+                <div class="noti-header-premium">
+                    <div class="noti-header-left">
+                        <div class="noti-logo-wrapper">
+                            <img src="https://i.postimg.cc/cJdGqYHG/IMG-20260524-WA0004.jpg" class="noti-logo" alt="Logo">
+                        </div>
+                        <div class="noti-title-stack">
+                            <div class="noti-main-title">Multiverse Official <i class="fas fa-certificate verified-icon"></i></div>
+                            <div class="noti-sub-title">Official Announcements</div>
+                        </div>
+                    </div>
+                    <div class="noti-circle-btn" id="close-noti">
+                        <i class="fas fa-arrow-left"></i>
+                    </div>
+                </div>
                 <div class="noti-body" id="dynamic-noti-container"></div>
             </div>
 
             <div class="overlay-panel" id="about-dev-panel">
-                <div class="modal-header-fixed">
-                    <div class="header-content-wrapper"><button class="back-btn" id="close-dev-btn"><i class="fas fa-arrow-left"></i></button><h1 class="modal-title">ABOUT DEVELOPER</h1></div>
-                    <div class="header-active-badge"><span class="dot"></span> Active</div>
-                </div>
-                <div class="dev-profile-section">
-                    <div class="profile-avatar-container">
-                        <div class="dev-profile-img-wrapper"><img src="https://i.postimg.cc/D0BF1b77/file-000000000e847207a64f6711d825a859.png" class="dev-profile-img" oncontextmenu="return false;" draggable="false"></div>
-                        <div class="profile-shield"><i class="fas fa-shield-alt"></i></div>
+                <div class="dev-scroll-area">
+                    <button class="back-btn dev-back-btn" id="close-dev-btn"><i class="fas fa-arrow-left"></i></button>
+                    
+                    <div class="dev-hero-banner">
+                        <div class="banner-fade-bottom"></div>
+                        <div class="hero-content-wrapper">
+                            <div class="profile-avatar-container">
+                                <div class="dev-profile-img-wrapper">
+                                    <img src="https://i.postimg.cc/D0BF1b77/file-000000000e847207a64f6711d825a859.png" class="dev-profile-img" oncontextmenu="return false;" draggable="false">
+                                </div>
+                                <div class="profile-shield"><i class="fas fa-shield-alt"></i></div>
+                            </div>
+                        </div>
                     </div>
-                    <h2 class="dev-greeting">Hey there! I'm MADxPRINCE</h2>
-                    <p class="dev-quote">"Dream Big, Hustle Hard, and Never Stop Exploring!"</p>
-                </div>
-                <div class="dev-cards-container">
-                    <div class="dev-info-card"><div class="dev-icon-box"><i class="fas fa-graduation-cap"></i></div><div class="dev-card-content"><div class="dev-card-title">Education</div><div class="dev-card-desc"><span class="dev-small-caps">Class</span> 11th (PCMB) | <span class="dev-small-caps">Batch:</span> 2026-28</div></div></div>
-                    <div class="dev-info-card"><div class="dev-icon-box"><i class="fas fa-map-marker-alt"></i></div><div class="dev-card-content"><div class="dev-card-title">Location</div><div class="dev-card-desc"><span class="dev-small-caps">Bihar , India</span> 🚩</div></div></div>
-                    <div class="dev-info-card"><div class="dev-icon-box"><i class="fas fa-birthday-cake"></i></div><div class="dev-card-content"><div class="dev-card-title">Birthday</div><div class="dev-card-desc"><span class="dev-small-caps">6 December</span> 💐💖</div></div></div>
-                    <div class="dev-info-card"><div class="dev-icon-box"><i class="fas fa-tools"></i></div><div class="dev-card-content"><div class="dev-card-title">Skills</div><div class="dev-card-desc" style="font-family: serif; font-style: italic; font-size: 0.95rem; font-weight: 600;">Hehe... Nothing ☠️</div></div></div>
-                </div>
-                <div class="find-online-section">
-                    <div class="dev-social-row">
-                        <a href="https://youtube.com/@madxprince" class="dev-soc-btn dev-yt"><i class="fab fa-youtube"></i></a>
-                        <a href="https://www.instagram.com/madxprince_3030" class="dev-soc-btn dev-ig"><i class="fab fa-instagram"></i></a>
-                        <a href="https://t.me/MADxPRINCE" class="dev-soc-btn dev-tg"><i class="fab fa-telegram-plane"></i></a>
-                        <a href="https://whatsapp.com/channel/0029Vb6NBZx1yT2GByTTVf2A" class="dev-soc-btn dev-wa"><i class="fab fa-whatsapp"></i></a>
+
+                    <div class="social-bar-left">
+                        <a href="https://whatsapp.com/channel/0029Vb6NBZx1yT2GByTTVf2A" target="_blank" class="hero-soc-btn"><i class="fab fa-whatsapp"></i></a>
+                        <a href="https://t.me/MADxPRINCE" target="_blank" class="hero-soc-btn"><i class="fab fa-telegram-plane"></i></a>
+                        <a href="https://www.instagram.com/madxprince_3030" target="_blank" class="hero-soc-btn"><i class="fab fa-instagram"></i></a>
+                        <a href="https://youtube.com/@madxprince" target="_blank" class="hero-soc-btn"><i class="fab fa-youtube"></i></a>
+                    </div>
+                    
+                    <div class="premium-bio-section">
+                        <div class="bio-greeting">Hey there! I'm <span class="highlight-name">MADxPRINCE</span></div>
+                        <div class="bio-quote-container">
+                            <div class="bio-quote">"Dream Big, Hustle Hard, and Never Stop Exploring!"</div>
+                        </div>
+                    </div>
+
+                    <div class="dev-body-content">
+                        <div class="dev-cards-container">
+                            <div class="dev-info-card">
+                                <div class="dev-icon-box"><i class="fas fa-graduation-cap"></i></div>
+                                <div class="dev-card-content">
+                                    <div class="dev-card-title">Education</div>
+                                    <div class="dev-card-desc"><span class="dev-small-caps">Class</span> 11th (PCMB) <span style="color:#4b5563;">|</span> <span class="dev-small-caps">Batch:</span> 2026-28</div>
+                                </div>
+                            </div>
+                            
+                            <div class="dev-info-card">
+                                <div class="dev-icon-box"><i class="fas fa-map-marker-alt"></i></div>
+                                <div class="dev-card-content">
+                                    <div class="dev-card-title">Location</div>
+                                    <div class="dev-card-desc"><span class="dev-small-caps">Bihar, India</span> 🚩</div>
+                                </div>
+                            </div>
+                            
+                            <div class="dev-info-card">
+                                <div class="dev-icon-box"><i class="fas fa-birthday-cake"></i></div>
+                                <div class="dev-card-content">
+                                    <div class="dev-card-title">Birthday</div>
+                                    <div class="dev-card-desc"><span class="dev-small-caps">6 December</span> 💐💖</div>
+                                </div>
+                            </div>
+                            
+                            <div class="dev-info-card">
+                                <div class="dev-icon-box"><i class="fas fa-tools"></i></div>
+                                <div class="dev-card-content">
+                                    <div class="dev-card-title">Skills</div>
+                                    <div class="dev-card-desc" style="font-family: serif; font-style: italic; font-size: 0.95rem; font-weight: 600; color: #a1a1aa;">Hehe... Nothing ☠️</div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="footer-wrapper">
+                            <div class="premium-copyright">© 2026 MULTIVERSE BOOKS | MADE WITH <i class="fas fa-heart" style="color: #ff4757; margin: 0 3px;"></i> BY MADxPRINCE</div>
+                        </div>
                     </div>
                 </div>
-                <div class="premium-copyright">© 2026 MULTIVERSE BOOKS <span style="margin: 0 5px;">|</span> MADE WITH <i class="fas fa-heart" style="color: #ff4757; margin: 0 3px;"></i> BY MADxPRINCE</div>
             </div>
 
             <div class="overlay-panel" id="dmca-panel">
@@ -222,12 +277,10 @@
                     <div class="dmca-hero">
                         <h1 class="dmca-hero-title">COPYRIGHT DISCLAIMER</h1>
                         <p class="dmca-hero-subtitle">
-    <span class="dmca-badge"><i class="fas fa-graduation-cap" style="color: #3b82f6;"></i> Educational</span>
-    <span class="dmca-badge"><i class="fas fa-flask" style="color: #10b981;"></i> Research</span>
-    <span class="dmca-badge"><i class="fas fa-book-open" style="color: #f59e0b;"></i> Reference</span>
-</p>
-
-                    
+                            <span class="dmca-badge"><i class="fas fa-graduation-cap" style="color: #3b82f6;"></i> Educational</span>
+                            <span class="dmca-badge"><i class="fas fa-flask" style="color: #10b981;"></i> Research</span>
+                            <span class="dmca-badge"><i class="fas fa-book-open" style="color: #f59e0b;"></i> Reference</span>
+                        </p>
                     </div>
                     <div class="dmca-section">
                         <h2 class="dmca-section-title"><span class="dmca-mini-icon icon-book"><i class="fas fa-book"></i></span>Content Ownership</h2>
@@ -250,11 +303,6 @@
                         <h2 class="dmca-section-title" style="color: #ec4899;"><span class="dmca-mini-icon" style="background: linear-gradient(135deg, #a855f7, #ec4899);"><i class="fas fa-user-shield"></i></span>User Responsibility</h2>
                         <p>Users are solely responsible for how they access, download, share or use any content available through this platform. This website and its administrators cannot be held responsible for any misuse or unauthorized use of the materials.</p>
                     </div>
-
-
-
-
-                    
                 </div>
                 <div class="premium-copyright">© 2026 MULTIVERSE BOOKS <span style="margin: 0 5px;">|</span> MADE WITH <i class="fas fa-heart" style="color: #ff4757; margin: 0 3px;"></i> BY MADxPRINCE</div>
             </div>
@@ -396,7 +444,6 @@
 
     <script>
         (function() {
-            // Initial load check for deep link
             const isDeepLink = new URLSearchParams(window.location.search).has('book');
             if (isDeepLink) {
                 document.getElementById('loaderScreen').style.display = 'none';
@@ -405,7 +452,6 @@
             }
         })();
 
-        // Add a simple function to close the login overlay
         window.closeLoginOverlay = function() {
             const loginOverlay = document.getElementById('loginOverlay');
             loginOverlay.style.opacity = '0';
