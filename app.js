@@ -136,6 +136,8 @@ onAuthStateChanged(auth, async (user) => {
             document.getElementById('admTabVideo').style.display = 'inline-flex';
             document.getElementById('adminAddPromptCard').style.display = 'block';
             document.getElementById('adminTutorialEdit').style.display = 'block'; 
+            document.getElementById('addYtLinkContainer').style.display = 'flex'; 
+            document.getElementById('editYtLinkContainer').style.display = 'flex'; 
         } else {
             window.IS_SUPER_ADMIN = false;
             document.getElementById('sidebarRoleText').innerText = "Verified User";
@@ -146,6 +148,8 @@ onAuthStateChanged(auth, async (user) => {
             document.getElementById('admTabPrompt').style.display = 'inline-flex'; // Verified users can see & copy prompts
             document.getElementById('adminAddPromptCard').style.display = 'none'; // Only Admin can add prompts
             document.getElementById('adminTutorialEdit').style.display = 'none'; 
+            document.getElementById('addYtLinkContainer').style.display = 'none'; 
+            document.getElementById('editYtLinkContainer').style.display = 'none'; 
             switchAdminTab('add');
         }
 
@@ -625,6 +629,7 @@ document.getElementById('addBookForm').addEventListener('submit', async (e) => {
     const titleInput = document.getElementById('inTitle').value; 
     const imgInput = document.getElementById('inImage').value;
     const pdfUrlInput = document.getElementById('inPdfUrl').value;
+    const ytUrlInput = document.getElementById('inYtUrl').value;
 
     if (!window.IS_SUPER_ADMIN) {
         if (!pdfUrlInput.includes('drive.google.com')) {
@@ -644,6 +649,7 @@ document.getElementById('addBookForm').addEventListener('submit', async (e) => {
         lang: document.getElementById('inLang').value, 
         exams: document.getElementById('inExams').value, 
         pdfLink: pdfUrlInput, 
+        ytLink: window.IS_SUPER_ADMIN ? ytUrlInput : "", 
         dateAdded: new Date().toLocaleDateString('en-GB').toUpperCase(), 
         createdAt: new Date().getTime() 
     };
@@ -731,6 +737,7 @@ window.openAdminEditModal = function(id) {
     document.getElementById('edExams').value = book.exams || ""; 
     document.getElementById('edImage').value = book.image; 
     document.getElementById('edPdfUrl').value = book.pdfLink || ""; 
+    document.getElementById('edYtUrl').value = book.ytLink || ""; 
     document.getElementById('adminEditModal').style.display = 'flex';
 }
 
@@ -759,7 +766,8 @@ document.getElementById('editBookForm').addEventListener('submit', async (e) => 
         lang: document.getElementById('edLang').value, 
         exams: document.getElementById('edExams').value, 
         image: document.getElementById('edImage').value, 
-        pdfLink: pdfUrlInput
+        pdfLink: pdfUrlInput, 
+        ytLink: window.IS_SUPER_ADMIN ? document.getElementById('edYtUrl').value : ""
     };
 
     try { 
