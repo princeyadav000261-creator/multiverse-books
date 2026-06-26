@@ -144,7 +144,7 @@ onAuthStateChanged(auth, async (user) => {
             document.getElementById('uploadMenuText').innerText = "Upload Books";
             
             document.getElementById('admTabManage').style.display = 'none';
-            document.getElementById('admTabVideo').style.display = 'inline-flex'; // Verified users can now see the tutorial tab
+            document.getElementById('admTabVideo').style.display = 'inline-flex'; 
             document.getElementById('admTabPrompt').style.display = 'inline-flex';
             document.getElementById('adminAddPromptCard').style.display = 'none'; 
             document.getElementById('adminTutorialEdit').style.display = 'none'; 
@@ -163,8 +163,8 @@ onAuthStateChanged(auth, async (user) => {
         document.getElementById('uploadMenuText').innerText = "Upload Books";
     }
 
-    // Load Prompts Dynamically
-    onSnapshot(query(collection(db, "prompts"), orderBy("createdAt", "desc")), (snapshot) => {
+    // Load Prompts Dynamically (UPDATED TO ASCENDING ORDER & NEW UI)
+    onSnapshot(query(collection(db, "prompts"), orderBy("createdAt", "asc")), (snapshot) => {
         const container = document.getElementById('promptsContainer');
         container.innerHTML = '';
         if(snapshot.empty) {
@@ -176,15 +176,18 @@ onAuthStateChanged(auth, async (user) => {
             const data = doc.data();
             const id = doc.id;
             const safeText = data.text.replace(/</g, "&lt;").replace(/>/g, "&gt;");
-            const safeInstruction = data.instruction ? data.instruction.replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/\n/g, "<br>") : "No instructions provided.";
+            const safeInstruction = data.instruction ? data.instruction.replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/\n/g, "<br>") : "";
             
             let deleteBtn = window.IS_SUPER_ADMIN ? `<button onclick="deletePrompt('${id}')" style="background:transparent; border:none; color:#ef4444; margin-left:auto; cursor:pointer; padding:5px;"><i class="fas fa-trash"></i></button>` : '';
 
+            let instructionHTML = '';
+            if(safeInstruction) {
+                instructionHTML = `<div style="color: #ffffff; font-weight: 600; font-size: 14px; margin-bottom: 8px; margin-left: 2px; line-height: 1.5; font-family: 'Inter', sans-serif;">${safeInstruction}</div>`;
+            }
+
             container.innerHTML += `
                 <div class="telegram-prompt-wrapper">
-                    <div style="color: #a1a1aa; font-weight: 500; font-size: 12.5px; margin-bottom: 8px; margin-left: 2px; line-height: 1.5; font-family: 'Inter', sans-serif;">
-                        <i class="fas fa-info-circle" style="color:#3b82f6; margin-right:5px;"></i> <b>How to use:</b><br>${safeInstruction}
-                    </div>
+                    ${instructionHTML}
                     <div class="telegram-prompt-card">
                         <div class="telegram-prompt-header" style="display:flex; align-items:center;">
                             ${data.title} ${deleteBtn}
@@ -246,7 +249,7 @@ onAuthStateChanged(auth, async (user) => {
 window.addPrompt = async function() {
     if(!window.IS_SUPER_ADMIN) return;
     const title = document.getElementById('newPromptTitle').value;
-    const instruction = document.getElementById('newPromptInstruction').value; // Get the instruction value
+    const instruction = document.getElementById('newPromptInstruction').value;
     const text = document.getElementById('newPromptText').value;
     
     if(!title || !text || !instruction) return showToast("Failed: Title, Instructions & Text required!");
@@ -790,3 +793,4 @@ document.getElementById('editBookForm').addEventListener('submit', async (e) => 
         btn.disabled = false;
     }
 });
+
