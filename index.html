@@ -333,9 +333,8 @@
                 
                 <div class="adm-tabs">
                     <button class="adm-tab-btn active" id="admTabAdd" onclick="switchAdminTab('add')"><i class="fas fa-plus"></i> Add Book</button>
-                    <button class="adm-tab-btn" id="admTabVideo" onclick="switchAdminTab('tutorial')"><i class="fas fa-video"></i> Tutorial Video</button>
+                    <button class="adm-tab-btn" id="admTabPrompt" onclick="switchAdminTab('prompt')" style="display:none;"><i class="fas fa-terminal"></i> Prompt Tool</button>
                     <button class="adm-tab-btn" id="admTabManage" onclick="switchAdminTab('manage')" style="display:none;"><i class="fas fa-list"></i> Manage</button>
-                    <button class="adm-tab-btn" id="admTabAnalytics" onclick="switchAdminTab('analytics')" style="display:none;"><i class="fas fa-list-alt"></i> System Logs</button>
                 </div>
 
                 <div class="adm-content-area">
@@ -366,18 +365,21 @@
                         </div>
                     </div>
 
-                    <div id="sectionTutorial" class="adm-section">
-                        <div class="adm-card" style="margin-bottom: 10px; border-bottom: none;">
-                            <div class="adm-card-title" style="border-bottom:none; margin-bottom: 0; padding-bottom: 0;"><i class="fas fa-video"></i> Tutorial Videos Collection</div>
-                        </div>
-                        <div class="adm-card" id="adminTutorialEdit" style="display: none; margin-bottom: 20px;">
-                            <h4 style="margin-bottom: 10px; color: #10b981; font-weight: 800;"><i class="fas fa-plus-circle"></i> Add New YouTube/Shorts Video</h4>
-                            <input type="url" id="newTutorialUrl" class="adm-input" placeholder="Paste YouTube OR Shorts URL Here" style="margin-bottom:10px;">
-                            <input type="text" id="newTutorialViews" class="adm-input" placeholder="Custom Views (e.g. 1.2M, 500K)" style="margin-bottom:10px;">
-                            <button type="button" class="adm-submit-btn" onclick="addTutorialLink()" style="background:#10b981; color: #fff;"><i class="fas fa-upload"></i> Add Video Card</button>
-                        </div>
-
-                        <div id="adminTutorialsGrid" style="display: flex; gap: 15px; flex-wrap: wrap; margin-top: 15px; justify-content: center; padding: 0 10px;">
+                    <div id="sectionPrompt" class="adm-section">
+                        <div class="adm-card">
+                            <div class="adm-card-title"><i class="fas fa-robot"></i> Useful Prompts & Tools
+                                <button id="editPromptBtn" style="display:none; margin-left:auto;" class="adm-btn-edit" onclick="toggleEditPrompt()"><i class="fas fa-pen"></i> Edit</button>
+                            </div>
+                            
+                            <div class="telegram-prompt-card">
+                                <div class="telegram-prompt-header">Important Prompt</div>
+                                <div class="telegram-prompt-body" id="promptTextDisplay">Loading prompt...</div>
+                                <textarea class="prompt-edit-textarea" id="promptTextEdit" style="display:none;"></textarea>
+                                <div class="telegram-prompt-footer">
+                                    <button class="copy-code-btn" id="copyPromptBtn" onclick="copyPromptText()"><i class="far fa-copy"></i> COPY CODE</button>
+                                    <button class="adm-submit-btn" id="savePromptBtn" onclick="savePromptText()" style="display:none; margin: 0; padding: 8px 20px; width: auto; background: #3b82f6; color: #fff;"><i class="fas fa-save"></i> Save Changes</button>
+                                </div>
+                            </div>
                         </div>
                     </div>
 
@@ -403,18 +405,6 @@
                                 <button class="adm-page-btn" id="admPrevPage" onclick="changeAdminPage(-1)"><i class="fas fa-chevron-left"></i> Prev</button>
                                 <span id="admPageInfo" style="color: #a1a1aa; font-size: 0.9rem; font-weight: 800;">Page 1 of 1</span>
                                 <button class="adm-page-btn" id="admNextPage" onclick="changeAdminPage(1)">Next <i class="fas fa-chevron-right"></i></button>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div id="sectionAnalytics" class="adm-section">
-                        <div class="adm-card">
-                            <div class="adm-card-title"><i class="fas fa-shield-alt"></i> System Activity Logs</div>
-                            <div style="overflow-x: auto;">
-                                <table class="adm-table">
-                                    <thead><tr><th>Admin Profile</th><th>Action Taken</th><th>Modified File / Book</th><th>Date & Recovery</th></tr></thead>
-                                    <tbody id="logsTableBody"><tr><td colspan="4" style="text-align:center; padding:20px; color:#a1a1aa; font-weight:800;">Loading Activity Logs...</td></tr></tbody>
-                                </table>
                             </div>
                         </div>
                     </div>
@@ -481,8 +471,7 @@
             document.querySelectorAll('.adm-tab-btn').forEach(el => el.classList.remove('active'));
             if(tabName === 'add') { document.getElementById('sectionAddBook').classList.add('active'); document.getElementById('admTabAdd').classList.add('active'); }
             else if(tabName === 'manage') { document.getElementById('sectionManageBooks').classList.add('active'); document.getElementById('admTabManage').classList.add('active'); }
-            else if(tabName === 'tutorial') { document.getElementById('sectionTutorial').classList.add('active'); document.getElementById('admTabVideo').classList.add('active'); }
-            else if(tabName === 'analytics') { document.getElementById('sectionAnalytics').classList.add('active'); document.getElementById('admTabAnalytics').classList.add('active'); }
+            else if(tabName === 'prompt') { document.getElementById('sectionPrompt').classList.add('active'); document.getElementById('admTabPrompt').classList.add('active'); }
         }
     </script>
     
