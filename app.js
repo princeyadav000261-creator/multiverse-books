@@ -133,19 +133,19 @@ onAuthStateChanged(auth, async (user) => {
             
             document.getElementById('admTabManage').style.display = 'inline-flex';
             document.getElementById('admTabPrompt').style.display = 'inline-flex';
-            document.getElementById('editPromptBtn').style.display = 'inline-block';
-            document.getElementById('addYtLinkContainer').style.display = 'flex'; 
-            document.getElementById('editYtLinkContainer').style.display = 'flex'; 
+            document.getElementById('admTabVideo').style.display = 'inline-flex';
+            document.getElementById('adminAddPromptCard').style.display = 'block';
+            document.getElementById('adminTutorialEdit').style.display = 'block'; 
         } else {
             window.IS_SUPER_ADMIN = false;
             document.getElementById('sidebarRoleText').innerText = "Verified User";
             document.getElementById('uploadMenuText').innerText = "Upload Books";
             
             document.getElementById('admTabManage').style.display = 'none';
-            document.getElementById('admTabPrompt').style.display = 'inline-flex'; // Verified users can see & copy prompt
-            document.getElementById('editPromptBtn').style.display = 'none'; // Only Admin can edit
-            document.getElementById('addYtLinkContainer').style.display = 'none'; 
-            document.getElementById('editYtLinkContainer').style.display = 'none'; 
+            document.getElementById('admTabVideo').style.display = 'none';
+            document.getElementById('admTabPrompt').style.display = 'inline-flex'; // Verified users can see & copy prompts
+            document.getElementById('adminAddPromptCard').style.display = 'none'; // Only Admin can add prompts
+            document.getElementById('adminTutorialEdit').style.display = 'none'; 
             switchAdminTab('add');
         }
 
@@ -159,15 +159,49 @@ onAuthStateChanged(auth, async (user) => {
         document.getElementById('uploadMenuText').innerText = "Upload Books";
     }
 
-    // Load Prompt Data
-    onSnapshot(doc(db, "settings", "globalPrompt"), (docSnap) => {
-        if(docSnap.exists()) {
-            window.currentPromptText = docSnap.data().text;
-        } else {
-            window.currentPromptText = "Role: Act as an expert educational counselor and competitive exam syllabus analyst.\n\n(No prompt saved yet. Super Admin can edit this.)";
+    // Load Prompts Dynamically
+    onSnapshot(query(collection(db, "prompts"), orderBy("createdAt", "desc")), (snapshot) => {
+        const container = document.getElementById('promptsContainer');
+        container.innerHTML = '';
+        if(snapshot.empty) {
+            container.innerHTML = `<div style="text-align:center; padding:20px; color:#a1a1aa; font-weight:800;">No prompts added yet.</div>`;
+            return;
         }
-        document.getElementById('promptTextDisplay').innerText = window.currentPromptText;
-        document.getElementById('promptTextEdit').value = window.currentPromptText;
+
+        snapshot.forEach(doc => {
+            const data = doc.data();
+            const id = doc.id;
+            const safeText = data.text.replace(/</g, "&lt;").replace(/>/g, "&gt;");
+            
+            let deleteBtn = window.IS_SUPER_ADMIN ? `<button onclick="deletePrompt('${id}')" style="background:transparent; border:none; color:#ef4444; margin-left:auto; cursor:pointer; padding:5px;"><i class="fas fa-trash"></i></button>` : '';
+
+            container.innerHTML += `
+                <div class="telegram-prompt-wrapper">
+                    <div class="telegram-prompt-sender">APNA MODZ</div>
+                    <div class="telegram-prompt-card">
+                        <div class="telegram-prompt-header" style="display:flex; align-items:center;">
+                            ${data.title} ${deleteBtn}
+                        </div>
+                        <div class="telegram-prompt-body">${safeText}</div>
+                        <div class="telegram-prompt-footer">
+                            <button class="telegram-copy-btn" id="copy-btn-${id}" onclick="copyPromptText(decodeURIComponent('${encodeURIComponent(data.text)}'), 'copy-btn-${id}')"><i class="far fa-copy"></i> COPY CODE</button>
+                        </div>
+                    </div>
+                </div>
+            `;
+        });
+    });
+
+    // Load Tutorials Dynamically
+    onSnapshot(query(collection(db, "tutorials"), orderBy("createdAt", "desc")), (snapshot) => {
+        const grid = document.getElementById('adminTutorialsGrid');
+        if(grid) {
+            grid.innerHTML = '';
+            snapshot.forEach(doc => {
+                const data = doc.data();
+                renderTutorialCard(data, doc.id, 'adminTutorialsGrid', window.IS_SUPER_ADMIN);
+            });
+        }
     });
 
     const q = query(collection(db, "books"), orderBy("createdAt", "desc"));
@@ -201,60 +235,139 @@ onAuthStateChanged(auth, async (user) => {
     }
 });
 
-/* TELEGRAM PROMPT COPY & EDIT LOGIC */
-window.copyPromptText = function() {
-    if(!window.currentPromptText) return;
-    navigator.clipboard.writeText(window.currentPromptText).then(() => {
-        const btn = document.getElementById('copyPromptBtn');
+/* TELEGRAM PROMPT ADD/DELETE/COPY LOGIC */
+window.addPrompt = async function() {
+    if(!window.IS_SUPER_ADMIN) return;
+    const title = document.getElementById('newPromptTitle').value;
+    const text = document.getElementById('newPromptText').value;
+    if(!title || !text) return showToast("Failed: Title and Text required!");
+    try {
+        await addDoc(collection(db, "prompts"), { title: title.trim(), text: text.trim(), createdAt: new Date().getTime() });
+        showToast("Prompt Added Successfully!");
+        document.getElementById('newPromptTitle').value = '';
+        document.getElementById('newPromptText').value = '';
+    } catch(e) { showToast("Failed: " + e.message); }
+}
+
+window.deletePrompt = async function(id) {
+    if(!window.IS_SUPER_ADMIN) return;
+    if(confirm("Are you sure you want to delete this prompt?")) {
+        try { await deleteDoc(doc(db, "prompts", id)); showToast("Prompt Deleted!"); } catch(e) { showToast("Failed!"); }
+    }
+}
+
+window.copyPromptText = function(text, btnId) {
+    if(!text) return;
+    navigator.clipboard.writeText(text).then(() => {
+        const btn = document.getElementById(btnId);
         const originalHTML = btn.innerHTML;
-        btn.innerHTML = `<i class="fas fa-check" style="color: #25D366;"></i> COPIED!`;
+        btn.innerHTML = `<i class="fas fa-check" style="color: #25D366;"></i> COPIED`;
         btn.style.color = "#25D366";
         setTimeout(() => {
             btn.innerHTML = originalHTML;
-            btn.style.color = "#DBDEE1";
+            btn.style.color = "#B5BAC1";
         }, 2000);
     }).catch(err => {
         showToast("Failed to copy!");
     });
 };
 
-window.toggleEditPrompt = function() {
-    if(!window.IS_SUPER_ADMIN) return;
-    const displayDiv = document.getElementById('promptTextDisplay');
-    const editArea = document.getElementById('promptTextEdit');
-    const copyBtn = document.getElementById('copyPromptBtn');
-    const saveBtn = document.getElementById('savePromptBtn');
-
-    if (displayDiv.style.display !== 'none') {
-        displayDiv.style.display = 'none';
-        editArea.style.display = 'block';
-        copyBtn.style.display = 'none';
-        saveBtn.style.display = 'flex';
-    } else {
-        displayDiv.style.display = 'block';
-        editArea.style.display = 'none';
-        copyBtn.style.display = 'flex';
-        saveBtn.style.display = 'none';
-    }
-};
-
-window.savePromptText = async function() {
-    if(!window.IS_SUPER_ADMIN) return;
-    const newText = document.getElementById('promptTextEdit').value;
-    const btn = document.getElementById('savePromptBtn');
-    btn.innerHTML = `<i class="fas fa-spinner fa-spin"></i> Saving...`;
-    btn.disabled = true;
+/* TUTORIAL RESTORE LOGIC */
+async function renderTutorialCard(data, docId, containerId, isAdmin) {
     try {
-        await setDoc(doc(db, "settings", "globalPrompt"), { text: newText });
-        showToast("Prompt Saved Successfully!");
-        window.toggleEditPrompt();
-    } catch(e) {
-        showToast("Failed to save prompt: " + e.message);
-    } finally {
-        btn.innerHTML = `<i class="fas fa-save"></i> Save Changes`;
-        btn.disabled = false;
+        const videoUrl = data.url;
+        const customViews = data.views || "10.5K"; 
+        
+        const videoIdMatch = videoUrl.match(/(?:youtu\.be\/|youtube\.com\/(?:[^\/]+\/.+\/|(?:v|e(?:mbed)?)\/|.*[?&]v=)|youtube\.com\/shorts\/)([^"&?\/\s]{11})/i);
+        if (!videoIdMatch) return;
+        const videoId = videoIdMatch[1];
+        const standardUrl = `https://www.youtube.com/watch?v=${videoId}`;
+
+        let title = "YouTube Video";
+        let channelName = "Tutorial";
+        
+        try {
+            const response = await fetch(`https://noembed.com/embed?url=${standardUrl}`);
+            const vidData = await response.json();
+            if(vidData.title) title = vidData.title;
+            if(vidData.author_name) channelName = vidData.author_name;
+        } catch(e) {}
+
+        const thumbnailUrl = `https://img.youtube.com/vi/${videoId}/maxresdefault.jpg`;
+        const fallbackUrl = `https://img.youtube.com/vi/${videoId}/hqdefault.jpg`;
+        const avatarUrl = `https://i.postimg.cc/D0BF1b77/file-000000000e847207a64f6711d825a859.png`;
+        
+        let actionBtns = '';
+        if(isAdmin) {
+            actionBtns = `
+            <div class="yt-action-btns">
+                <button class="yt-action-btn yt-edit" onclick="editTutorial('${docId}', '${videoUrl}', '${customViews}')"><i class="fas fa-pen"></i></button>
+                <button class="yt-action-btn yt-delete" onclick="deleteTutorial('${docId}')"><i class="fas fa-trash"></i></button>
+            </div>`;
+        }
+
+        const cardHTML = `
+            <div class="yt-card">
+                ${actionBtns}
+                <div class="yt-thumbnail-wrapper" onclick="window.open('${videoUrl}', '_blank')">
+                    <img src="${thumbnailUrl}" class="yt-thumbnail-img" alt="Thumbnail" onerror="this.src='${fallbackUrl}'">
+                    <div class="yt-play-icon"><i class="fas fa-play" style="margin-left: 3px;"></i></div>
+                </div>
+                <div class="yt-info-box" onclick="window.open('${videoUrl}', '_blank')">
+                    <div style="display:flex; gap:12px; align-items:flex-start;">
+                        <img src="${avatarUrl}" style="width:36px; height:36px; border-radius:50%; flex-shrink:0;">
+                        <div>
+                            <div class="yt-video-title">${title}</div>
+                            <div class="yt-channel-name">
+                                ${channelName} <i class="fas fa-check-circle yt-verified"></i> • ${customViews} Views
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        `;
+        document.getElementById(containerId).innerHTML += cardHTML;
+    } catch (error) {}
+}
+
+window.addTutorialLink = async function() {
+    if(!window.IS_SUPER_ADMIN) return; 
+    const url = document.getElementById('newTutorialUrl').value; 
+    const views = document.getElementById('newTutorialViews').value || "12K"; 
+
+    if(!url) return showToast("Failed: Enter YouTube URL!"); 
+    try { 
+        await addDoc(collection(db, "tutorials"), { url: url, views: views, createdAt: new Date().getTime() });
+        showToast("Video Added Successfully!"); 
+        document.getElementById('newTutorialUrl').value = ''; 
+        document.getElementById('newTutorialViews').value = ''; 
+    } catch(e) { showToast("Failed: " + e.message); } 
+}
+
+window.editTutorial = async function(id, currentUrl, currentViews) {
+    if(!window.IS_SUPER_ADMIN) return;
+    const newUrl = prompt("Enter new YouTube/Shorts URL:", currentUrl);
+    if(newUrl === null) return;
+    
+    const newViews = prompt("Enter custom views (e.g. 2.1M, 500K):", currentViews);
+    if(newViews === null) return;
+
+    if(newUrl.trim() !== "" && newViews.trim() !== "") {
+        try {
+            await updateDoc(doc(db, "tutorials", id), { url: newUrl.trim(), views: newViews.trim() });
+            showToast("Video Updated Successfully!");
+        } catch(e) {
+            showToast("Failed to update video!");
+        }
     }
-};
+}
+
+window.deleteTutorial = async function(id) {
+    if(!window.IS_SUPER_ADMIN) return;
+    if(confirm("Remove this tutorial video permanently?")) {
+        try { await deleteDoc(doc(db, "tutorials", id)); showToast("Video Removed!"); } catch(e) { showToast("Failed: " + e.message); }
+    }
+}
 
 document.getElementById('loginForm').addEventListener('submit', async (e) => {
     e.preventDefault(); 
@@ -512,7 +625,6 @@ document.getElementById('addBookForm').addEventListener('submit', async (e) => {
     const titleInput = document.getElementById('inTitle').value; 
     const imgInput = document.getElementById('inImage').value;
     const pdfUrlInput = document.getElementById('inPdfUrl').value;
-    const ytUrlInput = document.getElementById('inYtUrl').value;
 
     if (!window.IS_SUPER_ADMIN) {
         if (!pdfUrlInput.includes('drive.google.com')) {
@@ -532,7 +644,6 @@ document.getElementById('addBookForm').addEventListener('submit', async (e) => {
         lang: document.getElementById('inLang').value, 
         exams: document.getElementById('inExams').value, 
         pdfLink: pdfUrlInput, 
-        ytLink: window.IS_SUPER_ADMIN ? ytUrlInput : "", 
         dateAdded: new Date().toLocaleDateString('en-GB').toUpperCase(), 
         createdAt: new Date().getTime() 
     };
@@ -620,7 +731,6 @@ window.openAdminEditModal = function(id) {
     document.getElementById('edExams').value = book.exams || ""; 
     document.getElementById('edImage').value = book.image; 
     document.getElementById('edPdfUrl').value = book.pdfLink || ""; 
-    document.getElementById('edYtUrl').value = book.ytLink || ""; 
     document.getElementById('adminEditModal').style.display = 'flex';
 }
 
@@ -649,8 +759,7 @@ document.getElementById('editBookForm').addEventListener('submit', async (e) => 
         lang: document.getElementById('edLang').value, 
         exams: document.getElementById('edExams').value, 
         image: document.getElementById('edImage').value, 
-        pdfLink: pdfUrlInput, 
-        ytLink: window.IS_SUPER_ADMIN ? document.getElementById('edYtUrl').value : ""
+        pdfLink: pdfUrlInput
     };
 
     try { 
