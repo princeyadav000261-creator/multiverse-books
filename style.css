@@ -130,13 +130,27 @@ main .premium-copyright { width: calc(100% + 40px); margin-left: -20px; margin-r
 .overlay-panel.active { transform: translateX(0); }
 
 /* Common Modal Header */
-.modal-header-fixed { display: flex; align-items: center; gap: 15px; padding: 12px 20px; position: sticky; top: 0; z-index: 999; border-bottom: 1px solid rgba(255, 255, 255, 0.05); flex-shrink: 0; background-color: var(--dev-bg-main); }
+.modal-header-fixed { position: relative; display: flex; align-items: center; gap: 15px; padding: 12px 20px; position: sticky; top: 0; z-index: 999; border-bottom: 1px solid rgba(255, 255, 255, 0.05); flex-shrink: 0; background-color: var(--dev-bg-main); }
 .header-content-wrapper { display: flex; align-items: center; gap: 15px; flex-grow: 1; }
 .modal-header-fixed .back-btn { width: 42px; height: 42px; border-radius: 50%; background-color: transparent; border: 1px solid rgba(255, 255, 255, 0.15); color: #ffffff; font-size: 18px; display: flex; justify-content: center; align-items: center; cursor: pointer; flex-shrink: 0; outline: none; transition: 0.2s ease; }
 .modal-header-fixed .back-btn:active { transform: scale(0.95); }
-.modal-header-fixed .modal-title { font-family: 'Poppins', sans-serif; font-size: 17px; font-weight: 800; color: var(--text-primary); text-transform: uppercase; letter-spacing: 0px; margin: 0; }
 
-/* NEW: Top Right Header Logo */
+/* ==== FIXED: Centered Header Title for Both DMCA and Download Pages ==== */
+.modal-header-fixed .modal-title { 
+    position: absolute;
+    left: 50%;
+    transform: translateX(-50%);
+    font-family: 'Poppins', sans-serif; 
+    font-size: 17px; 
+    font-weight: 800; 
+    color: var(--text-primary); 
+    text-transform: uppercase; 
+    letter-spacing: 0px; 
+    margin: 0;
+    white-space: nowrap;
+}
+
+/* Right Header Logo */
 .header-right-logo { width: 42px; height: 42px; border-radius: 50%; object-fit: cover; border: 1.5px solid #ffffff; box-shadow: 0 0 10px rgba(255, 255, 255, 0.2); flex-shrink: 0; }
 
 /* PREMIUM DOWNLOAD MODAL STYLES */
@@ -147,7 +161,6 @@ main .premium-copyright { width: calc(100% + 40px); margin-left: -20px; margin-r
 }
 .download-modal::-webkit-scrollbar { display: none; }
 
-/* ================= FIX: HEADER TRANSPARENCY ON DOWNLOAD PAGE ================= */
 .download-modal .modal-header-fixed { 
     background-color: #000000 !important; /* Solid black to match modal background */
     border-bottom: 1px solid rgba(255, 255, 255, 0.1) !important; 
@@ -164,30 +177,34 @@ main .premium-copyright { width: calc(100% + 40px); margin-left: -20px; margin-r
 .dl-main-btn { width: 100%; min-height: 58px; padding: 16px 20px; border: none; border-radius: 16px; margin-top: 20px; background: #10b981; color: #ffffff; font-size: 18px; font-weight: 800; display: flex; justify-content: center; align-items: center; gap: 10px; cursor: pointer; box-shadow: 0 6px 20px rgba(16, 185, 129, 0.25); outline: none; transition: 0.2s ease;}
 .dl-main-btn:active { transform: scale(0.96); }
 
-/* White Borders for Download Page Cards */
+/* ==== FIXED: Matched styling with About Developer Cards for dl-box ==== */
 .dl-box { 
     width: 100%; margin-top: 12px; padding: 14px 16px; border-radius: 16px; display: flex; align-items: center; gap: 14px; 
-    background: rgba(20, 20, 25, 0.85); border: 0.2px solid #ffffff; /* White border */
-    text-decoration: none; color: #fff; cursor: pointer; transition: 0.2s ease; box-shadow: 0 2px 5px rgba(0,0,0,0.4);
+    background: rgba(20, 20, 25, 0.85); 
+    border: 1px solid rgba(255, 255, 255, 0.1); /* Transparent matching border */
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5); /* Matching shadow */
+    text-decoration: none; color: #fff; cursor: pointer; transition: 0.2s ease;
 }
 .dl-box:active { transform: scale(0.96); }
 .dl-box i.icon { font-size: 20px; width: 42px; height: 42px; display: flex; justify-content: center; align-items: center; border-radius: 12px; background: rgba(255,255,255,0.04); flex-shrink: 0; }
 .dl-box-title { font-size: 14px; font-weight: 600; }
 .dl-box-sub { font-size: 12px; color: var(--text-secondary); margin-top: 2px; }
 
+/* ==== FIXED: Matched styling with About Developer Cards for exam-rel-box ==== */
 .exam-rel-box { 
     margin-top: 20px; 
-    background: rgba(20, 20, 25, 0.85); border: 1px solid #ffffff; /* White border */
-    border-radius: 16px; padding: 18px; box-shadow: 0 4px 15px rgba(0,0,0,0.4);
+    background: rgba(20, 20, 25, 0.85); 
+    border: 1px solid rgba(255, 255, 255, 0.1); /* Transparent matching border */
+    border-radius: 16px; padding: 18px; 
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5); /* Matching shadow */
 }
 .exam-header { display: flex; align-items: center; gap: 10px; font-size: 14px; font-weight: 800; margin-bottom: 15px; color: #fff; }
 .exam-tags { display: flex; flex-wrap: wrap; gap: 8px; }
 
-/* ================= FIX: EXAM RELEVANCE TAGS BLACK/GRAY/WHITE THEME ================= */
 .dl-modal-tag { 
-    background: rgba(255, 255, 255, 0.05); /* Slight transparent gray/white */
-    border: 1px solid rgba(255, 255, 255, 0.2); /* White-ish border */
-    color: #ffffff; /* White text */
+    background: rgba(255, 255, 255, 0.05); 
+    border: 1px solid rgba(255, 255, 255, 0.2); 
+    color: #ffffff; 
     font-size: 12px; font-weight: 600; padding: 6px 12px; border-radius: 16px; 
     box-shadow: 0 2px 5px rgba(0,0,0,0.2); 
 }
@@ -213,19 +230,29 @@ main .premium-copyright { width: calc(100% + 40px); margin-left: -20px; margin-r
 .noti-main-title { font-size: 17px; font-weight: 800; color: #ffffff; display: flex; align-items: center; gap: 6px; font-family: 'Poppins', sans-serif; letter-spacing: 0.5px; }
 .noti-sub-title { font-size: 12px; color: #8c97ac; font-weight: 500; margin-top: 2px; }
 
-.verified-icon-svg { width: 18px; height: 18px; flex-shrink: 0; filter: drop-shadow(0px 2px 5px rgba(0, 0, 0, 0.4)); }
-.noti-circle-btn { width: 44px; height: 44px; border-radius: 50%; background-color: transparent; border: 1px solid rgba(255, 255, 255, 0.25); display: flex; justify-content: center; align-items: center; color: #ffffff; font-size: 18px; cursor: pointer; transition: 0.2s ease; backdrop-filter: blur(4px); }
+/* ==== FIXED: Smaller Verified Tick for premium feel ==== */
+.verified-icon-svg { width: 14px; height: 14px; flex-shrink: 0; filter: drop-shadow(0px 2px 5px rgba(0, 0, 0, 0.4)); }
+
+/* ==== FIXED: Smaller Back Button Size for Notification Panel ==== */
+.noti-circle-btn { width: 36px; height: 36px; border-radius: 50%; background-color: transparent; border: 1px solid rgba(255, 255, 255, 0.25); display: flex; justify-content: center; align-items: center; color: #ffffff; font-size: 15px; cursor: pointer; transition: 0.2s ease; backdrop-filter: blur(4px); }
 .noti-circle-btn:active { transform: scale(0.9); background-color: rgba(255, 255, 255, 0.1); }
 
 .noti-body { flex: 1; padding: 20px; overflow-y: auto; display: flex; flex-direction: column; gap: 15px; background-color: #000000; -webkit-overflow-scrolling: touch; transform: translateZ(0); will-change: transform; overscroll-behavior-y: contain;}
 .noti-body::-webkit-scrollbar { display: none; }
-.noti-card-dynamic { display: flex; gap: 15px; background-color: #0d0d12; border-radius: 16px; padding: 15px; align-items: center; border: 1px solid rgba(255, 255, 255, 0.4); }
+
+/* ==== FIXED: Matched styling with About Developer Cards for noti-card-dynamic ==== */
+.noti-card-dynamic { 
+    display: flex; gap: 15px; align-items: center;
+    background-color: rgba(20, 20, 25, 0.95); 
+    border-radius: 16px; padding: 15px; 
+    border: 1px solid rgba(255, 255, 255, 0.1); /* Transparent matching border */
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5); /* Matching shadow */
+}
 .noti-card-img { width: 45px; height: 60px; border-radius: 6px; object-fit: contain; background: #fff; flex-shrink: 0; }
 .noti-card-content { display: flex; flex-direction: column; gap: 4px; flex: 1; }
 .noti-card-title { font-size: 0.95rem; color: #ffffff; font-weight: 700; line-height: 1.3;}
 .noti-card-desc { font-size: 0.8rem; color: #8c97ac; }
 
-/* ================= PERFECT FOOTER ================= */
 .panel-fixed-footer { position: relative; width: 100%; padding: 20px 10px; padding-bottom: calc(20px + env(safe-area-inset-bottom, 0px)); text-align: center; font-size: 9px; font-weight: 700; color: #ffffff; letter-spacing: 0.8px; text-transform: uppercase; background: transparent; border-top: 1px solid rgba(255, 255, 255, 0.1); margin-top: auto; }
 
 /* ================= ABOUT DEVELOPER ================= */
@@ -260,12 +287,11 @@ main .premium-copyright { width: calc(100% + 40px); margin-left: -20px; margin-r
 
 .dev-cards-container { padding: 20px 15px 25px; display: flex; flex-direction: column; gap: 16px; }
 
-/* ================= FIX: REMOVED BLUR FOR BUTTER SMOOTH SCROLLING ================= */
 .dev-info-card { 
-    background: rgba(20, 20, 25, 0.95); /* More opaque, blur removed */
+    background: rgba(20, 20, 25, 0.95); 
     border-radius: 24px; padding: 20px; display: flex; align-items: center; gap: 18px; 
     border: 1px solid rgba(255, 255, 255, 0.1); box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5); 
-    transform: translateZ(0); /* Hardware acceleration enabled */
+    transform: translateZ(0); 
 }
 .dev-icon-box { width: 52px; height: 52px; border-radius: 16px; background: #1c1c1e; border: 1px solid rgba(255, 255, 255, 0.05); display: flex; justify-content: center; align-items: center; color: #ffffff; font-size: 1.3rem; flex-shrink: 0; box-shadow: inset 0 0 10px rgba(255,255,255,0.03); }
 .dev-card-content { display: flex; flex-direction: column; gap: 4px; }
@@ -282,19 +308,17 @@ main .premium-copyright { width: calc(100% + 40px); margin-left: -20px; margin-r
 .dmca-hero-title { font-size: 22px; font-weight: 900; letter-spacing: 1px; text-transform: uppercase; background: linear-gradient(90deg, #ffffff, #d4d4d8, #71717a); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
 .dmca-hero-subtitle { display: flex; justify-content: center; gap: 8px; flex-wrap: wrap; margin-top: 15px; }
 
-/* Premium gray badges with White Border */
 .dmca-badge { padding: 6px 14px; border-radius: 999px; background: rgba(255,255,255,0.05); border: 1px solid #ffffff; font-size: 10px; font-weight: 700; color: #e4e4e7; box-shadow: 0 2px 8px rgba(0,0,0,0.3); }
 .badge-edu i { color: #3b82f6 !important; }
 .badge-res i { color: #a855f7 !important; }
 .badge-ref i { color: #10b981 !important; }
 
-/* ================= FIX: REMOVED BLUR FOR BUTTER SMOOTH SCROLLING ================= */
 .dmca-section { 
     flex-shrink: 0; text-align: center; margin: 0 20px 20px; 
-    background: rgba(20, 20, 25, 0.95); /* More opaque, blur removed */
+    background: rgba(20, 20, 25, 0.95); 
     padding: 24px 20px; border-radius: 24px; border: 1px solid #ffffff !important; 
     box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5); 
-    transform: translateZ(0); /* Hardware acceleration enabled */
+    transform: translateZ(0); 
 }
 
 .dmca-section-title { display: flex; justify-content: center; align-items: center; gap: 14px; font-size: 1.1rem; font-weight: 800; margin-bottom: 12px; color: #ffffff !important; }
@@ -347,8 +371,11 @@ main .premium-copyright { width: calc(100% + 40px); margin-left: -20px; margin-r
 .close-login-btn:hover { background-color: rgba(255, 255, 255, 0.08); transform: scale(1.05); }
 .login-container { position: fixed; inset: 0; z-index: 99999; display: flex; flex-direction: column; align-items: center; justify-content: center; background: rgba(5, 5, 8, 0.95); backdrop-filter: blur(10px); transition: opacity 0.5s ease; overflow-y: auto; }
 .login-content-wrapper { margin: auto; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 15px; padding-top: 25px; width: 100%; max-width: 380px; position: relative; }
-.login-logo-glow { margin-top: -20px; width: 85px; height: 85px; background: #fff; border-radius: 20px; display: flex; justify-content: center; align-items: center; box-shadow: 0 0 45px rgba(138, 43, 226, 0.5), inset 0 0 15px rgba(0,0,0,0.1); margin-bottom: 18px; padding: 4px; }
+
+/* ==== FIXED: Removed Blue Glow from Login Logo ==== */
+.login-logo-glow { margin-top: -20px; width: 85px; height: 85px; background: #fff; border-radius: 20px; display: flex; justify-content: center; align-items: center; box-shadow: inset 0 0 15px rgba(0,0,0,0.1); margin-bottom: 18px; padding: 4px; }
 .login-logo-glow img { width: 100%; height: 100%; object-fit: cover; border-radius: 18px; border: 2px solid #52525b; }
+
 .login-title-small { color: #9d88ff; font-size: 12px; font-weight: 800; letter-spacing: 2px; text-transform: uppercase; }
 .login-title-large { color: #fff; font-size: 24px; font-weight: 900; margin-top: 4px; font-family: 'Poppins', sans-serif; letter-spacing: 1px; }
 .login-subtitle { color: #8c97ac; font-size: 11px; margin-top: 6px; margin-bottom: 35px; letter-spacing: 0.5px; }
