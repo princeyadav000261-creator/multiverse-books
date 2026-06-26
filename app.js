@@ -144,9 +144,9 @@ onAuthStateChanged(auth, async (user) => {
             document.getElementById('uploadMenuText').innerText = "Upload Books";
             
             document.getElementById('admTabManage').style.display = 'none';
-            document.getElementById('admTabVideo').style.display = 'none';
-            document.getElementById('admTabPrompt').style.display = 'inline-flex'; // Verified users can see & copy prompts
-            document.getElementById('adminAddPromptCard').style.display = 'none'; // Only Admin can add prompts
+            document.getElementById('admTabVideo').style.display = 'inline-flex'; // Verified users can now see the tutorial tab
+            document.getElementById('admTabPrompt').style.display = 'inline-flex';
+            document.getElementById('adminAddPromptCard').style.display = 'none'; 
             document.getElementById('adminTutorialEdit').style.display = 'none'; 
             document.getElementById('addYtLinkContainer').style.display = 'none'; 
             document.getElementById('editYtLinkContainer').style.display = 'none'; 
@@ -176,12 +176,15 @@ onAuthStateChanged(auth, async (user) => {
             const data = doc.data();
             const id = doc.id;
             const safeText = data.text.replace(/</g, "&lt;").replace(/>/g, "&gt;");
+            const safeInstruction = data.instruction ? data.instruction.replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/\n/g, "<br>") : "No instructions provided.";
             
             let deleteBtn = window.IS_SUPER_ADMIN ? `<button onclick="deletePrompt('${id}')" style="background:transparent; border:none; color:#ef4444; margin-left:auto; cursor:pointer; padding:5px;"><i class="fas fa-trash"></i></button>` : '';
 
             container.innerHTML += `
                 <div class="telegram-prompt-wrapper">
-                    <div class="telegram-prompt-sender">APNA MODZ</div>
+                    <div style="color: #a1a1aa; font-weight: 500; font-size: 12.5px; margin-bottom: 8px; margin-left: 2px; line-height: 1.5; font-family: 'Inter', sans-serif;">
+                        <i class="fas fa-info-circle" style="color:#3b82f6; margin-right:5px;"></i> <b>How to use:</b><br>${safeInstruction}
+                    </div>
                     <div class="telegram-prompt-card">
                         <div class="telegram-prompt-header" style="display:flex; align-items:center;">
                             ${data.title} ${deleteBtn}
@@ -243,12 +246,20 @@ onAuthStateChanged(auth, async (user) => {
 window.addPrompt = async function() {
     if(!window.IS_SUPER_ADMIN) return;
     const title = document.getElementById('newPromptTitle').value;
+    const instruction = document.getElementById('newPromptInstruction').value; // Get the instruction value
     const text = document.getElementById('newPromptText').value;
-    if(!title || !text) return showToast("Failed: Title and Text required!");
+    
+    if(!title || !text || !instruction) return showToast("Failed: Title, Instructions & Text required!");
     try {
-        await addDoc(collection(db, "prompts"), { title: title.trim(), text: text.trim(), createdAt: new Date().getTime() });
+        await addDoc(collection(db, "prompts"), { 
+            title: title.trim(), 
+            instruction: instruction.trim(),
+            text: text.trim(), 
+            createdAt: new Date().getTime() 
+        });
         showToast("Prompt Added Successfully!");
         document.getElementById('newPromptTitle').value = '';
+        document.getElementById('newPromptInstruction').value = '';
         document.getElementById('newPromptText').value = '';
     } catch(e) { showToast("Failed: " + e.message); }
 }
