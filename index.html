@@ -358,6 +358,8 @@
                                 <div class="adm-form-group"><label class="adm-label">Cover Image URL</label><input type="url" id="inImage" class="adm-input" placeholder="https://example.com/image.jpg" required autocomplete="off"></div>
                                 <div class="adm-form-group"><label class="adm-label">Direct PDF Link</label><input type="url" id="inPdfUrl" class="adm-input" placeholder="Google Drive Link" required autocomplete="off"></div>
                                 
+                                <div class="adm-form-group" id="addYtLinkContainer" style="display:none;"><label class="adm-label">YouTube Tutorial Link (Optional)</label><input type="url" id="inYtUrl" class="adm-input" placeholder="https://youtube.com/watch?v=..." autocomplete="off"></div>
+                                
                                 <button type="submit" id="publishBtn" class="adm-submit-btn">
                                     <span class="btn-text" style="display: flex; align-items: center; justify-content: center; gap: 10px;"><i class="fas fa-cloud-upload-alt"></i> Publish Book</span>
                                 </button>
@@ -381,9 +383,6 @@
                     </div>
 
                     <div id="sectionTutorial" class="adm-section">
-                        <div class="adm-card" style="margin-bottom: 10px; border-bottom: none;">
-                            <div class="adm-card-title" style="border-bottom:none; margin-bottom: 0; padding-bottom: 0;"><i class="fas fa-video"></i> Tutorial Videos Collection</div>
-                        </div>
                         <div class="adm-card" id="adminTutorialEdit" style="display: none; margin-bottom: 20px;">
                             <h4 style="margin-bottom: 10px; color: #10b981; font-weight: 800;"><i class="fas fa-plus-circle"></i> Add New YouTube/Shorts Video</h4>
                             <input type="url" id="newTutorialUrl" class="adm-input" placeholder="Paste YouTube OR Shorts URL Here" style="margin-bottom:10px;">
@@ -446,6 +445,7 @@
                 <div class="adm-form-group"><label class="adm-label">Exam Relevance</label><input type="text" id="edExams" class="adm-input" required autocomplete="off"></div>
                 <div class="adm-form-group"><label class="adm-label">Cover Image URL</label><input type="url" id="edImage" class="adm-input" required autocomplete="off"></div>
                 <div class="adm-form-group"><label class="adm-label">Direct PDF Link</label><input type="url" id="edPdfUrl" class="adm-input" required autocomplete="off"></div>
+                <div class="adm-form-group" id="editYtLinkContainer" style="display:none;"><label class="adm-label">YouTube Tutorial Link (Optional)</label><input type="url" id="edYtUrl" class="adm-input" autocomplete="off"></div>
                 
                 <button type="submit" id="editSaveBtn" class="adm-submit-btn" style="background:#3b82f6; color:#fff;">
                     <span class="btn-text" style="display: flex; align-items: center; justify-content: center; gap: 10px;"><i class="fas fa-save"></i> Save Changes</span>
