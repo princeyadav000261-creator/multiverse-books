@@ -372,6 +372,10 @@
                         <div class="adm-card" id="adminAddPromptCard" style="display: none; margin-bottom: 25px;">
                             <h4 style="margin-bottom: 12px; color: #10b981; font-weight: 800; display: flex; align-items: center; gap: 8px;"><i class="fas fa-plus-circle"></i> Add New Prompt</h4>
                             <input type="text" id="newPromptTitle" class="adm-input" placeholder="Prompt Title (e.g., Important Prompt)" style="margin-bottom:10px;">
+                            
+                            <!-- NEW: Instruction input field -->
+                            <textarea id="newPromptInstruction" class="adm-input" placeholder="Instructions (e.g., 1. Copy code 2. Paste in ChatGPT)" style="margin-bottom:10px; min-height: 60px; resize: vertical;"></textarea>
+                            
                             <textarea id="newPromptText" class="adm-input" placeholder="Paste your prompt text here..." style="margin-bottom:10px; min-height: 100px; resize: vertical;"></textarea>
                             <button type="button" class="adm-submit-btn" onclick="addPrompt()" style="background:#10b981; color: #fff;"><i class="fas fa-save"></i> Save Prompt</button>
                         </div>
