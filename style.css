@@ -474,9 +474,15 @@ select.adm-input { appearance: none; -webkit-appearance: none; padding-right: 40
 /* ==== NEW: EXACT TELEGRAM STYLE PROMPT BLOCK ==== */
 .telegram-prompt-wrapper { margin-bottom: 25px; font-family: 'Inter', sans-serif; display: flex; flex-direction: column; }
 .telegram-prompt-sender { color: #E58A8A; font-weight: 800; font-size: 13.5px; margin-bottom: 6px; margin-left: 2px; text-transform: uppercase; letter-spacing: 0.5px;}
-.telegram-prompt-card { background: #2B2D31; border-radius: 12px; overflow: hidden; width: 100%; border: none; box-shadow: 0 4px 10px rgba(0,0,0,0.3); }
+
+/* CHANGED: Left mein white pati (border) aur border-radius Image 2 jaisa kar diya */
+.telegram-prompt-card { background: #2B2D31; border-radius: 6px 12px 12px 6px; overflow: hidden; width: 100%; border: none; border-left: 4px solid #ffffff; box-shadow: 0 4px 10px rgba(0,0,0,0.3); }
+
 .telegram-prompt-header { background: #383A40; padding: 12px 15px; font-weight: 700; color: #fff; font-size: 15px; }
-.telegram-prompt-body { padding: 16px 15px; color: #DBDEE1; font-size: 14.5px; line-height: 1.5; white-space: pre-wrap; word-break: break-word; }
+
+/* CHANGED: Text size 14.5px se 15px kiya taaki screenshot jaisa perfect feel aaye */
+.telegram-prompt-body { padding: 16px 15px; color: #DBDEE1; font-size: 15px; line-height: 1.5; white-space: pre-wrap; word-break: break-word; }
+
 .telegram-prompt-footer { padding: 10px; display: flex; justify-content: center; align-items: center; border-top: 1px solid rgba(255,255,255,0.05); }
 .telegram-copy-btn { background: transparent; border: none; color: #B5BAC1; display: flex; align-items: center; gap: 8px; font-weight: 700; cursor: pointer; font-size: 14px; padding: 10px 15px; border-radius: 6px; transition: 0.2s; width: 100%; justify-content: center; outline: none;}
 .telegram-copy-btn:active { transform: scale(0.97); background: rgba(255,255,255,0.05); }
