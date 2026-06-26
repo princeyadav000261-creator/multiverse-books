@@ -1,5 +1,5 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
-import { getFirestore, collection, addDoc, doc, updateDoc, deleteDoc, onSnapshot, query, orderBy, setDoc, increment } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
+import { getFirestore, collection, addDoc, doc, updateDoc, deleteDoc, onSnapshot, query, orderBy, setDoc } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
 import { getAuth, signInWithEmailAndPassword, GoogleAuthProvider, signInWithPopup, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js";
 
 const firebaseConfig = {
@@ -29,7 +29,6 @@ const SUPER_ADMIN_EMAIL = "princeyadav000261@gmail.com";
 let adminFilteredBooks = [];
 let adminCurrentPage = 1;
 const adminBooksPerPage = 10;
-let dbLogs = []; 
 
 const urlParamsCheck = new URLSearchParams(window.location.search);
 window.isDeepLinkLoad = urlParamsCheck.has('book'); 
@@ -93,23 +92,6 @@ const currentQuoteIndex = todayDays % quotes.length;
 document.getElementById('daily-quote-text').innerHTML = `<i class="fas fa-quote-left" style="color: rgba(255,255,255,0.3); margin-right:5px;"></i> ${quotes[currentQuoteIndex].text}`;
 document.getElementById('daily-quote-author').innerText = `— ${quotes[currentQuoteIndex].author}`;
 
-async function logActivity(actionType, bookTitle, imageUrl = "", deletedBookData = null) {
-    try {
-        const userEmail = (auth.currentUser && auth.currentUser.email) ? auth.currentUser.email : "admin@multiverse.com";
-        await addDoc(collection(db, "activity_logs"), {
-            action: actionType,
-            bookTitle: bookTitle,
-            image: imageUrl,
-            deletedData: deletedBookData,
-            adminName: document.getElementById('sidebarProfileName').innerText,
-            adminEmail: userEmail,
-            adminPhoto: "https://i.postimg.cc/cJdGqYHG/IMG-20260524-WA0004.jpg",
-            timestamp: new Date().getTime(),
-            dateStr: new Date().toLocaleString('en-GB', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute:'2-digit' })
-        });
-    } catch(e) {}
-}
-
 window.addEventListener('resize', resizeCanvas); resizeCanvas(); animateHex(0);
 
 let isInitialLoad = true;
@@ -150,25 +132,18 @@ onAuthStateChanged(auth, async (user) => {
             document.getElementById('uploadMenuText').innerText = "Manage Vault";
             
             document.getElementById('admTabManage').style.display = 'inline-flex';
-            document.getElementById('admTabAnalytics').style.display = 'inline-flex';
-            document.getElementById('adminTutorialEdit').style.display = 'block';
+            document.getElementById('admTabPrompt').style.display = 'inline-flex';
+            document.getElementById('editPromptBtn').style.display = 'inline-block';
             document.getElementById('addYtLinkContainer').style.display = 'flex'; 
             document.getElementById('editYtLinkContainer').style.display = 'flex'; 
-            
-            onSnapshot(query(collection(db, "activity_logs"), orderBy("timestamp", "desc")), (snapshot) => {
-                dbLogs = [];
-                snapshot.forEach(doc => { let l = doc.data(); l.id = doc.id; dbLogs.push(l); });
-                renderLogs();
-            }, (error) => {});
-
         } else {
             window.IS_SUPER_ADMIN = false;
             document.getElementById('sidebarRoleText').innerText = "Verified User";
             document.getElementById('uploadMenuText').innerText = "Upload Books";
             
             document.getElementById('admTabManage').style.display = 'none';
-            document.getElementById('admTabAnalytics').style.display = 'none';
-            document.getElementById('adminTutorialEdit').style.display = 'none';
+            document.getElementById('admTabPrompt').style.display = 'inline-flex'; // Verified users can see & copy prompt
+            document.getElementById('editPromptBtn').style.display = 'none'; // Only Admin can edit
             document.getElementById('addYtLinkContainer').style.display = 'none'; 
             document.getElementById('editYtLinkContainer').style.display = 'none'; 
             switchAdminTab('add');
@@ -184,12 +159,15 @@ onAuthStateChanged(auth, async (user) => {
         document.getElementById('uploadMenuText').innerText = "Upload Books";
     }
 
-    onSnapshot(query(collection(db, "tutorials"), orderBy("createdAt", "desc")), (snapshot) => {
-        document.getElementById('adminTutorialsGrid').innerHTML = '';
-        snapshot.forEach(doc => {
-            const data = doc.data();
-            renderTutorialCard(data, doc.id, 'adminTutorialsGrid', window.IS_SUPER_ADMIN);
-        });
+    // Load Prompt Data
+    onSnapshot(doc(db, "settings", "globalPrompt"), (docSnap) => {
+        if(docSnap.exists()) {
+            window.currentPromptText = docSnap.data().text;
+        } else {
+            window.currentPromptText = "Role: Act as an expert educational counselor and competitive exam syllabus analyst.\n\n(No prompt saved yet. Super Admin can edit this.)";
+        }
+        document.getElementById('promptTextDisplay').innerText = window.currentPromptText;
+        document.getElementById('promptTextEdit').value = window.currentPromptText;
     });
 
     const q = query(collection(db, "books"), orderBy("createdAt", "desc"));
@@ -222,6 +200,61 @@ onAuthStateChanged(auth, async (user) => {
         isInitialLoad = false;
     }
 });
+
+/* TELEGRAM PROMPT COPY & EDIT LOGIC */
+window.copyPromptText = function() {
+    if(!window.currentPromptText) return;
+    navigator.clipboard.writeText(window.currentPromptText).then(() => {
+        const btn = document.getElementById('copyPromptBtn');
+        const originalHTML = btn.innerHTML;
+        btn.innerHTML = `<i class="fas fa-check" style="color: #25D366;"></i> COPIED!`;
+        btn.style.color = "#25D366";
+        setTimeout(() => {
+            btn.innerHTML = originalHTML;
+            btn.style.color = "#DBDEE1";
+        }, 2000);
+    }).catch(err => {
+        showToast("Failed to copy!");
+    });
+};
+
+window.toggleEditPrompt = function() {
+    if(!window.IS_SUPER_ADMIN) return;
+    const displayDiv = document.getElementById('promptTextDisplay');
+    const editArea = document.getElementById('promptTextEdit');
+    const copyBtn = document.getElementById('copyPromptBtn');
+    const saveBtn = document.getElementById('savePromptBtn');
+
+    if (displayDiv.style.display !== 'none') {
+        displayDiv.style.display = 'none';
+        editArea.style.display = 'block';
+        copyBtn.style.display = 'none';
+        saveBtn.style.display = 'flex';
+    } else {
+        displayDiv.style.display = 'block';
+        editArea.style.display = 'none';
+        copyBtn.style.display = 'flex';
+        saveBtn.style.display = 'none';
+    }
+};
+
+window.savePromptText = async function() {
+    if(!window.IS_SUPER_ADMIN) return;
+    const newText = document.getElementById('promptTextEdit').value;
+    const btn = document.getElementById('savePromptBtn');
+    btn.innerHTML = `<i class="fas fa-spinner fa-spin"></i> Saving...`;
+    btn.disabled = true;
+    try {
+        await setDoc(doc(db, "settings", "globalPrompt"), { text: newText });
+        showToast("Prompt Saved Successfully!");
+        window.toggleEditPrompt();
+    } catch(e) {
+        showToast("Failed to save prompt: " + e.message);
+    } finally {
+        btn.innerHTML = `<i class="fas fa-save"></i> Save Changes`;
+        btn.disabled = false;
+    }
+};
 
 document.getElementById('loginForm').addEventListener('submit', async (e) => {
     e.preventDefault(); 
@@ -470,103 +503,6 @@ function showToast(message) {
     setTimeout(() => { toast.classList.remove('show'); }, 3000);
 }
 
-async function renderTutorialCard(data, docId, containerId, isAdmin) {
-    try {
-        const videoUrl = data.url;
-        const customViews = data.views || "10.5K"; 
-        
-        const videoIdMatch = videoUrl.match(/(?:youtu\.be\/|youtube\.com\/(?:[^\/]+\/.+\/|(?:v|e(?:mbed)?)\/|.*[?&]v=)|youtube\.com\/shorts\/)([^"&?\/\s]{11})/i);
-        if (!videoIdMatch) return;
-        const videoId = videoIdMatch[1];
-        const standardUrl = `https://www.youtube.com/watch?v=${videoId}`;
-
-        let title = "YouTube Video";
-        let channelName = "Tutorial";
-        
-        try {
-            const response = await fetch(`https://noembed.com/embed?url=${standardUrl}`);
-            const vidData = await response.json();
-            if(vidData.title) title = vidData.title;
-            if(vidData.author_name) channelName = vidData.author_name;
-        } catch(e) {}
-
-        const thumbnailUrl = `https://img.youtube.com/vi/${videoId}/maxresdefault.jpg`;
-        const fallbackUrl = `https://img.youtube.com/vi/${videoId}/hqdefault.jpg`;
-        
-        const avatarUrl = `https://i.postimg.cc/D0BF1b77/file-000000000e847207a64f6711d825a859.png`;
-        
-        let actionBtns = '';
-        if(isAdmin) {
-            actionBtns = `
-            <div class="yt-action-btns">
-                <button class="yt-action-btn yt-edit" onclick="editTutorial('${docId}', '${videoUrl}', '${customViews}')"><i class="fas fa-pen"></i></button>
-                <button class="yt-action-btn yt-delete" onclick="deleteTutorial('${docId}')"><i class="fas fa-trash"></i></button>
-            </div>`;
-        }
-
-        const cardHTML = `
-            <div class="yt-card">
-                ${actionBtns}
-                <div class="yt-thumbnail-wrapper" onclick="window.open('${videoUrl}', '_blank')">
-                    <img src="${thumbnailUrl}" class="yt-thumbnail-img" alt="Thumbnail" onerror="this.src='${fallbackUrl}'">
-                    <div class="yt-play-icon"><i class="fas fa-play" style="margin-left: 3px;"></i></div>
-                </div>
-                <div class="yt-info-box" onclick="window.open('${videoUrl}', '_blank')">
-                    <div style="display:flex; gap:12px; align-items:flex-start;">
-                        <img src="${avatarUrl}" style="width:36px; height:36px; border-radius:50%; flex-shrink:0;">
-                        <div>
-                            <div class="yt-video-title">${title}</div>
-                            <div class="yt-channel-name">
-                                ${channelName} <i class="fas fa-check-circle yt-verified"></i> • ${customViews} Views
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        `;
-        document.getElementById(containerId).innerHTML += cardHTML;
-    } catch (error) {}
-}
-
-window.addTutorialLink = async function() {
-    if(!window.IS_SUPER_ADMIN) return; 
-    const url = document.getElementById('newTutorialUrl').value; 
-    const views = document.getElementById('newTutorialViews').value || "12K"; 
-
-    if(!url) return showToast("Failed: Enter YouTube URL!"); 
-    try { 
-        await addDoc(collection(db, "tutorials"), { url: url, views: views, createdAt: new Date().getTime() });
-        showToast("Video Added Successfully!"); 
-        document.getElementById('newTutorialUrl').value = ''; 
-        document.getElementById('newTutorialViews').value = ''; 
-    } catch(e) { showToast("Failed: " + e.message); } 
-}
-
-window.editTutorial = async function(id, currentUrl, currentViews) {
-    if(!window.IS_SUPER_ADMIN) return;
-    const newUrl = prompt("Enter new YouTube/Shorts URL:", currentUrl);
-    if(newUrl === null) return;
-    
-    const newViews = prompt("Enter custom views (e.g. 2.1M, 500K):", currentViews);
-    if(newViews === null) return;
-
-    if(newUrl.trim() !== "" && newViews.trim() !== "") {
-        try {
-            await updateDoc(doc(db, "tutorials", id), { url: newUrl.trim(), views: newViews.trim() });
-            showToast("Video Updated Successfully!");
-        } catch(e) {
-            showToast("Failed to update video!");
-        }
-    }
-}
-
-window.deleteTutorial = async function(id) {
-    if(!window.IS_SUPER_ADMIN) return;
-    if(confirm("Remove this tutorial video permanently?")) {
-        try { await deleteDoc(doc(db, "tutorials", id)); showToast("Video Removed!"); } catch(e) { showToast("Failed: " + e.message); }
-    }
-}
-
 document.getElementById('addBookForm').addEventListener('submit', async (e) => {
     e.preventDefault(); 
     
@@ -603,7 +539,6 @@ document.getElementById('addBookForm').addEventListener('submit', async (e) => {
 
     try { 
         await addDoc(collection(db, "books"), newBook); 
-        await logActivity("ADD", titleInput, imgInput);
         showToast("Book Published Successfully!"); 
         e.target.reset(); 
     } catch (error) { 
@@ -669,9 +604,7 @@ function renderAdminBooksTable() {
 window.deleteBookRecord = async function(id) { 
     if(confirm("Delete this book permanently?")) { 
         try { 
-            const book = window.booksData.find(x => x.id === id);
             await deleteDoc(doc(db, "books", id)); 
-            try { await logActivity("DELETE", book.title, book.image, book); } catch(e){}
             showToast("Deleted Successfully!"); 
         } catch (error) { showToast("Failed: Rules Blocked Delete!"); } 
     } 
@@ -722,7 +655,6 @@ document.getElementById('editBookForm').addEventListener('submit', async (e) => 
 
     try { 
         await updateDoc(doc(db, "books", docId), updatedData); 
-        try { await logActivity("EDIT", updatedData.title, updatedData.image); } catch(e){}
         document.getElementById('adminEditModal').style.display='none'; 
         showToast("Updated Successfully!"); 
     } catch (error) { showToast("Failed: Rules Blocked Update!"); } finally {
@@ -730,49 +662,3 @@ document.getElementById('editBookForm').addEventListener('submit', async (e) => 
         btn.disabled = false;
     }
 });
-
-function renderLogs() {
-    const tbody = document.getElementById('logsTableBody'); 
-    if(!tbody) return;
-    if (dbLogs.length === 0) { tbody.innerHTML = `<tr><td colspan="4" style="text-align:center; padding:20px; color:#a1a1aa; font-weight:800;">No activity tracked yet.</td></tr>`; return; }
-    let htmlString = "";
-    dbLogs.forEach(log => {
-        let badge = ''; let recoveryBtn = '';
-        if(log.action === 'ADD') { badge = `<span class="log-badge log-add"><i class="fas fa-plus"></i> Uploaded</span>`; } 
-        else if(log.action === 'EDIT') { badge = `<span class="log-badge log-edit"><i class="fas fa-pen"></i> Modified</span>`; } 
-        else if(log.action === 'DELETE') { badge = `<span class="log-badge log-delete"><i class="fas fa-trash"></i> Deleted</span>`; if(log.deletedData) { recoveryBtn = `<br><button class="btn-recover" onclick="recoverBook('${log.id}')"><i class="fas fa-undo"></i> Recover Vault</button>`; } } 
-        else if (log.action === 'RESTORE') { badge = `<span class="log-badge log-restore"><i class="fas fa-trash-restore"></i> Restored</span>`; }
-        
-        let img = log.image ? `<img src="${log.image}" class="log-table-img" onerror="this.src='https://via.placeholder.com/40x55?text=Img'">` : ''; 
-        let displayEmail = log.adminEmail || "admin@multiverse.com";
-        
-        htmlString += `<tr>
-            <td>
-                <div class="log-admin-info">
-                    <img src="https://i.postimg.cc/cJdGqYHG/IMG-20260524-WA0004.jpg" alt="Admin">
-                    <div>
-                        <div style="font-weight: 800; color: #fff; text-transform: uppercase;">${log.adminName || "Admin"}</div>
-                        <div style="font-size: 10px; color: #a1a1aa; font-weight: 600;">${displayEmail}</div>
-                    </div>
-                </div>
-            </td>
-            <td>${badge}</td>
-            <td style="display: flex; align-items: center;">${img}<span style="color:#fff; font-weight: 800; font-size:1.05rem;">${log.bookTitle}</span></td>
-            <td><div style="color: #a1a1aa; font-size: 0.9rem; font-weight:700;"><i class="far fa-clock" style="margin-right:5px;"></i> ${log.dateStr}</div>${recoveryBtn}</td>
-        </tr>`;
-    }); 
-    tbody.innerHTML = htmlString;
-}
-
-window.recoverBook = async function(logId) {
-    if(!window.IS_SUPER_ADMIN) return;
-    const log = dbLogs.find(l => l.id === logId);
-    if(!log || !log.deletedData) return;
-    if(confirm(`Recover "${log.bookTitle}"?`)) {
-        try {
-            await setDoc(doc(db, "books", log.deletedData.id), log.deletedData);
-            try { await logActivity("RESTORE", log.bookTitle, log.image); } catch(e){}
-            showToast("Book Restored Successfully!");
-        } catch(error) { showToast("Failed: Rules Blocked Restore!"); }
-    }
-}
