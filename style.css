@@ -130,7 +130,13 @@ main .premium-copyright { width: calc(100% + 40px); margin-left: -20px; margin-r
 .overlay-panel.active { transform: translateX(0); }
 
 /* Common Modal Header */
-.modal-header-fixed { position: relative; display: flex; align-items: center; gap: 15px; padding: 12px 20px; position: sticky; top: 0; z-index: 999; border-bottom: 1px solid rgba(255, 255, 255, 0.05); flex-shrink: 0; background-color: var(--dev-bg-main); }
+/* ==== FIXED: Improved Header Border/Separator for Premium Look ==== */
+.modal-header-fixed { 
+    position: relative; display: flex; align-items: center; gap: 15px; padding: 12px 20px; position: sticky; top: 0; z-index: 999; 
+    border-bottom: 1px solid rgba(255, 255, 255, 0.15) !important; 
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+    flex-shrink: 0; background-color: var(--dev-bg-main); 
+}
 .header-content-wrapper { display: flex; align-items: center; gap: 15px; flex-grow: 1; }
 .modal-header-fixed .back-btn { width: 42px; height: 42px; border-radius: 50%; background-color: transparent; border: 1px solid rgba(255, 255, 255, 0.15); color: #ffffff; font-size: 18px; display: flex; justify-content: center; align-items: center; cursor: pointer; flex-shrink: 0; outline: none; transition: 0.2s ease; }
 .modal-header-fixed .back-btn:active { transform: scale(0.95); }
@@ -162,8 +168,9 @@ main .premium-copyright { width: calc(100% + 40px); margin-left: -20px; margin-r
 .download-modal::-webkit-scrollbar { display: none; }
 
 .download-modal .modal-header-fixed { 
-    background-color: #000000 !important; /* Solid black to match modal background */
-    border-bottom: 1px solid rgba(255, 255, 255, 0.1) !important; 
+    background-color: #000000 !important; 
+    border-bottom: 1px solid rgba(255, 255, 255, 0.15) !important; 
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
 }
 
 .dl-content-wrapper { padding: 5px 20px 0; display: flex; flex-direction: column; min-height: 100%; }
@@ -198,7 +205,21 @@ main .premium-copyright { width: calc(100% + 40px); margin-left: -20px; margin-r
     border-radius: 16px; padding: 18px; 
     box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5); /* Matching shadow */
 }
-.exam-header { display: flex; align-items: center; gap: 10px; font-size: 14px; font-weight: 800; margin-bottom: 15px; color: #fff; }
+
+/* ==== FIXED: Exam Relevance Attractive Colors ==== */
+.exam-header { 
+    display: flex; align-items: center; gap: 10px; 
+    font-size: 15px; font-weight: 900; margin-bottom: 15px; 
+    color: #ff9d00; 
+    letter-spacing: 0.5px;
+    text-shadow: 0 0 10px rgba(255, 157, 0, 0.3);
+}
+.exam-header i { 
+    color: #ff007f; 
+    font-size: 18px; 
+    filter: drop-shadow(0 0 5px rgba(255, 0, 127, 0.4));
+}
+
 .exam-tags { display: flex; flex-wrap: wrap; gap: 8px; }
 
 .dl-modal-tag { 
@@ -222,7 +243,13 @@ main .premium-copyright { width: calc(100% + 40px); margin-left: -20px; margin-r
 .notifications-panel { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background-color: #000000; z-index: 999; display: flex; flex-direction: column; transform: translateX(100%); transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1); }
 .notifications-panel.active { transform: translateX(0); }
 
-.noti-header-premium { display: flex; justify-content: space-between; align-items: center; padding: 20px; border-bottom: 1px solid #1a1a1a; background-color: #050505; flex-shrink: 0;}
+/* ==== FIXED: Improved Notification Header Line ==== */
+.noti-header-premium { 
+    display: flex; justify-content: space-between; align-items: center; padding: 20px; 
+    border-bottom: 1px solid rgba(255, 255, 255, 0.15) !important; 
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+    background-color: #050505; flex-shrink: 0;
+}
 .noti-header-left { display: flex; align-items: center; gap: 15px; }
 .noti-logo-wrapper { width: 50px; height: 50px; border-radius: 50%; padding: 2px; background: linear-gradient(135deg, #444, #111); display: flex; justify-content: center; align-items: center; box-shadow: 0 4px 15px rgba(0,0,0,0.8); }
 .noti-logo { width: 100%; height: 100%; border-radius: 50%; object-fit: cover; }
@@ -313,10 +340,12 @@ main .premium-copyright { width: calc(100% + 40px); margin-left: -20px; margin-r
 .badge-res i { color: #a855f7 !important; }
 .badge-ref i { color: #10b981 !important; }
 
+/* ==== FIXED: DMCA Cards Border matched and Glow shadow removed ==== */
 .dmca-section { 
     flex-shrink: 0; text-align: center; margin: 0 20px 20px; 
     background: rgba(20, 20, 25, 0.95); 
-    padding: 24px 20px; border-radius: 24px; border: 1px solid #ffffff !important; 
+    padding: 24px 20px; border-radius: 24px; 
+    border: 1px solid rgba(255, 255, 255, 0.1) !important; 
     box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5); 
     transform: translateZ(0); 
 }
@@ -325,11 +354,13 @@ main .premium-copyright { width: calc(100% + 40px); margin-left: -20px; margin-r
 .dmca-section p { line-height: 1.6; color: #a1a1aa; font-size: 0.85rem; font-weight: 500; }
 
 .dmca-mini-icon { width: 44px; height: 44px; display: flex; justify-content: center; align-items: center; border-radius: 12px; color: #ffffff; font-size: 1.1rem; }
-.icon-ownership { background: linear-gradient(135deg, #3b82f6, #2563eb) !important; box-shadow: 0 4px 15px rgba(59, 130, 246, 0.4); } 
-.icon-concerns { background: linear-gradient(135deg, #a855f7, #7e22ce) !important; box-shadow: 0 4px 15px rgba(168, 85, 247, 0.4); } 
-.icon-contact { background: linear-gradient(135deg, #10b981, #059669) !important; box-shadow: 0 4px 15px rgba(16, 185, 129, 0.4); } 
-.icon-notice { background: linear-gradient(135deg, #f59e0b, #d97706) !important; box-shadow: 0 4px 15px rgba(245, 158, 11, 0.4); } 
-.icon-resp { background: linear-gradient(135deg, #ef4444, #dc2626) !important; box-shadow: 0 4px 15px rgba(239, 68, 68, 0.4); } 
+
+/* ==== FIXED: Icons Background Shadows completely removed ==== */
+.icon-ownership { background: linear-gradient(135deg, #3b82f6, #2563eb) !important; box-shadow: none !important; } 
+.icon-concerns { background: linear-gradient(135deg, #a855f7, #7e22ce) !important; box-shadow: none !important; } 
+.icon-contact { background: linear-gradient(135deg, #10b981, #059669) !important; box-shadow: none !important; } 
+.icon-notice { background: linear-gradient(135deg, #f59e0b, #d97706) !important; box-shadow: none !important; } 
+.icon-resp { background: linear-gradient(135deg, #ef4444, #dc2626) !important; box-shadow: none !important; } 
 
 .dmca-contact-link { display: inline-flex; align-items: center; gap: 8px; color: #ffffff; font-weight: 700; text-decoration: none; margin-top: 15px; padding: 12px 20px; background: rgba(255, 255, 255, 0.05); border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 14px; font-size: 0.9rem; transition: all 0.2s ease; }
 .dmca-contact-link:active { transform: scale(0.95); background: rgba(255, 255, 255, 0.1); }
@@ -405,7 +436,15 @@ main .premium-copyright { width: calc(100% + 40px); margin-left: -20px; margin-r
 .adm-top-header { display: flex; align-items: center; justify-content: space-between; padding: 15px 20px; background: rgba(20,20,25,0.9); border-bottom: 1px solid rgba(255,255,255,0.1); }
 .adm-header-title { font-family: 'Poppins', sans-serif; font-size: 16px; font-weight: 900; color: #fff; text-transform: uppercase; margin: 0; }
 .adm-logout-btn { background: rgba(239, 68, 68, 0.15); border: 1px solid rgba(239, 68, 68, 0.4); color: #ef4444; padding: 8px 15px; border-radius: 20px; font-weight: 800; font-size: 12px; cursor: pointer; display: flex; align-items: center; gap: 5px; }
-.adm-tabs { display: flex; gap: 10px; padding: 15px 20px; overflow-x: auto; border-bottom: 1px solid rgba(255,255,255,0.05); -webkit-overflow-scrolling: touch; transform: translateZ(0); }
+
+/* ==== FIXED: Improved Admin Tab Separator Line ==== */
+.adm-tabs { 
+    display: flex; gap: 10px; padding: 15px 20px; overflow-x: auto; 
+    background-color: #000000 !important; 
+    border-bottom: 1px solid rgba(255,255,255,0.15) !important; 
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+    -webkit-overflow-scrolling: touch; transform: translateZ(0); 
+}
 .adm-tabs::-webkit-scrollbar { display: none; }
 .adm-tab-btn { background: rgba(255,255,255,0.05); color: #a1a1aa; border: 1px solid rgba(255,255,255,0.1); padding: 10px 15px; border-radius: 10px; font-weight: 800; white-space: nowrap; cursor: pointer; display: flex; gap: 8px; align-items: center; outline: none; }
 .adm-tab-btn.active { background: rgba(139, 92, 246, 0.15); color: #8b5cf6; border-color: #8b5cf6; }
@@ -451,10 +490,13 @@ select.adm-input { appearance: none; -webkit-appearance: none; padding-right: 40
 .adm-modal-box { background: #1a1a24; border: 1px solid rgba(255,255,255,0.1); border-radius: 20px; width: 100%; max-width: 450px; padding: 25px; box-shadow: 0 10px 40px rgba(0,0,0,0.8); max-height: 85vh; overflow-y: auto; }
 .adm-modal-box::-webkit-scrollbar { display: none; }
 
-/* Admin Background OVERRIDES */
+/* ==== FIXED: Admin Dashboard specific Header Rule ==== */
 .overlay-panel#admin-dashboard-panel { background-color: #000000 !important; }
-.overlay-panel#admin-dashboard-panel .modal-header-fixed { background-color: #000000 !important; }
-.adm-tabs { background-color: #000000 !important; border-bottom: 1px solid rgba(255,255,255,0.05); }
+.overlay-panel#admin-dashboard-panel .modal-header-fixed { 
+    background-color: #000000 !important; 
+    border-bottom: 1px solid rgba(255, 255, 255, 0.15) !important;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+}
 
 #toast { position: fixed; bottom: 30px; right: 20px; color: #fff; padding: 15px 25px; border-radius: 10px; font-weight: 700; transform: translateX(150%); transition: 0.4s ease; z-index: 9999999; display: flex; align-items: center; gap: 10px; box-shadow: 0 5px 15px rgba(0,0,0,0.4); }
 #toast.show { transform: translateX(0); }
