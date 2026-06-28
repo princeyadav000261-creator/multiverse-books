@@ -32,6 +32,12 @@ const adminBooksPerPage = 10;
 
 const urlParamsCheck = new URLSearchParams(window.location.search);
 window.isDeepLinkLoad = urlParamsCheck.has('book'); 
+let pendingBookSlug = urlParamsCheck.get('book');
+
+// FIX: HTML block forcefully shows empty modal on load, we hide it instantly to show Login first
+if (window.isDeepLinkLoad) {
+    document.getElementById('downloadModal').style.display = 'none';
+}
 
 const canvas = document.getElementById('networkCanvas');
 const ctx = canvas.getContext('2d');
@@ -113,7 +119,8 @@ function showAppAndPopup() {
     setTimeout(() => { 
         loader.style.display = "none"; 
         cancelAnimationFrame(animationId);
-        setTimeout(triggerWhatsAppPopup, 4000); 
+        // FIX: Delayed WhatsApp popup to 15 Seconds (15000 ms) for premium user experience
+        setTimeout(triggerWhatsAppPopup, 15000); 
     }, 600);
 }
 
@@ -153,6 +160,13 @@ onAuthStateChanged(auth, async (user) => {
             switchAdminTab('add');
         }
 
+        // DEEP LINK LOGIC: If auth loads and user is logged in, show book (if books are loaded)
+        if (window.isDeepLinkLoad && pendingBookSlug && window.booksData.length > 0) {
+            document.getElementById("loaderScreen").style.display = "none";
+            document.getElementById('mainAppWrapper').style.display = 'block';
+            window.openDownloadPage(pendingBookSlug, true);
+        }
+
     } else {
         window.isUserLoggedIn = false;
         window.IS_SUPER_ADMIN = false;
@@ -161,6 +175,15 @@ onAuthStateChanged(auth, async (user) => {
         document.getElementById('sidebarProfileName').innerText = "Guest User";
         document.getElementById('sidebarRoleText').innerText = "Please Login";
         document.getElementById('uploadMenuText').innerText = "Upload Books";
+
+        // DEEP LINK LOGIC: If NOT logged in, show login screen immediately, keep download hidden
+        if (window.isDeepLinkLoad) {
+            document.getElementById("loaderScreen").style.display = "none";
+            document.getElementById('mainAppWrapper').style.display = 'block';
+            document.getElementById('downloadModal').style.display = 'none'; // Force hide empty modal
+            document.getElementById('loginOverlay').style.display = 'flex';
+            setTimeout(() => document.getElementById('loginOverlay').style.opacity = '1', 10);
+        }
     }
 
     onSnapshot(query(collection(db, "prompts"), orderBy("createdAt", "asc")), (snapshot) => {
@@ -229,9 +252,13 @@ onAuthStateChanged(auth, async (user) => {
         document.getElementById('adminSearchBook').value = '';
         renderAdminBooksTable(); 
         
-        const sBook = new URLSearchParams(window.location.search).get('book');
-        if(sBook && window.isDeepLinkLoad) { 
-            window.openDownloadPage(sBook, true);
+        // DEEP LINK LOGIC: Data is loaded, if logged in, open the modal
+        if (window.isDeepLinkLoad && pendingBookSlug) { 
+            if (window.isUserLoggedIn) {
+                document.getElementById("loaderScreen").style.display = "none";
+                document.getElementById('mainAppWrapper').style.display = 'block';
+                window.openDownloadPage(pendingBookSlug, true);
+            }
         }
     });
 
@@ -399,6 +426,10 @@ document.getElementById('loginForm').addEventListener('submit', async (e) => {
         btn.innerHTML = originalContent; 
         
         window.closeLoginOverlay();
+        // FIX: Deep Link Load Trigger on successful Login
+        if (window.isDeepLinkLoad && pendingBookSlug) {
+            setTimeout(() => { window.openDownloadPage(pendingBookSlug, true); }, 300);
+        }
     } catch(err) { 
         showToast("Failed: Invalid Credentials!"); 
         btn.innerHTML = originalContent; 
@@ -416,6 +447,10 @@ document.getElementById('googleSignInBtn').addEventListener('click', async () =>
         btn.innerHTML = originalContent;
         
         window.closeLoginOverlay();
+        // FIX: Deep Link Load Trigger on successful Login
+        if (window.isDeepLinkLoad && pendingBookSlug) {
+            setTimeout(() => { window.openDownloadPage(pendingBookSlug, true); }, 300);
+        }
     } catch(err) { 
         showToast("Failed: Google Sign-In Error."); 
         btn.innerHTML = originalContent;
@@ -474,8 +509,8 @@ function getBatchSize() {
 
 const mainElement = document.getElementById('mainContentArea');
 mainElement.addEventListener('scroll', () => {
-    if(mainElement.scrollTop > 200) triggerWhatsAppPopup();
-
+    // FIX: Removed aggressive scroll listener that bypassed the 15-second timer for WhatsApp popup
+    
     if(document.getElementById('app-search-input').value.trim() !== "") return;
     if (mainElement.scrollTop + mainElement.clientHeight >= mainElement.scrollHeight - 50) {
         const noResultsMsg = document.getElementById('no-results-msg');
@@ -561,14 +596,12 @@ window.openDownloadPage = function(slug, skipPushState = false) {
     const book = window.booksData.find(b => b.slug === slug); if(!book) return;
     document.getElementById("downloadModal").style.display = "flex";
     
-    // ==== ADDED SKELETON LOADING LOGIC HERE ====
     const previewImg = document.getElementById("dlPreviewImage");
-    previewImg.classList.add("image-loading-skeleton"); // Add loading class
+    previewImg.classList.add("image-loading-skeleton"); 
     previewImg.src = book.image; 
     previewImg.onload = () => {
-        previewImg.classList.remove("image-loading-skeleton"); // Remove when loaded
+        previewImg.classList.remove("image-loading-skeleton"); 
     };
-    // ===========================================
 
     document.getElementById("dlBookTitle").innerText = book.title; 
     document.getElementById("dlBookAuthor").innerText = book.author;
