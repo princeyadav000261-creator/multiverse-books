@@ -368,19 +368,16 @@
                     </div>
 
                     <div id="sectionPrompt" class="adm-section">
-                        <!-- Admin Form to Add New Prompt -->
                         <div class="adm-card" id="adminAddPromptCard" style="display: none; margin-bottom: 25px;">
                             <h4 style="margin-bottom: 12px; color: #10b981; font-weight: 800; display: flex; align-items: center; gap: 8px;"><i class="fas fa-plus-circle"></i> Add New Prompt</h4>
                             <input type="text" id="newPromptTitle" class="adm-input" placeholder="Prompt Title (e.g., Important Prompt)" style="margin-bottom:10px;">
                             
-                            <!-- NEW: Instruction input field -->
                             <textarea id="newPromptInstruction" class="adm-input" placeholder="Instructions (e.g., 1. Copy code 2. Paste in ChatGPT)" style="margin-bottom:10px; min-height: 60px; resize: vertical;"></textarea>
                             
                             <textarea id="newPromptText" class="adm-input" placeholder="Paste your prompt text here..." style="margin-bottom:10px; min-height: 100px; resize: vertical;"></textarea>
                             <button type="button" class="adm-submit-btn" onclick="addPrompt()" style="background:#10b981; color: #fff;"><i class="fas fa-save"></i> Save Prompt</button>
                         </div>
 
-                        <!-- Dynamic Prompts Wrapper (Telegram Style) -->
                         <div id="promptsContainer" style="display: flex; flex-direction: column; gap: 25px;">
                             <div style="text-align:center; padding:20px; color:#a1a1aa; font-weight:800;">Loading prompts...</div>
                         </div>
@@ -461,21 +458,6 @@
     <div id="toast"></div>
 
     <script>
-        (function() {
-            const isDeepLink = new URLSearchParams(window.location.search).has('book');
-            if (isDeepLink) {
-                document.getElementById('loaderScreen').style.display = 'none';
-                document.getElementById('mainAppWrapper').style.display = 'block';
-                document.getElementById('downloadModal').style.display = 'flex';
-            }
-        })();
-
-        window.closeLoginOverlay = function() {
-            const loginOverlay = document.getElementById('loginOverlay');
-            loginOverlay.style.opacity = '0';
-            setTimeout(() => { loginOverlay.style.display = 'none'; }, 500);
-        };
-
         function togglePasswordVisibility() {
             const passInput = document.getElementById('loginPassword'); const eyeIcon = document.getElementById('toggleEye');
             if (passInput.type === 'password') { passInput.type = 'text'; eyeIcon.classList.remove('fa-eye'); eyeIcon.classList.add('fa-eye-slash'); eyeIcon.style.color = '#8b5cf6'; } 
