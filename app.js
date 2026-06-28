@@ -163,7 +163,6 @@ onAuthStateChanged(auth, async (user) => {
         document.getElementById('uploadMenuText').innerText = "Upload Books";
     }
 
-    // Load Prompts Dynamically (UPDATED TO ASCENDING ORDER & NEW UI)
     onSnapshot(query(collection(db, "prompts"), orderBy("createdAt", "asc")), (snapshot) => {
         const container = document.getElementById('promptsContainer');
         container.innerHTML = '';
@@ -202,7 +201,6 @@ onAuthStateChanged(auth, async (user) => {
         });
     });
 
-    // Load Tutorials Dynamically
     onSnapshot(query(collection(db, "tutorials"), orderBy("createdAt", "desc")), (snapshot) => {
         const grid = document.getElementById('adminTutorialsGrid');
         if(grid) {
@@ -245,7 +243,6 @@ onAuthStateChanged(auth, async (user) => {
     }
 });
 
-/* TELEGRAM PROMPT ADD/DELETE/COPY LOGIC */
 window.addPrompt = async function() {
     if(!window.IS_SUPER_ADMIN) return;
     const title = document.getElementById('newPromptTitle').value;
@@ -290,7 +287,6 @@ window.copyPromptText = function(text, btnId) {
     });
 };
 
-/* TUTORIAL RESTORE LOGIC */
 async function renderTutorialCard(data, docId, containerId, isAdmin) {
     try {
         const videoUrl = data.url;
@@ -564,7 +560,18 @@ window.openDownloadPage = function(slug, skipPushState = false) {
 
     const book = window.booksData.find(b => b.slug === slug); if(!book) return;
     document.getElementById("downloadModal").style.display = "flex";
-    document.getElementById("dlPreviewImage").src = book.image; document.getElementById("dlBookTitle").innerText = book.title; document.getElementById("dlBookAuthor").innerText = book.author;
+    
+    // ==== ADDED SKELETON LOADING LOGIC HERE ====
+    const previewImg = document.getElementById("dlPreviewImage");
+    previewImg.classList.add("image-loading-skeleton"); // Add loading class
+    previewImg.src = book.image; 
+    previewImg.onload = () => {
+        previewImg.classList.remove("image-loading-skeleton"); // Remove when loaded
+    };
+    // ===========================================
+
+    document.getElementById("dlBookTitle").innerText = book.title; 
+    document.getElementById("dlBookAuthor").innerText = book.author;
     
     document.getElementById("dlPdfLinkBtn").onclick = async function() { 
         if(book.pdfLink) {
@@ -793,4 +800,3 @@ document.getElementById('editBookForm').addEventListener('submit', async (e) => 
         btn.disabled = false;
     }
 });
-
