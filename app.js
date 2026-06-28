@@ -30,20 +30,14 @@ let adminFilteredBooks = [];
 let adminCurrentPage = 1;
 const adminBooksPerPage = 10;
 
-// FIX: Intercept deep link execution immediately to prevent main page glitch
 const urlParamsCheck = new URLSearchParams(window.location.search);
 window.isDeepLinkLoad = urlParamsCheck.has('book'); 
 let pendingBookSlug = urlParamsCheck.get('book');
 
+// Initially hide main wrappers if deep linking to prevent glitches
 if (window.isDeepLinkLoad) {
-    // Forcefully hide main page and modal instantly so user sees nothing but loader/login
     document.getElementById('mainAppWrapper').style.display = 'none';
     document.getElementById('downloadModal').style.display = 'none';
-    const initialLoader = document.getElementById('loaderScreen');
-    if(initialLoader) {
-        initialLoader.style.display = 'flex';
-        initialLoader.style.opacity = '1';
-    }
 }
 
 const canvas = document.getElementById('networkCanvas');
@@ -107,9 +101,16 @@ document.getElementById('daily-quote-author').innerText = `— ${quotes[currentQ
 
 window.addEventListener('resize', resizeCanvas); resizeCanvas(); animateHex(0);
 
-let isInitialLoad = true;
-const appStartTime = Date.now();
+// ================= NEW SYNCHRONIZED APP LOAD STATE MACHINE =================
+let isAppReady = { auth: false, data: false, time: false };
+let hasTransitioned = false;
 let popupShown = false;
+
+// 1. Loader Animation fills completely in exactly 3 seconds (3000ms)
+setTimeout(() => {
+    isAppReady.time = true;
+    tryTransition();
+}, 3000);
 
 function triggerWhatsAppPopup() {
     if(!popupShown && !window.isDeepLinkLoad) {
@@ -118,40 +119,54 @@ function triggerWhatsAppPopup() {
     }
 }
 
-function showAppAndPopup() {
-    document.getElementById('mainAppWrapper').style.display = 'block'; 
-    const loader = document.getElementById("loaderScreen");
-    loader.style.opacity = "0";
+// Global Core Transition Logic - Executed ONLY when Time, Auth, and Data are ALL ready
+function tryTransition() {
+    if (isAppReady.auth && isAppReady.data && isAppReady.time && !hasTransitioned) {
+        hasTransitioned = true;
+        
+        const loader = document.getElementById("loaderScreen");
+        loader.style.opacity = "0"; // Smooth fade out start
 
-    setTimeout(() => { 
-        loader.style.display = "none"; 
-        cancelAnimationFrame(animationId);
-        setTimeout(triggerWhatsAppPopup, 15000); 
-    }, 600);
+        setTimeout(() => {
+            loader.style.display = "none";
+            cancelAnimationFrame(animationId);
+
+            if (window.isDeepLinkLoad && pendingBookSlug) {
+                if (window.isUserLoggedIn) {
+                    // Logged in: Directly show the specific book
+                    document.getElementById('mainAppWrapper').style.display = 'block';
+                    window.openDownloadPage(pendingBookSlug, true);
+                } else {
+                    // Not Logged in: Hide everything and just pop the Login Overlay
+                    document.getElementById('mainAppWrapper').style.display = 'none';
+                    const loginOverlay = document.getElementById('loginOverlay');
+                    loginOverlay.style.display = 'flex';
+                    setTimeout(() => loginOverlay.style.opacity = '1', 10);
+                }
+            } else {
+                // Normal User Flow
+                document.getElementById('mainAppWrapper').style.display = 'block';
+                setTimeout(triggerWhatsAppPopup, 15000); // 15s Delay for WhatsApp Popup
+            }
+        }, 600); // Wait 600ms for CSS fade out to finish
+    }
 }
+// =========================================================================
 
-// FIX: Global override for closing login overlay to handle Deep Link cancellations
+// Handle Login Close Button (X) gracefully without reloading the loader
 window.closeLoginOverlay = function() {
     const loginOverlay = document.getElementById('loginOverlay');
     loginOverlay.style.opacity = '0';
     setTimeout(() => { 
         loginOverlay.style.display = 'none'; 
         
-        // If user closes login prompt on a deep link without logging in, route to standard homepage
         if (window.isDeepLinkLoad && !window.isUserLoggedIn) {
             window.isDeepLinkLoad = false;
             window.history.replaceState({}, '', window.location.pathname);
             
-            // Keep main app hidden, show loader, restart normal experience
-            document.getElementById('mainAppWrapper').style.display = 'none'; 
-            const loader = document.getElementById("loaderScreen");
-            loader.style.display = "flex";
-            loader.style.opacity = "1";
-            
-            resizeCanvas(); 
-            requestAnimationFrame(animateHex);
-            
-            setTimeout(showAppAndPopup, 2500); 
+            // Bring them to main screen cleanly
+            document.getElementById('mainAppWrapper').style.display = 'block'; 
+            setTimeout(triggerWhatsAppPopup, 15000);
         }
     }, 500);
 };
@@ -191,13 +206,6 @@ onAuthStateChanged(auth, async (user) => {
             document.getElementById('editYtLinkContainer').style.display = 'none'; 
             switchAdminTab('add');
         }
-
-        if (window.isDeepLinkLoad && pendingBookSlug && window.booksData.length > 0) {
-            document.getElementById("loaderScreen").style.display = "none";
-            document.getElementById('mainAppWrapper').style.display = 'block';
-            window.openDownloadPage(pendingBookSlug, true);
-        }
-
     } else {
         window.isUserLoggedIn = false;
         window.IS_SUPER_ADMIN = false;
@@ -206,17 +214,11 @@ onAuthStateChanged(auth, async (user) => {
         document.getElementById('sidebarProfileName').innerText = "Guest User";
         document.getElementById('sidebarRoleText').innerText = "Please Login";
         document.getElementById('uploadMenuText').innerText = "Upload Books";
-
-        // FIX: Show Login directly without Main Page background if accessing Deep Link
-        if (window.isDeepLinkLoad) {
-            document.getElementById("loaderScreen").style.display = "none"; 
-            document.getElementById('mainAppWrapper').style.display = 'none'; 
-            document.getElementById('downloadModal').style.display = 'none'; 
-            
-            document.getElementById('loginOverlay').style.display = 'flex';
-            setTimeout(() => document.getElementById('loginOverlay').style.opacity = '1', 10);
-        }
     }
+
+    // 2. Auth checking completed
+    isAppReady.auth = true;
+    tryTransition();
 
     onSnapshot(query(collection(db, "prompts"), orderBy("createdAt", "asc")), (snapshot) => {
         const container = document.getElementById('promptsContainer');
@@ -284,21 +286,10 @@ onAuthStateChanged(auth, async (user) => {
         document.getElementById('adminSearchBook').value = '';
         renderAdminBooksTable(); 
         
-        if (window.isDeepLinkLoad && pendingBookSlug) { 
-            if (window.isUserLoggedIn) {
-                document.getElementById("loaderScreen").style.display = "none";
-                document.getElementById('mainAppWrapper').style.display = 'block';
-                window.openDownloadPage(pendingBookSlug, true);
-            }
-        }
+        // 3. Books data checking completed
+        isAppReady.data = true;
+        tryTransition();
     });
-
-    if (isInitialLoad && !window.isDeepLinkLoad) {
-        const elapsed = Date.now() - appStartTime;
-        const remainingTime = Math.max(0, 2500 - elapsed); 
-        setTimeout(showAppAndPopup, remainingTime);
-        isInitialLoad = false;
-    }
 });
 
 window.addPrompt = async function() {
@@ -575,7 +566,6 @@ window.renderBooksUI = function(startIndex, count, customData = null) {
     loadedCount = endIndex;
 }
 
-// FIX: Generate notifications with accurate 00/00/0000 DD/MM/YYYY date formatting
 window.generateNotifications = function() {
     const notiContainer = document.getElementById('dynamic-noti-container'); 
     notiContainer.innerHTML = ''; 
