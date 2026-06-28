@@ -124,36 +124,36 @@ function tryTransition() {
     if (isAppReady.auth && isAppReady.data && isAppReady.time && !hasTransitioned) {
         hasTransitioned = true;
         
+        // FIX: Show main content BEFORE loader fades out to completely eliminate the black screen loop
+        document.getElementById('mainAppWrapper').style.display = 'block';
+
+        if (window.isDeepLinkLoad && pendingBookSlug) {
+            if (window.isUserLoggedIn) {
+                // Logged in: Directly show the specific book modal
+                window.openDownloadPage(pendingBookSlug, true);
+            } else {
+                // Not Logged in: Pop the Login Overlay over the main screen
+                const loginOverlay = document.getElementById('loginOverlay');
+                loginOverlay.style.display = 'flex';
+                setTimeout(() => loginOverlay.style.opacity = '1', 10);
+            }
+        } else {
+            // Normal User Flow
+            setTimeout(triggerWhatsAppPopup, 15000); // 15s Delay for WhatsApp Popup
+        }
+
         const loader = document.getElementById("loaderScreen");
         loader.style.opacity = "0"; // Smooth fade out start
 
         setTimeout(() => {
             loader.style.display = "none";
             cancelAnimationFrame(animationId);
-
-            if (window.isDeepLinkLoad && pendingBookSlug) {
-                if (window.isUserLoggedIn) {
-                    // Logged in: Directly show the specific book
-                    document.getElementById('mainAppWrapper').style.display = 'block';
-                    window.openDownloadPage(pendingBookSlug, true);
-                } else {
-                    // Not Logged in: Hide everything and just pop the Login Overlay
-                    document.getElementById('mainAppWrapper').style.display = 'none';
-                    const loginOverlay = document.getElementById('loginOverlay');
-                    loginOverlay.style.display = 'flex';
-                    setTimeout(() => loginOverlay.style.opacity = '1', 10);
-                }
-            } else {
-                // Normal User Flow
-                document.getElementById('mainAppWrapper').style.display = 'block';
-                setTimeout(triggerWhatsAppPopup, 15000); // 15s Delay for WhatsApp Popup
-            }
         }, 600); // Wait 600ms for CSS fade out to finish
     }
 }
 // =========================================================================
 
-// Handle Login Close Button (X) gracefully without reloading the loader
+// Handle Login Close Button (X) gracefully
 window.closeLoginOverlay = function() {
     const loginOverlay = document.getElementById('loginOverlay');
     loginOverlay.style.opacity = '0';
@@ -164,8 +164,7 @@ window.closeLoginOverlay = function() {
             window.isDeepLinkLoad = false;
             window.history.replaceState({}, '', window.location.pathname);
             
-            // Bring them to main screen cleanly
-            document.getElementById('mainAppWrapper').style.display = 'block'; 
+            // App wrapper is already visible now, just trigger popup if needed
             setTimeout(triggerWhatsAppPopup, 15000);
         }
     }, 500);
