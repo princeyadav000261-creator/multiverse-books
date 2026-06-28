@@ -285,20 +285,6 @@ main .premium-copyright { width: calc(100% + 40px); margin-left: -20px; margin-r
 .dl-box-title { font-size: 14px; font-weight: 600; }
 .dl-box-sub { font-size: 12px; color: var(--text-secondary); margin-top: 2px; }
 
-/* UPLOAD PROMO BANNER CSS */
-.upload-promo-banner { 
-    margin-top: 15px; 
-    border-radius: 16px; 
-    overflow: hidden; 
-    border: 1px solid rgba(255, 255, 255, 0.1); 
-    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5); 
-    transition: 0.2s ease; 
-    cursor: pointer;
-    background: #000;
-}
-.upload-promo-banner:active { transform: scale(0.96); }
-.upload-promo-banner img { width: 100%; height: auto; display: block; object-fit: cover; }
-
 .exam-rel-box { 
     margin-top: 20px; 
     background: rgba(20, 20, 25, 0.85); 
