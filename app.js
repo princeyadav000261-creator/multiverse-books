@@ -615,14 +615,6 @@ document.getElementById('menu-admin-panel').addEventListener('click', (e) => {
 });
 document.getElementById('close-admin-btn').addEventListener('click', () => { history.back(); });
 
-// NEW FUNCTION: Open Admin Panel directly from Download Image Banner
-window.openAdminFromDownload = function() {
-    window.closeDownloadPage();
-    setTimeout(() => {
-        document.getElementById('menu-admin-panel').click();
-    }, 300); // 300ms delay ensures download modal closed smoothly
-};
-
 window.addEventListener('popstate', (e) => {
     document.getElementById('noti-panel').classList.remove('active'); document.getElementById('sidebar').classList.remove('active'); document.getElementById('sidebar-overlay').classList.remove('active'); document.getElementById('about-dev-panel').classList.remove('active'); document.getElementById('dmca-panel').classList.remove('active'); document.getElementById('admin-dashboard-panel').classList.remove('active'); document.getElementById('search-box').classList.remove('active');
     const sBook = new URLSearchParams(window.location.search).get('book');
