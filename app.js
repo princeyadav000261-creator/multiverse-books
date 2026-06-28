@@ -1,5 +1,5 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
-import { getFirestore, collection, addDoc, doc, updateDoc, deleteDoc, onSnapshot, query, orderBy, setDoc } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
+import { getFirestore, collection, addDoc, doc, updateDoc, deleteDoc, onSnapshot, query, orderBy, setDoc, getDoc } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
 import { getAuth, signInWithEmailAndPassword, GoogleAuthProvider, signInWithPopup, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js";
 
 const firebaseConfig = {
@@ -622,6 +622,7 @@ window.addEventListener('popstate', (e) => {
     else { document.getElementById("downloadModal").style.display = "none"; }
 });
 
+// ====== MAIN DOWNLOAD LOGIC CHANGES HERE ======
 window.openDownloadPage = function(slug, skipPushState = false) {
     if(!window.isUserLoggedIn) {
         document.getElementById('loginOverlay').style.display = 'flex';
@@ -642,9 +643,67 @@ window.openDownloadPage = function(slug, skipPushState = false) {
     document.getElementById("dlBookTitle").innerText = book.title; 
     document.getElementById("dlBookAuthor").innerText = book.author;
     
+    // Yahan par Limit wala naya Logic lagaya gaya hai
     document.getElementById("dlPdfLinkBtn").onclick = async function() { 
-        if(book.pdfLink) {
-            window.open(book.pdfLink, '_blank'); 
+        if(!window.isUserLoggedIn || !auth.currentUser) {
+            document.getElementById('loginOverlay').style.display = 'flex';
+            setTimeout(() => document.getElementById('loginOverlay').style.opacity = '1', 10);
+            return;
+        }
+
+        const btn = document.getElementById("dlPdfLinkBtn");
+        const originalText = btn.innerHTML;
+        const uid = auth.currentUser.uid;
+        const userDownloadRef = doc(db, "user_downloads", uid);
+        
+        // 🚨 YAHAN SE AAP LIMIT CHANGE KAR SAKTE HAIN 🚨
+        const MAX_DOWNLOADS = 2; // Abhi 2 book ki limit hai
+
+        btn.innerHTML = `<span style="display:flex; align-items:center; gap:8px;"><i class="fas fa-spinner fa-spin"></i> Processing...</span>`;
+        btn.disabled = true;
+
+        try {
+            const docSnap = await getDoc(userDownloadRef);
+            const now = new Date().getTime();
+
+            if (docSnap.exists()) {
+                let data = docSnap.data();
+                let lastDownloadTime = data.lastTime || 0;
+                let count = data.count || 0;
+
+                // Check kitne ghante hue pichli baar reset hue
+                const hoursPassed = (now - lastDownloadTime) / (1000 * 60 * 60);
+
+                if (hoursPassed < 24) {
+                    // Agar 24 hours nahi hue hain aur limit cross ho gayi
+                    if (count >= MAX_DOWNLOADS && !window.IS_SUPER_ADMIN) {
+                        showToast("Your plan is exhausted! Please try again after 24 hours.");
+                        btn.innerHTML = originalText;
+                        btn.disabled = false;
+                        return; // Rok do
+                    }
+                    // Limit cross nahi hui, toh count badha do
+                    await updateDoc(userDownloadRef, { count: count + 1 });
+                } else {
+                    // 24 hours se zyada ho gaye, cycle reset kar do
+                    await updateDoc(userDownloadRef, { count: 1, lastTime: now });
+                }
+            } else {
+                // User ki life ki pehli download
+                await setDoc(userDownloadRef, { count: 1, lastTime: now });
+            }
+
+            // Sab checks pass ho gaye, PDF open karein
+            if(book.pdfLink) {
+                window.open(book.pdfLink, '_blank'); 
+            }
+            
+        } catch (error) {
+            console.error("Download tracking error:", error);
+            showToast("Failed to initiate download. Try again.");
+        } finally {
+            btn.innerHTML = originalText;
+            btn.disabled = false;
         }
     };
     
@@ -699,7 +758,7 @@ window.shareBook = function() {
 
 function showToast(message) {
     const toast = document.getElementById('toast'); 
-    if (message.toLowerCase().includes('failed') || message.toLowerCase().includes('error') || message.toLowerCase().includes('invalid')) {
+    if (message.toLowerCase().includes('failed') || message.toLowerCase().includes('error') || message.toLowerCase().includes('invalid') || message.toLowerCase().includes('exhausted')) {
         toast.style.background = '#ef4444';
         toast.innerHTML = `<i class="fas fa-exclamation-circle"></i> <span id="toastMsg">${message}</span>`;
     } else {
