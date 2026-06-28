@@ -140,7 +140,7 @@
                 <div class="section-header-title"><i class="fas fa-book-open" style="color: #10b981;"></i> Trending Books 🔥 </div>
                 <div class="book-container" id="bookContainer"></div>
 
-                <div id="no-results-msg" style="display: none; padding-bottom: 30px;">
+                <div id="no-results-msg" style="display: none; padding-bottom: 20px;">
                     <div class="no-results-card">
                         <div class="no-results-icon"><i class="fas fa-book-open"></i></div>
                         <h2 class="no-results-title">BOOK NOT FOUND</h2>
@@ -168,8 +168,15 @@
                     <div class="dl-img-wrapper-outer"><div class="dl-img-container"><img id="dlPreviewImage" class="dl-preview-image" src="" oncontextmenu="return false;" draggable="false"><div class="dl-powered-badge disable-long-press">POWERED BY : MADxPRINCE</div></div></div>
                     <h2 class="dl-title" id="dlBookTitle"></h2><div class="dl-author" id="dlBookAuthor"></div>
                     <button id="dlPdfLinkBtn" class="dl-main-btn disable-long-press"><i class="fas fa-download"></i> Download PDF</button>
+                    
                     <div id="dlYoutubeLinkBtn" class="dl-box disable-long-press"><i class="fab fa-youtube icon" style="color: #ef4444;"></i><div><div class="dl-box-title">Watch Tutorials</div><div class="dl-box-sub">How to download books?</div></div></div>
                     <div class="dl-box disable-long-press" onclick="shareBook()"><i class="fas fa-share-nodes icon"></i><div><div class="dl-box-title">Share this book</div><div class="dl-box-sub">Send this book to friends</div></div></div>
+                    
+                    <!-- NEW IMAGE BANNER FOR UPLOAD -->
+                    <div class="upload-promo-banner disable-long-press" onclick="openAdminFromDownload()">
+                        <img src="https://i.postimg.cc/mgqd74wZ/IMG-20260626-WA0005.jpg" alt="Upload Book" oncontextmenu="return false;" draggable="false">
+                    </div>
+
                     <div class="exam-rel-box"><div class="exam-header"><i class="fas fa-ribbon"></i> EXAM RELEVANCE</div><div class="exam-tags" id="dlModalTags"></div></div>
                     
                     <div class="dl-social-container">
@@ -183,6 +190,7 @@
                     <div class="premium-copyright">© 2026 MULTIVERSE BOOKS <span style="margin: 0 5px;">|</span> MADE WITH <i class="fas fa-heart" style="color: #ff4757; margin: 0 3px; filter: drop-shadow(0 0 5px rgba(255,71,87,0.8));"></i> BY MADxPRINCE</div>
                 </div>
             </div>
+            
             <div class="notifications-panel" id="noti-panel">
                 <div class="noti-header-premium">
                     <div class="noti-header-left">
@@ -371,13 +379,10 @@
                         <div class="adm-card" id="adminAddPromptCard" style="display: none; margin-bottom: 25px;">
                             <h4 style="margin-bottom: 12px; color: #10b981; font-weight: 800; display: flex; align-items: center; gap: 8px;"><i class="fas fa-plus-circle"></i> Add New Prompt</h4>
                             <input type="text" id="newPromptTitle" class="adm-input" placeholder="Prompt Title (e.g., Important Prompt)" style="margin-bottom:10px;">
-                            
                             <textarea id="newPromptInstruction" class="adm-input" placeholder="Instructions (e.g., 1. Copy code 2. Paste in ChatGPT)" style="margin-bottom:10px; min-height: 60px; resize: vertical;"></textarea>
-                            
                             <textarea id="newPromptText" class="adm-input" placeholder="Paste your prompt text here..." style="margin-bottom:10px; min-height: 100px; resize: vertical;"></textarea>
                             <button type="button" class="adm-submit-btn" onclick="addPrompt()" style="background:#10b981; color: #fff;"><i class="fas fa-save"></i> Save Prompt</button>
                         </div>
-
                         <div id="promptsContainer" style="display: flex; flex-direction: column; gap: 25px;">
                             <div style="text-align:center; padding:20px; color:#a1a1aa; font-weight:800;">Loading prompts...</div>
                         </div>
@@ -390,9 +395,7 @@
                             <input type="text" id="newTutorialViews" class="adm-input" placeholder="Custom Views (e.g. 1.2M, 500K)" style="margin-bottom:10px;">
                             <button type="button" class="adm-submit-btn" onclick="addTutorialLink()" style="background:#10b981; color: #fff;"><i class="fas fa-upload"></i> Add Video Card</button>
                         </div>
-
-                        <div id="adminTutorialsGrid" style="display: flex; gap: 15px; flex-wrap: wrap; margin-top: 15px; justify-content: center; padding: 0 10px;">
-                        </div>
+                        <div id="adminTutorialsGrid" style="display: flex; gap: 15px; flex-wrap: wrap; margin-top: 15px; justify-content: center; padding: 0 10px;"></div>
                     </div>
 
                     <div id="sectionManageBooks" class="adm-section">
