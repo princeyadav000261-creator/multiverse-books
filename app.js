@@ -124,21 +124,18 @@ function tryTransition() {
     if (isAppReady.auth && isAppReady.data && isAppReady.time && !hasTransitioned) {
         hasTransitioned = true;
         
-        // FIX: Show main content BEFORE loader fades out to completely eliminate the black screen loop
+        // Show main content BEFORE loader fades out
         document.getElementById('mainAppWrapper').style.display = 'block';
 
         if (window.isDeepLinkLoad && pendingBookSlug) {
             if (window.isUserLoggedIn) {
-                // Logged in: Directly show the specific book modal
                 window.openDownloadPage(pendingBookSlug, true);
             } else {
-                // Not Logged in: Pop the Login Overlay over the main screen
                 const loginOverlay = document.getElementById('loginOverlay');
                 loginOverlay.style.display = 'flex';
                 setTimeout(() => loginOverlay.style.opacity = '1', 10);
             }
         } else {
-            // Normal User Flow
             setTimeout(triggerWhatsAppPopup, 15000); // 15s Delay for WhatsApp Popup
         }
 
@@ -148,7 +145,7 @@ function tryTransition() {
         setTimeout(() => {
             loader.style.display = "none";
             cancelAnimationFrame(animationId);
-        }, 600); // Wait 600ms for CSS fade out to finish
+        }, 600);
     }
 }
 // =========================================================================
@@ -215,7 +212,6 @@ onAuthStateChanged(auth, async (user) => {
         document.getElementById('uploadMenuText').innerText = "Upload Books";
     }
 
-    // 2. Auth checking completed
     isAppReady.auth = true;
     tryTransition();
 
@@ -285,7 +281,6 @@ onAuthStateChanged(auth, async (user) => {
         document.getElementById('adminSearchBook').value = '';
         renderAdminBooksTable(); 
         
-        // 3. Books data checking completed
         isAppReady.data = true;
         tryTransition();
     });
@@ -619,6 +614,14 @@ document.getElementById('menu-admin-panel').addEventListener('click', (e) => {
     sidebar.classList.remove('active'); sidebarOverlay.classList.remove('active');
 });
 document.getElementById('close-admin-btn').addEventListener('click', () => { history.back(); });
+
+// NEW FUNCTION: Open Admin Panel directly from Download Image Banner
+window.openAdminFromDownload = function() {
+    window.closeDownloadPage();
+    setTimeout(() => {
+        document.getElementById('menu-admin-panel').click();
+    }, 300); // 300ms delay ensures download modal closed smoothly
+};
 
 window.addEventListener('popstate', (e) => {
     document.getElementById('noti-panel').classList.remove('active'); document.getElementById('sidebar').classList.remove('active'); document.getElementById('sidebar-overlay').classList.remove('active'); document.getElementById('about-dev-panel').classList.remove('active'); document.getElementById('dmca-panel').classList.remove('active'); document.getElementById('admin-dashboard-panel').classList.remove('active'); document.getElementById('search-box').classList.remove('active');
