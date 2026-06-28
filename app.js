@@ -106,11 +106,11 @@ let isAppReady = { auth: false, data: false, time: false };
 let hasTransitioned = false;
 let popupShown = false;
 
-// 1. Loader Animation fills completely in exactly 3 seconds (3000ms)
+// 1. Loader Animation ab 2000ms par set kiya gaya hai! (2s)
 setTimeout(() => {
     isAppReady.time = true;
     tryTransition();
-}, 3000);
+}, 2000);
 
 function triggerWhatsAppPopup() {
     if(!popupShown && !window.isDeepLinkLoad) {
@@ -142,10 +142,11 @@ function tryTransition() {
         const loader = document.getElementById("loaderScreen");
         loader.style.opacity = "0"; // Smooth fade out start
 
+        // 2. Yahan bhi delay kam karke 300ms kar diya gaya hai (snappy load!)
         setTimeout(() => {
             loader.style.display = "none";
             cancelAnimationFrame(animationId);
-        }, 600);
+        }, 300);
     }
 }
 // =========================================================================
@@ -622,7 +623,6 @@ window.addEventListener('popstate', (e) => {
     else { document.getElementById("downloadModal").style.display = "none"; }
 });
 
-// ====== MAIN DOWNLOAD LOGIC CHANGES HERE ======
 window.openDownloadPage = function(slug, skipPushState = false) {
     if(!window.isUserLoggedIn) {
         document.getElementById('loginOverlay').style.display = 'flex';
@@ -643,7 +643,6 @@ window.openDownloadPage = function(slug, skipPushState = false) {
     document.getElementById("dlBookTitle").innerText = book.title; 
     document.getElementById("dlBookAuthor").innerText = book.author;
     
-    // Yahan par Limit wala naya Logic lagaya gaya hai
     document.getElementById("dlPdfLinkBtn").onclick = async function() { 
         if(!window.isUserLoggedIn || !auth.currentUser) {
             document.getElementById('loginOverlay').style.display = 'flex';
@@ -656,7 +655,6 @@ window.openDownloadPage = function(slug, skipPushState = false) {
         const uid = auth.currentUser.uid;
         const userDownloadRef = doc(db, "user_downloads", uid);
         
-        // 🚨 YAHAN SE AAP LIMIT CHANGE KAR SAKTE HAIN 🚨
         const MAX_DOWNLOADS = 2; // Abhi 2 book ki limit hai
 
         btn.innerHTML = `<span style="display:flex; align-items:center; gap:8px;"><i class="fas fa-spinner fa-spin"></i> Processing...</span>`;
@@ -671,29 +669,23 @@ window.openDownloadPage = function(slug, skipPushState = false) {
                 let lastDownloadTime = data.lastTime || 0;
                 let count = data.count || 0;
 
-                // Check kitne ghante hue pichli baar reset hue
                 const hoursPassed = (now - lastDownloadTime) / (1000 * 60 * 60);
 
                 if (hoursPassed < 24) {
-                    // Agar 24 hours nahi hue hain aur limit cross ho gayi
                     if (count >= MAX_DOWNLOADS && !window.IS_SUPER_ADMIN) {
                         showToast("Your plan is exhausted! Please try again after 24 hours.");
                         btn.innerHTML = originalText;
                         btn.disabled = false;
                         return; // Rok do
                     }
-                    // Limit cross nahi hui, toh count badha do
                     await updateDoc(userDownloadRef, { count: count + 1 });
                 } else {
-                    // 24 hours se zyada ho gaye, cycle reset kar do
                     await updateDoc(userDownloadRef, { count: 1, lastTime: now });
                 }
             } else {
-                // User ki life ki pehli download
                 await setDoc(userDownloadRef, { count: 1, lastTime: now });
             }
 
-            // Sab checks pass ho gaye, PDF open karein
             if(book.pdfLink) {
                 window.open(book.pdfLink, '_blank'); 
             }
@@ -746,8 +738,8 @@ window.closeDownloadPage = function() {
                 loader.style.display = "none";
                 cancelAnimationFrame(animationId);
                 document.getElementById("popupOverlay").style.display = "flex";
-            }, 600);
-        }, 2000);
+            }, 300); // reduced delay here too
+        }, 1500); // reduced wait
     }
 }
 window.shareBook = function() {
