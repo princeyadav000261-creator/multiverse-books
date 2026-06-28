@@ -30,13 +30,20 @@ let adminFilteredBooks = [];
 let adminCurrentPage = 1;
 const adminBooksPerPage = 10;
 
+// FIX: Intercept deep link execution immediately to prevent main page glitch
 const urlParamsCheck = new URLSearchParams(window.location.search);
 window.isDeepLinkLoad = urlParamsCheck.has('book'); 
 let pendingBookSlug = urlParamsCheck.get('book');
 
-// FIX: HTML block forcefully shows empty modal on load, we hide it instantly to show Login first
 if (window.isDeepLinkLoad) {
+    // Forcefully hide main page and modal instantly so user sees nothing but loader/login
+    document.getElementById('mainAppWrapper').style.display = 'none';
     document.getElementById('downloadModal').style.display = 'none';
+    const initialLoader = document.getElementById('loaderScreen');
+    if(initialLoader) {
+        initialLoader.style.display = 'flex';
+        initialLoader.style.opacity = '1';
+    }
 }
 
 const canvas = document.getElementById('networkCanvas');
@@ -119,10 +126,35 @@ function showAppAndPopup() {
     setTimeout(() => { 
         loader.style.display = "none"; 
         cancelAnimationFrame(animationId);
-        // FIX: Delayed WhatsApp popup to 15 Seconds (15000 ms) for premium user experience
         setTimeout(triggerWhatsAppPopup, 15000); 
     }, 600);
 }
+
+// FIX: Global override for closing login overlay to handle Deep Link cancellations
+window.closeLoginOverlay = function() {
+    const loginOverlay = document.getElementById('loginOverlay');
+    loginOverlay.style.opacity = '0';
+    setTimeout(() => { 
+        loginOverlay.style.display = 'none'; 
+        
+        // If user closes login prompt on a deep link without logging in, route to standard homepage
+        if (window.isDeepLinkLoad && !window.isUserLoggedIn) {
+            window.isDeepLinkLoad = false;
+            window.history.replaceState({}, '', window.location.pathname);
+            
+            // Keep main app hidden, show loader, restart normal experience
+            document.getElementById('mainAppWrapper').style.display = 'none'; 
+            const loader = document.getElementById("loaderScreen");
+            loader.style.display = "flex";
+            loader.style.opacity = "1";
+            
+            resizeCanvas(); 
+            requestAnimationFrame(animateHex);
+            
+            setTimeout(showAppAndPopup, 2500); 
+        }
+    }, 500);
+};
 
 onAuthStateChanged(auth, async (user) => {
     if (user) {
@@ -160,7 +192,6 @@ onAuthStateChanged(auth, async (user) => {
             switchAdminTab('add');
         }
 
-        // DEEP LINK LOGIC: If auth loads and user is logged in, show book (if books are loaded)
         if (window.isDeepLinkLoad && pendingBookSlug && window.booksData.length > 0) {
             document.getElementById("loaderScreen").style.display = "none";
             document.getElementById('mainAppWrapper').style.display = 'block';
@@ -176,11 +207,12 @@ onAuthStateChanged(auth, async (user) => {
         document.getElementById('sidebarRoleText').innerText = "Please Login";
         document.getElementById('uploadMenuText').innerText = "Upload Books";
 
-        // DEEP LINK LOGIC: If NOT logged in, show login screen immediately, keep download hidden
+        // FIX: Show Login directly without Main Page background if accessing Deep Link
         if (window.isDeepLinkLoad) {
-            document.getElementById("loaderScreen").style.display = "none";
-            document.getElementById('mainAppWrapper').style.display = 'block';
-            document.getElementById('downloadModal').style.display = 'none'; // Force hide empty modal
+            document.getElementById("loaderScreen").style.display = "none"; 
+            document.getElementById('mainAppWrapper').style.display = 'none'; 
+            document.getElementById('downloadModal').style.display = 'none'; 
+            
             document.getElementById('loginOverlay').style.display = 'flex';
             setTimeout(() => document.getElementById('loginOverlay').style.opacity = '1', 10);
         }
@@ -252,7 +284,6 @@ onAuthStateChanged(auth, async (user) => {
         document.getElementById('adminSearchBook').value = '';
         renderAdminBooksTable(); 
         
-        // DEEP LINK LOGIC: Data is loaded, if logged in, open the modal
         if (window.isDeepLinkLoad && pendingBookSlug) { 
             if (window.isUserLoggedIn) {
                 document.getElementById("loaderScreen").style.display = "none";
@@ -426,8 +457,9 @@ document.getElementById('loginForm').addEventListener('submit', async (e) => {
         btn.innerHTML = originalContent; 
         
         window.closeLoginOverlay();
-        // FIX: Deep Link Load Trigger on successful Login
+        
         if (window.isDeepLinkLoad && pendingBookSlug) {
+            document.getElementById('mainAppWrapper').style.display = 'block';
             setTimeout(() => { window.openDownloadPage(pendingBookSlug, true); }, 300);
         }
     } catch(err) { 
@@ -447,8 +479,9 @@ document.getElementById('googleSignInBtn').addEventListener('click', async () =>
         btn.innerHTML = originalContent;
         
         window.closeLoginOverlay();
-        // FIX: Deep Link Load Trigger on successful Login
+        
         if (window.isDeepLinkLoad && pendingBookSlug) {
+            document.getElementById('mainAppWrapper').style.display = 'block';
             setTimeout(() => { window.openDownloadPage(pendingBookSlug, true); }, 300);
         }
     } catch(err) { 
@@ -509,8 +542,6 @@ function getBatchSize() {
 
 const mainElement = document.getElementById('mainContentArea');
 mainElement.addEventListener('scroll', () => {
-    // FIX: Removed aggressive scroll listener that bypassed the 15-second timer for WhatsApp popup
-    
     if(document.getElementById('app-search-input').value.trim() !== "") return;
     if (mainElement.scrollTop + mainElement.clientHeight >= mainElement.scrollHeight - 50) {
         const noResultsMsg = document.getElementById('no-results-msg');
@@ -544,10 +575,31 @@ window.renderBooksUI = function(startIndex, count, customData = null) {
     loadedCount = endIndex;
 }
 
+// FIX: Generate notifications with accurate 00/00/0000 DD/MM/YYYY date formatting
 window.generateNotifications = function() {
-    const notiContainer = document.getElementById('dynamic-noti-container'); notiContainer.innerHTML = ''; 
+    const notiContainer = document.getElementById('dynamic-noti-container'); 
+    notiContainer.innerHTML = ''; 
     window.booksData.slice(0, 15).forEach((book) => {
-        notiContainer.innerHTML += `<div class="noti-card-dynamic" onclick="openDownloadPage('${book.slug}')" style="cursor:pointer;"><img src="${book.image}" class="noti-card-img" alt="Logo"><div class="noti-card-content"><div class="noti-card-title">${book.title} Book Added ✅</div><div class="noti-card-desc">New book is now available.</div></div></div>`;
+        
+        let dateStr = "00/00/0000";
+        if (book.dateAdded) {
+            dateStr = book.dateAdded; 
+        } else if (book.createdAt) {
+            const d = new Date(book.createdAt);
+            dateStr = `${String(d.getDate()).padStart(2, '0')}/${String(d.getMonth()+1).padStart(2, '0')}/${d.getFullYear()}`;
+        }
+
+        notiContainer.innerHTML += `
+        <div class="noti-card-dynamic" onclick="openDownloadPage('${book.slug}')" style="cursor:pointer;">
+            <img src="${book.image}" class="noti-card-img" alt="Logo">
+            <div class="noti-card-content">
+                <div class="noti-card-title">${book.title} Book Added ✅</div>
+                <div class="noti-card-desc">New book is now available.</div>
+                <div style="font-size: 10px; color: #10b981; margin-top: 2px; font-weight: 700; display: flex; align-items: center; gap: 4px;">
+                    <i class="far fa-calendar-alt"></i> Added: ${dateStr}
+                </div>
+            </div>
+        </div>`;
     });
 }
 
