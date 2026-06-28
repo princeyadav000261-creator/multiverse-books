@@ -79,21 +79,21 @@ header { display: flex; align-items: center; justify-content: space-between; pad
 .menu-item.active i { color: var(--spidy-accent-blue); text-shadow: 0 0 10px rgba(123, 138, 255, 0.5); }
 .menu-item.active span { color: var(--text-primary); text-shadow: 0 0 8px rgba(255, 255, 255, 0.3); }
 
-/* ==== YAHAN CHANGE KIYA GAYA HAI: PRO BADGE ==== */
+/* ==== YAHAN CHANGE KIYA GAYA HAI: PRO BADGE (SMALL & INNER GLOW) ==== */
 .pro-badge { 
     margin-left: auto; 
-    background-color: rgba(37, 211, 102, 0.1); /* Halka green background */
-    color: #25D366 !important; /* Bright green text */
-    font-size: 8px; 
+    background-color: rgba(37, 211, 102, 0.05); /* Lighter bg to make inner glow pop */
+    color: #25D366 !important; 
+    font-size: 7px; /* Chota size */
     font-weight: 800 !important; 
-    padding: 4px 10px; /* Pill shape ke liye padding */
-    border-radius: 50px; /* Perfct oval/pill shape */
-    letter-spacing: 0.8px; 
+    padding: 3px 7px; /* Tighter padding for compact look */
+    border-radius: 50px; 
+    letter-spacing: 0.5px; 
     text-transform: uppercase; 
-    border: 1px solid #25D366; /* Green border jo aapne manga tha */
-    box-shadow: 0 0 10px rgba(37, 211, 102, 0.2); /* Halka green glow */
+    border: 1px solid rgba(37, 211, 102, 0.5); /* Softer thin border */
+    box-shadow: inset 0 0 6px rgba(37, 211, 102, 0.5), 0 0 5px rgba(37, 211, 102, 0.2); /* Andar (inner) aur bahar ka glow */
 }
-/* ============================================== */
+/* ==================================================================== */
 
 .card-link i.external { margin-left: auto; font-size: 11px; width: auto; opacity: 0.7; }
 .card-whatsapp { background-color: var(--whatsapp-bg); box-shadow: inset 0 0 0 1px rgba(37, 211, 102, 0.1); } .card-whatsapp i, .card-whatsapp span { color: var(--whatsapp-green); }
@@ -462,8 +462,8 @@ main .premium-copyright { width: calc(100% + 40px); margin-left: -20px; margin-r
 .dmca-contact-link { display: inline-flex; align-items: center; gap: 8px; color: #ffffff; font-weight: 700; text-decoration: none; margin-top: 15px; padding: 12px 20px; background: rgba(255, 255, 255, 0.05); border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 14px; font-size: 0.9rem; transition: all 0.2s ease; }
 .dmca-contact-link:active { transform: scale(0.95); background: rgba(255, 255, 255, 0.1); }
 
-/* CANVAS LOADER */
-.loader-screen { position: fixed; inset: 0; display: flex; justify-content: center; align-items: center; flex-direction: column; background-color: #050505; z-index: 9999999; overflow: hidden; transition: opacity .6s; }
+/* ==== YAHAN CHANGE KIYA GAYA HAI: LOADER TIMING ==== */
+.loader-screen { position: fixed; inset: 0; display: flex; justify-content: center; align-items: center; flex-direction: column; background-color: #050505; z-index: 9999999; overflow: hidden; transition: opacity .3s; /* Transition aur snappy kar diya */ }
 #networkCanvas { position: absolute; top: 0; left: 0; width: 100vw; height: 100vh; z-index: 1; pointer-events: none; }
 .loader-logo { width: 115px; height: 115px; border-radius: 30px; overflow: hidden; padding: 8px; background: linear-gradient(135deg, #ffffff, #f1f5f9); box-shadow: 0 0 18px rgba(255,255,255,.55), 0 0 35px rgba(255,255,255,.45), 0 0 60px rgba(255,255,255,.25); animation: pulseLogo 2s infinite; z-index: 5; position: relative; }
 .loader-logo img { width: 100%; height: 100%; object-fit: contain; border-radius: 22px; }
@@ -473,11 +473,12 @@ main .premium-copyright { width: calc(100% + 40px); margin-left: -20px; margin-r
 .tag { padding: 8px 14px; border-radius: 14px; background: rgba(255,255,255,.05); border: 1px solid rgba(255,255,255,.08); display: flex; align-items: center; gap: 7px; font-size: 10px; font-weight: 700; color: #ffffff; backdrop-filter: blur(12px); font-family: 'Poppins', sans-serif; }
 .tag i { color: #ffffff; filter: drop-shadow(0 0 6px rgba(255,255,255,.8)) drop-shadow(0 0 12px rgba(255,255,255,.5)); }
 .loader-bar { width: 200px; height: 7px; border-radius: 30px; overflow: hidden; background: rgba(255,255,255,.08); border: 1px solid rgba(255,255,255,.12); box-shadow: inset 0 0 8px rgba(255,255,255,.08), 0 0 12px rgba(255,255,255,.08); margin-top: 28px; z-index: 5; }
-.loader-fill { width: 0%; height: 100%; background: linear-gradient(90deg, #ffffff, #f8fafc, #ffffff); box-shadow: 0 0 10px rgba(255,255,255,.8), 0 0 20px rgba(255,255,255,.55), 0 0 35px rgba(255,255,255,.3); animation: loadBar 3s linear forwards; position: relative; overflow: hidden; }
+.loader-fill { width: 0%; height: 100%; background: linear-gradient(90deg, #ffffff, #f8fafc, #ffffff); box-shadow: 0 0 10px rgba(255,255,255,.8), 0 0 20px rgba(255,255,255,.55), 0 0 35px rgba(255,255,255,.3); animation: loadBar 2s linear forwards; /* Animation timing 2 seconds fix ki gayi hai */ position: relative; overflow: hidden; }
 .loader-fill::before { content: ""; position: absolute; top: 0; left: -40%; width: 40%; height: 100%; background: linear-gradient(90deg, transparent, rgba(255,255,255,.95), transparent); animation: shineMove 1.2s linear infinite; }
 @keyframes shineMove { 0% { left: -40%; } 100% { left: 120%; } }
 @keyframes loadBar { 0% { width: 0%; } 100% { width: 100%; } }
 .loader-powered-text { position: absolute; bottom: 35px; left: 50%; transform: translateX(-50%); color: #ffffff; font-size: 11px; font-weight: 700; letter-spacing: 1.5px; font-family: 'Poppins', sans-serif; text-transform: uppercase; z-index: 10; white-space: nowrap; }
+/* ========================================================== */
 
 /* WHATSAPP POPUP */
 .popup-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.85); backdrop-filter: blur(5px); display: none; justify-content: center; align-items: center; z-index: 9999998; padding: 20px; }
