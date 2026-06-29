@@ -34,7 +34,6 @@ const urlParamsCheck = new URLSearchParams(window.location.search);
 window.isDeepLinkLoad = urlParamsCheck.has('book'); 
 let pendingBookSlug = urlParamsCheck.get('book');
 
-// Initially hide main wrappers if deep linking to prevent glitches
 if (window.isDeepLinkLoad) {
     document.getElementById('mainAppWrapper').style.display = 'none';
     document.getElementById('downloadModal').style.display = 'none';
@@ -101,12 +100,10 @@ document.getElementById('daily-quote-author').innerText = `— ${quotes[currentQ
 
 window.addEventListener('resize', resizeCanvas); resizeCanvas(); animateHex(0);
 
-// ================= NEW SYNCHRONIZED APP LOAD STATE MACHINE =================
 let isAppReady = { auth: false, data: false, time: false };
 let hasTransitioned = false;
 let popupShown = false;
 
-// 1. Loader Animation ab 2000ms par set kiya gaya hai! (2s)
 setTimeout(() => {
     isAppReady.time = true;
     tryTransition();
@@ -119,12 +116,10 @@ function triggerWhatsAppPopup() {
     }
 }
 
-// Global Core Transition Logic - Executed ONLY when Time, Auth, and Data are ALL ready
 function tryTransition() {
     if (isAppReady.auth && isAppReady.data && isAppReady.time && !hasTransitioned) {
         hasTransitioned = true;
         
-        // Show main content BEFORE loader fades out
         document.getElementById('mainAppWrapper').style.display = 'block';
 
         if (window.isDeepLinkLoad && pendingBookSlug) {
@@ -136,22 +131,19 @@ function tryTransition() {
                 setTimeout(() => loginOverlay.style.opacity = '1', 10);
             }
         } else {
-            setTimeout(triggerWhatsAppPopup, 15000); // 15s Delay for WhatsApp Popup
+            setTimeout(triggerWhatsAppPopup, 15000); 
         }
 
         const loader = document.getElementById("loaderScreen");
-        loader.style.opacity = "0"; // Smooth fade out start
+        loader.style.opacity = "0"; 
 
-        // 2. Yahan bhi delay kam karke 300ms kar diya gaya hai (snappy load!)
         setTimeout(() => {
             loader.style.display = "none";
             cancelAnimationFrame(animationId);
         }, 300);
     }
 }
-// =========================================================================
 
-// Handle Login Close Button (X) gracefully
 window.closeLoginOverlay = function() {
     const loginOverlay = document.getElementById('loginOverlay');
     loginOverlay.style.opacity = '0';
@@ -161,8 +153,6 @@ window.closeLoginOverlay = function() {
         if (window.isDeepLinkLoad && !window.isUserLoggedIn) {
             window.isDeepLinkLoad = false;
             window.history.replaceState({}, '', window.location.pathname);
-            
-            // App wrapper is already visible now, just trigger popup if needed
             setTimeout(triggerWhatsAppPopup, 15000);
         }
     }, 500);
@@ -331,10 +321,11 @@ window.copyPromptText = function(text, btnId) {
     });
 };
 
+/* ===== CHANGED: NEW YOUTUBE CARD DESIGN ===== */
 async function renderTutorialCard(data, docId, containerId, isAdmin) {
     try {
         const videoUrl = data.url;
-        const customViews = data.views || "10.5K"; 
+        const customViews = data.views || "10K"; 
         
         const videoIdMatch = videoUrl.match(/(?:youtu\.be\/|youtube\.com\/(?:[^\/]+\/.+\/|(?:v|e(?:mbed)?)\/|.*[?&]v=)|youtube\.com\/shorts\/)([^"&?\/\s]{11})/i);
         if (!videoIdMatch) return;
@@ -366,19 +357,17 @@ async function renderTutorialCard(data, docId, containerId, isAdmin) {
 
         const cardHTML = `
             <div class="yt-card">
-                ${actionBtns}
                 <div class="yt-thumbnail-wrapper" onclick="window.open('${videoUrl}', '_blank')">
+                    ${actionBtns}
                     <img src="${thumbnailUrl}" class="yt-thumbnail-img" alt="Thumbnail" onerror="this.src='${fallbackUrl}'">
-                    <div class="yt-play-icon"><i class="fas fa-play" style="margin-left: 3px;"></i></div>
+                    <div class="yt-duration">12:05</div>
                 </div>
                 <div class="yt-info-box" onclick="window.open('${videoUrl}', '_blank')">
-                    <div style="display:flex; gap:12px; align-items:flex-start;">
-                        <img src="${avatarUrl}" style="width:36px; height:36px; border-radius:50%; flex-shrink:0;">
-                        <div>
-                            <div class="yt-video-title">${title}</div>
-                            <div class="yt-channel-name">
-                                ${channelName} <i class="fas fa-check-circle yt-verified"></i> • ${customViews} Views
-                            </div>
+                    <img src="${avatarUrl}" class="yt-avatar" alt="Avatar">
+                    <div class="yt-text-content">
+                        <div class="yt-video-title">${title}</div>
+                        <div class="yt-channel-name">
+                            ${channelName} • ${customViews} views • 5 days ago
                         </div>
                     </div>
                 </div>
@@ -387,6 +376,7 @@ async function renderTutorialCard(data, docId, containerId, isAdmin) {
         document.getElementById(containerId).innerHTML += cardHTML;
     } catch (error) {}
 }
+/* ================================================== */
 
 window.addTutorialLink = async function() {
     if(!window.IS_SUPER_ADMIN) return; 
@@ -655,7 +645,7 @@ window.openDownloadPage = function(slug, skipPushState = false) {
         const uid = auth.currentUser.uid;
         const userDownloadRef = doc(db, "user_downloads", uid);
         
-        const MAX_DOWNLOADS = 2; // Abhi 2 book ki limit hai
+        const MAX_DOWNLOADS = 2;
 
         btn.innerHTML = `<span style="display:flex; align-items:center; gap:8px;"><i class="fas fa-spinner fa-spin"></i> Processing...</span>`;
         btn.disabled = true;
@@ -676,7 +666,7 @@ window.openDownloadPage = function(slug, skipPushState = false) {
                         showToast("Your plan is exhausted! Please try again after 24 hours.");
                         btn.innerHTML = originalText;
                         btn.disabled = false;
-                        return; // Rok do
+                        return; 
                     }
                     await updateDoc(userDownloadRef, { count: count + 1 });
                 } else {
@@ -738,8 +728,8 @@ window.closeDownloadPage = function() {
                 loader.style.display = "none";
                 cancelAnimationFrame(animationId);
                 document.getElementById("popupOverlay").style.display = "flex";
-            }, 300); // reduced delay here too
-        }, 1500); // reduced wait
+            }, 300);
+        }, 1500); 
     }
 }
 window.shareBook = function() {
