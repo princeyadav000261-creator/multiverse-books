@@ -339,9 +339,9 @@
                 
                 <div class="adm-tabs">
                     <button class="adm-tab-btn active" id="admTabAdd" onclick="switchAdminTab('add')"><i class="fas fa-plus"></i> Add Book</button>
-                    <button class="adm-tab-btn" id="admTabPrompt" onclick="switchAdminTab('prompt')" style="display:none;"><i class="fas fa-terminal"></i> Prompts</button>
-                    <button class="adm-tab-btn" id="admTabVideo" onclick="switchAdminTab('tutorial')" style="display:none;"><i class="fas fa-video"></i> Tutorial Video</button>
-                    <button class="adm-tab-btn" id="admTabManage" onclick="switchAdminTab('manage')" style="display:none;"><i class="fas fa-list"></i> Manage</button>
+                    <button class="adm-tab-btn" id="admTabPrompt" onclick="switchAdminTab('prompt')"><i class="fas fa-terminal"></i> Prompts</button>
+                    <button class="adm-tab-btn" id="admTabVideo" onclick="switchAdminTab('tutorial')"><i class="fas fa-video"></i> Tutorials</button>
+                    <button class="adm-tab-btn" id="admTabManage" onclick="switchAdminTab('manage')"><i class="fas fa-list"></i> Manage</button>
                 </div>
 
                 <div class="adm-content-area">
@@ -373,27 +373,12 @@
                     </div>
 
                     <div id="sectionPrompt" class="adm-section">
-                        <div class="adm-card" id="adminAddPromptCard" style="display: none; margin-bottom: 25px;">
-                            <h4 style="margin-bottom: 12px; color: #10b981; font-weight: 800; display: flex; align-items: center; gap: 8px;"><i class="fas fa-plus-circle"></i> Add New Prompt</h4>
-                            <input type="text" id="newPromptTitle" class="adm-input" placeholder="Prompt Title (e.g., Important Prompt)" style="margin-bottom:10px;">
-                            <textarea id="newPromptInstruction" class="adm-input" placeholder="Instructions (e.g., 1. Copy code 2. Paste in ChatGPT)" style="margin-bottom:10px; min-height: 60px; resize: vertical;"></textarea>
-                            <textarea id="newPromptText" class="adm-input" placeholder="Paste your prompt text here..." style="margin-bottom:10px; min-height: 100px; resize: vertical;"></textarea>
-                            <button type="button" class="adm-submit-btn" onclick="addPrompt()" style="background:#10b981; color: #fff;"><i class="fas fa-save"></i> Save Prompt</button>
-                        </div>
                         <div id="promptsContainer" style="display: flex; flex-direction: column; gap: 25px;">
                             <div style="text-align:center; padding:20px; color:#a1a1aa; font-weight:800;">Loading prompts...</div>
                         </div>
                     </div>
 
                     <div id="sectionTutorial" class="adm-section">
-                        <div class="adm-card" id="adminTutorialEdit" style="display: none; margin-bottom: 20px;">
-                            <h4 style="margin-bottom: 10px; color: #10b981; font-weight: 800;"><i class="fas fa-plus-circle"></i> Add New YouTube/Shorts Video</h4>
-                            <input type="url" id="newTutorialUrl" class="adm-input" placeholder="Paste YouTube OR Shorts URL Here" style="margin-bottom:10px;">
-                            <input type="text" id="newTutorialViews" class="adm-input" placeholder="Custom Views (e.g. 1.2M, 500K)" style="margin-bottom:10px;">
-                            <input type="text" id="newTutorialDuration" class="adm-input" placeholder="Video Duration (e.g. 12:05)" style="margin-bottom:10px;">
-                            <input type="url" id="newTutorialAvatar" class="adm-input" placeholder="Channel Logo Image URL (Optional)" style="margin-bottom:10px;">
-                            <button type="button" class="adm-submit-btn" onclick="addTutorialLink()" style="background:#10b981; color: #fff;"><i class="fas fa-upload"></i> Add Video Card</button>
-                        </div>
                         <div id="adminTutorialsGrid" style="display: flex; gap: 15px; flex-wrap: wrap; margin-top: 15px; justify-content: center; padding: 0 10px;"></div>
                     </div>
 
