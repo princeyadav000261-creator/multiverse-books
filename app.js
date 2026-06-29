@@ -321,11 +321,13 @@ window.copyPromptText = function(text, btnId) {
     });
 };
 
-/* ===== CHANGED: NEW YOUTUBE CARD DESIGN ===== */
+/* ===== YOUTUBE CARD DESIGN (WITH CUSTOM DURATION & AVATAR) ===== */
 async function renderTutorialCard(data, docId, containerId, isAdmin) {
     try {
         const videoUrl = data.url;
         const customViews = data.views || "10K"; 
+        const customDuration = data.duration || "10:00";
+        const customAvatar = data.avatarUrl || "https://i.postimg.cc/D0BF1b77/file-000000000e847207a64f6711d825a859.png"; 
         
         const videoIdMatch = videoUrl.match(/(?:youtu\.be\/|youtube\.com\/(?:[^\/]+\/.+\/|(?:v|e(?:mbed)?)\/|.*[?&]v=)|youtube\.com\/shorts\/)([^"&?\/\s]{11})/i);
         if (!videoIdMatch) return;
@@ -344,13 +346,12 @@ async function renderTutorialCard(data, docId, containerId, isAdmin) {
 
         const thumbnailUrl = `https://img.youtube.com/vi/${videoId}/maxresdefault.jpg`;
         const fallbackUrl = `https://img.youtube.com/vi/${videoId}/hqdefault.jpg`;
-        const avatarUrl = `https://i.postimg.cc/D0BF1b77/file-000000000e847207a64f6711d825a859.png`;
         
         let actionBtns = '';
         if(isAdmin) {
             actionBtns = `
             <div class="yt-action-btns">
-                <button class="yt-action-btn yt-edit" onclick="editTutorial('${docId}', '${videoUrl}', '${customViews}')"><i class="fas fa-pen"></i></button>
+                <button class="yt-action-btn yt-edit" onclick="editTutorial('${docId}', '${videoUrl}', '${customViews}', '${customDuration}', '${customAvatar}')"><i class="fas fa-pen"></i></button>
                 <button class="yt-action-btn yt-delete" onclick="deleteTutorial('${docId}')"><i class="fas fa-trash"></i></button>
             </div>`;
         }
@@ -360,14 +361,14 @@ async function renderTutorialCard(data, docId, containerId, isAdmin) {
                 <div class="yt-thumbnail-wrapper" onclick="window.open('${videoUrl}', '_blank')">
                     ${actionBtns}
                     <img src="${thumbnailUrl}" class="yt-thumbnail-img" alt="Thumbnail" onerror="this.src='${fallbackUrl}'">
-                    <div class="yt-duration">12:05</div>
+                    <div class="yt-duration">${customDuration}</div>
                 </div>
                 <div class="yt-info-box" onclick="window.open('${videoUrl}', '_blank')">
-                    <img src="${avatarUrl}" class="yt-avatar" alt="Avatar">
+                    <img src="${customAvatar}" class="yt-avatar" alt="Avatar">
                     <div class="yt-text-content">
                         <div class="yt-video-title">${title}</div>
                         <div class="yt-channel-name">
-                            ${channelName} • ${customViews} views • 5 days ago
+                            ${channelName} • ${customViews} views
                         </div>
                     </div>
                 </div>
@@ -376,33 +377,53 @@ async function renderTutorialCard(data, docId, containerId, isAdmin) {
         document.getElementById(containerId).innerHTML += cardHTML;
     } catch (error) {}
 }
-/* ================================================== */
 
 window.addTutorialLink = async function() {
     if(!window.IS_SUPER_ADMIN) return; 
     const url = document.getElementById('newTutorialUrl').value; 
-    const views = document.getElementById('newTutorialViews').value || "12K"; 
+    const views = document.getElementById('newTutorialViews').value || "10K"; 
+    const duration = document.getElementById('newTutorialDuration').value || "10:00"; 
+    const avatarUrl = document.getElementById('newTutorialAvatar').value || ""; 
 
     if(!url) return showToast("Failed: Enter YouTube URL!"); 
     try { 
-        await addDoc(collection(db, "tutorials"), { url: url, views: views, createdAt: new Date().getTime() });
+        await addDoc(collection(db, "tutorials"), { 
+            url: url, 
+            views: views, 
+            duration: duration,
+            avatarUrl: avatarUrl,
+            createdAt: new Date().getTime() 
+        });
         showToast("Video Added Successfully!"); 
         document.getElementById('newTutorialUrl').value = ''; 
         document.getElementById('newTutorialViews').value = ''; 
+        document.getElementById('newTutorialDuration').value = ''; 
+        document.getElementById('newTutorialAvatar').value = ''; 
     } catch(e) { showToast("Failed: " + e.message); } 
 }
 
-window.editTutorial = async function(id, currentUrl, currentViews) {
+window.editTutorial = async function(id, currentUrl, currentViews, currentDuration, currentAvatar) {
     if(!window.IS_SUPER_ADMIN) return;
     const newUrl = prompt("Enter new YouTube/Shorts URL:", currentUrl);
     if(newUrl === null) return;
     
     const newViews = prompt("Enter custom views (e.g. 2.1M, 500K):", currentViews);
     if(newViews === null) return;
+    
+    const newDuration = prompt("Enter video duration (e.g. 15:30):", currentDuration);
+    if(newDuration === null) return;
+    
+    const newAvatar = prompt("Enter Channel Logo URL (Leave blank for default):", currentAvatar);
+    if(newAvatar === null) return;
 
-    if(newUrl.trim() !== "" && newViews.trim() !== "") {
+    if(newUrl.trim() !== "") {
         try {
-            await updateDoc(doc(db, "tutorials", id), { url: newUrl.trim(), views: newViews.trim() });
+            await updateDoc(doc(db, "tutorials", id), { 
+                url: newUrl.trim(), 
+                views: newViews.trim() || "10K",
+                duration: newDuration.trim() || "10:00",
+                avatarUrl: newAvatar.trim()
+            });
             showToast("Video Updated Successfully!");
         } catch(e) {
             showToast("Failed to update video!");
