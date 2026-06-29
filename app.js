@@ -171,24 +171,14 @@ onAuthStateChanged(auth, async (user) => {
             window.IS_SUPER_ADMIN = true;
             document.getElementById('sidebarRoleText').innerText = "Super Admin";
             document.getElementById('uploadMenuText').innerText = "Manage Vault";
-            
             document.getElementById('admTabManage').style.display = 'inline-flex';
-            document.getElementById('admTabPrompt').style.display = 'inline-flex';
-            document.getElementById('admTabVideo').style.display = 'inline-flex';
-            document.getElementById('adminAddPromptCard').style.display = 'block';
-            document.getElementById('adminTutorialEdit').style.display = 'block'; 
             document.getElementById('addYtLinkContainer').style.display = 'flex'; 
             document.getElementById('editYtLinkContainer').style.display = 'flex'; 
         } else {
             window.IS_SUPER_ADMIN = false;
             document.getElementById('sidebarRoleText').innerText = "Verified User";
             document.getElementById('uploadMenuText').innerText = "Upload Books";
-            
             document.getElementById('admTabManage').style.display = 'none';
-            document.getElementById('admTabVideo').style.display = 'inline-flex'; 
-            document.getElementById('admTabPrompt').style.display = 'inline-flex';
-            document.getElementById('adminAddPromptCard').style.display = 'none'; 
-            document.getElementById('adminTutorialEdit').style.display = 'none'; 
             document.getElementById('addYtLinkContainer').style.display = 'none'; 
             document.getElementById('editYtLinkContainer').style.display = 'none'; 
             switchAdminTab('add');
@@ -210,7 +200,7 @@ onAuthStateChanged(auth, async (user) => {
         const container = document.getElementById('promptsContainer');
         container.innerHTML = '';
         if(snapshot.empty) {
-            container.innerHTML = `<div style="text-align:center; padding:20px; color:#a1a1aa; font-weight:800;">No prompts added yet.</div>`;
+            container.innerHTML = `<div style="text-align:center; padding:20px; color:#a1a1aa; font-weight:800;">No prompts available yet.</div>`;
             return;
         }
 
@@ -220,8 +210,6 @@ onAuthStateChanged(auth, async (user) => {
             const safeText = data.text.replace(/</g, "&lt;").replace(/>/g, "&gt;");
             const safeInstruction = data.instruction ? data.instruction.replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/\n/g, "<br>") : "";
             
-            let deleteBtn = window.IS_SUPER_ADMIN ? `<button onclick="deletePrompt('${id}')" style="background:transparent; border:none; color:#ef4444; margin-left:auto; cursor:pointer; padding:5px;"><i class="fas fa-trash"></i></button>` : '';
-
             let instructionHTML = '';
             if(safeInstruction) {
                 instructionHTML = `<div style="color: #ffffff; font-weight: 600; font-size: 14px; margin-bottom: 8px; margin-left: 2px; line-height: 1.5; font-family: 'Inter', sans-serif;">${safeInstruction}</div>`;
@@ -232,7 +220,7 @@ onAuthStateChanged(auth, async (user) => {
                     ${instructionHTML}
                     <div class="telegram-prompt-card">
                         <div class="telegram-prompt-header" style="display:flex; align-items:center;">
-                            ${data.title} ${deleteBtn}
+                            ${data.title}
                         </div>
                         <div class="telegram-prompt-body">${safeText}</div>
                         <div class="telegram-prompt-footer">
@@ -250,7 +238,7 @@ onAuthStateChanged(auth, async (user) => {
             grid.innerHTML = '';
             snapshot.forEach(doc => {
                 const data = doc.data();
-                renderTutorialCard(data, doc.id, 'adminTutorialsGrid', window.IS_SUPER_ADMIN);
+                renderTutorialCard(data);
             });
         }
     });
@@ -277,34 +265,6 @@ onAuthStateChanged(auth, async (user) => {
     });
 });
 
-window.addPrompt = async function() {
-    if(!window.IS_SUPER_ADMIN) return;
-    const title = document.getElementById('newPromptTitle').value;
-    const instruction = document.getElementById('newPromptInstruction').value;
-    const text = document.getElementById('newPromptText').value;
-    
-    if(!title || !text || !instruction) return showToast("Failed: Title, Instructions & Text required!");
-    try {
-        await addDoc(collection(db, "prompts"), { 
-            title: title.trim(), 
-            instruction: instruction.trim(),
-            text: text.trim(), 
-            createdAt: new Date().getTime() 
-        });
-        showToast("Prompt Added Successfully!");
-        document.getElementById('newPromptTitle').value = '';
-        document.getElementById('newPromptInstruction').value = '';
-        document.getElementById('newPromptText').value = '';
-    } catch(e) { showToast("Failed: " + e.message); }
-}
-
-window.deletePrompt = async function(id) {
-    if(!window.IS_SUPER_ADMIN) return;
-    if(confirm("Are you sure you want to delete this prompt?")) {
-        try { await deleteDoc(doc(db, "prompts", id)); showToast("Prompt Deleted!"); } catch(e) { showToast("Failed!"); }
-    }
-}
-
 window.copyPromptText = function(text, btnId) {
     if(!text) return;
     navigator.clipboard.writeText(text).then(() => {
@@ -321,8 +281,8 @@ window.copyPromptText = function(text, btnId) {
     });
 };
 
-/* ===== YOUTUBE CARD DESIGN (WITH CUSTOM DURATION & AVATAR) ===== */
-async function renderTutorialCard(data, docId, containerId, isAdmin) {
+/* ===== YOUTUBE CARD DESIGN (WITH PROTECTION) ===== */
+async function renderTutorialCard(data) {
     try {
         const videoUrl = data.url;
         const customViews = data.views || "10K"; 
@@ -347,24 +307,14 @@ async function renderTutorialCard(data, docId, containerId, isAdmin) {
         const thumbnailUrl = `https://img.youtube.com/vi/${videoId}/maxresdefault.jpg`;
         const fallbackUrl = `https://img.youtube.com/vi/${videoId}/hqdefault.jpg`;
         
-        let actionBtns = '';
-        if(isAdmin) {
-            actionBtns = `
-            <div class="yt-action-btns">
-                <button class="yt-action-btn yt-edit" onclick="editTutorial('${docId}', '${videoUrl}', '${customViews}', '${customDuration}', '${customAvatar}')"><i class="fas fa-pen"></i></button>
-                <button class="yt-action-btn yt-delete" onclick="deleteTutorial('${docId}')"><i class="fas fa-trash"></i></button>
-            </div>`;
-        }
-
         const cardHTML = `
             <div class="yt-card">
                 <div class="yt-thumbnail-wrapper" onclick="window.open('${videoUrl}', '_blank')">
-                    ${actionBtns}
-                    <img src="${thumbnailUrl}" class="yt-thumbnail-img" alt="Thumbnail" onerror="this.src='${fallbackUrl}'">
+                    <img src="${thumbnailUrl}" class="yt-thumbnail-img" alt="Thumbnail" onerror="this.src='${fallbackUrl}'" oncontextmenu="return false;" draggable="false" style="-webkit-touch-callout: none; pointer-events: none;">
                     <div class="yt-duration">${customDuration}</div>
                 </div>
                 <div class="yt-info-box" onclick="window.open('${videoUrl}', '_blank')">
-                    <img src="${customAvatar}" class="yt-avatar" alt="Avatar">
+                    <img src="${customAvatar}" class="yt-avatar" alt="Avatar" oncontextmenu="return false;" draggable="false" style="-webkit-touch-callout: none; pointer-events: none;">
                     <div class="yt-text-content">
                         <div class="yt-video-title">${title}</div>
                         <div class="yt-channel-name">
@@ -374,68 +324,8 @@ async function renderTutorialCard(data, docId, containerId, isAdmin) {
                 </div>
             </div>
         `;
-        document.getElementById(containerId).innerHTML += cardHTML;
+        document.getElementById('adminTutorialsGrid').innerHTML += cardHTML;
     } catch (error) {}
-}
-
-window.addTutorialLink = async function() {
-    if(!window.IS_SUPER_ADMIN) return; 
-    const url = document.getElementById('newTutorialUrl').value; 
-    const views = document.getElementById('newTutorialViews').value || "10K"; 
-    const duration = document.getElementById('newTutorialDuration').value || "10:00"; 
-    const avatarUrl = document.getElementById('newTutorialAvatar').value || ""; 
-
-    if(!url) return showToast("Failed: Enter YouTube URL!"); 
-    try { 
-        await addDoc(collection(db, "tutorials"), { 
-            url: url, 
-            views: views, 
-            duration: duration,
-            avatarUrl: avatarUrl,
-            createdAt: new Date().getTime() 
-        });
-        showToast("Video Added Successfully!"); 
-        document.getElementById('newTutorialUrl').value = ''; 
-        document.getElementById('newTutorialViews').value = ''; 
-        document.getElementById('newTutorialDuration').value = ''; 
-        document.getElementById('newTutorialAvatar').value = ''; 
-    } catch(e) { showToast("Failed: " + e.message); } 
-}
-
-window.editTutorial = async function(id, currentUrl, currentViews, currentDuration, currentAvatar) {
-    if(!window.IS_SUPER_ADMIN) return;
-    const newUrl = prompt("Enter new YouTube/Shorts URL:", currentUrl);
-    if(newUrl === null) return;
-    
-    const newViews = prompt("Enter custom views (e.g. 2.1M, 500K):", currentViews);
-    if(newViews === null) return;
-    
-    const newDuration = prompt("Enter video duration (e.g. 15:30):", currentDuration);
-    if(newDuration === null) return;
-    
-    const newAvatar = prompt("Enter Channel Logo URL (Leave blank for default):", currentAvatar);
-    if(newAvatar === null) return;
-
-    if(newUrl.trim() !== "") {
-        try {
-            await updateDoc(doc(db, "tutorials", id), { 
-                url: newUrl.trim(), 
-                views: newViews.trim() || "10K",
-                duration: newDuration.trim() || "10:00",
-                avatarUrl: newAvatar.trim()
-            });
-            showToast("Video Updated Successfully!");
-        } catch(e) {
-            showToast("Failed to update video!");
-        }
-    }
-}
-
-window.deleteTutorial = async function(id) {
-    if(!window.IS_SUPER_ADMIN) return;
-    if(confirm("Remove this tutorial video permanently?")) {
-        try { await deleteDoc(doc(db, "tutorials", id)); showToast("Video Removed!"); } catch(e) { showToast("Failed: " + e.message); }
-    }
 }
 
 document.getElementById('loginForm').addEventListener('submit', async (e) => {
