@@ -1,4 +1,5 @@
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Poppins:ital,wght@0,400;0,600;1,500;0,700;0,800;0,900&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap');
 
 :root {
     --bg-main: #0c111d;
@@ -272,7 +273,7 @@ main .premium-copyright { width: calc(100% + 40px); margin-left: -20px; margin-r
 .tag i { color: #ffffff; filter: drop-shadow(0 0 6px rgba(255,255,255,.8)) drop-shadow(0 0 12px rgba(255,255,255,.5)); }
 .loader-bar { width: 200px; height: 7px; border-radius: 30px; overflow: hidden; background: rgba(255,255,255,.08); border: 1px solid rgba(255,255,255,.12); box-shadow: inset 0 0 8px rgba(255,255,255,.08), 0 0 12px rgba(255,255,255,.08); margin-top: 28px; z-index: 5; }
 .loader-fill { width: 0%; height: 100%; background: linear-gradient(90deg, #ffffff, #f8fafc, #ffffff); box-shadow: 0 0 10px rgba(255,255,255,.8), 0 0 20px rgba(255,255,255,.55), 0 0 35px rgba(255,255,255,.3); animation: loadBar 2s linear forwards; position: relative; overflow: hidden; }
-.loader-fill::before { content: ""; position: absolute; top: 0; left: -40%; width: 40%; height: 100%; background: linear-gradient(90deg, transparent, rgba(255,255,255,.95), transparent); animation: shineMove 1.2s linear infinite; }
+.loader-fill::before { content: absolute; top: 0; left: -40%; width: 40%; height: 100%; background: linear-gradient(90deg, transparent, rgba(255,255,255,.95), transparent); animation: shineMove 1.2s linear infinite; }
 @keyframes shineMove { 0% { left: -40%; } 100% { left: 120%; } }
 @keyframes loadBar { 0% { width: 0%; } 100% { width: 100%; } }
 .loader-powered-text { position: absolute; bottom: 35px; left: 50%; transform: translateX(-50%); color: #ffffff; font-size: 11px; font-weight: 700; letter-spacing: 1.5px; font-family: 'Poppins', sans-serif; text-transform: uppercase; z-index: 10; white-space: nowrap; }
@@ -291,26 +292,58 @@ main .premium-copyright { width: calc(100% + 40px); margin-left: -20px; margin-r
 .later { margin-top: 18px; color: #888; font-size: 8px; font-weight: 700; letter-spacing: 2px; cursor: pointer; transition: .3s; font-family: 'Poppins', sans-serif;}
 .later:hover { color: #fff; }
 
+/* ---------------------------------------------------- */
+/* NEW PREMIUM LOGIN DESIGN CSS START */
+/* ---------------------------------------------------- */
 .close-login-btn { position: absolute; top: 20px; right: 20px; width: 42px; height: 42px; border-radius: 50%; background-color: transparent; border: 1px solid rgba(255, 255, 255, 0.15); color: #ffffff; font-size: 18px; display: flex; justify-content: center; align-items: center; cursor: pointer; z-index: 1000; transition: 0.2s ease; }
 .close-login-btn:hover { background-color: rgba(255, 255, 255, 0.08); transform: scale(1.05); }
-.login-container { position: fixed; inset: 0; z-index: 99999; display: flex; flex-direction: column; align-items: center; justify-content: center; background: rgba(5, 5, 8, 0.95); backdrop-filter: blur(10px); transition: opacity 0.5s ease; overflow-y: auto; }
-.login-content-wrapper { margin: auto; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 15px; padding-top: 25px; width: 100%; max-width: 380px; position: relative; }
-.login-logo-glow { margin-top: -20px; width: 85px; height: 85px; background: #fff; border-radius: 20px; display: flex; justify-content: center; align-items: center; box-shadow: inset 0 0 15px rgba(0,0,0,0.1); margin-bottom: 18px; padding: 4px; }
-.login-logo-glow img { width: 100%; height: 100%; object-fit: cover; border-radius: 18px; border: 2px solid #52525b; }
-.login-title-small { color: #9d88ff; font-size: 12px; font-weight: 800; letter-spacing: 2px; text-transform: uppercase; }
-.login-title-large { color: #fff; font-size: 24px; font-weight: 900; margin-top: 4px; font-family: 'Poppins', sans-serif; letter-spacing: 1px; }
-.login-subtitle { color: #8c97ac; font-size: 11px; margin-top: 6px; margin-bottom: 35px; letter-spacing: 0.5px; }
-.login-card { background: rgba(255, 255, 255, 0.02); backdrop-filter: blur(15px); -webkit-backdrop-filter: blur(15px); border: 1px solid rgba(255, 255, 255, 0.2); border-radius: 24px; padding: 25px 20px; width: 100%; box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5), 0 0 30px rgba(255, 255, 255, 0.08), inset 0 0 30px rgba(255, 255, 255, 0.15); }
-.login-badge { background: rgba(26, 27, 38, 0.8); border: 1px solid rgba(255,255,255,0.08); border-radius: 12px; padding: 8px 16px; display: inline-flex; align-items: center; justify-content: center; gap: 8px; color: #fff; font-weight: 600; font-size: 12px; margin-bottom: 18px; box-shadow: 0 4px 10px rgba(0,0,0,0.2); }
-.input-wrapper { position: relative; display: flex; align-items: center; margin-bottom: 12px; width: 100%; }
-.input-wrapper i.left-icon { position: absolute; left: 15px; color: #6b7280; font-size: 14px; }
-.input-wrapper .toggle-eye { position: absolute; right: 15px; color: #6b7280; cursor: pointer; padding: 5px;}
-.input-wrapper input { width: 100%; background: #1a1c24; border: 1px solid rgba(255,255,255,0.05); border-radius: 14px; padding: 14px 45px; color: #fff; outline: none; font-weight: 500; font-size: 13.5px; }
-.input-wrapper input:focus { border-color: #6d5dfc; }
-.btn-login { background: #6d5dfc; color: #fff; width: 100%; padding: 14px; border-radius: 14px; border: none; font-size: 15px; font-weight: 700; cursor: pointer; transition: 0.3s; margin-top: 8px; box-shadow: 0 8px 20px rgba(109, 93, 252, 0.3); display: flex; justify-content: center; align-items: center; gap: 10px;}
-.btn-login:hover { background: #5a4bdf; }
-.btn-token-style { background: #1a1b26; color: #fff; width: 100%; padding: 14px; border-radius: 14px; border: 1px solid rgba(255,255,255,0.05); font-size: 14px; font-weight: 600; cursor: pointer; display: flex; justify-content: center; align-items: center; gap: 10px; transition: 0.3s; }
-.btn-token-style:hover { background: rgba(255,255,255,0.05); }
+.login-container { position: fixed; inset: 0; z-index: 99999; display: flex; flex-direction: column; align-items: center; justify-content: center; background: linear-gradient(135deg, rgba(15, 15, 25, 0.9) 0%, rgba(0, 0, 0, 0.98) 100%); backdrop-filter: blur(10px); transition: opacity 0.5s ease; overflow-y: auto; }
+
+.login-wrapper { position: relative; z-index: 10; width: 100%; max-width: 420px; display: flex; flex-direction: column; align-items: center; padding: 20px; margin: auto; font-family: 'Outfit', sans-serif;}
+.login-wrapper * { font-family: 'Outfit', sans-serif; }
+.logo-container { text-align: center; margin-bottom: 25px; width: 100%; }
+.brand-logo { width: 115px; height: 115px; border-radius: 22px; object-fit: cover; margin-bottom: 20px; border: 6px solid #71717a; box-shadow: 0 15px 40px rgba(0,0,0,0.9); transition: transform 0.3s ease; }
+.brand-logo:hover { transform: scale(1.05); }
+.brand-title { font-size: 35px; font-weight: 800; letter-spacing: 1.5px; text-transform: uppercase; text-shadow: 0 4px 15px rgba(0,0,0,0.8); margin-top: 10px; color: #fff; }
+.brand-subtitle { font-size: 11px; letter-spacing: 0.5px; color: #71717a; margin-top: 8px; text-transform: uppercase; font-weight: 600; width: 100%; }
+.glass-card { background: linear-gradient(135deg, rgba(255, 255, 255, 0.08) 0%, rgba(255, 255, 255, 0.01) 100%); backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px); border-radius: 16px; padding: 40px 30px; width: 100%; border-top: 1px solid rgba(255, 255, 255, 0.45); border-left: 1px solid rgba(255, 255, 255, 0.3); border-bottom: 1px solid rgba(255, 255, 255, 0.05); border-right: 1px solid rgba(255, 255, 255, 0.05); box-shadow: inset 0 0 35px rgba(255, 255, 255, 0.12), inset 0 4px 20px rgba(255, 255, 255, 0.35), 0 30px 60px rgba(0, 0, 0, 0.7); transition: all 0.4s cubic-bezier(0.25, 0.8, 0.25, 1); position: relative; overflow: hidden; }
+.glass-card::before { content: ''; position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: radial-gradient(circle at 0% 0%, rgba(255, 255, 255, 0.3) 0%, transparent 60%); pointer-events: none; z-index: 0; }
+.glass-card:hover { transform: translateY(-3px); box-shadow: inset 0 0 40px rgba(255, 255, 255, 0.15), inset 0 4px 25px rgba(255, 255, 255, 0.4), 0 40px 75px rgba(0, 0, 0, 0.9); }
+.form-header, #loginForm, .social-login { position: relative; z-index: 1; }
+.form-header { display: flex; align-items: center; justify-content: center; gap: 10px; font-size: 22px; font-weight: 600; margin-bottom: 35px; color: #fff; letter-spacing: 1px; }
+.form-header i { color: #00d2ff; font-size: 22px; text-shadow: 0 2px 12px rgba(0, 210, 255, 0.5); }
+.input-group { position: relative; margin-bottom: 25px; }
+.input-icon { position: absolute; left: 0; top: 50%; transform: translateY(-50%); color: #d4d4d8; font-size: 14px; transition: 0.3s ease; pointer-events: none; }
+.input-group input { width: 100%; background: transparent; border: none; border-bottom: 1px solid rgba(255, 255, 255, 0.4); border-radius: 0; color: #ffffff; font-size: 15px; padding: 10px 25px 10px 28px; outline: none; transition: 0.3s ease; }
+.input-group input::placeholder { color: #d4d4d8; font-size: 14px; font-weight: 300; }
+.input-group input:focus { border-bottom-color: #00d2ff; box-shadow: 0 2px 0 0 rgba(0, 210, 255, 0.2); }
+.input-group:focus-within .input-icon { color: #00d2ff; }
+.toggle-password { position: absolute; right: 0; top: 50%; transform: translateY(-50%); color: #a1a1aa; cursor: pointer; transition: 0.2s; padding: 5px; }
+.toggle-password:hover { color: #fff; text-shadow: 0 0 8px rgba(255,255,255,0.5); }
+.form-actions { display: flex; justify-content: flex-start; align-items: center; font-size: 14px; margin-bottom: 25px; color: #e4e4e7; }
+.form-actions label { display: flex; align-items: center; gap: 8px; cursor: pointer; font-weight: 300; }
+.btn-login { width: 100%; background: rgba(255, 255, 255, 0.95); color: #000000; border: none; padding: 14px; border-radius: 8px; font-size: 16px; font-weight: 700; cursor: pointer; transition: all 0.3s ease; box-shadow: 0 4px 15px rgba(255, 255, 255, 0.1); display: flex; justify-content: center; align-items: center; gap: 10px;}
+.btn-login:hover { transform: translateY(-2px); background: #ffffff; box-shadow: 0 8px 20px rgba(255, 255, 255, 0.25); }
+.btn-google { width: 100%; background: rgba(255, 255, 255, 0.05); color: #ffffff; border: 1px solid rgba(255, 255, 255, 0.2); padding: 12px; border-radius: 8px; font-size: 15px; font-weight: 500; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 12px; transition: all 0.3s ease; margin-top: 15px; }
+.btn-google img { width: 22px; height: 22px; }
+.btn-google:hover { background: rgba(255, 255, 255, 0.15); border-color: rgba(255, 255, 255, 0.5); transform: translateY(-2px); box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3); }
+
+/* Mobile Adjustments for Login */
+@media (max-width: 420px) {
+    .brand-title { font-size: 29px; } 
+    .brand-logo { width: 95px; height: 95px; border: 4px solid #71717a; box-shadow: 0 10px 25px rgba(0,0,0,0.9); }
+    .brand-subtitle { font-size: 9px; } 
+    .glass-card { padding: 35px 25px; }
+}
+@media (max-width: 320px) {
+    .brand-subtitle { font-size: 8px; } 
+    .brand-title { font-size: 24px; } 
+    .form-header { font-size: 18px; }
+}
+/* ---------------------------------------------------- */
+/* NEW PREMIUM LOGIN DESIGN CSS END */
+/* ---------------------------------------------------- */
+
 
 .overlay-panel#admin-dashboard-panel * { font-weight: 700; }
 .adm-top-header { display: flex; align-items: center; justify-content: space-between; padding: 15px 20px; background: rgba(20,20,25,0.9); border-bottom: 1px solid rgba(255,255,255,0.1); }
