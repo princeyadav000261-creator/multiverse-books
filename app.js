@@ -16,14 +16,15 @@ const db = getFirestore(app);
 const auth = getAuth(app);
 const provider = new GoogleAuthProvider();
 
-window.booksData = [];
+// IMPORTANT SECURITY FIX: Removed "window." from variables so they stay secure and hidden inside this module
+let booksData = [];
 let loadedCount = 0; 
 let isLoadingMore = false;
 let activeBookSlug = ""; 
 let activeBookTitle = "";
 
-window.IS_SUPER_ADMIN = false;
-window.isUserLoggedIn = false; 
+let IS_SUPER_ADMIN = false;
+let isUserLoggedIn = false; 
 const SUPER_ADMIN_EMAIL = "princeyadav000261@gmail.com"; 
 
 let adminFilteredBooks = [];
@@ -31,16 +32,16 @@ let adminCurrentPage = 1;
 const adminBooksPerPage = 10;
 
 const urlParamsCheck = new URLSearchParams(window.location.search);
-window.isDeepLinkLoad = urlParamsCheck.has('book'); 
+let isDeepLinkLoad = urlParamsCheck.has('book'); 
 let pendingBookSlug = urlParamsCheck.get('book');
 
-if (window.isDeepLinkLoad) {
+if (isDeepLinkLoad) {
     document.getElementById('mainAppWrapper').style.display = 'none';
     document.getElementById('downloadModal').style.display = 'none';
 }
 
 /* =========================================
-   NEW PROGRESS BAR LOGIC ADDED HERE
+   PROGRESS BAR LOGIC
 ========================================== */
 let loadingProgress = 0;
 let loaderInterval;
@@ -141,7 +142,7 @@ setTimeout(() => {
 }, 2000);
 
 function triggerWhatsAppPopup() {
-    if(!popupShown && !window.isDeepLinkLoad) {
+    if(!popupShown && !isDeepLinkLoad) {
         popupShown = true;
         document.getElementById("popupOverlay").style.display = "flex";
     }
@@ -158,8 +159,8 @@ function tryTransition() {
         setTimeout(() => {
             document.getElementById('mainAppWrapper').style.display = 'block';
 
-            if (window.isDeepLinkLoad && pendingBookSlug) {
-                if (window.isUserLoggedIn) {
+            if (isDeepLinkLoad && pendingBookSlug) {
+                if (isUserLoggedIn) {
                     window.openDownloadPage(pendingBookSlug, true);
                 } else {
                     const loginOverlay = document.getElementById('loginOverlay');
@@ -187,8 +188,8 @@ window.closeLoginOverlay = function() {
     setTimeout(() => { 
         loginOverlay.style.display = 'none'; 
         
-        if (window.isDeepLinkLoad && !window.isUserLoggedIn) {
-            window.isDeepLinkLoad = false;
+        if (isDeepLinkLoad && !isUserLoggedIn) {
+            isDeepLinkLoad = false;
             window.history.replaceState({}, '', window.location.pathname);
             setTimeout(triggerWhatsAppPopup, 15000);
         }
@@ -197,7 +198,7 @@ window.closeLoginOverlay = function() {
 
 onAuthStateChanged(auth, async (user) => {
     if (user) {
-        window.isUserLoggedIn = true;
+        isUserLoggedIn = true;
         localStorage.setItem('isUserLoggedIn', 'true');
 
         let dName = user.displayName;
@@ -205,14 +206,14 @@ onAuthStateChanged(auth, async (user) => {
         document.getElementById('sidebarProfileName').innerText = dName;
 
         if (user.email === SUPER_ADMIN_EMAIL) {
-            window.IS_SUPER_ADMIN = true;
+            IS_SUPER_ADMIN = true;
             document.getElementById('sidebarRoleText').innerText = "Super Admin";
             document.getElementById('uploadMenuText').innerText = "Manage Vault";
             document.getElementById('admTabManage').style.display = 'inline-flex';
             document.getElementById('addYtLinkContainer').style.display = 'flex'; 
             document.getElementById('editYtLinkContainer').style.display = 'flex'; 
         } else {
-            window.IS_SUPER_ADMIN = false;
+            IS_SUPER_ADMIN = false;
             document.getElementById('sidebarRoleText').innerText = "Verified User";
             document.getElementById('uploadMenuText').innerText = "Upload Books";
             document.getElementById('admTabManage').style.display = 'none';
@@ -221,8 +222,8 @@ onAuthStateChanged(auth, async (user) => {
             switchAdminTab('add');
         }
     } else {
-        window.isUserLoggedIn = false;
-        window.IS_SUPER_ADMIN = false;
+        isUserLoggedIn = false;
+        IS_SUPER_ADMIN = false;
         localStorage.removeItem('isUserLoggedIn');
         
         document.getElementById('sidebarProfileName').innerText = "Guest User";
@@ -282,18 +283,18 @@ onAuthStateChanged(auth, async (user) => {
 
     const q = query(collection(db, "books"), orderBy("createdAt", "desc"));
     onSnapshot(q, (snapshot) => {
-        window.booksData = [];
+        booksData = [];
         snapshot.forEach((doc) => {
             let data = doc.data(); data.id = doc.id;
             data.slug = data.title.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)+/g, '');
-            window.booksData.push(data);
+            booksData.push(data);
         });
         loadedCount = 0;
         const searchInput = document.getElementById('app-search-input').value;
         if(searchInput.trim() === "") { window.renderBooksUI(0, getBatchSize() * 2); } else { performFuzzySearch(searchInput); }
         window.generateNotifications();
         
-        adminFilteredBooks = [...window.booksData];
+        adminFilteredBooks = [...booksData];
         document.getElementById('adminSearchBook').value = '';
         renderAdminBooksTable(); 
         
@@ -381,7 +382,7 @@ document.getElementById('loginForm').addEventListener('submit', async (e) => {
         
         window.closeLoginOverlay();
         
-        if (window.isDeepLinkLoad && pendingBookSlug) {
+        if (isDeepLinkLoad && pendingBookSlug) {
             document.getElementById('mainAppWrapper').style.display = 'block';
             setTimeout(() => { window.openDownloadPage(pendingBookSlug, true); }, 300);
         }
@@ -403,7 +404,7 @@ document.getElementById('googleSignInBtn').addEventListener('click', async () =>
         
         window.closeLoginOverlay();
         
-        if (window.isDeepLinkLoad && pendingBookSlug) {
+        if (isDeepLinkLoad && pendingBookSlug) {
             document.getElementById('mainAppWrapper').style.display = 'block';
             setTimeout(() => { window.openDownloadPage(pendingBookSlug, true); }, 300);
         }
@@ -446,7 +447,7 @@ closeSearchBtn.addEventListener('click', () => {
 function performFuzzySearch(searchText) {
     let normalizedSearch = searchText.toLowerCase().replace(/[^a-z0-9\s]/g, '');
     let searchTokens = normalizedSearch.split(/\s+/).filter(token => token.length > 0);
-    const filteredData = window.booksData.filter(book => {
+    const filteredData = booksData.filter(book => {
         let textToSearch = (book.title + " " + book.author).toLowerCase().replace(/[^a-z0-9\s]/g, '');
         return searchTokens.every(token => textToSearch.includes(token));
     });
@@ -468,7 +469,7 @@ mainElement.addEventListener('scroll', () => {
     if(document.getElementById('app-search-input').value.trim() !== "") return;
     if (mainElement.scrollTop + mainElement.clientHeight >= mainElement.scrollHeight - 50) {
         const noResultsMsg = document.getElementById('no-results-msg');
-        if (loadedCount < window.booksData.length && !isLoadingMore && noResultsMsg.style.display !== 'flex') {
+        if (loadedCount < booksData.length && !isLoadingMore && noResultsMsg.style.display !== 'flex') {
             isLoadingMore = true;
             document.getElementById("bottomSpinner").style.display = "flex";
             setTimeout(() => {
@@ -482,7 +483,7 @@ mainElement.addEventListener('scroll', () => {
 
 window.renderBooksUI = function(startIndex, count, customData = null) {
     const container = document.getElementById("bookContainer");
-    let dataToRender = customData ? customData : window.booksData;
+    let dataToRender = customData ? customData : booksData;
     let endIndex = Math.min(startIndex + count, dataToRender.length);
     if(startIndex === 0) container.innerHTML = "";
     for(let i = startIndex; i < endIndex; i++) {
@@ -501,7 +502,7 @@ window.renderBooksUI = function(startIndex, count, customData = null) {
 window.generateNotifications = function() {
     const notiContainer = document.getElementById('dynamic-noti-container'); 
     notiContainer.innerHTML = ''; 
-    window.booksData.slice(0, 15).forEach((book) => {
+    booksData.slice(0, 15).forEach((book) => {
         
         let dateStr = "00/00/0000";
         if (book.dateAdded) {
@@ -541,7 +542,7 @@ document.getElementById('close-dmca-btn').addEventListener('click', () => { hist
 
 document.getElementById('menu-admin-panel').addEventListener('click', (e) => {
     e.preventDefault();
-    if(!window.isUserLoggedIn) {
+    if(!isUserLoggedIn) {
         sidebar.classList.remove('active'); sidebarOverlay.classList.remove('active');
         document.getElementById('loginOverlay').style.display = 'flex';
         setTimeout(() => document.getElementById('loginOverlay').style.opacity = '1', 10);
@@ -561,13 +562,13 @@ window.addEventListener('popstate', (e) => {
 });
 
 window.openDownloadPage = function(slug, skipPushState = false) {
-    if(!window.isUserLoggedIn) {
+    if(!isUserLoggedIn) {
         document.getElementById('loginOverlay').style.display = 'flex';
         setTimeout(() => document.getElementById('loginOverlay').style.opacity = '1', 10);
         return;
     }
 
-    const book = window.booksData.find(b => b.slug === slug); if(!book) return;
+    const book = booksData.find(b => b.slug === slug); if(!book) return;
     document.getElementById("downloadModal").style.display = "flex";
     
     const previewImg = document.getElementById("dlPreviewImage");
@@ -581,7 +582,7 @@ window.openDownloadPage = function(slug, skipPushState = false) {
     document.getElementById("dlBookAuthor").innerText = book.author;
     
     document.getElementById("dlPdfLinkBtn").onclick = async function() { 
-        if(!window.isUserLoggedIn || !auth.currentUser) {
+        if(!isUserLoggedIn || !auth.currentUser) {
             document.getElementById('loginOverlay').style.display = 'flex';
             setTimeout(() => document.getElementById('loginOverlay').style.opacity = '1', 10);
             return;
@@ -609,7 +610,7 @@ window.openDownloadPage = function(slug, skipPushState = false) {
                 const hoursPassed = (now - lastDownloadTime) / (1000 * 60 * 60);
 
                 if (hoursPassed < 24) {
-                    if (count >= MAX_DOWNLOADS && !window.IS_SUPER_ADMIN) {
+                    if (count >= MAX_DOWNLOADS && !IS_SUPER_ADMIN) {
                         showToast("Your plan is exhausted! Please try again after 24 hours.");
                         btn.innerHTML = originalText;
                         btn.disabled = false;
@@ -661,15 +662,14 @@ window.closeDownloadPage = function() {
         window.history.replaceState({}, '', window.location.pathname); 
     }
 
-    if(window.isDeepLinkLoad) {
-        window.isDeepLinkLoad = false;
+    if(isDeepLinkLoad) {
+        isDeepLinkLoad = false;
         const loader = document.getElementById("loaderScreen");
         loader.style.display = "flex";
         loader.style.opacity = "1";
         resizeCanvas(); 
         requestAnimationFrame(animateHex);
         
-        // Ensure UI stays at 100% when closing download modal dynamically
         updateLoaderUI(100);
 
         setTimeout(() => {
@@ -712,7 +712,7 @@ document.getElementById('addBookForm').addEventListener('submit', async (e) => {
     const pdfUrlInput = document.getElementById('inPdfUrl').value;
     const ytUrlInput = document.getElementById('inYtUrl').value;
 
-    if (!window.IS_SUPER_ADMIN) {
+    if (!IS_SUPER_ADMIN) {
         if (!pdfUrlInput.includes('drive.google.com')) {
             showToast("Failed: Normal users can only upload Google Drive links!");
             return;
@@ -730,7 +730,7 @@ document.getElementById('addBookForm').addEventListener('submit', async (e) => {
         lang: document.getElementById('inLang').value, 
         exams: document.getElementById('inExams').value, 
         pdfLink: pdfUrlInput, 
-        ytLink: window.IS_SUPER_ADMIN ? ytUrlInput : "", 
+        ytLink: IS_SUPER_ADMIN ? ytUrlInput : "", 
         dateAdded: new Date().toLocaleDateString('en-GB').toUpperCase(), 
         createdAt: new Date().getTime() 
     };
@@ -751,7 +751,7 @@ document.getElementById('addBookForm').addEventListener('submit', async (e) => {
 document.getElementById('adminSearchBook').addEventListener('input', (e) => {
     const term = e.target.value.toLowerCase().replace(/[^a-z0-9\s]/g, '');
     const tokens = term.split(/\s+/).filter(t => t.length > 0);
-    adminFilteredBooks = window.booksData.filter(b => {
+    adminFilteredBooks = booksData.filter(b => {
         const str = (b.title + " " + b.author).toLowerCase().replace(/[^a-z0-9\s]/g, '');
         return tokens.every(t => str.includes(t));
     });
@@ -766,7 +766,7 @@ window.changeAdminPage = function(dir) {
 
 function renderAdminBooksTable() {
     if(!document.getElementById('adminBooksTableBody')) return;
-    if(document.getElementById('adminSearchBook').value.trim() === "") { adminFilteredBooks = [...window.booksData]; }
+    if(document.getElementById('adminSearchBook').value.trim() === "") { adminFilteredBooks = [...booksData]; }
 
     const totalPages = Math.ceil(adminFilteredBooks.length / adminBooksPerPage) || 1;
     if(adminCurrentPage > totalPages) adminCurrentPage = totalPages;
@@ -809,7 +809,7 @@ window.deleteBookRecord = async function(id) {
 }
 
 window.openAdminEditModal = function(id) {
-    const book = window.booksData.find(x => x.id === id); 
+    const book = booksData.find(x => x.id === id); 
     document.getElementById('editDocId').value = book.id; 
     document.getElementById('edTitle').value = book.title; 
     document.getElementById('edAuthor').value = book.author || ""; 
@@ -829,7 +829,7 @@ document.getElementById('editBookForm').addEventListener('submit', async (e) => 
     const originalText = btn.innerHTML;
     const pdfUrlInput = document.getElementById('edPdfUrl').value;
 
-    if (!window.IS_SUPER_ADMIN) {
+    if (!IS_SUPER_ADMIN) {
         if (!pdfUrlInput.includes('drive.google.com')) {
             showToast("Failed: You can only upload Google Drive links!");
             return;
@@ -848,7 +848,7 @@ document.getElementById('editBookForm').addEventListener('submit', async (e) => 
         exams: document.getElementById('edExams').value, 
         image: document.getElementById('edImage').value, 
         pdfLink: pdfUrlInput, 
-        ytLink: window.IS_SUPER_ADMIN ? document.getElementById('edYtUrl').value : ""
+        ytLink: IS_SUPER_ADMIN ? document.getElementById('edYtUrl').value : ""
     };
 
     try { 
