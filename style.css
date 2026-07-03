@@ -221,9 +221,11 @@ main .premium-copyright { width: calc(100% + 40px); margin-left: -20px; margin-r
 .tags-container { display: flex; flex-wrap: wrap; gap: 5px; margin-top: auto; }
 .book-tag { font-size: 9px; font-weight: 700; padding: 3px 6px; border-radius: 6px; }
 
+/* --- UPDATE 1: Language tags now match the transparent/hollow style of the Year tag --- */
 .tag-year { background-color: rgba(245, 158, 11, 0.1); border: 1px solid #f59e0b; color: #f59e0b; }
-.tag-lang-hindi { background-color: #3b0764; border: 1px solid #6b21a8; color: #d8b4fe; }
-.tag-lang-english { background-color: #1e3a8a; border: 1px solid #1d4ed8; color: #bfdbfe; }
+.tag-lang-hindi { background-color: rgba(168, 85, 247, 0.1); border: 1px solid #a855f7; color: #a855f7; } /* Purple transparent glow */
+.tag-lang-english { background-color: rgba(59, 130, 246, 0.1); border: 1px solid #3b82f6; color: #3b82f6; } /* Blue transparent glow */
+/* ------------------------------------------------------------------------------------------ */
 
 .bottom-spinner-container { display: flex; align-items: center; justify-content: center; gap: 10px; padding: 10px 20px 30px; display: none; }
 .bottom-spinner { width: 22px; height: 22px; border: 3px solid var(--bg-card); border-top: 3px solid #ffffff; border-radius: 50%; animation: spinLoader 1s linear infinite; }
@@ -376,7 +378,10 @@ main .premium-copyright { width: calc(100% + 40px); margin-left: -20px; margin-r
 .icon-concerns { background: linear-gradient(135deg, #ef4444, #f43f5e) !important; box-shadow: 0 4px 15px rgba(239, 68, 68, 0.3) !important; } 
 .icon-contact { background: linear-gradient(135deg, #3b82f6, #06b6d4) !important; box-shadow: 0 4px 15px rgba(59, 130, 246, 0.3) !important; } 
 .icon-notice { background: linear-gradient(135deg, #8b5cf6, #ec4899) !important; box-shadow: 0 4px 15px rgba(139, 92, 246, 0.3) !important; } 
-.icon-resp { background: linear-gradient(135deg, #10b981, #34d399) !important; box-shadow: 0 4px 15px rgba(16, 185, 129, 0.3) !important; } 
+
+/* --- UPDATE 2: DMCA 'User Responsibility' icon changed to RED Warning style --- */
+.icon-resp { background: linear-gradient(135deg, #ef4444, #dc2626) !important; box-shadow: 0 4px 15px rgba(239, 68, 68, 0.4) !important; } 
+/* ------------------------------------------------------------------------------ */
 
 .dmca-contact-link { display: inline-flex; align-items: center; gap: 8px; color: #ffffff; font-weight: 700; text-decoration: none; margin-top: 15px; padding: 12px 20px; background: rgba(255, 255, 255, 0.1); border: 1px solid rgba(255, 255, 255, 0.2); border-radius: 14px; font-size: 0.9rem; transition: all 0.2s ease; }
 .dmca-contact-link:active { transform: scale(0.95); background: rgba(255, 255, 255, 0.2); }
@@ -465,7 +470,6 @@ main .premium-copyright { width: calc(100% + 40px); margin-left: -20px; margin-r
 .adm-tabs::-webkit-scrollbar { display: none; }
 .adm-tab-btn { background: rgba(255,255,255,0.05); color: #a1a1aa; border: 1px solid rgba(255,255,255,0.15); padding: 10px 15px; border-radius: 10px; font-weight: 800; white-space: nowrap; cursor: pointer; display: flex; gap: 8px; align-items: center; outline: none; }
 
-/* Premium White Glow on Active Tab ("Manage Vault") */
 .adm-tab-btn.active { 
     background: linear-gradient(135deg, rgba(255, 255, 255, 0.25), rgba(255, 255, 255, 0.05)); 
     color: #ffffff; 
@@ -479,7 +483,6 @@ main .premium-copyright { width: calc(100% + 40px); margin-left: -20px; margin-r
 .adm-section.active { display: block; }
 @keyframes admFadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
 
-/* Premium White Glow on Admin Card ("Publish New Book") */
 .adm-card { 
     background: radial-gradient(circle at 50% 0%, rgba(255, 255, 255, 0.15) 0%, transparent 40%), #121212; 
     border: 1px solid rgba(255,255,255,0.15); 
