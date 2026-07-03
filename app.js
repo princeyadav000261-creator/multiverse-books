@@ -39,6 +39,37 @@ if (window.isDeepLinkLoad) {
     document.getElementById('downloadModal').style.display = 'none';
 }
 
+/* =========================================
+   NEW PROGRESS BAR LOGIC ADDED HERE
+========================================== */
+let loadingProgress = 0;
+let loaderInterval;
+
+function updateLoaderUI(percent) {
+    const loaderFill = document.getElementById('loaderFill');
+    const loaderPercentage = document.getElementById('loaderPercentage');
+    const loaderStatusText = document.getElementById('loaderStatusText');
+    
+    if (loaderFill) loaderFill.style.width = percent + "%";
+    if (loaderPercentage) loaderPercentage.innerText = percent + "%";
+    
+    if (loaderStatusText) {
+        if (percent < 30) loaderStatusText.innerText = "Initializing System...";
+        else if (percent < 60) loaderStatusText.innerText = "Fetching Secure Data...";
+        else if (percent < 99) loaderStatusText.innerText = "Preparing Content...";
+        else loaderStatusText.innerText = "Ready to Launch!";
+    }
+}
+
+loaderInterval = setInterval(() => {
+    if (loadingProgress < 90) {
+        loadingProgress += Math.floor(Math.random() * 8) + 2; 
+        if (loadingProgress > 90) loadingProgress = 90;
+        updateLoaderUI(loadingProgress);
+    }
+}, 150);
+/* ========================================= */
+
 const canvas = document.getElementById('networkCanvas');
 const ctx = canvas.getContext('2d');
 let width, height;
@@ -120,27 +151,33 @@ function tryTransition() {
     if (isAppReady.auth && isAppReady.data && isAppReady.time && !hasTransitioned) {
         hasTransitioned = true;
         
-        document.getElementById('mainAppWrapper').style.display = 'block';
-
-        if (window.isDeepLinkLoad && pendingBookSlug) {
-            if (window.isUserLoggedIn) {
-                window.openDownloadPage(pendingBookSlug, true);
-            } else {
-                const loginOverlay = document.getElementById('loginOverlay');
-                loginOverlay.style.display = 'flex';
-                setTimeout(() => loginOverlay.style.opacity = '1', 10);
-            }
-        } else {
-            setTimeout(triggerWhatsAppPopup, 15000); 
-        }
-
-        const loader = document.getElementById("loaderScreen");
-        loader.style.opacity = "0"; 
+        // Progress ko forcefully 100% set karo kuki data load ho chuka hai
+        clearInterval(loaderInterval);
+        updateLoaderUI(100);
 
         setTimeout(() => {
-            loader.style.display = "none";
-            cancelAnimationFrame(animationId);
-        }, 300);
+            document.getElementById('mainAppWrapper').style.display = 'block';
+
+            if (window.isDeepLinkLoad && pendingBookSlug) {
+                if (window.isUserLoggedIn) {
+                    window.openDownloadPage(pendingBookSlug, true);
+                } else {
+                    const loginOverlay = document.getElementById('loginOverlay');
+                    loginOverlay.style.display = 'flex';
+                    setTimeout(() => loginOverlay.style.opacity = '1', 10);
+                }
+            } else {
+                setTimeout(triggerWhatsAppPopup, 15000); 
+            }
+
+            const loader = document.getElementById("loaderScreen");
+            loader.style.opacity = "0"; 
+
+            setTimeout(() => {
+                loader.style.display = "none";
+                cancelAnimationFrame(animationId);
+            }, 300);
+        }, 500); // Wait time di taaki user 100% complete likha hua dekh paye
     }
 }
 
@@ -281,7 +318,6 @@ window.copyPromptText = function(text, btnId) {
     });
 };
 
-/* ===== YOUTUBE CARD DESIGN (WITH PROTECTION) ===== */
 async function renderTutorialCard(data) {
     try {
         const videoUrl = data.url;
@@ -632,6 +668,9 @@ window.closeDownloadPage = function() {
         loader.style.opacity = "1";
         resizeCanvas(); 
         requestAnimationFrame(animateHex);
+        
+        // Ensure UI stays at 100% when closing download modal dynamically
+        updateLoaderUI(100);
 
         setTimeout(() => {
             loader.style.opacity = "0";
