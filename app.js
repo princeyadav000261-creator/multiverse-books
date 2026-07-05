@@ -16,7 +16,7 @@ const db = getFirestore(app);
 const auth = getAuth(app);
 const provider = new GoogleAuthProvider();
 
-// IMPORTANT SECURITY FIX: Removed "window." from variables so they stay secure and hidden inside this module
+// IMPORTANT SECURITY FIX: Hardcoded admin email removed.
 let booksData = [];
 let loadedCount = 0; 
 let isLoadingMore = false;
@@ -25,7 +25,6 @@ let activeBookTitle = "";
 
 let IS_SUPER_ADMIN = false;
 let isUserLoggedIn = false; 
-const SUPER_ADMIN_EMAIL = "princeyadav000261@gmail.com"; 
 
 let adminFilteredBooks = [];
 let adminCurrentPage = 1;
@@ -84,7 +83,6 @@ const currentQuoteIndex = todayDays % quotes.length;
 document.getElementById('daily-quote-text').innerHTML = `<i class="fas fa-quote-left" style="color: rgba(255,255,255,0.3); margin-right:5px;"></i> ${quotes[currentQuoteIndex].text}`;
 document.getElementById('daily-quote-author').innerText = `— ${quotes[currentQuoteIndex].author}`;
 
-
 let isAppReady = { auth: false, data: false, time: false };
 let hasTransitioned = false;
 let popupShown = false;
@@ -105,7 +103,6 @@ function tryTransition() {
     if (isAppReady.auth && isAppReady.data && isAppReady.time && !hasTransitioned) {
         hasTransitioned = true;
         
-        // Progress ko forcefully 100% set karo kuki data load ho chuka hai
         clearInterval(loaderInterval);
         updateLoaderUI(100);
 
@@ -130,7 +127,7 @@ function tryTransition() {
             setTimeout(() => {
                 loader.style.display = "none";
             }, 300);
-        }, 500); // Wait time di taaki user 100% complete likha hua dekh paye
+        }, 500); 
     }
 }
 
@@ -148,6 +145,9 @@ window.closeLoginOverlay = function() {
     }, 500);
 };
 
+// ==========================================
+// SECURE ADMIN VERIFICATION LOGIC ADDED HERE
+// ==========================================
 onAuthStateChanged(auth, async (user) => {
     if (user) {
         isUserLoggedIn = true;
@@ -157,21 +157,30 @@ onAuthStateChanged(auth, async (user) => {
         if (!dName || dName.trim() === "") { dName = user.email.split('@')[0]; }
         document.getElementById('sidebarProfileName').innerText = dName;
 
-        if (user.email === SUPER_ADMIN_EMAIL) {
-            IS_SUPER_ADMIN = true;
-            document.getElementById('sidebarRoleText').innerText = "Super Admin";
-            document.getElementById('uploadMenuText').innerText = "Manage Vault";
-            document.getElementById('admTabManage').style.display = 'inline-flex';
-            document.getElementById('addYtLinkContainer').style.display = 'flex'; 
-            document.getElementById('editYtLinkContainer').style.display = 'flex'; 
-        } else {
+        try {
+            // Firebase Firestore se check kar rahe hain ki kya user email admins collection me hai
+            const adminDocRef = doc(db, "admins", user.email);
+            const adminDocSnap = await getDoc(adminDocRef);
+
+            if (adminDocSnap.exists()) {
+                IS_SUPER_ADMIN = true;
+                document.getElementById('sidebarRoleText').innerText = "Super Admin";
+                document.getElementById('uploadMenuText').innerText = "Manage Vault";
+                document.getElementById('admTabManage').style.display = 'inline-flex';
+                document.getElementById('addYtLinkContainer').style.display = 'flex'; 
+                document.getElementById('editYtLinkContainer').style.display = 'flex'; 
+            } else {
+                IS_SUPER_ADMIN = false;
+                document.getElementById('sidebarRoleText').innerText = "Verified User";
+                document.getElementById('uploadMenuText').innerText = "Upload Books";
+                document.getElementById('admTabManage').style.display = 'none';
+                document.getElementById('addYtLinkContainer').style.display = 'none'; 
+                document.getElementById('editYtLinkContainer').style.display = 'none'; 
+                switchAdminTab('add');
+            }
+        } catch (error) {
+            console.error("Admin verification failed:", error);
             IS_SUPER_ADMIN = false;
-            document.getElementById('sidebarRoleText').innerText = "Verified User";
-            document.getElementById('uploadMenuText').innerText = "Upload Books";
-            document.getElementById('admTabManage').style.display = 'none';
-            document.getElementById('addYtLinkContainer').style.display = 'none'; 
-            document.getElementById('editYtLinkContainer').style.display = 'none'; 
-            switchAdminTab('add');
         }
     } else {
         isUserLoggedIn = false;
