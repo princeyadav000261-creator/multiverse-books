@@ -71,52 +71,6 @@ loaderInterval = setInterval(() => {
 }, 150);
 /* ========================================= */
 
-const canvas = document.getElementById('networkCanvas');
-const ctx = canvas.getContext('2d');
-let width, height;
-let hexagons = [];
-let animationId;
-
-function initHex() {
-    hexagons = [];
-    const R = 32; const X_OFFSET = R * 1.5; const Y_OFFSET = Math.sqrt(3) * R;
-    const cols = Math.ceil(width / X_OFFSET) + 2; const rows = Math.ceil(height / Y_OFFSET) + 2;
-    for (let q = -1; q < cols; q++) {
-        for (let r = -1; r < rows; r++) {
-            let x = q * X_OFFSET; let y = r * Y_OFFSET;
-            if (q % 2 !== 0) y += Y_OFFSET / 2;
-            let rand = Math.random();
-            if (rand > 0.45) { hexagons.push({ x: x, y: y, type: 'main', blinkOffset: Math.random() * Math.PI * 2, blinkSpeed: 0.001 + Math.random() * 0.0015 }); } 
-            else if (rand > 0.15) { hexagons.push({ x: x + 15, y: y + 15, type: 'bg', blinkOffset: Math.random() * Math.PI * 2, blinkSpeed: 0.0008 }); }
-        }
-    }
-}
-function drawHexagon(x, y, alpha, type) {
-    ctx.beginPath(); const R = 32;
-    for (let i = 0; i < 6; i++) {
-        const angle = (Math.PI / 3) * i; const hx = x + R * Math.cos(angle); const hy = y + R * Math.sin(angle);
-        if (i === 0) ctx.moveTo(hx, hy); else ctx.lineTo(hx, hy);
-    }
-    ctx.closePath();
-    ctx.strokeStyle = type === 'main' ? `rgba(255, 255, 255, ${alpha})` : `rgba(255, 255, 255, ${alpha * 0.15})`; 
-    ctx.lineWidth = type === 'main' ? 0.5 : 0.2;
-    ctx.stroke();
-    for (let i = 0; i < 6; i++) {
-        const angle = (Math.PI / 3) * i; const hx = x + R * Math.cos(angle); const hy = y + R * Math.sin(angle);
-        ctx.beginPath(); ctx.arc(hx, hy, type === 'main' ? 1.5 : 0.8, 0, Math.PI * 2);
-        ctx.fillStyle = type === 'main' ? ctx.strokeStyle : `rgba(255, 255, 255, ${alpha * 0.2})`; ctx.fill();
-    }
-}
-function animateHex(time) {
-    ctx.clearRect(0, 0, width, height);
-    hexagons.forEach(hex => { let alpha = 0.5 + 0.5 * Math.sin(time * hex.blinkSpeed + hex.blinkOffset); drawHexagon(hex.x, hex.y, alpha, hex.type); });
-    animationId = requestAnimationFrame(animateHex);
-}
-function resizeCanvas() {
-    const dpr = window.devicePixelRatio || 1; width = window.innerWidth; height = window.innerHeight;
-    canvas.width = width * dpr; canvas.height = height * dpr; ctx.scale(dpr, dpr); initHex(); 
-}
-
 const quotes = [
     { text: "Be the change that you wish to see in the world.", author: "Mahatma Gandhi" },
     { text: "I have not failed. I've just found 10,000 ways that won't work.", author: "Thomas A. Edison" },
@@ -130,7 +84,6 @@ const currentQuoteIndex = todayDays % quotes.length;
 document.getElementById('daily-quote-text').innerHTML = `<i class="fas fa-quote-left" style="color: rgba(255,255,255,0.3); margin-right:5px;"></i> ${quotes[currentQuoteIndex].text}`;
 document.getElementById('daily-quote-author').innerText = `— ${quotes[currentQuoteIndex].author}`;
 
-window.addEventListener('resize', resizeCanvas); resizeCanvas(); animateHex(0);
 
 let isAppReady = { auth: false, data: false, time: false };
 let hasTransitioned = false;
@@ -176,7 +129,6 @@ function tryTransition() {
 
             setTimeout(() => {
                 loader.style.display = "none";
-                cancelAnimationFrame(animationId);
             }, 300);
         }, 500); // Wait time di taaki user 100% complete likha hua dekh paye
     }
@@ -667,8 +619,6 @@ window.closeDownloadPage = function() {
         const loader = document.getElementById("loaderScreen");
         loader.style.display = "flex";
         loader.style.opacity = "1";
-        resizeCanvas(); 
-        requestAnimationFrame(animateHex);
         
         updateLoaderUI(100);
 
@@ -676,7 +626,6 @@ window.closeDownloadPage = function() {
             loader.style.opacity = "0";
             setTimeout(() => {
                 loader.style.display = "none";
-                cancelAnimationFrame(animationId);
                 document.getElementById("popupOverlay").style.display = "flex";
             }, 300);
         }, 1500); 
