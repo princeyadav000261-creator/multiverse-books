@@ -309,7 +309,7 @@ main .premium-copyright { width: calc(100% + 40px); margin-left: -20px; margin-r
 .dmca-contact-link:active { transform: scale(0.95); background: rgba(255, 255, 255, 0.2); }
 
 /* --- LOADER SCREEN WITH UPDATED PROGRESS BAR AND TEXT --- */
-.loader-screen { position: fixed; inset: 0; display: flex; justify-content: center; align-items: center; flex-direction: column; background-color: #000000; z-index: 9999999; overflow: hidden; transition: opacity .3s; }
+.loader-screen { position: fixed; inset: 0; display: flex; justify-content: center; align-items: center; flex-direction: column; background-color: #000000; z-index: 9999999; overflow: hidden; transition: opacity .3s; padding-bottom: 12vh; /* MODIFIED: Added padding to shift the center content upwards smoothly */ }
 .loader-logo { width: 115px; height: 115px; border-radius: 30px; overflow: hidden; padding: 8px; background: linear-gradient(135deg, #ffffff, #f1f5f9); border: 5px solid #71717a; animation: pulseLogo 2s infinite; z-index: 5; position: relative; }
 .loader-logo img { width: 100%; height: 100%; object-fit: contain; border-radius: 22px; }
 @keyframes pulseLogo { 0% { transform: scale(1); } 50% { transform: scale(1.05); } 100% { transform: scale(1); } }
