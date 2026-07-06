@@ -20,7 +20,6 @@ const auth = getAuth(app);
 const provider = new GoogleAuthProvider();
 // const analytics = getAnalytics(app); // Analytics chalu karne ke liye
 
-// IMPORTANT SECURITY FIX: Hardcoded admin email removed.
 let booksData = [];
 let loadedCount = 0; 
 let isLoadingMore = false;
@@ -150,7 +149,7 @@ window.closeLoginOverlay = function() {
 };
 
 // ==========================================
-// SECURE ADMIN VERIFICATION LOGIC ADDED HERE
+// SECURE ADMIN & AUTO USER CREATION LOGIC
 // ==========================================
 onAuthStateChanged(auth, async (user) => {
     if (user) {
@@ -162,6 +161,19 @@ onAuthStateChanged(auth, async (user) => {
         document.getElementById('sidebarProfileName').innerText = dName;
 
         try {
+            // NAYI LOGIC: User ka data Firebase me auto-save karna
+            const userRef = doc(db, "users", user.uid);
+            const userSnap = await getDoc(userRef);
+
+            if (!userSnap.exists()) {
+                await setDoc(userRef, {
+                    email: user.email,
+                    name: dName,
+                    photo: user.photoURL || "",
+                    createdAt: new Date().getTime()
+                });
+            }
+
             // Firebase Firestore se check kar rahe hain ki kya user email admins collection me hai
             const adminDocRef = doc(db, "admins", user.email);
             const adminDocSnap = await getDoc(adminDocRef);
@@ -183,7 +195,7 @@ onAuthStateChanged(auth, async (user) => {
                 switchAdminTab('add');
             }
         } catch (error) {
-            console.error("Admin verification failed:", error);
+            console.error("Verification failed:", error);
             IS_SUPER_ADMIN = false;
         }
     } else {
