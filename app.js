@@ -1,8 +1,8 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
 import { getFirestore, collection, addDoc, doc, updateDoc, deleteDoc, onSnapshot, query, orderBy, setDoc, getDoc } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
 import { getAuth, signInWithEmailAndPassword, GoogleAuthProvider, signInWithPopup, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js";
-// Optional: Agar analytics chahiye to ise un-comment kar lena
-// import { getAnalytics } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-analytics.js";
+
+import { getAnalytics } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-analytics.js";
 
 const firebaseConfig = {
   apiKey: "AIzaSyASYcouPGDMx5_V9ZUZ3RcFifCxcbpcst8",
@@ -18,7 +18,8 @@ const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 const auth = getAuth(app);
 const provider = new GoogleAuthProvider();
-// const analytics = getAnalytics(app); // Analytics chalu karne ke liye
+
+const analytics = getAnalytics(app); 
 
 let booksData = [];
 let loadedCount = 0; 
@@ -42,9 +43,7 @@ if (isDeepLinkLoad) {
     document.getElementById('downloadModal').style.display = 'none';
 }
 
-/* =========================================
-   PROGRESS BAR LOGIC
-========================================== */
+
 let loadingProgress = 0;
 let loaderInterval;
 
