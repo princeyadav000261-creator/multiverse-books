@@ -1,20 +1,24 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
 import { getFirestore, collection, addDoc, doc, updateDoc, deleteDoc, onSnapshot, query, orderBy, setDoc, getDoc } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
 import { getAuth, signInWithEmailAndPassword, GoogleAuthProvider, signInWithPopup, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js";
+// Optional: Agar analytics chahiye to ise un-comment kar lena
+// import { getAnalytics } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-analytics.js";
 
 const firebaseConfig = {
-    apiKey: "AIzaSyAXBSGCZFdkSbk-Ireoo7sRY4mLzS25nyk",
-    authDomain: "multiverse-books-2.firebaseapp.com",
-    projectId: "multiverse-books-2",
-    storageBucket: "multiverse-books-2.firebasestorage.app",
-    messagingSenderId: "59280260709",
-    appId: "1:59280260709:web:ef05fbe489ce2ee41e108c"
+  apiKey: "AIzaSyASYcouPGDMx5_V9ZUZ3RcFifCxcbpcst8",
+  authDomain: "spidy-book-dbe32.firebaseapp.com",
+  projectId: "spidy-book-dbe32",
+  storageBucket: "spidy-book-dbe32.firebasestorage.app",
+  messagingSenderId: "681583149252",
+  appId: "1:681583149252:web:f679d1847cd749d0a7c991",
+  measurementId: "G-DKH77K3KEH"
 };
 
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 const auth = getAuth(app);
 const provider = new GoogleAuthProvider();
+// const analytics = getAnalytics(app); // Analytics chalu karne ke liye
 
 // IMPORTANT SECURITY FIX: Hardcoded admin email removed.
 let booksData = [];
