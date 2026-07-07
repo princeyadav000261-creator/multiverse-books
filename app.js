@@ -1,7 +1,6 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
 import { getFirestore, collection, addDoc, doc, updateDoc, deleteDoc, onSnapshot, query, orderBy, setDoc, getDoc } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
 import { getAuth, signInWithEmailAndPassword, GoogleAuthProvider, signInWithPopup, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js";
-
 import { getAnalytics } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-analytics.js";
 
 const firebaseConfig = {
@@ -18,7 +17,6 @@ const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 const auth = getAuth(app);
 const provider = new GoogleAuthProvider();
-
 const analytics = getAnalytics(app); 
 
 let booksData = [];
@@ -30,9 +28,14 @@ let activeBookTitle = "";
 let IS_SUPER_ADMIN = false;
 let isUserLoggedIn = false; 
 
+let CURRENT_ADMIN_NAME = "USER";
+let CURRENT_ADMIN_EMAIL = "";
+let CURRENT_ADMIN_PHOTO = "https://i.postimg.cc/D0BF1b77/file-000000000e847207a64f6711d825a859.png";
+
 let adminFilteredBooks = [];
 let adminCurrentPage = 1;
 const adminBooksPerPage = 10;
+let currentAuthorFilter = "All"; // SMART FILTER VARIABLE
 
 const urlParamsCheck = new URLSearchParams(window.location.search);
 let isDeepLinkLoad = urlParamsCheck.has('book'); 
@@ -42,7 +45,6 @@ if (isDeepLinkLoad) {
     document.getElementById('mainAppWrapper').style.display = 'none';
     document.getElementById('downloadModal').style.display = 'none';
 }
-
 
 let loadingProgress = 0;
 let loaderInterval;
@@ -70,7 +72,6 @@ loaderInterval = setInterval(() => {
         updateLoaderUI(loadingProgress);
     }
 }, 150);
-/* ========================================= */
 
 const quotes = [
     { text: "Be the change that you wish to see in the world.", author: "Mahatma Gandhi" },
@@ -147,9 +148,6 @@ window.closeLoginOverlay = function() {
     }, 500);
 };
 
-// ==========================================
-// SECURE ADMIN & AUTO USER CREATION LOGIC
-// ==========================================
 onAuthStateChanged(auth, async (user) => {
     if (user) {
         isUserLoggedIn = true;
@@ -158,9 +156,12 @@ onAuthStateChanged(auth, async (user) => {
         let dName = user.displayName;
         if (!dName || dName.trim() === "") { dName = user.email.split('@')[0]; }
         document.getElementById('sidebarProfileName').innerText = dName;
+        
+        CURRENT_ADMIN_NAME = dName;
+        CURRENT_ADMIN_EMAIL = user.email;
+        if(user.photoURL) CURRENT_ADMIN_PHOTO = user.photoURL;
 
         try {
-            // NAYI LOGIC: User ka data Firebase me auto-save karna
             const userRef = doc(db, "users", user.uid);
             const userSnap = await getDoc(userRef);
 
@@ -173,7 +174,6 @@ onAuthStateChanged(auth, async (user) => {
                 });
             }
 
-            // Firebase Firestore se check kar rahe hain ki kya user email admins collection me hai
             const adminDocRef = doc(db, "admins", user.email);
             const adminDocSnap = await getDoc(adminDocRef);
 
@@ -265,13 +265,23 @@ onAuthStateChanged(auth, async (user) => {
             data.slug = data.title.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)+/g, '');
             booksData.push(data);
         });
+        
+        // AUTHORS DYNAMIC FILTER LOAD HOGA
+        window.populateAuthorFilters(booksData);
+
         loadedCount = 0;
         const searchInput = document.getElementById('app-search-input').value;
-        if(searchInput.trim() === "") { window.renderBooksUI(0, getBatchSize() * 2); } else { performFuzzySearch(searchInput); }
+        if(searchInput.trim() === "" && currentAuthorFilter === "All") { 
+            window.renderBooksUI(0, getBatchSize() * 2); 
+        } else { 
+            window.applySearchAndFilter(searchInput, currentAuthorFilter); 
+        }
         window.generateNotifications();
         
         adminFilteredBooks = [...booksData];
-        document.getElementById('adminSearchBook').value = '';
+        if(document.getElementById('adminSearchBook')) {
+            document.getElementById('adminSearchBook').value = '';
+        }
         renderAdminBooksTable(); 
         
         isAppReady.data = true;
@@ -402,34 +412,91 @@ document.getElementById('admin-logout-btn').addEventListener('click', () => {
 window.closePopup = function(){ document.getElementById("popupOverlay").style.display = "none"; };
 window.joinChannel = function(){ window.open('https://whatsapp.com/channel/0029Vb6NBZx1yT2GByTTVf2A', '_blank'); };
 
+// ==========================================
+// SMART AUTHOR FILTERING & SEARCH INTEGRATED SYSTEM
+// ==========================================
+
 let searchTimeout;
 const searchInputEl = document.getElementById('app-search-input');
 const closeSearchBtn = document.getElementById('close-search');
+
+window.openFilterModal = function() { document.getElementById('filterModal').style.display = 'flex'; }
+window.closeFilterModal = function() { document.getElementById('filterModal').style.display = 'none'; }
+
+window.selectFilterChip = function(element) {
+    let siblings = element.parentNode.children;
+    for(let sib of siblings) { sib.classList.remove('active'); }
+    element.classList.add('active');
+}
+
+window.populateAuthorFilters = function(books) {
+    const container = document.getElementById('author-filter-container');
+    if(!container) return;
+    let authors = [...new Set(books.map(b => b.author))].filter(a => a && a.trim() !== "").sort();
+    
+    let html = `<div class="filter-chip ${currentAuthorFilter === 'All' ? 'active' : ''}" onclick="selectFilterChip(this)">All</div>`;
+    authors.forEach(author => {
+        let isAct = (author === currentAuthorFilter) ? 'active' : '';
+        html += `<div class="filter-chip ${isAct}" onclick="selectFilterChip(this)">${author}</div>`;
+    });
+    container.innerHTML = html;
+}
+
+window.applySearchAndFilter = function(searchText, authorName) {
+    let filteredData = booksData;
+    
+    // Author filter
+    if (authorName !== "All") {
+        filteredData = filteredData.filter(book => book.author === authorName);
+    }
+    
+    // Text filter
+    if (searchText.trim() !== "") {
+        let normalizedSearch = searchText.toLowerCase().replace(/[^a-z0-9\s]/g, '');
+        let searchTokens = normalizedSearch.split(/\s+/).filter(token => token.length > 0);
+        filteredData = filteredData.filter(book => {
+            let textToSearch = (book.title + " " + book.author).toLowerCase().replace(/[^a-z0-9\s]/g, '');
+            return searchTokens.every(token => textToSearch.includes(token));
+        });
+    }
+    
+    // Render result
+    if(filteredData.length > 0) { 
+        document.getElementById('no-results-msg').style.display = 'none'; 
+        window.renderBooksUI(0, filteredData.length, filteredData); 
+    } else { 
+        document.getElementById("bookContainer").innerHTML = ""; 
+        document.getElementById('no-results-msg').style.display = 'flex'; 
+    }
+}
+
+window.applyFilters = function() {
+    let activeChip = document.querySelector('#author-filter-container .filter-chip.active');
+    currentAuthorFilter = activeChip ? activeChip.innerText : "All";
+    let searchText = searchInputEl.value;
+    window.applySearchAndFilter(searchText, currentAuthorFilter);
+    closeFilterModal();
+}
 
 searchInputEl.addEventListener('input', (e) => {
     clearTimeout(searchTimeout);
     const searchText = e.target.value;
     searchTimeout = setTimeout(() => {
-        if(searchText.trim() === "") { document.getElementById('no-results-msg').style.display = 'none'; window.renderBooksUI(0, getBatchSize() * 2); } 
-        else { performFuzzySearch(searchText); }
+        if(searchText.trim() === "" && currentAuthorFilter === "All") { 
+            document.getElementById('no-results-msg').style.display = 'none'; 
+            window.renderBooksUI(0, getBatchSize() * 2); 
+        } 
+        else { window.applySearchAndFilter(searchText, currentAuthorFilter); }
     }, 300);
 });
 
 closeSearchBtn.addEventListener('click', () => {
-    searchInputEl.value = ''; document.getElementById('no-results-msg').style.display = 'none'; window.renderBooksUI(0, getBatchSize() * 2); document.getElementById('search-box').classList.remove('active');
+    searchInputEl.value = ''; 
+    document.getElementById('no-results-msg').style.display = 'none'; 
+    window.applySearchAndFilter('', currentAuthorFilter); 
+    document.getElementById('search-box').classList.remove('active');
     if (history.state && history.state.popup === 'search') { history.back(); }
 });
-
-function performFuzzySearch(searchText) {
-    let normalizedSearch = searchText.toLowerCase().replace(/[^a-z0-9\s]/g, '');
-    let searchTokens = normalizedSearch.split(/\s+/).filter(token => token.length > 0);
-    const filteredData = booksData.filter(book => {
-        let textToSearch = (book.title + " " + book.author).toLowerCase().replace(/[^a-z0-9\s]/g, '');
-        return searchTokens.every(token => textToSearch.includes(token));
-    });
-    if(filteredData.length > 0) { document.getElementById('no-results-msg').style.display = 'none'; window.renderBooksUI(0, filteredData.length, filteredData); } 
-    else { document.getElementById("bookContainer").innerHTML = ""; document.getElementById('no-results-msg').style.display = 'flex'; }
-}
 
 function getBatchSize() {
     let cols = 2; 
@@ -442,7 +509,7 @@ function getBatchSize() {
 
 const mainElement = document.getElementById('mainContentArea');
 mainElement.addEventListener('scroll', () => {
-    if(document.getElementById('app-search-input').value.trim() !== "") return;
+    if(document.getElementById('app-search-input').value.trim() !== "" || currentAuthorFilter !== "All") return;
     if (mainElement.scrollTop + mainElement.clientHeight >= mainElement.scrollHeight - 50) {
         const noResultsMsg = document.getElementById('no-results-msg');
         if (loadedCount < booksData.length && !isLoadingMore && noResultsMsg.style.display !== 'flex') {
@@ -479,7 +546,6 @@ window.generateNotifications = function() {
     const notiContainer = document.getElementById('dynamic-noti-container'); 
     notiContainer.innerHTML = ''; 
     booksData.slice(0, 15).forEach((book) => {
-        
         let dateStr = "00/00/0000";
         if (book.dateAdded) {
             dateStr = book.dateAdded; 
@@ -487,7 +553,6 @@ window.generateNotifications = function() {
             const d = new Date(book.createdAt);
             dateStr = `${String(d.getDate()).padStart(2, '0')}/${String(d.getMonth()+1).padStart(2, '0')}/${d.getFullYear()}`;
         }
-
         notiContainer.innerHTML += `
         <div class="noti-card-dynamic" onclick="openDownloadPage('${book.slug}')" style="cursor:pointer;">
             <img src="${book.image}" class="noti-card-img" alt="Logo">
@@ -531,7 +596,7 @@ document.getElementById('menu-admin-panel').addEventListener('click', (e) => {
 document.getElementById('close-admin-btn').addEventListener('click', () => { history.back(); });
 
 window.addEventListener('popstate', (e) => {
-    document.getElementById('noti-panel').classList.remove('active'); document.getElementById('sidebar').classList.remove('active'); document.getElementById('sidebar-overlay').classList.remove('active'); document.getElementById('about-dev-panel').classList.remove('active'); document.getElementById('dmca-panel').classList.remove('active'); document.getElementById('admin-dashboard-panel').classList.remove('active'); document.getElementById('search-box').classList.remove('active');
+    document.getElementById('noti-panel').classList.remove('active'); document.getElementById('sidebar').classList.remove('active'); document.getElementById('sidebar-overlay').classList.remove('active'); document.getElementById('about-dev-panel').classList.remove('active'); document.getElementById('dmca-panel').classList.remove('active'); document.getElementById('admin-dashboard-panel').classList.remove('active'); document.getElementById('search-box').classList.remove('active'); document.getElementById('filterModal').style.display = 'none';
     const sBook = new URLSearchParams(window.location.search).get('book');
     if(sBook) { if(window.openDownloadPage) window.openDownloadPage(sBook, true); } 
     else { document.getElementById("downloadModal").style.display = "none"; }
@@ -655,6 +720,7 @@ window.closeDownloadPage = function() {
         }, 1500); 
     }
 }
+
 window.shareBook = function() {
     const shareUrl = window.location.origin + window.location.pathname + "?book=" + activeBookSlug;
     if (navigator.share) navigator.share({ title: activeBookTitle, text: "Download free book", url: shareUrl });
@@ -672,6 +738,24 @@ function showToast(message) {
     }
     toast.classList.add('show'); 
     setTimeout(() => { toast.classList.remove('show'); }, 3000);
+}
+
+async function logActivity(action, bookTitle, imageUrl = "", deletedData = null) {
+    try {
+        await addDoc(collection(db, "activity_logs"), {
+            action,
+            bookTitle,
+            image: imageUrl,
+            deletedData,
+            adminName: CURRENT_ADMIN_NAME,
+            adminEmail: CURRENT_ADMIN_EMAIL,
+            adminPhoto: CURRENT_ADMIN_PHOTO,
+            timestamp: new Date().getTime(),
+            dateStr: new Date().toLocaleString('en-GB', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute:'2-digit' })
+        });
+    } catch(e) {
+        console.error("Logging Error:", e);
+    }
 }
 
 document.getElementById('addBookForm').addEventListener('submit', async (e) => {
@@ -710,6 +794,7 @@ document.getElementById('addBookForm').addEventListener('submit', async (e) => {
 
     try { 
         await addDoc(collection(db, "books"), newBook); 
+        await logActivity("ADD", newBook.title, newBook.image); 
         showToast("Book Published Successfully!"); 
         e.target.reset(); 
     } catch (error) { 
@@ -775,7 +860,9 @@ function renderAdminBooksTable() {
 window.deleteBookRecord = async function(id) { 
     if(confirm("Delete this book permanently?")) { 
         try { 
+            const bookToDelete = booksData.find(x => x.id === id); 
             await deleteDoc(doc(db, "books", id)); 
+            if(bookToDelete) { await logActivity("DELETE", bookToDelete.title, bookToDelete.image, bookToDelete); } 
             showToast("Deleted Successfully!"); 
         } catch (error) { showToast("Failed: Rules Blocked Delete!"); } 
     } 
@@ -826,6 +913,7 @@ document.getElementById('editBookForm').addEventListener('submit', async (e) => 
 
     try { 
         await updateDoc(doc(db, "books", docId), updatedData); 
+        await logActivity("EDIT", updatedData.title, updatedData.image); 
         document.getElementById('adminEditModal').style.display='none'; 
         showToast("Updated Successfully!"); 
     } catch (error) { showToast("Failed: Rules Blocked Update!"); } finally {
