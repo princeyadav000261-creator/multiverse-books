@@ -19,18 +19,15 @@
             <div class="tag"><i class="fa-solid fa-layer-group"></i> MORE</div>
         </div>
         
-        <!-- UPDATED LOADER BAR AND PROGRESS TEXT -->
         <div class="loader-bar"><div class="loader-fill" id="loaderFill"></div></div>
         <div class="loader-progress-text">
             <span id="loaderStatusText">Initializing System...</span>
             <span id="loaderPercentage">0%</span>
         </div>
-        <!-- ==================================== -->
         
         <div class="loader-powered-text">POWERED BY SPIDYUNIVERSE</div>
     </div>
 
-    <!-- PREMIUM GLASSMORPHISM LOGIN OVERLAY -->
     <div id="loginOverlay" class="login-container" style="display: none; opacity: 0;">
         <div class="close-login-btn" onclick="closeLoginOverlay()"><i class="fas fa-times"></i></div>
         
@@ -96,9 +93,20 @@
                     <div class="icon-box" id="open-search"><i class="fas fa-search"></i></div>
                     <div class="icon-box bell-wrapper" id="open-noti"><i class="fas fa-bell"></i><span class="blink-dot"></span></div>
                 </div>
+                
                 <div class="search-box-expanded" id="search-box">
-                    <div class="search-input-wrapper"><i class="fas fa-search"></i><input type="text" class="search-input" id="app-search-input" placeholder="Advance Search (e.g. Physics Khan)..."></div>
-                    <div class="icon-box" id="close-search"><i class="fas fa-arrow-right"></i></div>
+                    <div class="search-input-wrapper">
+                        <i class="fas fa-search"></i>
+                        <input type="text" class="search-input" id="app-search-input" placeholder="Advance Search (e.g. Physics Khan)...">
+                    </div>
+                    <div class="search-actions-right">
+                        <div class="action-btn-circle" id="open-filter-btn" onclick="openFilterModal()" title="Filter Books">
+                            <i class="fas fa-filter"></i>
+                        </div>
+                        <div class="action-btn-circle" id="close-search" title="Close Search">
+                            <i class="fas fa-times"></i>
+                        </div>
+                    </div>
                 </div>
             </header>
 
@@ -157,7 +165,7 @@
                     <div class="no-results-card">
                         <div class="no-results-icon"><i class="fas fa-book-open"></i></div>
                         <h2 class="no-results-title">BOOK NOT FOUND</h2>
-                        <p class="no-results-desc">Sorry, we couldn't find any book matching your search.</p>
+                        <p class="no-results-desc">Sorry, we couldn't find any book matching your search or filter.</p>
                         <div class="no-results-badge">❁ POWERED BY : MADxPRINCE ❁</div>
                     </div>
                 </div>
@@ -420,6 +428,31 @@
                     </div>
                 </div>
             </div>
+        </div>
+    </div>
+
+    <div class="filter-overlay" id="filterModal">
+        <div class="filter-bottom-sheet">
+            <div class="filter-drag-handle"></div>
+            
+            <div class="filter-header">
+                <div style="display:flex; align-items:center; gap:10px;">
+                    <i class="fas fa-sliders-h" style="color:#10b981; font-size: 20px;"></i>
+                    <h2>Filter Books</h2>
+                </div>
+                <button class="close-filter-btn" onclick="closeFilterModal()"><i class="fas fa-times"></i></button>
+            </div>
+
+            <div class="filter-section">
+                <h3>Filter by Author</h3>
+                <div class="filter-options" id="author-filter-container">
+                    <div class="filter-chip active" onclick="selectFilterChip(this)">All</div>
+                </div>
+            </div>
+
+            <button class="apply-filter-btn" onclick="applyFilters()">
+                <i class="fas fa-check-circle"></i> Apply Filter
+            </button>
         </div>
     </div>
 
