@@ -20,6 +20,7 @@ const provider = new GoogleAuthProvider();
 const analytics = getAnalytics(app); 
 
 let booksData = [];
+let mainFilteredData = []; // NEW: Array for both search and filter
 let loadedCount = 0; 
 let isLoadingMore = false;
 let activeBookSlug = ""; 
@@ -35,7 +36,9 @@ let CURRENT_ADMIN_PHOTO = "https://i.postimg.cc/D0BF1b77/file-000000000e847207a6
 let adminFilteredBooks = [];
 let adminCurrentPage = 1;
 const adminBooksPerPage = 10;
-let currentAuthorFilter = "All"; // SMART FILTER VARIABLE
+
+// NAYA LOGIC: Smart Filter Variable
+let currentAuthorFilter = "All"; 
 
 const urlParamsCheck = new URLSearchParams(window.location.search);
 let isDeepLinkLoad = urlParamsCheck.has('book'); 
@@ -266,16 +269,10 @@ onAuthStateChanged(auth, async (user) => {
             booksData.push(data);
         });
         
-        // AUTHORS DYNAMIC FILTER LOAD HOGA
-        window.populateAuthorFilters(booksData);
-
-        loadedCount = 0;
-        const searchInput = document.getElementById('app-search-input').value;
-        if(searchInput.trim() === "" && currentAuthorFilter === "All") { 
-            window.renderBooksUI(0, getBatchSize() * 2); 
-        } else { 
-            window.applySearchAndFilter(searchInput, currentAuthorFilter); 
-        }
+        mainFilteredData = [...booksData]; // Setup main filtered data
+        updateAuthorFilterOptions(); // Update Smart filter options
+        applyMasterFilter(); // Render correctly
+        
         window.generateNotifications();
         
         adminFilteredBooks = [...booksData];
@@ -413,90 +410,115 @@ window.closePopup = function(){ document.getElementById("popupOverlay").style.di
 window.joinChannel = function(){ window.open('https://whatsapp.com/channel/0029Vb6NBZx1yT2GByTTVf2A', '_blank'); };
 
 // ==========================================
-// SMART AUTHOR FILTERING & SEARCH INTEGRATED SYSTEM
+// NAYA LOGIC: SMART AUTHOR FILTER & SEARCH
 // ==========================================
 
-let searchTimeout;
-const searchInputEl = document.getElementById('app-search-input');
-const closeSearchBtn = document.getElementById('close-search');
-
-window.openFilterModal = function() { document.getElementById('filterModal').style.display = 'flex'; }
-window.closeFilterModal = function() { document.getElementById('filterModal').style.display = 'none'; }
-
-window.selectFilterChip = function(element) {
-    let siblings = element.parentNode.children;
-    for(let sib of siblings) { sib.classList.remove('active'); }
-    element.classList.add('active');
-}
-
-window.populateAuthorFilters = function(books) {
-    const container = document.getElementById('author-filter-container');
-    if(!container) return;
-    let authors = [...new Set(books.map(b => b.author))].filter(a => a && a.trim() !== "").sort();
-    
-    let html = `<div class="filter-chip ${currentAuthorFilter === 'All' ? 'active' : ''}" onclick="selectFilterChip(this)">All</div>`;
-    authors.forEach(author => {
-        let isAct = (author === currentAuthorFilter) ? 'active' : '';
-        html += `<div class="filter-chip ${isAct}" onclick="selectFilterChip(this)">${author}</div>`;
+function updateAuthorFilterOptions() {
+    const authorMap = new Map();
+    booksData.forEach(book => {
+        if(!book.author) return;
+        // Normalize: lowercase, replace multiple spaces with single, trim spaces
+        let normalized = book.author.toLowerCase().replace(/\s+/g, ' ').trim();
+        if(!authorMap.has(normalized)) {
+            authorMap.set(normalized, book.author.trim()); // Save first encountered display name
+        }
     });
-    container.innerHTML = html;
+
+    const uniqueAuthors = Array.from(authorMap.values()).sort((a, b) => a.localeCompare(b));
+    const grid = document.getElementById('authorFilterGrid');
+    
+    // Default All Pill
+    let html = `<div class="f-pill ${currentAuthorFilter === 'All' ? 'active' : ''}" onclick="selectAuthorFilter('All')">All</div>`;
+    
+    uniqueAuthors.forEach(author => {
+        // Match current active ignoring case/space
+        let normAuthor = author.toLowerCase().replace(/\s+/g, ' ').trim();
+        let normCurrent = currentAuthorFilter.toLowerCase().replace(/\s+/g, ' ').trim();
+        let isActive = (normAuthor === normCurrent) ? 'active' : '';
+        
+        html += `<div class="f-pill ${isActive}" onclick="selectAuthorFilter('${author.replace(/'/g, "\\'")}')">${author}</div>`;
+    });
+    
+    grid.innerHTML = html;
 }
 
-window.applySearchAndFilter = function(searchText, authorName) {
-    let filteredData = booksData;
+window.selectAuthorFilter = function(authorName) {
+    currentAuthorFilter = authorName;
+    updateAuthorFilterOptions(); // Re-render to show active pill
     
-    // Author filter
-    if (authorName !== "All") {
-        filteredData = filteredData.filter(book => book.author === authorName);
-    }
+    // Close modal
+    document.getElementById('filterBottomOverlay').classList.remove('active');
     
-    // Text filter
-    if (searchText.trim() !== "") {
-        let normalizedSearch = searchText.toLowerCase().replace(/[^a-z0-9\s]/g, '');
-        let searchTokens = normalizedSearch.split(/\s+/).filter(token => token.length > 0);
-        filteredData = filteredData.filter(book => {
+    applyMasterFilter(); // Render books
+}
+
+// Master Filter: Handles both Search Box + Author Filter Bottom Sheet
+function applyMasterFilter() {
+    const searchInput = document.getElementById('app-search-input').value;
+    let normalizedSearch = searchInput.toLowerCase().replace(/[^a-z0-9\s]/g, '');
+    let searchTokens = normalizedSearch.split(/\s+/).filter(token => token.length > 0);
+    
+    mainFilteredData = booksData.filter(book => {
+        // 1. Author Filter Check
+        let matchesAuthor = true;
+        if (currentAuthorFilter !== "All") {
+            let normFilter = currentAuthorFilter.toLowerCase().replace(/\s+/g, ' ').trim();
+            let normBookAuth = (book.author || "").toLowerCase().replace(/\s+/g, ' ').trim();
+            matchesAuthor = (normFilter === normBookAuth);
+        }
+
+        // 2. Search Text Check
+        let matchesSearch = true;
+        if (searchTokens.length > 0) {
             let textToSearch = (book.title + " " + book.author).toLowerCase().replace(/[^a-z0-9\s]/g, '');
-            return searchTokens.every(token => textToSearch.includes(token));
-        });
-    }
-    
-    // Render result
-    if(filteredData.length > 0) { 
+            matchesSearch = searchTokens.every(token => textToSearch.includes(token));
+        }
+
+        return matchesAuthor && matchesSearch;
+    });
+
+    loadedCount = 0; // Reset pagination
+    if(mainFilteredData.length > 0) { 
         document.getElementById('no-results-msg').style.display = 'none'; 
-        window.renderBooksUI(0, filteredData.length, filteredData); 
+        window.renderBooksUI(0, getBatchSize() * 2, mainFilteredData); 
     } else { 
         document.getElementById("bookContainer").innerHTML = ""; 
         document.getElementById('no-results-msg').style.display = 'flex'; 
     }
 }
 
-window.applyFilters = function() {
-    let activeChip = document.querySelector('#author-filter-container .filter-chip.active');
-    currentAuthorFilter = activeChip ? activeChip.innerText : "All";
-    let searchText = searchInputEl.value;
-    window.applySearchAndFilter(searchText, currentAuthorFilter);
-    closeFilterModal();
-}
+// Search Input Listener
+let searchTimeout;
+const searchInputEl = document.getElementById('app-search-input');
+const closeSearchBtn = document.getElementById('close-search');
 
-searchInputEl.addEventListener('input', (e) => {
+searchInputEl.addEventListener('input', () => {
     clearTimeout(searchTimeout);
-    const searchText = e.target.value;
-    searchTimeout = setTimeout(() => {
-        if(searchText.trim() === "" && currentAuthorFilter === "All") { 
-            document.getElementById('no-results-msg').style.display = 'none'; 
-            window.renderBooksUI(0, getBatchSize() * 2); 
-        } 
-        else { window.applySearchAndFilter(searchText, currentAuthorFilter); }
-    }, 300);
+    searchTimeout = setTimeout(() => { applyMasterFilter(); }, 300);
 });
 
 closeSearchBtn.addEventListener('click', () => {
     searchInputEl.value = ''; 
-    document.getElementById('no-results-msg').style.display = 'none'; 
-    window.applySearchAndFilter('', currentAuthorFilter); 
+    applyMasterFilter();
     document.getElementById('search-box').classList.remove('active');
     if (history.state && history.state.popup === 'search') { history.back(); }
 });
+
+// Modal Actions for Bottom Filter Sheet
+document.getElementById('openAuthorFilterBtn').addEventListener('click', () => {
+    document.getElementById('filterBottomOverlay').classList.add('active');
+});
+
+document.getElementById('closeAuthorFilterBtn').addEventListener('click', () => {
+    document.getElementById('filterBottomOverlay').classList.remove('active');
+});
+
+document.getElementById('filterBottomOverlay').addEventListener('click', (e) => {
+    if (e.target === document.getElementById('filterBottomOverlay')) {
+        document.getElementById('filterBottomOverlay').classList.remove('active');
+    }
+});
+// ==========================================
 
 function getBatchSize() {
     let cols = 2; 
@@ -509,14 +531,15 @@ function getBatchSize() {
 
 const mainElement = document.getElementById('mainContentArea');
 mainElement.addEventListener('scroll', () => {
-    if(document.getElementById('app-search-input').value.trim() !== "" || currentAuthorFilter !== "All") return;
     if (mainElement.scrollTop + mainElement.clientHeight >= mainElement.scrollHeight - 50) {
         const noResultsMsg = document.getElementById('no-results-msg');
-        if (loadedCount < booksData.length && !isLoadingMore && noResultsMsg.style.display !== 'flex') {
+        
+        // Use mainFilteredData for infinite scroll length check
+        if (loadedCount < mainFilteredData.length && !isLoadingMore && noResultsMsg.style.display !== 'flex') {
             isLoadingMore = true;
             document.getElementById("bottomSpinner").style.display = "flex";
             setTimeout(() => {
-                window.renderBooksUI(loadedCount, getBatchSize());
+                window.renderBooksUI(loadedCount, getBatchSize(), mainFilteredData);
                 document.getElementById("bottomSpinner").style.display = "none";
                 isLoadingMore = false;
             }, 1000); 
@@ -526,19 +549,22 @@ mainElement.addEventListener('scroll', () => {
 
 window.renderBooksUI = function(startIndex, count, customData = null) {
     const container = document.getElementById("bookContainer");
-    let dataToRender = customData ? customData : booksData;
+    let dataToRender = customData ? customData : mainFilteredData;
     let endIndex = Math.min(startIndex + count, dataToRender.length);
     if(startIndex === 0) container.innerHTML = "";
+    
+    let htmlChunk = "";
     for(let i = startIndex; i < endIndex; i++) {
         let book = dataToRender[i];
         let langClass = book.lang.toLowerCase() === 'hindi' ? 'tag-lang-hindi' : 'tag-lang-english';
-        container.innerHTML += `
+        htmlChunk += `
         <div class="book-card" onclick="openDownloadPage('${book.slug}')">
             <div class="card-img-wrapper"><div class="badge-free">FREE</div><img src="${book.image}" class="book-image" oncontextmenu="return false;" draggable="false"></div>
             <div class="book-details"><div class="book-title">${book.title}</div><div class="book-author">${book.author}</div>
             <div class="tags-container"><span class="book-tag tag-year">${book.year}</span><span class="book-tag ${langClass}">${book.lang}</span></div></div>
         </div>`;
     }
+    container.innerHTML += htmlChunk;
     loadedCount = endIndex;
 }
 
@@ -596,7 +622,7 @@ document.getElementById('menu-admin-panel').addEventListener('click', (e) => {
 document.getElementById('close-admin-btn').addEventListener('click', () => { history.back(); });
 
 window.addEventListener('popstate', (e) => {
-    document.getElementById('noti-panel').classList.remove('active'); document.getElementById('sidebar').classList.remove('active'); document.getElementById('sidebar-overlay').classList.remove('active'); document.getElementById('about-dev-panel').classList.remove('active'); document.getElementById('dmca-panel').classList.remove('active'); document.getElementById('admin-dashboard-panel').classList.remove('active'); document.getElementById('search-box').classList.remove('active'); document.getElementById('filterModal').style.display = 'none';
+    document.getElementById('noti-panel').classList.remove('active'); document.getElementById('sidebar').classList.remove('active'); document.getElementById('sidebar-overlay').classList.remove('active'); document.getElementById('about-dev-panel').classList.remove('active'); document.getElementById('dmca-panel').classList.remove('active'); document.getElementById('admin-dashboard-panel').classList.remove('active'); document.getElementById('search-box').classList.remove('active');
     const sBook = new URLSearchParams(window.location.search).get('book');
     if(sBook) { if(window.openDownloadPage) window.openDownloadPage(sBook, true); } 
     else { document.getElementById("downloadModal").style.display = "none"; }
