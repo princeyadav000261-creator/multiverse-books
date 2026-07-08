@@ -20,7 +20,7 @@ const provider = new GoogleAuthProvider();
 const analytics = getAnalytics(app); 
 
 let booksData = [];
-let mainFilteredData = []; // NEW: Array for both search and filter
+let mainFilteredData = []; 
 let loadedCount = 0; 
 let isLoadingMore = false;
 let activeBookSlug = ""; 
@@ -37,8 +37,39 @@ let adminFilteredBooks = [];
 let adminCurrentPage = 1;
 const adminBooksPerPage = 10;
 
-// NAYA LOGIC: Smart Filter Variable
 let currentAuthorFilter = "All"; 
+
+// ==========================================
+// NEW: BOOKMARK SYSTEM LOGIC
+// ==========================================
+let savedBooks = JSON.parse(localStorage.getItem('spidy_saved_books')) || [];
+
+window.toggleBookmark = function(event, slug) {
+    event.stopPropagation(); // Card ko open hone se rokne ke liye
+    
+    const index = savedBooks.indexOf(slug);
+    const iconElement = event.currentTarget.querySelector('i');
+
+    if (index === -1) {
+        // Add bookmark
+        savedBooks.push(slug);
+        iconElement.className = "fas fa-bookmark"; // Filled icon
+        showToast("Book saved to favorites!");
+    } else {
+        // Remove bookmark
+        savedBooks.splice(index, 1);
+        iconElement.className = "far fa-bookmark"; // Outline icon
+        showToast("Book removed from favorites!");
+    }
+
+    localStorage.setItem('spidy_saved_books', JSON.stringify(savedBooks));
+    
+    // Agar Bookmarks panel open hai toh usko realtime me update karo
+    if(document.getElementById('bookmarks-panel').classList.contains('active')) {
+        renderSavedBooksUI();
+    }
+}
+// ==========================================
 
 const urlParamsCheck = new URLSearchParams(window.location.search);
 let isDeepLinkLoad = urlParamsCheck.has('book'); 
@@ -269,9 +300,9 @@ onAuthStateChanged(auth, async (user) => {
             booksData.push(data);
         });
         
-        mainFilteredData = [...booksData]; // Setup main filtered data
-        updateAuthorFilterOptions(); // Update Smart filter options
-        applyMasterFilter(); // Render correctly
+        mainFilteredData = [...booksData]; 
+        updateAuthorFilterOptions(); 
+        applyMasterFilter(); 
         
         window.generateNotifications();
         
@@ -409,29 +440,23 @@ document.getElementById('admin-logout-btn').addEventListener('click', () => {
 window.closePopup = function(){ document.getElementById("popupOverlay").style.display = "none"; };
 window.joinChannel = function(){ window.open('https://whatsapp.com/channel/0029Vb6NBZx1yT2GByTTVf2A', '_blank'); };
 
-// ==========================================
-// NAYA LOGIC: SMART AUTHOR FILTER & SEARCH
-// ==========================================
 
 function updateAuthorFilterOptions() {
     const authorMap = new Map();
     booksData.forEach(book => {
         if(!book.author) return;
-        // Normalize: lowercase, replace multiple spaces with single, trim spaces
         let normalized = book.author.toLowerCase().replace(/\s+/g, ' ').trim();
         if(!authorMap.has(normalized)) {
-            authorMap.set(normalized, book.author.trim()); // Save first encountered display name
+            authorMap.set(normalized, book.author.trim()); 
         }
     });
 
     const uniqueAuthors = Array.from(authorMap.values()).sort((a, b) => a.localeCompare(b));
     const grid = document.getElementById('authorFilterGrid');
     
-    // Default All Pill
     let html = `<div class="f-pill ${currentAuthorFilter === 'All' ? 'active' : ''}" onclick="selectAuthorFilter('All')">All</div>`;
     
     uniqueAuthors.forEach(author => {
-        // Match current active ignoring case/space
         let normAuthor = author.toLowerCase().replace(/\s+/g, ' ').trim();
         let normCurrent = currentAuthorFilter.toLowerCase().replace(/\s+/g, ' ').trim();
         let isActive = (normAuthor === normCurrent) ? 'active' : '';
@@ -444,22 +469,17 @@ function updateAuthorFilterOptions() {
 
 window.selectAuthorFilter = function(authorName) {
     currentAuthorFilter = authorName;
-    updateAuthorFilterOptions(); // Re-render to show active pill
-    
-    // Close modal
+    updateAuthorFilterOptions(); 
     document.getElementById('filterBottomOverlay').classList.remove('active');
-    
-    applyMasterFilter(); // Render books
+    applyMasterFilter(); 
 }
 
-// Master Filter: Handles both Search Box + Author Filter Bottom Sheet
 function applyMasterFilter() {
     const searchInput = document.getElementById('app-search-input').value;
     let normalizedSearch = searchInput.toLowerCase().replace(/[^a-z0-9\s]/g, '');
     let searchTokens = normalizedSearch.split(/\s+/).filter(token => token.length > 0);
     
     mainFilteredData = booksData.filter(book => {
-        // 1. Author Filter Check
         let matchesAuthor = true;
         if (currentAuthorFilter !== "All") {
             let normFilter = currentAuthorFilter.toLowerCase().replace(/\s+/g, ' ').trim();
@@ -467,7 +487,6 @@ function applyMasterFilter() {
             matchesAuthor = (normFilter === normBookAuth);
         }
 
-        // 2. Search Text Check
         let matchesSearch = true;
         if (searchTokens.length > 0) {
             let textToSearch = (book.title + " " + book.author).toLowerCase().replace(/[^a-z0-9\s]/g, '');
@@ -477,7 +496,7 @@ function applyMasterFilter() {
         return matchesAuthor && matchesSearch;
     });
 
-    loadedCount = 0; // Reset pagination
+    loadedCount = 0; 
     if(mainFilteredData.length > 0) { 
         document.getElementById('no-results-msg').style.display = 'none'; 
         window.renderBooksUI(0, getBatchSize() * 2, mainFilteredData); 
@@ -487,7 +506,6 @@ function applyMasterFilter() {
     }
 }
 
-// Search Input Listener
 let searchTimeout;
 const searchInputEl = document.getElementById('app-search-input');
 const closeSearchBtn = document.getElementById('close-search');
@@ -504,7 +522,6 @@ closeSearchBtn.addEventListener('click', () => {
     if (history.state && history.state.popup === 'search') { history.back(); }
 });
 
-// Modal Actions for Bottom Filter Sheet
 document.getElementById('openAuthorFilterBtn').addEventListener('click', () => {
     document.getElementById('filterBottomOverlay').classList.add('active');
 });
@@ -518,7 +535,6 @@ document.getElementById('filterBottomOverlay').addEventListener('click', (e) => 
         document.getElementById('filterBottomOverlay').classList.remove('active');
     }
 });
-// ==========================================
 
 function getBatchSize() {
     let cols = 2; 
@@ -534,7 +550,6 @@ mainElement.addEventListener('scroll', () => {
     if (mainElement.scrollTop + mainElement.clientHeight >= mainElement.scrollHeight - 50) {
         const noResultsMsg = document.getElementById('no-results-msg');
         
-        // Use mainFilteredData for infinite scroll length check
         if (loadedCount < mainFilteredData.length && !isLoadingMore && noResultsMsg.style.display !== 'flex') {
             isLoadingMore = true;
             document.getElementById("bottomSpinner").style.display = "flex";
@@ -547,6 +562,7 @@ mainElement.addEventListener('scroll', () => {
     }
 });
 
+// NAYA LOGIC: Bookmark status check add kar diya HTML render me
 window.renderBooksUI = function(startIndex, count, customData = null) {
     const container = document.getElementById("bookContainer");
     let dataToRender = customData ? customData : mainFilteredData;
@@ -557,15 +573,63 @@ window.renderBooksUI = function(startIndex, count, customData = null) {
     for(let i = startIndex; i < endIndex; i++) {
         let book = dataToRender[i];
         let langClass = book.lang.toLowerCase() === 'hindi' ? 'tag-lang-hindi' : 'tag-lang-english';
+        
+        let isSaved = savedBooks.includes(book.slug);
+        let bookmarkIcon = isSaved ? 'fas fa-bookmark' : 'far fa-bookmark';
+
         htmlChunk += `
         <div class="book-card" onclick="openDownloadPage('${book.slug}')">
-            <div class="card-img-wrapper"><div class="badge-free">FREE</div><img src="${book.image}" class="book-image" oncontextmenu="return false;" draggable="false"></div>
-            <div class="book-details"><div class="book-title">${book.title}</div><div class="book-author">${book.author}</div>
-            <div class="tags-container"><span class="book-tag tag-year">${book.year}</span><span class="book-tag ${langClass}">${book.lang}</span></div></div>
+            <div class="card-img-wrapper">
+                <div class="badge-free">FREE</div>
+                <div class="bookmark-btn" onclick="toggleBookmark(event, '${book.slug}')">
+                    <i class="${bookmarkIcon}"></i>
+                </div>
+                <img src="${book.image}" class="book-image" oncontextmenu="return false;" draggable="false">
+            </div>
+            <div class="book-details">
+                <div class="book-title">${book.title}</div><div class="book-author">${book.author}</div>
+                <div class="tags-container"><span class="book-tag tag-year">${book.year}</span><span class="book-tag ${langClass}">${book.lang}</span></div>
+            </div>
         </div>`;
     }
     container.innerHTML += htmlChunk;
     loadedCount = endIndex;
+}
+
+// NAYA LOGIC: Function to render ONLY saved books in the Bookmarks panel
+window.renderSavedBooksUI = function() {
+    const container = document.getElementById("savedBooksContainer");
+    const noMsg = document.getElementById("no-saved-msg");
+    container.innerHTML = "";
+
+    const savedBooksData = booksData.filter(book => savedBooks.includes(book.slug));
+
+    if (savedBooksData.length === 0) {
+        noMsg.style.display = "flex";
+        return;
+    }
+    
+    noMsg.style.display = "none";
+    let htmlChunk = "";
+    savedBooksData.forEach(book => {
+        let langClass = book.lang.toLowerCase() === 'hindi' ? 'tag-lang-hindi' : 'tag-lang-english';
+        // Sab saved me hi dikhenge toh true hi rahega yahan par
+        htmlChunk += `
+        <div class="book-card" onclick="openDownloadPage('${book.slug}')">
+            <div class="card-img-wrapper">
+                <div class="badge-free">FREE</div>
+                <div class="bookmark-btn" onclick="toggleBookmark(event, '${book.slug}')">
+                    <i class="fas fa-bookmark"></i>
+                </div>
+                <img src="${book.image}" class="book-image" oncontextmenu="return false;" draggable="false">
+            </div>
+            <div class="book-details">
+                <div class="book-title">${book.title}</div><div class="book-author">${book.author}</div>
+                <div class="tags-container"><span class="book-tag tag-year">${book.year}</span><span class="book-tag ${langClass}">${book.lang}</span></div>
+            </div>
+        </div>`;
+    });
+    container.innerHTML = htmlChunk;
 }
 
 window.generateNotifications = function() {
@@ -604,8 +668,20 @@ sidebarOverlay.addEventListener('click', () => { history.back(); });
 document.getElementById('menu-home').addEventListener('click', (e) => { e.preventDefault(); history.back(); });
 document.getElementById('menu-about-dev').addEventListener('click', (e) => { e.preventDefault(); history.replaceState({ popup: 'dev' }, ''); document.getElementById('about-dev-panel').classList.add('active'); sidebar.classList.remove('active'); sidebarOverlay.classList.remove('active'); });
 document.getElementById('close-dev-btn').addEventListener('click', () => { history.back(); });
+
 document.getElementById('menu-dmca').addEventListener('click', (e) => { e.preventDefault(); history.replaceState({ popup: 'dmca' }, ''); document.getElementById('dmca-panel').classList.add('active'); sidebar.classList.remove('active'); sidebarOverlay.classList.remove('active'); });
 document.getElementById('close-dmca-btn').addEventListener('click', () => { history.back(); });
+
+// NAYA LOGIC: Listeners for Bookmarks panel
+document.getElementById('menu-bookmarks').addEventListener('click', (e) => { 
+    e.preventDefault(); 
+    history.replaceState({ popup: 'bookmarks' }, ''); 
+    document.getElementById('bookmarks-panel').classList.add('active'); 
+    sidebar.classList.remove('active'); 
+    sidebarOverlay.classList.remove('active');
+    renderSavedBooksUI(); 
+});
+document.getElementById('close-bookmarks-btn').addEventListener('click', () => { history.back(); });
 
 document.getElementById('menu-admin-panel').addEventListener('click', (e) => {
     e.preventDefault();
@@ -622,7 +698,11 @@ document.getElementById('menu-admin-panel').addEventListener('click', (e) => {
 document.getElementById('close-admin-btn').addEventListener('click', () => { history.back(); });
 
 window.addEventListener('popstate', (e) => {
-    document.getElementById('noti-panel').classList.remove('active'); document.getElementById('sidebar').classList.remove('active'); document.getElementById('sidebar-overlay').classList.remove('active'); document.getElementById('about-dev-panel').classList.remove('active'); document.getElementById('dmca-panel').classList.remove('active'); document.getElementById('admin-dashboard-panel').classList.remove('active'); document.getElementById('search-box').classList.remove('active');
+    document.getElementById('noti-panel').classList.remove('active'); document.getElementById('sidebar').classList.remove('active'); document.getElementById('sidebar-overlay').classList.remove('active'); document.getElementById('about-dev-panel').classList.remove('active'); document.getElementById('dmca-panel').classList.remove('active'); document.getElementById('bookmarks-panel').classList.remove('active'); document.getElementById('admin-dashboard-panel').classList.remove('active'); document.getElementById('search-box').classList.remove('active');
+    
+    // Auto re-render home books if we are coming back from saved books (to refresh icons)
+    applyMasterFilter();
+
     const sBook = new URLSearchParams(window.location.search).get('book');
     if(sBook) { if(window.openDownloadPage) window.openDownloadPage(sBook, true); } 
     else { document.getElementById("downloadModal").style.display = "none"; }
