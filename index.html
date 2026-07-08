@@ -28,7 +28,6 @@
         <div class="loader-powered-text">POWERED BY SPIDYUNIVERSE</div>
     </div>
 
-    <!-- PREMIUM GLASSMORPHISM LOGIN OVERLAY -->
     <div id="loginOverlay" class="login-container" style="display: none; opacity: 0;">
         <div class="close-login-btn" onclick="closeLoginOverlay()"><i class="fas fa-times"></i></div>
         
@@ -119,6 +118,8 @@
                         </a>
                         <a href="#" class="menu-item normal" id="menu-admin-panel"><i class="fas fa-cloud-upload-alt"></i><span id="uploadMenuText">Upload Books</span></a>
                         <a href="#" class="menu-item normal" id="menu-dmca"><i class="fas fa-shield-halved"></i><span>DMCA Request</span></a>
+                        
+                        <a href="#" class="menu-item normal" id="menu-bookmarks"><i class="far fa-bookmark"></i><span>Bookmarks</span></a>
                     </div>
 
                     <div class="menu-section">
@@ -173,7 +174,6 @@
                 <div class="premium-copyright">© 2026 SPIDY BOOK HUB <span style="margin: 0 5px;">|</span> MADE WITH <i class="fas fa-heart" style="color: #ff4757; margin: 0 3px; filter: drop-shadow(0 0 5px rgba(255,71,87,0.8));"></i> BY MADxPRINCE</div>
             </main>
 
-            <!-- SMART FILTER BOTTOM SHEET (UPDATED FOR LOGO) -->
             <div class="filter-bottom-overlay" id="filterBottomOverlay">
                 <div class="filter-bottom-sheet" id="filterBottomSheet">
                     <div class="f-drag-handle"></div>
@@ -185,12 +185,9 @@
                         <div class="f-close" id="closeAuthorFilterBtn"><i class="fas fa-times"></i></div>
                     </div>
                     <div class="f-options-grid" id="authorFilterGrid">
-                        <!-- Dynamic Pills Will Load Here -->
-                    </div>
+                        </div>
                 </div>
             </div>
-            <!-- =============================== -->
-
             <div class="download-modal" id="downloadModal">
                 <div class="modal-header-fixed">
                     <div class="header-content-wrapper" style="display: flex; align-items: center; gap: 15px; flex-grow: 1;">
@@ -221,6 +218,34 @@
                 </div>
             </div>
             
+            <div class="overlay-panel" id="bookmarks-panel">
+                <div class="modal-header-fixed">
+                    <div class="header-content-wrapper" style="display: flex; align-items: center; gap: 15px; flex-grow: 1;">
+                        <button class="back-btn" id="close-bookmarks-btn"><i class="fas fa-arrow-left"></i></button>
+                        <h1 class="modal-title">SAVED BOOKS</h1>
+                    </div>
+                    <img src="https://i.postimg.cc/fygCB079/file-00000000d51c720780078a0d21adc0f6.png" class="header-right-logo" alt="Logo" oncontextmenu="return false;" draggable="false">
+                </div>
+                <div class="dmca-content" style="padding: 20px 20px 0px;">
+                    <div style="margin-bottom: 15px;">
+                        <div class="section-header-title" style="margin-bottom: 0;"><i class="fas fa-bookmark" style="color: #3b82f6;"></i> Your Favorites 💖 </div>
+                    </div>
+                    
+                    <div class="book-container" id="savedBooksContainer"></div>
+
+                    <div id="no-saved-msg" style="display: none; padding-bottom: 20px; justify-content: center; height: 100%;">
+                        <div class="no-results-card" style="margin-top: 40px;">
+                            <div class="no-results-icon"><i class="far fa-bookmark"></i></div>
+                            <h2 class="no-results-title">NO SAVED BOOKS</h2>
+                            <p class="no-results-desc">You haven't bookmarked any books yet. Click the bookmark icon on any book to save it here!</p>
+                        </div>
+                    </div>
+                    
+                    <div class="panel-fixed-footer">
+                        © 2026 SPIDY BOOK HUB <span style="margin: 0 5px;">|</span> MADE WITH <i class="fas fa-heart" style="color: #ff4757; margin: 0 3px;"></i> BY MADxPRINCE
+                    </div>
+                </div>
+            </div>
             <div class="notifications-panel" id="noti-panel">
                 <div class="noti-header-premium">
                     <div class="noti-header-left">
