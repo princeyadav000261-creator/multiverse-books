@@ -365,10 +365,10 @@ main .premium-copyright { width: calc(100% + 40px); margin-left: -20px; margin-r
 .adm-header-title { font-family: 'Poppins', sans-serif; font-size: 16px; font-weight: 900; color: #fff; text-transform: uppercase; margin: 0; }
 .adm-logout-btn { background: rgba(255, 255, 255, 0.1); border: 1px solid rgba(255, 255, 255, 0.3); color: #ffffff; padding: 8px 15px; border-radius: 20px; font-weight: 800; font-size: 12px; cursor: pointer; display: flex; align-items: center; gap: 5px; } 
 
-/* TABS CSS UPDATED: No glow, active is white and bold, normal is normal weight */
+/* TABS CSS UPDATED: Active and inactive states are now bold based on request */
 .adm-tabs { display: flex; gap: 10px; padding: 15px 20px; overflow-x: auto; background-color: #000000 !important; border-bottom: 1px solid rgba(255,255,255,0.15) !important; box-shadow: 0 4px 15px rgba(0, 0, 0, 0.5); -webkit-overflow-scrolling: touch; transform: translateZ(0); }
 .adm-tabs::-webkit-scrollbar { display: none; }
-.adm-tab-btn { background: rgba(255,255,255,0.05); color: #a1a1aa; border: 1px solid rgba(255,255,255,0.1); padding: 10px 15px; border-radius: 10px; font-weight: 500 !important; white-space: nowrap; cursor: pointer; display: flex; gap: 8px; align-items: center; outline: none; transition: 0.2s ease; }
+.adm-tab-btn { background: rgba(255,255,255,0.05); color: #a1a1aa; border: 1px solid rgba(255,255,255,0.1); padding: 10px 15px; border-radius: 10px; font-weight: 700 !important; white-space: nowrap; cursor: pointer; display: flex; gap: 8px; align-items: center; outline: none; transition: 0.2s ease; }
 .adm-tab-btn.active { background: rgba(255, 255, 255, 0.1); color: #ffffff; border-color: rgba(255, 255, 255, 0.3); box-shadow: none; text-shadow: none; font-weight: 800 !important; } 
 
 .adm-content-area { flex: 1; overflow-y: auto; padding: 20px; -webkit-overflow-scrolling: touch; transform: translateZ(0); will-change: transform; overscroll-behavior-y: contain; }
@@ -376,8 +376,8 @@ main .premium-copyright { width: calc(100% + 40px); margin-left: -20px; margin-r
 .adm-section.active { display: block; }
 @keyframes admFadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
 
-/* CARDS CSS UPDATED: Removed white glow inside, made professional clean solid dark background */
-.adm-card { background: #0f0f13; border: 1px solid rgba(255,255,255,0.08); border-radius: 16px; padding: 25px; margin-bottom: 20px; box-shadow: 0 4px 20px rgba(0,0,0,0.4); }
+/* CARDS CSS UPDATED: Added a distinct white top line to match layout request */
+.adm-card { background: #0f0f13; border: 1px solid rgba(255,255,255,0.08); border-top: 3px solid #ffffff; border-radius: 16px; padding: 25px; margin-bottom: 20px; box-shadow: 0 4px 20px rgba(0,0,0,0.4); }
 
 /* CARD TITLE UPDATED: Premium dashed underline */
 .adm-card-title { font-size: 1.15rem; font-weight: 800; color: #fff; margin-bottom: 20px; display: flex; align-items: center; gap: 12px; border-bottom: 1px dashed rgba(255,255,255,0.15); padding-bottom: 15px; }
