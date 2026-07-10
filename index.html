@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>SPIDY BOOK HUB</title>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="./style.css">
 </head>
 <body>
@@ -101,8 +102,9 @@
 
             <div class="sidebar-overlay" id="sidebar-overlay"></div>
             <div class="sidebar" id="sidebar">
-                <div class="sidebar-header-new">
-                    <img src="https://i.postimg.cc/fygCB079/file-00000000d51c720780078a0d21adc0f6.png" alt="Profile" class="profile-img" id="sidebarProfileImg" oncontextmenu="return false;" draggable="false">
+                
+                <div class="sidebar-header-new" onclick="openMyProfile()" style="cursor: pointer; transition: 0.2s;" onmouseover="this.style.background='rgba(255,255,255,0.05)'" onmouseout="this.style.background='transparent'">
+                    <img src="https://i.postimg.cc/D0BF1b77/file-000000000e847207a64f6711d825a859.png" alt="Profile" class="profile-img" id="sidebarProfileImg" oncontextmenu="return false;" draggable="false">
                     <div class="profile-info">
                         <div class="profile-name" id="sidebarProfileName">Guest User</div>
                         <div style="font-size: 10px; color: #10b981; font-weight: bold; margin-top: 2px;" id="sidebarRoleText">Please Login</div>
@@ -188,6 +190,71 @@
                         </div>
                 </div>
             </div>
+
+            <div class="overlay-panel" id="my-profile-panel" style="background-color: #050508;">
+                <div class="bg-glow-container">
+                    <div class="glow-orb-1"></div>
+                    <div class="glow-orb-2"></div>
+                    <div class="glow-orb-3"></div>
+                </div>
+
+                <div style="display: flex; align-items: center; justify-content: center; height: 100%; padding: 20px;">
+                    <div class="profile-card">
+                        <div class="card-cover">
+                            <button class="close-btn" aria-label="Close" onclick="closeMyProfile()">
+                                <i class="fas fa-times"></i>
+                            </button>
+                        </div>
+                        
+                        <div class="profile-info">
+                            <div class="avatar-ring">
+                                <div class="avatar-inner">
+                                    <img id="profile-avatar-ui" src="https://i.postimg.cc/D0BF1b77/file-000000000e847207a64f6711d825a859.png" alt="Profile">
+                                </div>
+                                <div class="shield-badge"><i class="fas fa-shield-alt"></i></div>
+                            </div>
+                            <h2 class="user-name" id="profile-name-ui">Loading...</h2>
+                            <p class="user-email" id="profile-email-ui">Loading...</p>
+                        </div>
+
+                        <div class="divider"></div>
+
+                        <div class="stats-container">
+                            <div class="stat-card card-upload">
+                                <div class="icon-box"><i class="fas fa-cloud-upload-alt"></i></div>
+                                <div class="stat-info">
+                                    <div class="stat-label">Uploaded</div>
+                                    <div class="stat-value" id="profile-uploads">0</div>
+                                </div>
+                            </div>
+
+                            <div class="stat-card card-download">
+                                <div class="icon-box"><i class="fas fa-cloud-download-alt"></i></div>
+                                <div class="stat-info">
+                                    <div class="stat-label">Downloaded</div>
+                                    <div class="stat-value" id="profile-downloads">0</div>
+                                </div>
+                            </div>
+
+                            <div class="stat-card card-bookmark">
+                                <div class="icon-box"><i class="fas fa-bookmark"></i></div>
+                                <div class="stat-info">
+                                    <div class="stat-label">Saved</div>
+                                    <div class="stat-value" id="profile-saved">0</div>
+                                </div>
+                            </div>
+
+                            <div class="stat-card card-premium">
+                                <div class="icon-box"><i class="fas fa-crown"></i></div>
+                                <div class="stat-info">
+                                    <div class="stat-label">Rank</div>
+                                    <div class="stat-value premium-text" id="profile-rank">#--</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
             <div class="download-modal" id="downloadModal">
                 <div class="modal-header-fixed">
                     <div class="header-content-wrapper" style="display: flex; align-items: center; gap: 15px; flex-grow: 1;">
@@ -246,6 +313,7 @@
                     </div>
                 </div>
             </div>
+
             <div class="notifications-panel" id="noti-panel">
                 <div class="noti-header-premium">
                     <div class="noti-header-left">
