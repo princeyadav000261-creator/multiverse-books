@@ -1,5 +1,5 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
-import { getFirestore, collection, addDoc, doc, updateDoc, deleteDoc, onSnapshot, query, orderBy, setDoc, getDoc } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
+import { getFirestore, collection, addDoc, doc, updateDoc, deleteDoc, onSnapshot, query, orderBy, setDoc, getDoc, increment, getDocs } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
 import { getAuth, signInWithEmailAndPassword, GoogleAuthProvider, signInWithPopup, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js";
 import { getAnalytics } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-analytics.js";
 
@@ -39,37 +39,28 @@ const adminBooksPerPage = 10;
 
 let currentAuthorFilter = "All"; 
 
-// ==========================================
-// NEW: BOOKMARK SYSTEM LOGIC
-// ==========================================
 let savedBooks = JSON.parse(localStorage.getItem('spidy_saved_books')) || [];
 
 window.toggleBookmark = function(event, slug) {
-    event.stopPropagation(); // Card ko open hone se rokne ke liye
-    
+    event.stopPropagation(); 
     const index = savedBooks.indexOf(slug);
     const iconElement = event.currentTarget.querySelector('i');
 
     if (index === -1) {
-        // Add bookmark
         savedBooks.push(slug);
-        iconElement.className = "fas fa-bookmark"; // Filled icon
+        iconElement.className = "fas fa-bookmark"; 
         showToast("Book saved to favorites!");
     } else {
-        // Remove bookmark
         savedBooks.splice(index, 1);
-        iconElement.className = "far fa-bookmark"; // Outline icon
+        iconElement.className = "far fa-bookmark"; 
         showToast("Book removed from favorites!");
     }
 
     localStorage.setItem('spidy_saved_books', JSON.stringify(savedBooks));
-    
-    // Agar Bookmarks panel open hai toh usko realtime me update karo
     if(document.getElementById('bookmarks-panel').classList.contains('active')) {
         renderSavedBooksUI();
     }
 }
-// ==========================================
 
 const urlParamsCheck = new URLSearchParams(window.location.search);
 let isDeepLinkLoad = urlParamsCheck.has('book'); 
@@ -87,10 +78,8 @@ function updateLoaderUI(percent) {
     const loaderFill = document.getElementById('loaderFill');
     const loaderPercentage = document.getElementById('loaderPercentage');
     const loaderStatusText = document.getElementById('loaderStatusText');
-    
     if (loaderFill) loaderFill.style.width = percent + "%";
     if (loaderPercentage) loaderPercentage.innerText = percent + "%";
-    
     if (loaderStatusText) {
         if (percent < 30) loaderStatusText.innerText = "Initializing System...";
         else if (percent < 60) loaderStatusText.innerText = "Fetching Secure Data...";
@@ -139,7 +128,6 @@ function triggerWhatsAppPopup() {
 function tryTransition() {
     if (isAppReady.auth && isAppReady.data && isAppReady.time && !hasTransitioned) {
         hasTransitioned = true;
-        
         clearInterval(loaderInterval);
         updateLoaderUI(100);
 
@@ -157,13 +145,9 @@ function tryTransition() {
             } else {
                 setTimeout(triggerWhatsAppPopup, 15000); 
             }
-
             const loader = document.getElementById("loaderScreen");
             loader.style.opacity = "0"; 
-
-            setTimeout(() => {
-                loader.style.display = "none";
-            }, 300);
+            setTimeout(() => { loader.style.display = "none"; }, 300);
         }, 500); 
     }
 }
@@ -173,7 +157,6 @@ window.closeLoginOverlay = function() {
     loginOverlay.style.opacity = '0';
     setTimeout(() => { 
         loginOverlay.style.display = 'none'; 
-        
         if (isDeepLinkLoad && !isUserLoggedIn) {
             isDeepLinkLoad = false;
             window.history.replaceState({}, '', window.location.pathname);
@@ -191,9 +174,16 @@ onAuthStateChanged(auth, async (user) => {
         if (!dName || dName.trim() === "") { dName = user.email.split('@')[0]; }
         document.getElementById('sidebarProfileName').innerText = dName;
         
+        const sidebarAvatar = document.getElementById('sidebarProfileImg');
+        if(user.photoURL) {
+            CURRENT_ADMIN_PHOTO = user.photoURL;
+            sidebarAvatar.src = user.photoURL;
+        } else {
+            sidebarAvatar.src = "https://i.postimg.cc/D0BF1b77/file-000000000e847207a64f6711d825a859.png";
+        }
+        
         CURRENT_ADMIN_NAME = dName;
         CURRENT_ADMIN_EMAIL = user.email;
-        if(user.photoURL) CURRENT_ADMIN_PHOTO = user.photoURL;
 
         try {
             const userRef = doc(db, "users", user.uid);
@@ -204,8 +194,10 @@ onAuthStateChanged(auth, async (user) => {
                     email: user.email,
                     name: dName,
                     photo: user.photoURL || "",
+                    totalUploads: 0, 
+                    lifetimeDownloads: 0,
                     createdAt: new Date().getTime()
-                });
+                }, { merge: true });
             }
 
             const adminDocRef = doc(db, "admins", user.email);
@@ -239,6 +231,7 @@ onAuthStateChanged(auth, async (user) => {
         document.getElementById('sidebarProfileName').innerText = "Guest User";
         document.getElementById('sidebarRoleText').innerText = "Please Login";
         document.getElementById('uploadMenuText').innerText = "Upload Books";
+        document.getElementById('sidebarProfileImg').src = "https://i.postimg.cc/D0BF1b77/file-000000000e847207a64f6711d825a859.png";
     }
 
     isAppReady.auth = true;
@@ -247,36 +240,15 @@ onAuthStateChanged(auth, async (user) => {
     onSnapshot(query(collection(db, "prompts"), orderBy("createdAt", "asc")), (snapshot) => {
         const container = document.getElementById('promptsContainer');
         container.innerHTML = '';
-        if(snapshot.empty) {
-            container.innerHTML = `<div style="text-align:center; padding:20px; color:#a1a1aa; font-weight:800;">No prompts available yet.</div>`;
-            return;
-        }
-
+        if(snapshot.empty) { container.innerHTML = `<div style="text-align:center; padding:20px; color:#a1a1aa; font-weight:800;">No prompts available yet.</div>`; return; }
         snapshot.forEach(doc => {
             const data = doc.data();
             const id = doc.id;
             const safeText = data.text.replace(/</g, "&lt;").replace(/>/g, "&gt;");
             const safeInstruction = data.instruction ? data.instruction.replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/\n/g, "<br>") : "";
-            
             let instructionHTML = '';
-            if(safeInstruction) {
-                instructionHTML = `<div style="color: #ffffff; font-weight: 600; font-size: 14px; margin-bottom: 8px; margin-left: 2px; line-height: 1.5; font-family: 'Inter', sans-serif;">${safeInstruction}</div>`;
-            }
-
-            container.innerHTML += `
-                <div class="telegram-prompt-wrapper">
-                    ${instructionHTML}
-                    <div class="telegram-prompt-card">
-                        <div class="telegram-prompt-header" style="display:flex; align-items:center;">
-                            ${data.title}
-                        </div>
-                        <div class="telegram-prompt-body">${safeText}</div>
-                        <div class="telegram-prompt-footer">
-                            <button class="telegram-copy-btn" id="copy-btn-${id}" onclick="copyPromptText(decodeURIComponent('${encodeURIComponent(data.text)}'), 'copy-btn-${id}')"><i class="far fa-copy"></i> COPY CODE</button>
-                        </div>
-                    </div>
-                </div>
-            `;
+            if(safeInstruction) { instructionHTML = `<div style="color: #ffffff; font-weight: 600; font-size: 14px; margin-bottom: 8px; margin-left: 2px; line-height: 1.5; font-family: 'Inter', sans-serif;">${safeInstruction}</div>`; }
+            container.innerHTML += `<div class="telegram-prompt-wrapper">${instructionHTML}<div class="telegram-prompt-card"><div class="telegram-prompt-header" style="display:flex; align-items:center;">${data.title}</div><div class="telegram-prompt-body">${safeText}</div><div class="telegram-prompt-footer"><button class="telegram-copy-btn" id="copy-btn-${id}" onclick="copyPromptText(decodeURIComponent('${encodeURIComponent(data.text)}'), 'copy-btn-${id}')"><i class="far fa-copy"></i> COPY CODE</button></div></div></div>`;
         });
     });
 
@@ -284,10 +256,7 @@ onAuthStateChanged(auth, async (user) => {
         const grid = document.getElementById('adminTutorialsGrid');
         if(grid) {
             grid.innerHTML = '';
-            snapshot.forEach(doc => {
-                const data = doc.data();
-                renderTutorialCard(data);
-            });
+            snapshot.forEach(doc => { renderTutorialCard(doc.data()); });
         }
     });
 
@@ -299,19 +268,13 @@ onAuthStateChanged(auth, async (user) => {
             data.slug = data.title.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)+/g, '');
             booksData.push(data);
         });
-        
         mainFilteredData = [...booksData]; 
         updateAuthorFilterOptions(); 
         applyMasterFilter(); 
-        
         window.generateNotifications();
-        
         adminFilteredBooks = [...booksData];
-        if(document.getElementById('adminSearchBook')) {
-            document.getElementById('adminSearchBook').value = '';
-        }
+        if(document.getElementById('adminSearchBook')) { document.getElementById('adminSearchBook').value = ''; }
         renderAdminBooksTable(); 
-        
         isAppReady.data = true;
         tryTransition();
     });
@@ -324,13 +287,8 @@ window.copyPromptText = function(text, btnId) {
         const originalHTML = btn.innerHTML;
         btn.innerHTML = `<i class="fas fa-check" style="color: #25D366;"></i> COPIED`;
         btn.style.color = "#25D366";
-        setTimeout(() => {
-            btn.innerHTML = originalHTML;
-            btn.style.color = "#B5BAC1";
-        }, 2000);
-    }).catch(err => {
-        showToast("Failed to copy!");
-    });
+        setTimeout(() => { btn.innerHTML = originalHTML; btn.style.color = "#B5BAC1"; }, 2000);
+    }).catch(err => { showToast("Failed to copy!"); });
 };
 
 async function renderTutorialCard(data) {
@@ -339,42 +297,20 @@ async function renderTutorialCard(data) {
         const customViews = data.views || "10K"; 
         const customDuration = data.duration || "10:00";
         const customAvatar = data.avatarUrl || "https://i.postimg.cc/D0BF1b77/file-000000000e847207a64f6711d825a859.png"; 
-        
         const videoIdMatch = videoUrl.match(/(?:youtu\.be\/|youtube\.com\/(?:[^\/]+\/.+\/|(?:v|e(?:mbed)?)\/|.*[?&]v=)|youtube\.com\/shorts\/)([^"&?\/\s]{11})/i);
         if (!videoIdMatch) return;
         const videoId = videoIdMatch[1];
         const standardUrl = `https://www.youtube.com/watch?v=${videoId}`;
-
-        let title = "YouTube Video";
-        let channelName = "Tutorial";
-        
+        let title = "YouTube Video"; let channelName = "Tutorial";
         try {
             const response = await fetch(`https://noembed.com/embed?url=${standardUrl}`);
             const vidData = await response.json();
             if(vidData.title) title = vidData.title;
             if(vidData.author_name) channelName = vidData.author_name;
         } catch(e) {}
-
         const thumbnailUrl = `https://img.youtube.com/vi/${videoId}/maxresdefault.jpg`;
         const fallbackUrl = `https://img.youtube.com/vi/${videoId}/hqdefault.jpg`;
-        
-        const cardHTML = `
-            <div class="yt-card">
-                <div class="yt-thumbnail-wrapper" onclick="window.open('${videoUrl}', '_blank')">
-                    <img src="${thumbnailUrl}" class="yt-thumbnail-img" alt="Thumbnail" onerror="this.src='${fallbackUrl}'" oncontextmenu="return false;" draggable="false" style="-webkit-touch-callout: none; pointer-events: none;">
-                    <div class="yt-duration">${customDuration}</div>
-                </div>
-                <div class="yt-info-box" onclick="window.open('${videoUrl}', '_blank')">
-                    <img src="${customAvatar}" class="yt-avatar" alt="Avatar" oncontextmenu="return false;" draggable="false" style="-webkit-touch-callout: none; pointer-events: none;">
-                    <div class="yt-text-content">
-                        <div class="yt-video-title">${title}</div>
-                        <div class="yt-channel-name">
-                            ${channelName} • ${customViews} views
-                        </div>
-                    </div>
-                </div>
-            </div>
-        `;
+        const cardHTML = `<div class="yt-card"><div class="yt-thumbnail-wrapper" onclick="window.open('${videoUrl}', '_blank')"><img src="${thumbnailUrl}" class="yt-thumbnail-img" alt="Thumbnail" onerror="this.src='${fallbackUrl}'" oncontextmenu="return false;" draggable="false" style="-webkit-touch-callout: none; pointer-events: none;"><div class="yt-duration">${customDuration}</div></div><div class="yt-info-box" onclick="window.open('${videoUrl}', '_blank')"><img src="${customAvatar}" class="yt-avatar" alt="Avatar" oncontextmenu="return false;" draggable="false" style="-webkit-touch-callout: none; pointer-events: none;"><div class="yt-text-content"><div class="yt-video-title">${title}</div><div class="yt-channel-name">${channelName} • ${customViews} views</div></div></div></div>`;
         document.getElementById('adminTutorialsGrid').innerHTML += cardHTML;
     } catch (error) {}
 }
@@ -383,49 +319,36 @@ document.getElementById('loginForm').addEventListener('submit', async (e) => {
     e.preventDefault(); 
     const email = document.getElementById('loginEmail').value; 
     const pass = document.getElementById('loginPassword').value;
-    
     const btn = document.getElementById('loginBtn'); 
     const originalContent = btn.innerHTML;
     btn.innerHTML = `<span style="display:flex; align-items:center; gap:8px;"><div class="premium-loader"></div> Authenticating...</span>`;
-    
     try { 
         await signInWithEmailAndPassword(auth, email, pass); 
         e.target.reset(); 
         showToast("Login Successful!"); 
         btn.innerHTML = originalContent; 
-        
         window.closeLoginOverlay();
-        
         if (isDeepLinkLoad && pendingBookSlug) {
             document.getElementById('mainAppWrapper').style.display = 'block';
             setTimeout(() => { window.openDownloadPage(pendingBookSlug, true); }, 300);
         }
-    } catch(err) { 
-        showToast("Failed: Invalid Credentials!"); 
-        btn.innerHTML = originalContent; 
-    } 
+    } catch(err) { showToast("Failed: Invalid Credentials!"); btn.innerHTML = originalContent; } 
 });
 
 document.getElementById('googleSignInBtn').addEventListener('click', async () => { 
     const btn = document.getElementById('googleSignInBtn');
     const originalContent = btn.innerHTML;
     btn.innerHTML = `<span style="display:flex; align-items:center; gap:8px;"><div class="premium-loader"></div> Connecting...</span>`;
-    
     try { 
         await signInWithPopup(auth, provider); 
         showToast("Google Login Successful!");
         btn.innerHTML = originalContent;
-        
         window.closeLoginOverlay();
-        
         if (isDeepLinkLoad && pendingBookSlug) {
             document.getElementById('mainAppWrapper').style.display = 'block';
             setTimeout(() => { window.openDownloadPage(pendingBookSlug, true); }, 300);
         }
-    } catch(err) { 
-        showToast("Failed: Google Sign-In Error."); 
-        btn.innerHTML = originalContent;
-    } 
+    } catch(err) { showToast("Failed: Google Sign-In Error."); btn.innerHTML = originalContent; } 
 });
 
 document.getElementById('admin-logout-btn').addEventListener('click', () => { 
@@ -440,36 +363,27 @@ document.getElementById('admin-logout-btn').addEventListener('click', () => {
 window.closePopup = function(){ document.getElementById("popupOverlay").style.display = "none"; };
 window.joinChannel = function(){ window.open('https://whatsapp.com/channel/0029Vb6NBZx1yT2GByTTVf2A', '_blank'); };
 
-
 function updateAuthorFilterOptions() {
     const authorMap = new Map();
     booksData.forEach(book => {
         if(!book.author) return;
         let normalized = book.author.toLowerCase().replace(/\s+/g, ' ').trim();
-        if(!authorMap.has(normalized)) {
-            authorMap.set(normalized, book.author.trim()); 
-        }
+        if(!authorMap.has(normalized)) { authorMap.set(normalized, book.author.trim()); }
     });
-
     const uniqueAuthors = Array.from(authorMap.values()).sort((a, b) => a.localeCompare(b));
     const grid = document.getElementById('authorFilterGrid');
-    
     let html = `<div class="f-pill ${currentAuthorFilter === 'All' ? 'active' : ''}" onclick="selectAuthorFilter('All')">All</div>`;
-    
     uniqueAuthors.forEach(author => {
         let normAuthor = author.toLowerCase().replace(/\s+/g, ' ').trim();
         let normCurrent = currentAuthorFilter.toLowerCase().replace(/\s+/g, ' ').trim();
         let isActive = (normAuthor === normCurrent) ? 'active' : '';
-        
         html += `<div class="f-pill ${isActive}" onclick="selectAuthorFilter('${author.replace(/'/g, "\\'")}')">${author}</div>`;
     });
-    
     grid.innerHTML = html;
 }
 
 window.selectAuthorFilter = function(authorName) {
-    currentAuthorFilter = authorName;
-    updateAuthorFilterOptions(); 
+    currentAuthorFilter = authorName; updateAuthorFilterOptions(); 
     document.getElementById('filterBottomOverlay').classList.remove('active');
     applyMasterFilter(); 
 }
@@ -478,7 +392,6 @@ function applyMasterFilter() {
     const searchInput = document.getElementById('app-search-input').value;
     let normalizedSearch = searchInput.toLowerCase().replace(/[^a-z0-9\s]/g, '');
     let searchTokens = normalizedSearch.split(/\s+/).filter(token => token.length > 0);
-    
     mainFilteredData = booksData.filter(book => {
         let matchesAuthor = true;
         if (currentAuthorFilter !== "All") {
@@ -486,16 +399,13 @@ function applyMasterFilter() {
             let normBookAuth = (book.author || "").toLowerCase().replace(/\s+/g, ' ').trim();
             matchesAuthor = (normFilter === normBookAuth);
         }
-
         let matchesSearch = true;
         if (searchTokens.length > 0) {
             let textToSearch = (book.title + " " + book.author).toLowerCase().replace(/[^a-z0-9\s]/g, '');
             matchesSearch = searchTokens.every(token => textToSearch.includes(token));
         }
-
         return matchesAuthor && matchesSearch;
     });
-
     loadedCount = 0; 
     if(mainFilteredData.length > 0) { 
         document.getElementById('no-results-msg').style.display = 'none'; 
@@ -510,31 +420,11 @@ let searchTimeout;
 const searchInputEl = document.getElementById('app-search-input');
 const closeSearchBtn = document.getElementById('close-search');
 
-searchInputEl.addEventListener('input', () => {
-    clearTimeout(searchTimeout);
-    searchTimeout = setTimeout(() => { applyMasterFilter(); }, 300);
-});
-
-closeSearchBtn.addEventListener('click', () => {
-    searchInputEl.value = ''; 
-    applyMasterFilter();
-    document.getElementById('search-box').classList.remove('active');
-    if (history.state && history.state.popup === 'search') { history.back(); }
-});
-
-document.getElementById('openAuthorFilterBtn').addEventListener('click', () => {
-    document.getElementById('filterBottomOverlay').classList.add('active');
-});
-
-document.getElementById('closeAuthorFilterBtn').addEventListener('click', () => {
-    document.getElementById('filterBottomOverlay').classList.remove('active');
-});
-
-document.getElementById('filterBottomOverlay').addEventListener('click', (e) => {
-    if (e.target === document.getElementById('filterBottomOverlay')) {
-        document.getElementById('filterBottomOverlay').classList.remove('active');
-    }
-});
+searchInputEl.addEventListener('input', () => { clearTimeout(searchTimeout); searchTimeout = setTimeout(() => { applyMasterFilter(); }, 300); });
+closeSearchBtn.addEventListener('click', () => { searchInputEl.value = ''; applyMasterFilter(); document.getElementById('search-box').classList.remove('active'); if (history.state && history.state.popup === 'search') { history.back(); }});
+document.getElementById('openAuthorFilterBtn').addEventListener('click', () => { document.getElementById('filterBottomOverlay').classList.add('active'); });
+document.getElementById('closeAuthorFilterBtn').addEventListener('click', () => { document.getElementById('filterBottomOverlay').classList.remove('active'); });
+document.getElementById('filterBottomOverlay').addEventListener('click', (e) => { if (e.target === document.getElementById('filterBottomOverlay')) { document.getElementById('filterBottomOverlay').classList.remove('active'); }});
 
 function getBatchSize() {
     let cols = 2; 
@@ -549,85 +439,41 @@ const mainElement = document.getElementById('mainContentArea');
 mainElement.addEventListener('scroll', () => {
     if (mainElement.scrollTop + mainElement.clientHeight >= mainElement.scrollHeight - 50) {
         const noResultsMsg = document.getElementById('no-results-msg');
-        
         if (loadedCount < mainFilteredData.length && !isLoadingMore && noResultsMsg.style.display !== 'flex') {
-            isLoadingMore = true;
-            document.getElementById("bottomSpinner").style.display = "flex";
-            setTimeout(() => {
-                window.renderBooksUI(loadedCount, getBatchSize(), mainFilteredData);
-                document.getElementById("bottomSpinner").style.display = "none";
-                isLoadingMore = false;
-            }, 1000); 
+            isLoadingMore = true; document.getElementById("bottomSpinner").style.display = "flex";
+            setTimeout(() => { window.renderBooksUI(loadedCount, getBatchSize(), mainFilteredData); document.getElementById("bottomSpinner").style.display = "none"; isLoadingMore = false; }, 1000); 
         }
     }
 });
 
-// NAYA LOGIC: Bookmark status check add kar diya HTML render me
 window.renderBooksUI = function(startIndex, count, customData = null) {
     const container = document.getElementById("bookContainer");
     let dataToRender = customData ? customData : mainFilteredData;
     let endIndex = Math.min(startIndex + count, dataToRender.length);
     if(startIndex === 0) container.innerHTML = "";
-    
     let htmlChunk = "";
     for(let i = startIndex; i < endIndex; i++) {
         let book = dataToRender[i];
         let langClass = book.lang.toLowerCase() === 'hindi' ? 'tag-lang-hindi' : 'tag-lang-english';
-        
         let isSaved = savedBooks.includes(book.slug);
         let bookmarkIcon = isSaved ? 'fas fa-bookmark' : 'far fa-bookmark';
-
-        htmlChunk += `
-        <div class="book-card" onclick="openDownloadPage('${book.slug}')">
-            <div class="card-img-wrapper">
-                <div class="badge-free">FREE</div>
-                <div class="bookmark-btn" onclick="toggleBookmark(event, '${book.slug}')">
-                    <i class="${bookmarkIcon}"></i>
-                </div>
-                <img src="${book.image}" class="book-image" oncontextmenu="return false;" draggable="false">
-            </div>
-            <div class="book-details">
-                <div class="book-title">${book.title}</div><div class="book-author">${book.author}</div>
-                <div class="tags-container"><span class="book-tag tag-year">${book.year}</span><span class="book-tag ${langClass}">${book.lang}</span></div>
-            </div>
-        </div>`;
+        htmlChunk += `<div class="book-card" onclick="openDownloadPage('${book.slug}')"><div class="card-img-wrapper"><div class="badge-free">FREE</div><div class="bookmark-btn" onclick="toggleBookmark(event, '${book.slug}')"><i class="${bookmarkIcon}"></i></div><img src="${book.image}" class="book-image" oncontextmenu="return false;" draggable="false"></div><div class="book-details"><div class="book-title">${book.title}</div><div class="book-author">${book.author}</div><div class="tags-container"><span class="book-tag tag-year">${book.year}</span><span class="book-tag ${langClass}">${book.lang}</span></div></div></div>`;
     }
     container.innerHTML += htmlChunk;
     loadedCount = endIndex;
 }
 
-// NAYA LOGIC: Function to render ONLY saved books in the Bookmarks panel
 window.renderSavedBooksUI = function() {
     const container = document.getElementById("savedBooksContainer");
     const noMsg = document.getElementById("no-saved-msg");
     container.innerHTML = "";
-
     const savedBooksData = booksData.filter(book => savedBooks.includes(book.slug));
-
-    if (savedBooksData.length === 0) {
-        noMsg.style.display = "flex";
-        return;
-    }
-    
+    if (savedBooksData.length === 0) { noMsg.style.display = "flex"; return; }
     noMsg.style.display = "none";
     let htmlChunk = "";
     savedBooksData.forEach(book => {
         let langClass = book.lang.toLowerCase() === 'hindi' ? 'tag-lang-hindi' : 'tag-lang-english';
-        // Sab saved me hi dikhenge toh true hi rahega yahan par
-        htmlChunk += `
-        <div class="book-card" onclick="openDownloadPage('${book.slug}')">
-            <div class="card-img-wrapper">
-                <div class="badge-free">FREE</div>
-                <div class="bookmark-btn" onclick="toggleBookmark(event, '${book.slug}')">
-                    <i class="fas fa-bookmark"></i>
-                </div>
-                <img src="${book.image}" class="book-image" oncontextmenu="return false;" draggable="false">
-            </div>
-            <div class="book-details">
-                <div class="book-title">${book.title}</div><div class="book-author">${book.author}</div>
-                <div class="tags-container"><span class="book-tag tag-year">${book.year}</span><span class="book-tag ${langClass}">${book.lang}</span></div>
-            </div>
-        </div>`;
+        htmlChunk += `<div class="book-card" onclick="openDownloadPage('${book.slug}')"><div class="card-img-wrapper"><div class="badge-free">FREE</div><div class="bookmark-btn" onclick="toggleBookmark(event, '${book.slug}')"><i class="fas fa-bookmark"></i></div><img src="${book.image}" class="book-image" oncontextmenu="return false;" draggable="false"></div><div class="book-details"><div class="book-title">${book.title}</div><div class="book-author">${book.author}</div><div class="tags-container"><span class="book-tag tag-year">${book.year}</span><span class="book-tag ${langClass}">${book.lang}</span></div></div></div>`;
     });
     container.innerHTML = htmlChunk;
 }
@@ -637,25 +483,73 @@ window.generateNotifications = function() {
     notiContainer.innerHTML = ''; 
     booksData.slice(0, 15).forEach((book) => {
         let dateStr = "00/00/0000";
-        if (book.dateAdded) {
-            dateStr = book.dateAdded; 
-        } else if (book.createdAt) {
-            const d = new Date(book.createdAt);
-            dateStr = `${String(d.getDate()).padStart(2, '0')}/${String(d.getMonth()+1).padStart(2, '0')}/${d.getFullYear()}`;
-        }
-        notiContainer.innerHTML += `
-        <div class="noti-card-dynamic" onclick="openDownloadPage('${book.slug}')" style="cursor:pointer;">
-            <img src="${book.image}" class="noti-card-img" alt="Logo">
-            <div class="noti-card-content">
-                <div class="noti-card-title">${book.title} Book Added ✅</div>
-                <div class="noti-card-desc">New book is now available.</div>
-                <div style="font-size: 10px; color: #10b981; margin-top: 2px; font-weight: 700; display: flex; align-items: center; gap: 4px;">
-                    <i class="far fa-calendar-alt"></i> Added: ${dateStr}
-                </div>
-            </div>
-        </div>`;
+        if (book.dateAdded) { dateStr = book.dateAdded; } 
+        else if (book.createdAt) { const d = new Date(book.createdAt); dateStr = `${String(d.getDate()).padStart(2, '0')}/${String(d.getMonth()+1).padStart(2, '0')}/${d.getFullYear()}`; }
+        notiContainer.innerHTML += `<div class="noti-card-dynamic" onclick="openDownloadPage('${book.slug}')" style="cursor:pointer;"><img src="${book.image}" class="noti-card-img" alt="Logo"><div class="noti-card-content"><div class="noti-card-title">${book.title} Book Added ✅</div><div class="noti-card-desc">New book is now available.</div><div style="font-size: 10px; color: #10b981; margin-top: 2px; font-weight: 700; display: flex; align-items: center; gap: 4px;"><i class="far fa-calendar-alt"></i> Added: ${dateStr}</div></div></div>`;
     });
 }
+
+window.openMyProfile = async function() {
+    if(!isUserLoggedIn || !auth.currentUser) {
+        document.getElementById('sidebar').classList.remove('active');
+        document.getElementById('sidebar-overlay').classList.remove('active');
+        document.getElementById('loginOverlay').style.display = 'flex';
+        setTimeout(() => document.getElementById('loginOverlay').style.opacity = '1', 10);
+        return;
+    }
+
+    document.getElementById('sidebar').classList.remove('active');
+    document.getElementById('sidebar-overlay').classList.remove('active');
+
+    document.getElementById('profile-name-ui').innerText = CURRENT_ADMIN_NAME;
+    document.getElementById('profile-email-ui').innerText = CURRENT_ADMIN_EMAIL;
+    document.getElementById('profile-avatar-ui').src = CURRENT_ADMIN_PHOTO;
+    document.getElementById('profile-saved').innerText = savedBooks.length;
+
+    document.getElementById('my-profile-panel').classList.add('active');
+    history.pushState({ popup: 'profile' }, '');
+
+    try {
+        const userRef = doc(db, "users", auth.currentUser.uid);
+        const userSnap = await getDoc(userRef);
+        let uploads = 0;
+        let downloads = 0;
+
+        if (userSnap.exists()) {
+            const data = userSnap.data();
+            uploads = data.totalUploads || 0;
+            downloads = data.lifetimeDownloads || 0;
+        }
+        document.getElementById('profile-uploads').innerText = uploads;
+        document.getElementById('profile-downloads').innerText = downloads;
+
+        const usersRef = collection(db, "users");
+        const q = query(usersRef, orderBy("totalUploads", "desc"));
+        const querySnapshot = await getDocs(q);
+
+        let rank = 1;
+        let found = false;
+        querySnapshot.forEach((docSnap) => {
+            if(found) return;
+            if(docSnap.id === auth.currentUser.uid) {
+                found = true;
+            } else {
+                rank++;
+            }
+        });
+
+        document.getElementById('profile-rank').innerText = "#" + rank;
+    } catch (error) {
+        console.error("Error fetching profile stats:", error);
+        showToast("Error loading profile data");
+    }
+}
+
+window.closeMyProfile = function() {
+    if (history.state && history.state.popup === 'profile') { history.back(); } 
+    else { document.getElementById('my-profile-panel').classList.remove('active'); }
+}
+
 
 document.getElementById('open-search').addEventListener('click', () => { history.pushState({ popup: 'search' }, ''); document.getElementById('search-box').classList.add('active'); setTimeout(() => { searchInputEl.focus(); }, 300); });
 document.getElementById('open-noti').addEventListener('click', () => { history.pushState({ popup: 'noti' }, ''); document.getElementById('noti-panel').classList.add('active'); document.querySelector('.blink-dot').style.display = 'none'; });
@@ -672,14 +566,8 @@ document.getElementById('close-dev-btn').addEventListener('click', () => { histo
 document.getElementById('menu-dmca').addEventListener('click', (e) => { e.preventDefault(); history.replaceState({ popup: 'dmca' }, ''); document.getElementById('dmca-panel').classList.add('active'); sidebar.classList.remove('active'); sidebarOverlay.classList.remove('active'); });
 document.getElementById('close-dmca-btn').addEventListener('click', () => { history.back(); });
 
-// NAYA LOGIC: Listeners for Bookmarks panel
 document.getElementById('menu-bookmarks').addEventListener('click', (e) => { 
-    e.preventDefault(); 
-    history.replaceState({ popup: 'bookmarks' }, ''); 
-    document.getElementById('bookmarks-panel').classList.add('active'); 
-    sidebar.classList.remove('active'); 
-    sidebarOverlay.classList.remove('active');
-    renderSavedBooksUI(); 
+    e.preventDefault(); history.replaceState({ popup: 'bookmarks' }, ''); document.getElementById('bookmarks-panel').classList.add('active'); sidebar.classList.remove('active'); sidebarOverlay.classList.remove('active'); renderSavedBooksUI(); 
 });
 document.getElementById('close-bookmarks-btn').addEventListener('click', () => { history.back(); });
 
@@ -698,11 +586,17 @@ document.getElementById('menu-admin-panel').addEventListener('click', (e) => {
 document.getElementById('close-admin-btn').addEventListener('click', () => { history.back(); });
 
 window.addEventListener('popstate', (e) => {
-    document.getElementById('noti-panel').classList.remove('active'); document.getElementById('sidebar').classList.remove('active'); document.getElementById('sidebar-overlay').classList.remove('active'); document.getElementById('about-dev-panel').classList.remove('active'); document.getElementById('dmca-panel').classList.remove('active'); document.getElementById('bookmarks-panel').classList.remove('active'); document.getElementById('admin-dashboard-panel').classList.remove('active'); document.getElementById('search-box').classList.remove('active');
+    document.getElementById('noti-panel').classList.remove('active'); 
+    document.getElementById('sidebar').classList.remove('active'); 
+    document.getElementById('sidebar-overlay').classList.remove('active'); 
+    document.getElementById('about-dev-panel').classList.remove('active'); 
+    document.getElementById('dmca-panel').classList.remove('active'); 
+    document.getElementById('bookmarks-panel').classList.remove('active'); 
+    document.getElementById('admin-dashboard-panel').classList.remove('active'); 
+    document.getElementById('search-box').classList.remove('active');
+    document.getElementById('my-profile-panel').classList.remove('active'); 
     
-    // Auto re-render home books if we are coming back from saved books (to refresh icons)
     applyMasterFilter();
-
     const sBook = new URLSearchParams(window.location.search).get('book');
     if(sBook) { if(window.openDownloadPage) window.openDownloadPage(sBook, true); } 
     else { document.getElementById("downloadModal").style.display = "none"; }
@@ -714,32 +608,25 @@ window.openDownloadPage = function(slug, skipPushState = false) {
         setTimeout(() => document.getElementById('loginOverlay').style.opacity = '1', 10);
         return;
     }
-
     const book = booksData.find(b => b.slug === slug); if(!book) return;
     document.getElementById("downloadModal").style.display = "flex";
     
     const previewImg = document.getElementById("dlPreviewImage");
-    previewImg.classList.add("image-loading-skeleton"); 
-    previewImg.src = book.image; 
-    previewImg.onload = () => {
-        previewImg.classList.remove("image-loading-skeleton"); 
-    };
+    previewImg.classList.add("image-loading-skeleton"); previewImg.src = book.image; 
+    previewImg.onload = () => { previewImg.classList.remove("image-loading-skeleton"); };
 
     document.getElementById("dlBookTitle").innerText = book.title; 
     document.getElementById("dlBookAuthor").innerText = book.author;
     
     document.getElementById("dlPdfLinkBtn").onclick = async function() { 
         if(!isUserLoggedIn || !auth.currentUser) {
-            document.getElementById('loginOverlay').style.display = 'flex';
-            setTimeout(() => document.getElementById('loginOverlay').style.opacity = '1', 10);
-            return;
+            document.getElementById('loginOverlay').style.display = 'flex'; setTimeout(() => document.getElementById('loginOverlay').style.opacity = '1', 10); return;
         }
 
         const btn = document.getElementById("dlPdfLinkBtn");
         const originalText = btn.innerHTML;
         const uid = auth.currentUser.uid;
         const userDownloadRef = doc(db, "user_downloads", uid);
-        
         const MAX_DOWNLOADS = 2;
 
         btn.innerHTML = `<span style="display:flex; align-items:center; gap:8px;"><i class="fas fa-spinner fa-spin"></i> Processing...</span>`;
@@ -753,15 +640,12 @@ window.openDownloadPage = function(slug, skipPushState = false) {
                 let data = docSnap.data();
                 let lastDownloadTime = data.lastTime || 0;
                 let count = data.count || 0;
-
                 const hoursPassed = (now - lastDownloadTime) / (1000 * 60 * 60);
 
                 if (hoursPassed < 24) {
                     if (count >= MAX_DOWNLOADS && !IS_SUPER_ADMIN) {
                         showToast("Your plan is exhausted! Please try again after 24 hours.");
-                        btn.innerHTML = originalText;
-                        btn.disabled = false;
-                        return; 
+                        btn.innerHTML = originalText; btn.disabled = false; return; 
                     }
                     await updateDoc(userDownloadRef, { count: count + 1 });
                 } else {
@@ -771,59 +655,37 @@ window.openDownloadPage = function(slug, skipPushState = false) {
                 await setDoc(userDownloadRef, { count: 1, lastTime: now });
             }
 
-            if(book.pdfLink) {
-                window.open(book.pdfLink, '_blank'); 
-            }
+            const userRef = doc(db, "users", uid);
+            await updateDoc(userRef, { lifetimeDownloads: increment(1) }).catch(e => console.log("Stats error ignored"));
+
+            if(book.pdfLink) { window.open(book.pdfLink, '_blank'); }
             
         } catch (error) {
             console.error("Download tracking error:", error);
             showToast("Failed to initiate download. Try again.");
         } finally {
-            btn.innerHTML = originalText;
-            btn.disabled = false;
+            btn.innerHTML = originalText; btn.disabled = false;
         }
     };
     
     document.getElementById("dlYoutubeLinkBtn").onclick = function() { 
-        if(book.ytLink && book.ytLink !== "#" && book.ytLink !== "") { 
-            window.open(book.ytLink, '_blank'); 
-        } else {
-            window.open('https://youtube.com/@madxprince', '_blank');
-        }
+        if(book.ytLink && book.ytLink !== "#" && book.ytLink !== "") { window.open(book.ytLink, '_blank'); } 
+        else { window.open('https://youtube.com/@madxprince', '_blank'); }
     };
-
     let examsArray = (book.exams || "General").split(',').map(item => item.trim());
     document.getElementById("dlModalTags").innerHTML = examsArray.map(exam => `<div class="dl-modal-tag">${exam}</div>`).join('');
-    
-    activeBookSlug = book.slug;
-    activeBookTitle = book.title;
-    
+    activeBookSlug = book.slug; activeBookTitle = book.title;
     if (!skipPushState) { history.pushState({ popup: 'book' }, '', '?book=' + book.slug); }
 }
 
 window.closeDownloadPage = function() {
-    if (history.state && history.state.popup === 'book') { 
-        history.back(); 
-    } else { 
-        document.getElementById("downloadModal").style.display = "none"; 
-        window.history.replaceState({}, '', window.location.pathname); 
-    }
-
+    if (history.state && history.state.popup === 'book') { history.back(); } 
+    else { document.getElementById("downloadModal").style.display = "none"; window.history.replaceState({}, '', window.location.pathname); }
     if(isDeepLinkLoad) {
         isDeepLinkLoad = false;
-        const loader = document.getElementById("loaderScreen");
-        loader.style.display = "flex";
-        loader.style.opacity = "1";
-        
+        const loader = document.getElementById("loaderScreen"); loader.style.display = "flex"; loader.style.opacity = "1";
         updateLoaderUI(100);
-
-        setTimeout(() => {
-            loader.style.opacity = "0";
-            setTimeout(() => {
-                loader.style.display = "none";
-                document.getElementById("popupOverlay").style.display = "flex";
-            }, 300);
-        }, 1500); 
+        setTimeout(() => { loader.style.opacity = "0"; setTimeout(() => { loader.style.display = "none"; document.getElementById("popupOverlay").style.display = "flex"; }, 300); }, 1500); 
     }
 }
 
@@ -849,66 +711,43 @@ function showToast(message) {
 async function logActivity(action, bookTitle, imageUrl = "", deletedData = null) {
     try {
         await addDoc(collection(db, "activity_logs"), {
-            action,
-            bookTitle,
-            image: imageUrl,
-            deletedData,
-            adminName: CURRENT_ADMIN_NAME,
-            adminEmail: CURRENT_ADMIN_EMAIL,
-            adminPhoto: CURRENT_ADMIN_PHOTO,
-            timestamp: new Date().getTime(),
-            dateStr: new Date().toLocaleString('en-GB', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute:'2-digit' })
+            action, bookTitle, image: imageUrl, deletedData, adminName: CURRENT_ADMIN_NAME, adminEmail: CURRENT_ADMIN_EMAIL, adminPhoto: CURRENT_ADMIN_PHOTO, timestamp: new Date().getTime(), dateStr: new Date().toLocaleString('en-GB', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute:'2-digit' })
         });
-    } catch(e) {
-        console.error("Logging Error:", e);
-    }
+    } catch(e) { console.error("Logging Error:", e); }
 }
 
 document.getElementById('addBookForm').addEventListener('submit', async (e) => {
     e.preventDefault(); 
-    
-    const btn = document.getElementById('publishBtn');
-    const originalText = btn.innerHTML;
-    
+    const btn = document.getElementById('publishBtn'); const originalText = btn.innerHTML;
     const titleInput = document.getElementById('inTitle').value; 
     const imgInput = document.getElementById('inImage').value;
     const pdfUrlInput = document.getElementById('inPdfUrl').value;
     const ytUrlInput = document.getElementById('inYtUrl').value;
 
     if (!IS_SUPER_ADMIN) {
-        if (!pdfUrlInput.includes('drive.google.com')) {
-            showToast("Failed: Normal users can only upload Google Drive links!");
-            return;
-        }
+        if (!pdfUrlInput.includes('drive.google.com')) { showToast("Failed: Normal users can only upload Google Drive links!"); return; }
     }
 
     btn.innerHTML = `<span class="btn-text" style="display: flex; align-items: center; justify-content: center; gap: 10px;"><div class="premium-loader" style="border-color:#000;"></div> Publishing...</span>`;
     btn.disabled = true;
 
     const newBook = { 
-        title: titleInput, 
-        author: document.getElementById('inAuthor').value, 
-        image: imgInput, 
-        year: document.getElementById('inYear').value, 
-        lang: document.getElementById('inLang').value, 
-        exams: document.getElementById('inExams').value, 
-        pdfLink: pdfUrlInput, 
-        ytLink: IS_SUPER_ADMIN ? ytUrlInput : "", 
-        dateAdded: new Date().toLocaleDateString('en-GB').toUpperCase(), 
-        createdAt: new Date().getTime() 
+        title: titleInput, author: document.getElementById('inAuthor').value, image: imgInput, year: document.getElementById('inYear').value, lang: document.getElementById('inLang').value, exams: document.getElementById('inExams').value, pdfLink: pdfUrlInput, ytLink: IS_SUPER_ADMIN ? ytUrlInput : "", dateAdded: new Date().toLocaleDateString('en-GB').toUpperCase(), createdAt: new Date().getTime(),
+        uploaderUid: auth.currentUser.uid 
     };
 
     try { 
         await addDoc(collection(db, "books"), newBook); 
+        const userRef = doc(db, "users", auth.currentUser.uid);
+        await updateDoc(userRef, { totalUploads: increment(1) }).catch(e => console.log("Stats error ignored"));
+
         await logActivity("ADD", newBook.title, newBook.image); 
         showToast("Book Published Successfully!"); 
         e.target.reset(); 
     } catch (error) { 
-        if(error.message.includes("Missing or insufficient permissions")) { showToast("Failed: Firebase Security Rules Blocked Save!"); } 
-        else { showToast("Failed: " + error.message); }
+        if(error.message.includes("Missing or insufficient permissions")) { showToast("Failed: Firebase Security Rules Blocked Save!"); } else { showToast("Failed: " + error.message); }
     } finally {
-        btn.innerHTML = originalText;
-        btn.disabled = false;
+        btn.innerHTML = originalText; btn.disabled = false;
     }
 });
 
@@ -919,46 +758,30 @@ document.getElementById('adminSearchBook').addEventListener('input', (e) => {
         const str = (b.title + " " + b.author).toLowerCase().replace(/[^a-z0-9\s]/g, '');
         return tokens.every(t => str.includes(t));
     });
-    adminCurrentPage = 1;
-    renderAdminBooksTable();
+    adminCurrentPage = 1; renderAdminBooksTable();
 });
 
-window.changeAdminPage = function(dir) {
-    adminCurrentPage += dir;
-    renderAdminBooksTable();
-}
+window.changeAdminPage = function(dir) { adminCurrentPage += dir; renderAdminBooksTable(); }
 
 function renderAdminBooksTable() {
     if(!document.getElementById('adminBooksTableBody')) return;
     if(document.getElementById('adminSearchBook').value.trim() === "") { adminFilteredBooks = [...booksData]; }
-
     const totalPages = Math.ceil(adminFilteredBooks.length / adminBooksPerPage) || 1;
     if(adminCurrentPage > totalPages) adminCurrentPage = totalPages;
     if(adminCurrentPage < 1) adminCurrentPage = 1;
 
     document.getElementById('admPageInfo').innerText = `Page ${adminCurrentPage} of ${totalPages}`;
-    document.getElementById('admPrevPage').disabled = adminCurrentPage === 1;
-    document.getElementById('admNextPage').disabled = adminCurrentPage === totalPages;
+    document.getElementById('admPrevPage').disabled = adminCurrentPage === 1; document.getElementById('admNextPage').disabled = adminCurrentPage === totalPages;
 
     const startIdx = (adminCurrentPage - 1) * adminBooksPerPage;
     const paginated = adminFilteredBooks.slice(startIdx, startIdx + adminBooksPerPage);
     const tbody = document.getElementById('adminBooksTableBody');
     let htmlString = "";
     
-    if(paginated.length === 0) {
-         tbody.innerHTML = `<tr><td colspan="3" style="text-align:center; padding:20px; color:#a1a1aa; font-weight:800;">No books found matching search.</td></tr>`;
-         return;
-    }
+    if(paginated.length === 0) { tbody.innerHTML = `<tr><td colspan="3" style="text-align:center; padding:20px; color:#a1a1aa; font-weight:800;">No books found matching search.</td></tr>`; return; }
 
     paginated.forEach((book) => { 
-        htmlString += `<tr>
-            <td><img src="${book.image}" style="width:40px; border-radius:5px;"></td>
-            <td><strong style="color:#fff;">${book.title}</strong><br><span style="font-size:0.8rem; color:#a1a1aa;">${book.author}</span></td>
-            <td>
-                <button class="adm-btn-edit" onclick="openAdminEditModal('${book.id}')"><i class="fas fa-edit"></i></button>
-                <button class="adm-btn-delete" onclick="deleteBookRecord('${book.id}')"><i class="fas fa-trash"></i></button>
-            </td>
-        </tr>`; 
+        htmlString += `<tr><td><img src="${book.image}" style="width:40px; border-radius:5px;"></td><td><strong style="color:#fff;">${book.title}</strong><br><span style="font-size:0.8rem; color:#a1a1aa;">${book.author}</span></td><td><button class="adm-btn-edit" onclick="openAdminEditModal('${book.id}')"><i class="fas fa-edit"></i></button><button class="adm-btn-delete" onclick="deleteBookRecord('${book.id}')"><i class="fas fa-trash"></i></button></td></tr>`; 
     });
     tbody.innerHTML = htmlString;
 }
@@ -976,54 +799,22 @@ window.deleteBookRecord = async function(id) {
 
 window.openAdminEditModal = function(id) {
     const book = booksData.find(x => x.id === id); 
-    document.getElementById('editDocId').value = book.id; 
-    document.getElementById('edTitle').value = book.title; 
-    document.getElementById('edAuthor').value = book.author || ""; 
-    document.getElementById('edYear').value = book.year || "2026"; 
-    document.getElementById('edLang').value = book.lang || "Hindi"; 
-    document.getElementById('edExams').value = book.exams || ""; 
-    document.getElementById('edImage').value = book.image; 
-    document.getElementById('edPdfUrl').value = book.pdfLink || ""; 
-    document.getElementById('edYtUrl').value = book.ytLink || ""; 
+    document.getElementById('editDocId').value = book.id; document.getElementById('edTitle').value = book.title; document.getElementById('edAuthor').value = book.author || ""; document.getElementById('edYear').value = book.year || "2026"; document.getElementById('edLang').value = book.lang || "Hindi"; document.getElementById('edExams').value = book.exams || ""; document.getElementById('edImage').value = book.image; document.getElementById('edPdfUrl').value = book.pdfLink || ""; document.getElementById('edYtUrl').value = book.ytLink || ""; 
     document.getElementById('adminEditModal').style.display = 'flex';
 }
 
 document.getElementById('editBookForm').addEventListener('submit', async (e) => {
     e.preventDefault(); 
-    
-    const btn = document.getElementById('editSaveBtn');
-    const originalText = btn.innerHTML;
+    const btn = document.getElementById('editSaveBtn'); const originalText = btn.innerHTML;
     const pdfUrlInput = document.getElementById('edPdfUrl').value;
-
-    if (!IS_SUPER_ADMIN) {
-        if (!pdfUrlInput.includes('drive.google.com')) {
-            showToast("Failed: You can only upload Google Drive links!");
-            return;
-        }
-    }
-
-    btn.innerHTML = `<span class="btn-text" style="display: flex; align-items: center; justify-content: center; gap: 10px;"><div class="premium-loader"></div> Saving...</span>`;
-    btn.disabled = true;
+    if (!IS_SUPER_ADMIN) { if (!pdfUrlInput.includes('drive.google.com')) { showToast("Failed: You can only upload Google Drive links!"); return; } }
+    btn.innerHTML = `<span class="btn-text" style="display: flex; align-items: center; justify-content: center; gap: 10px;"><div class="premium-loader"></div> Saving...</span>`; btn.disabled = true;
 
     const docId = document.getElementById('editDocId').value;
-    const updatedData = { 
-        title: document.getElementById('edTitle').value, 
-        author: document.getElementById('edAuthor').value, 
-        year: document.getElementById('edYear').value, 
-        lang: document.getElementById('edLang').value, 
-        exams: document.getElementById('edExams').value, 
-        image: document.getElementById('edImage').value, 
-        pdfLink: pdfUrlInput, 
-        ytLink: IS_SUPER_ADMIN ? document.getElementById('edYtUrl').value : ""
-    };
+    const updatedData = { title: document.getElementById('edTitle').value, author: document.getElementById('edAuthor').value, year: document.getElementById('edYear').value, lang: document.getElementById('edLang').value, exams: document.getElementById('edExams').value, image: document.getElementById('edImage').value, pdfLink: pdfUrlInput, ytLink: IS_SUPER_ADMIN ? document.getElementById('edYtUrl').value : "" };
 
     try { 
-        await updateDoc(doc(db, "books", docId), updatedData); 
-        await logActivity("EDIT", updatedData.title, updatedData.image); 
-        document.getElementById('adminEditModal').style.display='none'; 
-        showToast("Updated Successfully!"); 
-    } catch (error) { showToast("Failed: Rules Blocked Update!"); } finally {
-        btn.innerHTML = originalText;
-        btn.disabled = false;
-    }
+        await updateDoc(doc(db, "books", docId), updatedData); await logActivity("EDIT", updatedData.title, updatedData.image); 
+        document.getElementById('adminEditModal').style.display='none'; showToast("Updated Successfully!"); 
+    } catch (error) { showToast("Failed: Rules Blocked Update!"); } finally { btn.innerHTML = originalText; btn.disabled = false; }
 });
