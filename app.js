@@ -489,6 +489,10 @@ window.generateNotifications = function() {
     });
 }
 
+
+// ==========================================
+// MY PROFILE & CUSTOM RANKING LOGIC (UPDATED)
+// ==========================================
 window.openMyProfile = async function() {
     if(!isUserLoggedIn || !auth.currentUser) {
         document.getElementById('sidebar').classList.remove('active');
@@ -523,20 +527,43 @@ window.openMyProfile = async function() {
         document.getElementById('profile-uploads').innerText = uploads;
         document.getElementById('profile-downloads').innerText = downloads;
 
+        // FETCH ALL USERS FOR PROPER SORTING
         const usersRef = collection(db, "users");
-        const q = query(usersRef, orderBy("totalUploads", "desc"));
-        const querySnapshot = await getDocs(q);
-
-        let rank = 1;
-        let found = false;
+        const querySnapshot = await getDocs(usersRef);
+        
+        let allUsers = [];
         querySnapshot.forEach((docSnap) => {
-            if(found) return;
-            if(docSnap.id === auth.currentUser.uid) {
-                found = true;
-            } else {
-                rank++;
-            }
+            allUsers.push({ id: docSnap.id, ...docSnap.data() });
         });
+
+        // ==========================================
+        // DUAL PRIORITY SORTING ALGORITHM
+        // 1. Sort by totalUploads (High to Low)
+        // 2. If uploads are equal, sort by createdAt (Old accounts first)
+        // ==========================================
+        allUsers.sort((a, b) => {
+            let uploadsA = a.totalUploads || 0;
+            let uploadsB = b.totalUploads || 0;
+            
+            // If someone has more uploads, they get better rank
+            if (uploadsB !== uploadsA) {
+                return uploadsB - uploadsA; 
+            }
+            
+            // If uploads are tie (e.g. both 0), sort by who logged in first
+            let timeA = a.createdAt || 0;
+            let timeB = b.createdAt || 0;
+            return timeA - timeB; 
+        });
+
+        // Find the current user's actual position in the sorted array
+        let rank = 1;
+        for (let i = 0; i < allUsers.length; i++) {
+            if (allUsers[i].id === auth.currentUser.uid) {
+                rank = i + 1; // i starts at 0, rank starts at 1
+                break;
+            }
+        }
 
         document.getElementById('profile-rank').innerText = "#" + rank;
     } catch (error) {
@@ -544,6 +571,7 @@ window.openMyProfile = async function() {
         showToast("Error loading profile data");
     }
 }
+// ==========================================
 
 window.closeMyProfile = function() {
     if (history.state && history.state.popup === 'profile') { history.back(); } 
