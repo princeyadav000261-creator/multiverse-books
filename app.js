@@ -41,7 +41,6 @@ let currentAuthorFilter = "All";
 
 let savedBooks = JSON.parse(localStorage.getItem('spidy_saved_books')) || [];
 
-// --- UTILITY: XSS SANITIZER ---
 function sanitizeHTML(str) {
     if (typeof str !== 'string') return str;
     return str.replace(/[&<>'"]/g, function(match) {
@@ -114,7 +113,6 @@ const currentQuoteIndex = todayDays % quotes.length;
 document.getElementById('daily-quote-text').innerHTML = `<i class="fas fa-quote-left" style="color: rgba(255,255,255,0.3); margin-right:5px;"></i> ${sanitizeHTML(quotes[currentQuoteIndex].text)}`;
 document.getElementById('daily-quote-author').innerText = `— ${sanitizeHTML(quotes[currentQuoteIndex].author)}`;
 
-// Removed Fake time dependency
 let isAppReady = { auth: false, data: false }; 
 let hasTransitioned = false;
 let popupShown = false;
@@ -165,7 +163,7 @@ function closeLoginOverlayLocal() {
         }
     }, 500);
 }
-// Attach to event listener
+
 document.getElementById('closeLoginBtn').addEventListener('click', closeLoginOverlayLocal);
 document.getElementById('toggleEye').addEventListener('click', togglePasswordVisibility);
 
@@ -292,7 +290,6 @@ onAuthStateChanged(auth, async (user) => {
     });
 });
 
-// Event Delegation for Prompts
 document.getElementById('promptsContainer').addEventListener('click', (e) => {
     const btn = e.target.closest('.telegram-copy-btn');
     if (btn) {
@@ -392,7 +389,6 @@ document.getElementById('admin-logout-btn').addEventListener('click', () => {
     }
 });
 
-// General Popup handlers
 document.getElementById('joinWhatsappBtn').addEventListener('click', () => { window.open('https://whatsapp.com/channel/0029Vb6NBZx1yT2GByTTVf2A', '_blank'); });
 document.getElementById('laterPopupBtn').addEventListener('click', () => { document.getElementById("popupOverlay").style.display = "none"; });
 
@@ -424,6 +420,7 @@ document.getElementById('authorFilterGrid').addEventListener('click', (e) => {
     }
 });
 
+// SEARCH FILTER LOGIC UPGRADED - NOW SEARCHES 'EXAMS' AS WELL
 function applyMasterFilter() {
     const searchInput = document.getElementById('app-search-input').value;
     let normalizedSearch = searchInput.toLowerCase().replace(/[^a-z0-9\s]/g, '');
@@ -437,7 +434,8 @@ function applyMasterFilter() {
         }
         let matchesSearch = true;
         if (searchTokens.length > 0) {
-            let textToSearch = (book.title + " " + book.author).toLowerCase().replace(/[^a-z0-9\s]/g, '');
+            // ADVANCED SEARCH: ADDED book.exams into searchable text
+            let textToSearch = (book.title + " " + (book.author || "") + " " + (book.exams || "")).toLowerCase().replace(/[^a-z0-9\s]/g, '');
             matchesSearch = searchTokens.every(token => textToSearch.includes(token));
         }
         return matchesAuthor && matchesSearch;
@@ -484,9 +482,9 @@ mainElement.addEventListener('scroll', () => {
                 }
             }
             scrollTimeout = null;
-        }, 150); // Throttling for scroll perf
+        }, 150); 
     }
-}, { passive: true }); // passive true stops scroll blocking
+}, { passive: true }); 
 
 function renderBooksUI(startIndex, count, customData = null) {
     const container = document.getElementById("bookContainer");
@@ -506,7 +504,6 @@ function renderBooksUI(startIndex, count, customData = null) {
     loadedCount = endIndex;
 }
 
-// Event Delegation for Books Container
 document.getElementById('bookContainer').addEventListener('click', (e) => {
     const card = e.target.closest('.book-card');
     if(card) {
@@ -564,9 +561,6 @@ document.getElementById('dynamic-noti-container').addEventListener('click', (e) 
     if(card) openDownloadPageLocal(card.getAttribute('data-slug'));
 });
 
-// ==========================================
-// MY PROFILE
-// ==========================================
 document.getElementById('sidebarHeader').addEventListener('click', openMyProfileLocal);
 
 async function openMyProfileLocal() {
@@ -640,7 +634,6 @@ function closeMyProfileLocal() {
     if (history.state && history.state.popup === 'profile') { history.back(); } 
     else { document.getElementById('my-profile-panel').classList.remove('active'); }
 }
-
 
 document.getElementById('open-search').addEventListener('click', () => { history.pushState({ popup: 'search' }, ''); document.getElementById('search-box').classList.add('active'); setTimeout(() => { searchInputEl.focus(); }, 300); });
 document.getElementById('open-noti').addEventListener('click', () => { history.pushState({ popup: 'noti' }, ''); document.getElementById('noti-panel').classList.add('active'); document.querySelector('.blink-dot').style.display = 'none'; });
@@ -844,7 +837,6 @@ document.getElementById('addBookForm').addEventListener('submit', async (e) => {
     }
 });
 
-// Admin Tabs Event Listeners
 document.querySelectorAll('.adm-tab-btn').forEach(btn => {
     btn.addEventListener('click', (e) => {
         let tab = 'add';
@@ -864,11 +856,13 @@ function switchAdminTabLocal(tabName) {
     else if(tabName === 'tutorial') { document.getElementById('sectionTutorial').classList.add('active'); document.getElementById('admTabVideo').classList.add('active'); }
 }
 
+// ADMIN SEARCH UPGRADED - NOW SEARCHES 'EXAMS' AS WELL
 document.getElementById('adminSearchBook').addEventListener('input', (e) => {
     const term = e.target.value.toLowerCase().replace(/[^a-z0-9\s]/g, '');
     const tokens = term.split(/\s+/).filter(t => t.length > 0);
     adminFilteredBooks = booksData.filter(b => {
-        const str = (b.title + " " + b.author).toLowerCase().replace(/[^a-z0-9\s]/g, '');
+        // ADVANCED SEARCH: ADDED b.exams into searchable text
+        const str = (b.title + " " + (b.author || "") + " " + (b.exams || "")).toLowerCase().replace(/[^a-z0-9\s]/g, '');
         return tokens.every(t => str.includes(t));
     });
     adminCurrentPage = 1; renderAdminBooksTable();
@@ -902,7 +896,6 @@ function renderAdminBooksTable() {
     tbody.innerHTML = htmlString;
 }
 
-// Event Delegation for Admin Table
 document.getElementById('adminBooksTableBody').addEventListener('click', (e) => {
     const editBtn = e.target.closest('.adm-btn-edit');
     const delBtn = e.target.closest('.adm-btn-delete');
