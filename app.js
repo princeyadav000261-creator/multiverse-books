@@ -49,16 +49,15 @@ function sanitizeHTML(str) {
     });
 }
 
+// BOOKMARK TOAST REMOVED FROM HERE
 function toggleBookmarkLocal(iconElement, slug) {
     const index = savedBooks.indexOf(slug);
     if (index === -1) {
         savedBooks.push(slug);
         iconElement.className = "fas fa-bookmark"; 
-        showToast("Book saved to favorites!");
     } else {
         savedBooks.splice(index, 1);
         iconElement.className = "far fa-bookmark"; 
-        showToast("Book removed from favorites!");
     }
     localStorage.setItem('spidy_saved_books', JSON.stringify(savedBooks));
     if(document.getElementById('bookmarks-panel').classList.contains('active')) {
@@ -384,6 +383,7 @@ document.getElementById('admin-logout-btn').addEventListener('click', () => {
     if(confirm("Are you sure you want to logout?")) {
         signOut(auth).then(() => { 
             document.getElementById('admin-dashboard-panel').classList.remove('active'); 
+            // SHOW TOAST RED ON LOGOUT
             showToast("Logged out successfully");
         });
     }
@@ -420,7 +420,6 @@ document.getElementById('authorFilterGrid').addEventListener('click', (e) => {
     }
 });
 
-// SEARCH FILTER LOGIC UPGRADED - NOW SEARCHES 'EXAMS' AS WELL
 function applyMasterFilter() {
     const searchInput = document.getElementById('app-search-input').value;
     let normalizedSearch = searchInput.toLowerCase().replace(/[^a-z0-9\s]/g, '');
@@ -434,7 +433,6 @@ function applyMasterFilter() {
         }
         let matchesSearch = true;
         if (searchTokens.length > 0) {
-            // ADVANCED SEARCH: ADDED book.exams into searchable text
             let textToSearch = (book.title + " " + (book.author || "") + " " + (book.exams || "")).toLowerCase().replace(/[^a-z0-9\s]/g, '');
             matchesSearch = searchTokens.every(token => textToSearch.includes(token));
         }
@@ -781,15 +779,20 @@ function shareBookLocal() {
     else { navigator.clipboard.writeText(shareUrl); alert("Link Copied!"); }
 }
 
+// LOGOUT TOAST LOGIC UPDATED TO RED COLOR
 function showToast(message) {
     const toast = document.getElementById('toast'); 
-    if (message.toLowerCase().includes('failed') || message.toLowerCase().includes('error') || message.toLowerCase().includes('invalid') || message.toLowerCase().includes('exhausted')) {
-        toast.style.background = '#ef4444';
+    const lowerMsg = message.toLowerCase();
+    
+    // Check for 'logged out' or 'logout' alongside errors
+    if (lowerMsg.includes('failed') || lowerMsg.includes('error') || lowerMsg.includes('invalid') || lowerMsg.includes('exhausted') || lowerMsg.includes('logout') || lowerMsg.includes('logged out')) {
+        toast.style.background = '#ef4444'; // Red color
         toast.innerHTML = `<i class="fas fa-exclamation-circle"></i> <span id="toastMsg">${sanitizeHTML(message)}</span>`;
     } else {
-        toast.style.background = '#10b981';
+        toast.style.background = '#10b981'; // Green color
         toast.innerHTML = `<i class="fas fa-check-circle"></i> <span id="toastMsg">${sanitizeHTML(message)}</span>`;
     }
+    
     toast.classList.add('show'); 
     setTimeout(() => { toast.classList.remove('show'); }, 3000);
 }
@@ -856,12 +859,10 @@ function switchAdminTabLocal(tabName) {
     else if(tabName === 'tutorial') { document.getElementById('sectionTutorial').classList.add('active'); document.getElementById('admTabVideo').classList.add('active'); }
 }
 
-// ADMIN SEARCH UPGRADED - NOW SEARCHES 'EXAMS' AS WELL
 document.getElementById('adminSearchBook').addEventListener('input', (e) => {
     const term = e.target.value.toLowerCase().replace(/[^a-z0-9\s]/g, '');
     const tokens = term.split(/\s+/).filter(t => t.length > 0);
     adminFilteredBooks = booksData.filter(b => {
-        // ADVANCED SEARCH: ADDED b.exams into searchable text
         const str = (b.title + " " + (b.author || "") + " " + (b.exams || "")).toLowerCase().replace(/[^a-z0-9\s]/g, '');
         return tokens.every(t => str.includes(t));
     });
