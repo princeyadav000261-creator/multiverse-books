@@ -30,7 +30,7 @@
     </div>
 
     <div id="loginOverlay" class="login-container" style="display: none; opacity: 0;">
-        <div class="close-login-btn" onclick="closeLoginOverlay()"><i class="fas fa-times"></i></div>
+        <div class="close-login-btn" id="closeLoginBtn"><i class="fas fa-times"></i></div>
         
         <div class="login-wrapper">
             <div class="logo-container">
@@ -52,7 +52,7 @@
                     <div class="input-group">
                         <i class="fas fa-lock input-icon"></i>
                         <input type="password" id="loginPassword" placeholder="Enter your password" required>
-                        <i class="fas fa-eye toggle-password" id="toggleEye" onclick="togglePasswordVisibility()"></i>
+                        <i class="fas fa-eye toggle-password" id="toggleEye"></i>
                     </div>
                     <div class="form-actions">
                         <label><input type="checkbox"> Remember me</label>
@@ -79,8 +79,8 @@
                     <svg class="verified-badge-ui" viewBox="0 0 100 100"><defs><linearGradient id="pG1" x1="0%" y1="0%" x2="0%" y2="100%"><stop offset="0%" stop-color="#55bbf8" /><stop offset="100%" stop-color="#0a7bd2" /></linearGradient></defs><g fill="url(#pG1)"><circle cx="50" cy="15" r="14" /><circle cx="50" cy="15" r="14" transform="rotate(30 50 50)" /><circle cx="50" cy="15" r="14" transform="rotate(60 50 50)" /><circle cx="50" cy="15" r="14" transform="rotate(90 50 50)" /><circle cx="50" cy="15" r="14" transform="rotate(120 50 50)" /><circle cx="50" cy="15" r="14" transform="rotate(150 50 50)" /><circle cx="50" cy="15" r="14" transform="rotate(180 50 50)" /><circle cx="50" cy="15" r="14" transform="rotate(210 50 50)" /><circle cx="50" cy="15" r="14" transform="rotate(240 50 50)" /><circle cx="50" cy="15" r="14" transform="rotate(270 50 50)" /><circle cx="50" cy="15" r="14" transform="rotate(300 50 50)" /><circle cx="50" cy="15" r="14" transform="rotate(330 50 50)" /><circle cx="50" cy="50" r="33" /></g><path d="M33 52 L43 62 L67 36" fill="none" stroke="#ffffff" stroke-width="8" stroke-linecap="round" stroke-linejoin="round" filter="drop-shadow(0px 3px 2px rgba(0,0,0,0.3))" /></svg>
                 </h1>
                 <p> 𝐒𝐭𝐮𝐝𝐲 𝐦𝐚𝐭𝐞𝐫𝐢𝐚𝐥 𝐤𝐞 𝐥𝐢𝐲𝐞 𝐢𝐝𝐡𝐚𝐫-𝐮𝐝𝐡𝐚𝐫 𝐛𝐡𝐚𝐭𝐚𝐤𝐧𝐚 𝐜𝐡𝐡𝐨𝐝𝐨! 📚 𝐀𝐛 𝐦𝐢𝐥𝐞𝐠𝐚 𝐬𝐚𝐚𝐫𝐚 𝐜𝐨𝐧𝐭𝐞𝐧𝐭 𝐛𝐢𝐥𝐤𝐮𝐥 𝐅𝐑𝐄𝐄. 𝐈𝐧𝐬𝐭𝐚𝐧𝐭 𝐮𝐩𝐝𝐚𝐭𝐞𝐬 𝐚𝐮𝐫 𝐛𝐞𝐬𝐭 𝐛𝐨𝐨𝐤𝐬 𝐩𝐚𝐚𝐧𝐞 𝐤𝐞 𝐥𝐢𝐲𝐞 𝐚𝐚𝐣 𝐡𝐢 𝐡𝐮𝐦𝐚𝐫𝐚 𝐖𝐡𝐚𝐭𝐬𝐀𝐩𝐩 𝐜𝐡𝐚𝐧𝐧𝐞𝐥 𝐣𝐨𝐢𝐧 𝐤𝐚𝐫𝐞. ☟☟</p>
-                <button class="join-btn" onclick="joinChannel()"><img src="https://upload.wikimedia.org/wikipedia/commons/6/6b/WhatsApp.svg" alt="WhatsApp" oncontextmenu="return false;" draggable="false"> WhatsApp Channel</button>
-                <div class="later" onclick="closePopup()">MAYBE LATER</div>
+                <button class="join-btn" id="joinWhatsappBtn"><img src="https://upload.wikimedia.org/wikipedia/commons/6/6b/WhatsApp.svg" alt="WhatsApp" oncontextmenu="return false;" draggable="false"> WhatsApp Channel</button>
+                <div class="later" id="laterPopupBtn">MAYBE LATER</div>
             </div>
         </div>
 
@@ -103,7 +103,7 @@
             <div class="sidebar-overlay" id="sidebar-overlay"></div>
             <div class="sidebar" id="sidebar">
                 
-                <div class="sidebar-header-new" onclick="openMyProfile()" style="cursor: pointer; transition: 0.2s;" onmouseover="this.style.background='rgba(255,255,255,0.05)'" onmouseout="this.style.background='transparent'">
+                <div class="sidebar-header-new" id="sidebarHeader" style="cursor: pointer; transition: 0.2s;" onmouseover="this.style.background='rgba(255,255,255,0.05)'" onmouseout="this.style.background='transparent'">
                     <img src="https://i.postimg.cc/D0BF1b77/file-000000000e847207a64f6711d825a859.png" alt="Profile" class="profile-img" id="sidebarProfileImg" oncontextmenu="return false;" draggable="false">
                     <div class="profile-info">
                         <div class="profile-name" id="sidebarProfileName">Guest User</div>
@@ -186,22 +186,15 @@
                         </h3>
                         <div class="f-close" id="closeAuthorFilterBtn"><i class="fas fa-times"></i></div>
                     </div>
-                    <div class="f-options-grid" id="authorFilterGrid">
-                        </div>
+                    <div class="f-options-grid" id="authorFilterGrid"></div>
                 </div>
             </div>
 
-            <div class="overlay-panel" id="my-profile-panel" style="background-color: #050508;">
-                <div class="bg-glow-container">
-                    <div class="glow-orb-1"></div>
-                    <div class="glow-orb-2"></div>
-                    <div class="glow-orb-3"></div>
-                </div>
-
+            <div class="overlay-panel" id="my-profile-panel">
                 <div style="display: flex; align-items: center; justify-content: center; height: 100%; padding: 20px;">
                     <div class="profile-card">
                         <div class="card-cover">
-                            <button class="close-btn" aria-label="Close" onclick="closeMyProfile()">
+                            <button class="close-btn" id="closeProfileBtn" aria-label="Close">
                                 <i class="fas fa-times"></i>
                             </button>
                         </div>
@@ -255,10 +248,11 @@
                     </div>
                 </div>
             </div>
+
             <div class="download-modal" id="downloadModal">
                 <div class="modal-header-fixed">
                     <div class="header-content-wrapper" style="display: flex; align-items: center; gap: 15px; flex-grow: 1;">
-                        <button class="back-btn" onclick="closeDownloadPage()"><i class="fas fa-arrow-left"></i></button>
+                        <button class="back-btn" id="closeDlBtn"><i class="fas fa-arrow-left"></i></button>
                         <h1 class="modal-title">SPIDY BOOK HUB</h1>
                     </div>
                     <img src="https://i.postimg.cc/fygCB079/file-00000000d51c720780078a0d21adc0f6.png" class="header-right-logo" alt="Logo" oncontextmenu="return false;" draggable="false">
@@ -269,7 +263,7 @@
                     <button id="dlPdfLinkBtn" class="dl-main-btn disable-long-press"><i class="fas fa-download"></i> Download PDF</button>
                     
                     <div id="dlYoutubeLinkBtn" class="dl-box disable-long-press"><i class="fab fa-youtube icon" style="color: #ef4444;"></i><div><div class="dl-box-title">Watch Tutorials</div><div class="dl-box-sub">How to download books?</div></div></div>
-                    <div class="dl-box disable-long-press" onclick="shareBook()"><i class="fas fa-share-nodes icon"></i><div><div class="dl-box-title">Share this book</div><div class="dl-box-sub">Send this book to friends</div></div></div>
+                    <div class="dl-box disable-long-press" id="shareBookBtn"><i class="fas fa-share-nodes icon"></i><div><div class="dl-box-title">Share this book</div><div class="dl-box-sub">Send this book to friends</div></div></div>
                     
                     <div class="exam-rel-box"><div class="exam-header"><i class="fas fa-ribbon"></i> EXAM RELEVANCE</div><div class="exam-tags" id="dlModalTags"></div></div>
                     
@@ -464,10 +458,10 @@
                 </div>
                 
                 <div class="adm-tabs">
-                    <button class="adm-tab-btn active" id="admTabAdd" onclick="switchAdminTab('add')"><i class="fas fa-plus"></i> Add Book</button>
-                    <button class="adm-tab-btn" id="admTabPrompt" onclick="switchAdminTab('prompt')"><i class="fas fa-terminal"></i> Prompts</button>
-                    <button class="adm-tab-btn" id="admTabVideo" onclick="switchAdminTab('tutorial')"><i class="fas fa-video"></i> Tutorials</button>
-                    <button class="adm-tab-btn" id="admTabManage" onclick="switchAdminTab('manage')"><i class="fas fa-list"></i> Manage</button>
+                    <button class="adm-tab-btn active" id="admTabAdd"><i class="fas fa-plus"></i> Add Book</button>
+                    <button class="adm-tab-btn" id="admTabPrompt"><i class="fas fa-terminal"></i> Prompts</button>
+                    <button class="adm-tab-btn" id="admTabVideo"><i class="fas fa-video"></i> Tutorials</button>
+                    <button class="adm-tab-btn" id="admTabManage"><i class="fas fa-list"></i> Manage</button>
                 </div>
 
                 <div class="adm-content-area">
@@ -527,9 +521,9 @@
                             </div>
 
                             <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 20px;">
-                                <button class="adm-page-btn" id="admPrevPage" onclick="changeAdminPage(-1)"><i class="fas fa-chevron-left"></i> Prev</button>
+                                <button class="adm-page-btn" id="admPrevPage"><i class="fas fa-chevron-left"></i> Prev</button>
                                 <span id="admPageInfo" style="color: #a1a1aa; font-size: 0.9rem; font-weight: 800;">Page 1 of 1</span>
-                                <button class="adm-page-btn" id="admNextPage" onclick="changeAdminPage(1)">Next <i class="fas fa-chevron-right"></i></button>
+                                <button class="adm-page-btn" id="admNextPage">Next <i class="fas fa-chevron-right"></i></button>
                             </div>
                         </div>
                     </div>
@@ -542,7 +536,7 @@
         <div class="adm-modal-box">
             <h3 style="color: #fff; margin-bottom: 15px; font-size: 1.1rem; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 10px; font-weight: 800;">
                 <span><i class="fas fa-pen"></i> Edit Vault Record</span>
-                <i class="fas fa-times" onclick="document.getElementById('adminEditModal').style.display='none'" style="cursor: pointer; color: #a1a1aa; padding: 5px;"></i>
+                <i class="fas fa-times" id="closeEditModalBtn" style="cursor: pointer; color: #a1a1aa; padding: 5px;"></i>
             </h3>
             <form id="editBookForm">
                 <input type="hidden" id="editDocId"> 
@@ -570,23 +564,6 @@
 
     <div id="toast"></div>
 
-    <script>
-        function togglePasswordVisibility() {
-            const passInput = document.getElementById('loginPassword'); const eyeIcon = document.getElementById('toggleEye');
-            if (passInput.type === 'password') { passInput.type = 'text'; eyeIcon.classList.remove('fa-eye'); eyeIcon.classList.add('fa-eye-slash'); eyeIcon.style.color = '#00d2ff'; } 
-            else { passInput.type = 'password'; eyeIcon.classList.remove('fa-eye-slash'); eyeIcon.classList.add('fa-eye'); eyeIcon.style.color = '#a1a1aa'; }
-        }
-        
-        function switchAdminTab(tabName) {
-            document.querySelectorAll('.adm-section').forEach(el => el.classList.remove('active'));
-            document.querySelectorAll('.adm-tab-btn').forEach(el => el.classList.remove('active'));
-            if(tabName === 'add') { document.getElementById('sectionAddBook').classList.add('active'); document.getElementById('admTabAdd').classList.add('active'); }
-            else if(tabName === 'manage') { document.getElementById('sectionManageBooks').classList.add('active'); document.getElementById('admTabManage').classList.add('active'); }
-            else if(tabName === 'prompt') { document.getElementById('sectionPrompt').classList.add('active'); document.getElementById('admTabPrompt').classList.add('active'); }
-            else if(tabName === 'tutorial') { document.getElementById('sectionTutorial').classList.add('active'); document.getElementById('admTabVideo').classList.add('active'); }
-        }
-    </script>
-    
     <script type="module" src="./app.js"></script>
 </body>
 </html>
