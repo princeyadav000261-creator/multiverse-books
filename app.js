@@ -54,11 +54,9 @@ function toggleBookmarkLocal(iconElement, slug) {
     if (index === -1) {
         savedBooks.push(slug);
         iconElement.className = "fas fa-bookmark"; 
-        // Toast Removed based on user request
     } else {
         savedBooks.splice(index, 1);
         iconElement.className = "far fa-bookmark"; 
-        // Toast Removed based on user request
     }
     localStorage.setItem('spidy_saved_books', JSON.stringify(savedBooks));
     if(document.getElementById('bookmarks-panel').classList.contains('active')) {
@@ -294,7 +292,7 @@ document.getElementById('promptsContainer').addEventListener('click', (e) => {
     const btn = e.target.closest('.telegram-copy-btn');
     if (btn) {
         const text = decodeURIComponent(btn.getAttribute('data-text'));
-        copyPromptTextLocal(text, btn.id);
+        copyPromptTextLocal(text, btnId);
     }
 });
 
@@ -420,7 +418,6 @@ document.getElementById('authorFilterGrid').addEventListener('click', (e) => {
     }
 });
 
-// SEARCH FILTER LOGIC UPGRADED - NOW SEARCHES 'EXAMS' EXACTLY BASED ON COMMA SEPARATION
 function applyMasterFilter() {
     const searchInputRaw = document.getElementById('app-search-input').value.trim();
     const searchStr = searchInputRaw.toLowerCase();
@@ -437,18 +434,15 @@ function applyMasterFilter() {
 
         let matchesSearch = true;
         if (searchInputRaw.length > 0) {
-            // Check Title & Author
             let textToSearch = (book.title + " " + (book.author || "")).toLowerCase().replace(/[^a-z0-9\s]/g, '');
             let matchesTitleAuthor = false;
             if (searchTokens.length > 0) {
                 matchesTitleAuthor = searchTokens.every(token => textToSearch.includes(token));
             }
 
-            // EXACT COMMA BASED SEARCH FOR EXAMS
             let matchesExam = false;
             if (book.exams) {
                 let examArray = book.exams.split(',').map(e => e.trim().toLowerCase());
-                // Match search string specifically against each comma separated exam term
                 matchesExam = examArray.some(exam => exam.includes(searchStr));
             }
 
@@ -719,6 +713,9 @@ function openDownloadPageLocal(slug, skipPushState = false) {
     document.getElementById("dlBookTitle").innerText = sanitizeHTML(book.title); 
     document.getElementById("dlBookAuthor").innerText = sanitizeHTML(book.author);
     
+    // ==========================================
+    // UPDATED DOWNLOAD LOGIC (UPLOAD TO UNLOCK)
+    // ==========================================
     document.getElementById("dlPdfLinkBtn").onclick = async function() { 
         if(!isUserLoggedIn || !auth.currentUser) {
             document.getElementById('loginOverlay').style.display = 'flex'; setTimeout(() => document.getElementById('loginOverlay').style.opacity = '1', 10); return;
@@ -727,37 +724,41 @@ function openDownloadPageLocal(slug, skipPushState = false) {
         const btn = document.getElementById("dlPdfLinkBtn");
         const originalText = btn.innerHTML;
         const uid = auth.currentUser.uid;
-        const userDownloadRef = doc(db, "user_downloads", uid);
-        const MAX_DOWNLOADS = 2;
 
         btn.innerHTML = `<span style="display:flex; align-items:center; gap:8px;"><i class="fas fa-spinner fa-spin"></i> Processing...</span>`;
         btn.disabled = true;
 
         try {
-            const docSnap = await getDoc(userDownloadRef);
-            const now = new Date().getTime();
-
-            if (docSnap.exists()) {
-                let data = docSnap.data();
-                let lastDownloadTime = data.lastTime || 0;
-                let count = data.count || 0;
-                const hoursPassed = (now - lastDownloadTime) / (1000 * 60 * 60);
-
-                if (hoursPassed < 24) {
-                    if (count >= MAX_DOWNLOADS && !IS_SUPER_ADMIN) {
-                        showToast("Your plan is exhausted! Please try again after 24 hours.");
-                        btn.innerHTML = originalText; btn.disabled = false; return; 
-                    }
-                    await updateDoc(userDownloadRef, { count: count + 1 });
-                } else {
-                    await updateDoc(userDownloadRef, { count: 1, lastTime: now });
-                }
-            } else {
-                await setDoc(userDownloadRef, { count: 1, lastTime: now });
-            }
-
             const userRef = doc(db, "users", uid);
-            await updateDoc(userRef, { lifetimeDownloads: increment(1) }).catch(e => console.log("Stats error ignored"));
+            const userSnap = await getDoc(userRef);
+
+            if (userSnap.exists()) {
+                let data = userSnap.data();
+                let uploads = data.totalUploads || 0;
+                let downloads = data.lifetimeDownloads || 0;
+
+                // NAYA LOGIC: Har user ko pehle 2 download free. Uske baad har 1 upload par 2 download.
+                let allowedDownloads = 2 + (uploads * 2);
+
+                if (downloads >= allowedDownloads && !IS_SUPER_ADMIN) {
+                    showToast("Limit Reached! Upload 1 book to get 2 more downloads.");
+                    
+                    // Download modal close
+                    closeDownloadPageLocal();
+                    
+                    // User ko upload panel par bhejna
+                    history.pushState({ popup: 'admin' }, '');
+                    document.getElementById('admin-dashboard-panel').classList.add('active');
+                    switchAdminTabLocal('add');
+                    
+                    btn.innerHTML = originalText; 
+                    btn.disabled = false; 
+                    return; 
+                }
+
+                // Increment downloads
+                await updateDoc(userRef, { lifetimeDownloads: increment(1) }).catch(e => console.log("Stats error ignored"));
+            }
 
             if(book.pdfLink) { window.open(book.pdfLink, '_blank'); }
             
@@ -768,6 +769,7 @@ function openDownloadPageLocal(slug, skipPushState = false) {
             btn.innerHTML = originalText; btn.disabled = false;
         }
     };
+    // ==========================================
     
     document.getElementById("dlYoutubeLinkBtn").onclick = function() { 
         if(book.ytLink && book.ytLink !== "#" && book.ytLink !== "") { window.open(book.ytLink, '_blank'); } 
@@ -798,16 +800,15 @@ function shareBookLocal() {
     else { navigator.clipboard.writeText(shareUrl); alert("Link Copied!"); }
 }
 
-// LOGOUT TOAST COLOR LOGIC UPDATED TO RED
 function showToast(message) {
     const toast = document.getElementById('toast'); 
     const lowerMsg = message.toLowerCase();
     
-    if (lowerMsg.includes('failed') || lowerMsg.includes('error') || lowerMsg.includes('invalid') || lowerMsg.includes('exhausted') || lowerMsg.includes('logout') || lowerMsg.includes('logged out')) {
-        toast.style.background = '#ef4444'; // Red Background
+    if (lowerMsg.includes('failed') || lowerMsg.includes('error') || lowerMsg.includes('invalid') || lowerMsg.includes('limit') || lowerMsg.includes('exhausted') || lowerMsg.includes('logout') || lowerMsg.includes('logged out')) {
+        toast.style.background = '#ef4444'; 
         toast.innerHTML = `<i class="fas fa-exclamation-circle"></i> <span id="toastMsg">${sanitizeHTML(message)}</span>`;
     } else {
-        toast.style.background = '#10b981'; // Green Background
+        toast.style.background = '#10b981'; 
         toast.innerHTML = `<i class="fas fa-check-circle"></i> <span id="toastMsg">${sanitizeHTML(message)}</span>`;
     }
     
@@ -877,7 +878,6 @@ function switchAdminTabLocal(tabName) {
     else if(tabName === 'tutorial') { document.getElementById('sectionTutorial').classList.add('active'); document.getElementById('admTabVideo').classList.add('active'); }
 }
 
-// ADMIN SEARCH UPGRADED - NOW SEARCHES 'EXAMS' EXACTLY BASED ON COMMA SEPARATION
 document.getElementById('adminSearchBook').addEventListener('input', (e) => {
     const searchInputRaw = e.target.value.trim();
     const searchStr = searchInputRaw.toLowerCase();
