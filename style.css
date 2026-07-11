@@ -61,7 +61,7 @@ header { display: flex; align-items: center; justify-content: space-between; pad
 .sidebar.active { transform: translateX(0); } 
 
 .sidebar-header-new { display: flex; align-items: center; padding: 18px 20px; border-bottom: 1px solid var(--border-color); flex-shrink: 0; }
-.profile-img { width: 44px; height: 44px; border-radius: 12px; object-fit: cover; box-shadow: 0 0 15px rgba(255, 255, 255, 0.15); flex-shrink: 0; background: #fff;}
+.profile-img { width: 44px; height: 44px; border-radius: 12px; object-fit: cover; box-shadow: 0 0 15px rgba(255, 255, 255, 0.15); flex-shrink: 0; background: #fff; border: 2px solid #a1a1aa; /* Border Added Here */ }
 .profile-info { margin-left: 14px; flex-grow: 1; min-width: 0; display: flex; flex-direction: column; justify-content: center; }
 .profile-name { color: var(--text-primary); font-size: 17px; font-weight: 1000; letter-spacing: 0.5px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 
@@ -102,7 +102,7 @@ main::-webkit-scrollbar { display: none; }
 main .premium-copyright { width: calc(100% + 40px); margin-left: -20px; margin-right: -20px; margin-top: auto; }
 .dl-content-wrapper .premium-copyright { width: calc(100% + 40px); margin-left: -20px; margin-right: -20px; margin-top: auto; }
 
-.quote-card { background: linear-gradient(135deg, rgba(255, 255, 255, 0.08) 0%, rgba(255, 255, 255, 0.02) 100%); backdrop-filter: blur(20px); border: 1px solid rgba(255, 255, 255, 0.25); border-top: 1px solid rgba(255, 255, 255, 0.4); border-left: 1px solid rgba(255, 255, 255, 0.3); border-radius: 24px; padding: 26px 22px; margin-bottom: 25px; position: relative; overflow: hidden; box-shadow: 0 15px 35px rgba(0, 0, 0, 0.7), 0 0 25px rgba(255, 255, 255, 0.12), inset 0 0 20px rgba(255, 255, 255, 0.05); flex-shrink: 0; transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.3s ease; }
+.quote-card { background: linear-gradient(135deg, rgba(255, 255, 255, 0.08) 0%, rgba(255, 255, 255, 0.02) 100%); backdrop-filter: blur(20px); border: 1px solid rgba(255, 255, 255, 0.25); border-top: 1px solid rgba(255, 255, 255, 0.4); border-left: 1px solid rgba(255, 255, 255, 0.3); border-radius: 24px; padding: 26px 22px; margin-bottom: 25px; position: relative; overflow: hidden; box-shadow: 0 15px 35px rgba(0, 0, 0, 0.7), 0 0 25px rgba(255, 255, 255, 0.12), inset 0 0 20px rgba(255, 255, 255, 0.05); flex-shrink: 0; transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1); }
 .quote-card:hover { transform: translateY(-4px); box-shadow: 0 20px 40px rgba(0, 0, 0, 0.8), 0 0 35px rgba(255, 255, 255, 0.22), inset 0 0 25px rgba(255, 255, 255, 0.08); }
 .quote-card::before { content: ''; position: absolute; top: -30%; left: -30%; width: 160%; height: 160%; background: radial-gradient(circle, rgba(255, 255, 255, 0.12) 0%, transparent 60%); pointer-events: none; z-index: 0; animation: rotateGlow 12s linear infinite; }
 @keyframes rotateGlow { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
@@ -114,8 +114,9 @@ main .premium-copyright { width: calc(100% + 40px); margin-left: -20px; margin-r
 
 .section-header-title { font-size: 1.1rem; font-weight: 800; color: #fff; letter-spacing: 0.5px; text-transform: uppercase; display: flex; align-items: center; gap: 8px; }
 
-.book-container { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; margin-bottom: 25px; transition: all 0.3s ease;}
-.book-card { background-color: var(--bg-card); border: 1px solid var(--border-color); border-radius: 16px; overflow: hidden; cursor: pointer; transition: transform 0.2s, box-shadow 0.2s; display: flex; flex-direction: column; box-shadow: 0 4px 15px rgba(0,0,0,0.5); }
+.book-container { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; margin-bottom: 25px; transition: all 0.3s ease; -webkit-overflow-scrolling: touch; }
+/* Scroll Performance Fix for mobile lag */
+.book-card { background-color: var(--bg-card); border: 1px solid var(--border-color); border-radius: 16px; overflow: hidden; cursor: pointer; display: flex; flex-direction: column; box-shadow: 0 4px 15px rgba(0,0,0,0.5); will-change: transform, box-shadow; transition: transform 0.2s, box-shadow 0.2s; }
 .book-card:active { transform: scale(0.98); }
 .card-img-wrapper { position: relative; width: 100%; height: 180px; background: #fff; transition: height 0.3s ease;}
 .book-image { width: 100%; height: 100%; object-fit: contain; display: block; }
@@ -474,26 +475,15 @@ select.adm-input { appearance: none; -webkit-appearance: none; padding-right: 40
 }
 
 /* ========================================================= */
-/* ULTIMATE PREMIUM PROFILE CSS (For Overlay Panel) */
+/* ULTIMATE PREMIUM PROFILE CSS (Updated to Transparent Blur)*/
 /* ========================================================= */
 
 #my-profile-panel {
-    background-color: #050508;
+    background: rgba(0, 0, 0, 0.75) !important;
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
     z-index: 100000;
 }
-
-#my-profile-panel .bg-glow-container {
-    position: absolute; top: 0; left: 0; width: 100%; height: 100%;
-    z-index: 0; pointer-events: none; overflow: hidden;
-}
-
-#my-profile-panel .glow-orb-1 { position: absolute; top: -10%; left: -10%; width: 450px; height: 450px; background: radial-gradient(circle, rgba(139, 92, 246, 0.35), transparent 70%); filter: blur(80px); animation: float1 12s infinite alternate ease-in-out; }
-#my-profile-panel .glow-orb-2 { position: absolute; bottom: -15%; right: -10%; width: 500px; height: 500px; background: radial-gradient(circle, rgba(236, 72, 153, 0.3), transparent 70%); filter: blur(90px); animation: float2 15s infinite alternate-reverse ease-in-out; }
-#my-profile-panel .glow-orb-3 { position: absolute; top: 40%; left: 50%; transform: translate(-50%, -50%); width: 300px; height: 300px; background: radial-gradient(circle, rgba(59, 130, 246, 0.2), transparent 70%); filter: blur(70px); animation: float3 10s infinite alternate ease-in-out; }
-
-@keyframes float1 { 100% { transform: translate(100px, 80px); } }
-@keyframes float2 { 100% { transform: translate(-100px, -80px); } }
-@keyframes float3 { 100% { transform: translate(50px, -50px) scale(1.2); } }
 
 #my-profile-panel .profile-card {
     width: 100%; max-width: 400px; background: #000000; border-radius: 24px; overflow: hidden;
