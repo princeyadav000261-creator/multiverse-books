@@ -49,15 +49,16 @@ function sanitizeHTML(str) {
     });
 }
 
-// BOOKMARK TOAST REMOVED FROM HERE
 function toggleBookmarkLocal(iconElement, slug) {
     const index = savedBooks.indexOf(slug);
     if (index === -1) {
         savedBooks.push(slug);
         iconElement.className = "fas fa-bookmark"; 
+        // Toast Removed based on user request
     } else {
         savedBooks.splice(index, 1);
         iconElement.className = "far fa-bookmark"; 
+        // Toast Removed based on user request
     }
     localStorage.setItem('spidy_saved_books', JSON.stringify(savedBooks));
     if(document.getElementById('bookmarks-panel').classList.contains('active')) {
@@ -383,7 +384,6 @@ document.getElementById('admin-logout-btn').addEventListener('click', () => {
     if(confirm("Are you sure you want to logout?")) {
         signOut(auth).then(() => { 
             document.getElementById('admin-dashboard-panel').classList.remove('active'); 
-            // SHOW TOAST RED ON LOGOUT
             showToast("Logged out successfully");
         });
     }
@@ -420,10 +420,13 @@ document.getElementById('authorFilterGrid').addEventListener('click', (e) => {
     }
 });
 
+// SEARCH FILTER LOGIC UPGRADED - NOW SEARCHES 'EXAMS' EXACTLY BASED ON COMMA SEPARATION
 function applyMasterFilter() {
-    const searchInput = document.getElementById('app-search-input').value;
-    let normalizedSearch = searchInput.toLowerCase().replace(/[^a-z0-9\s]/g, '');
+    const searchInputRaw = document.getElementById('app-search-input').value.trim();
+    const searchStr = searchInputRaw.toLowerCase();
+    let normalizedSearch = searchInputRaw.toLowerCase().replace(/[^a-z0-9\s]/g, '');
     let searchTokens = normalizedSearch.split(/\s+/).filter(token => token.length > 0);
+
     mainFilteredData = booksData.filter(book => {
         let matchesAuthor = true;
         if (currentAuthorFilter !== "All") {
@@ -431,11 +434,27 @@ function applyMasterFilter() {
             let normBookAuth = (book.author || "").toLowerCase().replace(/\s+/g, ' ').trim();
             matchesAuthor = (normFilter === normBookAuth);
         }
+
         let matchesSearch = true;
-        if (searchTokens.length > 0) {
-            let textToSearch = (book.title + " " + (book.author || "") + " " + (book.exams || "")).toLowerCase().replace(/[^a-z0-9\s]/g, '');
-            matchesSearch = searchTokens.every(token => textToSearch.includes(token));
+        if (searchInputRaw.length > 0) {
+            // Check Title & Author
+            let textToSearch = (book.title + " " + (book.author || "")).toLowerCase().replace(/[^a-z0-9\s]/g, '');
+            let matchesTitleAuthor = false;
+            if (searchTokens.length > 0) {
+                matchesTitleAuthor = searchTokens.every(token => textToSearch.includes(token));
+            }
+
+            // EXACT COMMA BASED SEARCH FOR EXAMS
+            let matchesExam = false;
+            if (book.exams) {
+                let examArray = book.exams.split(',').map(e => e.trim().toLowerCase());
+                // Match search string specifically against each comma separated exam term
+                matchesExam = examArray.some(exam => exam.includes(searchStr));
+            }
+
+            matchesSearch = matchesTitleAuthor || matchesExam;
         }
+
         return matchesAuthor && matchesSearch;
     });
     loadedCount = 0; 
@@ -779,17 +798,16 @@ function shareBookLocal() {
     else { navigator.clipboard.writeText(shareUrl); alert("Link Copied!"); }
 }
 
-// LOGOUT TOAST LOGIC UPDATED TO RED COLOR
+// LOGOUT TOAST COLOR LOGIC UPDATED TO RED
 function showToast(message) {
     const toast = document.getElementById('toast'); 
     const lowerMsg = message.toLowerCase();
     
-    // Check for 'logged out' or 'logout' alongside errors
     if (lowerMsg.includes('failed') || lowerMsg.includes('error') || lowerMsg.includes('invalid') || lowerMsg.includes('exhausted') || lowerMsg.includes('logout') || lowerMsg.includes('logged out')) {
-        toast.style.background = '#ef4444'; // Red color
+        toast.style.background = '#ef4444'; // Red Background
         toast.innerHTML = `<i class="fas fa-exclamation-circle"></i> <span id="toastMsg">${sanitizeHTML(message)}</span>`;
     } else {
-        toast.style.background = '#10b981'; // Green color
+        toast.style.background = '#10b981'; // Green Background
         toast.innerHTML = `<i class="fas fa-check-circle"></i> <span id="toastMsg">${sanitizeHTML(message)}</span>`;
     }
     
@@ -859,12 +877,29 @@ function switchAdminTabLocal(tabName) {
     else if(tabName === 'tutorial') { document.getElementById('sectionTutorial').classList.add('active'); document.getElementById('admTabVideo').classList.add('active'); }
 }
 
+// ADMIN SEARCH UPGRADED - NOW SEARCHES 'EXAMS' EXACTLY BASED ON COMMA SEPARATION
 document.getElementById('adminSearchBook').addEventListener('input', (e) => {
-    const term = e.target.value.toLowerCase().replace(/[^a-z0-9\s]/g, '');
-    const tokens = term.split(/\s+/).filter(t => t.length > 0);
-    adminFilteredBooks = booksData.filter(b => {
-        const str = (b.title + " " + (b.author || "") + " " + (b.exams || "")).toLowerCase().replace(/[^a-z0-9\s]/g, '');
-        return tokens.every(t => str.includes(t));
+    const searchInputRaw = e.target.value.trim();
+    const searchStr = searchInputRaw.toLowerCase();
+    const normalizedSearch = searchInputRaw.toLowerCase().replace(/[^a-z0-9\s]/g, '');
+    const tokens = normalizedSearch.split(/\s+/).filter(t => t.length > 0);
+    
+    adminFilteredBooks = booksData.filter(book => {
+        if (searchInputRaw.length === 0) return true;
+        
+        let textToSearch = (book.title + " " + (book.author || "")).toLowerCase().replace(/[^a-z0-9\s]/g, '');
+        let matchesTitleAuthor = false;
+        if (tokens.length > 0) {
+            matchesTitleAuthor = tokens.every(token => textToSearch.includes(token));
+        }
+
+        let matchesExam = false;
+        if (book.exams) {
+            let examArray = book.exams.split(',').map(e => e.trim().toLowerCase());
+            matchesExam = examArray.some(exam => exam.includes(searchStr));
+        }
+
+        return matchesTitleAuthor || matchesExam;
     });
     adminCurrentPage = 1; renderAdminBooksTable();
 });
