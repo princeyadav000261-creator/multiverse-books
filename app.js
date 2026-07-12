@@ -292,7 +292,7 @@ document.getElementById('promptsContainer').addEventListener('click', (e) => {
     const btn = e.target.closest('.telegram-copy-btn');
     if (btn) {
         const text = decodeURIComponent(btn.getAttribute('data-text'));
-        copyPromptTextLocal(text, btnId);
+        copyPromptTextLocal(text, btn.id);
     }
 });
 
@@ -651,6 +651,10 @@ document.getElementById('open-noti').addEventListener('click', () => { history.p
 document.getElementById('close-noti').addEventListener('click', () => { if (history.state && history.state.popup) { history.back(); } else { document.getElementById('noti-panel').classList.remove('active'); }});
 
 const sidebar = document.getElementById('sidebar'); const sidebarOverlay = document.getElementById('sidebar-overlay');
+
+// ==========================================
+// MENU ADMIN PANEL TRIGGER & POPUP LOGIC
+// ==========================================
 document.getElementById('open-menu').addEventListener('click', () => { history.pushState({ popup: 'sidebar' }, ''); sidebar.classList.add('active'); sidebarOverlay.classList.add('active'); });
 sidebarOverlay.addEventListener('click', () => { history.back(); });
 
@@ -677,8 +681,18 @@ document.getElementById('menu-admin-panel').addEventListener('click', (e) => {
     history.pushState({ popup: 'admin' }, '');
     document.getElementById('admin-dashboard-panel').classList.add('active');
     sidebar.classList.remove('active'); sidebarOverlay.classList.remove('active');
+    
+    // UPLOAD GUIDE POPUP TRIGGER
+    setTimeout(() => {
+        document.getElementById('uploadPopup').classList.remove('hidden');
+    }, 300);
 });
 document.getElementById('close-admin-btn').addEventListener('click', () => { history.back(); });
+
+// ADD CLOSE POPUP BUTTON LOGIC
+document.getElementById('closeUploadPopupBtn').addEventListener('click', () => {
+    document.getElementById('uploadPopup').classList.add('hidden');
+});
 
 window.addEventListener('popstate', (e) => {
     document.getElementById('noti-panel').classList.remove('active'); 
@@ -714,7 +728,7 @@ function openDownloadPageLocal(slug, skipPushState = false) {
     document.getElementById("dlBookAuthor").innerText = sanitizeHTML(book.author);
     
     // ==========================================
-    // UPDATED DOWNLOAD LOGIC (UPLOAD TO UNLOCK)
+    // UPDATED DOWNLOAD LOGIC & POPUP TRIGGER
     // ==========================================
     document.getElementById("dlPdfLinkBtn").onclick = async function() { 
         if(!isUserLoggedIn || !auth.currentUser) {
@@ -737,7 +751,6 @@ function openDownloadPageLocal(slug, skipPushState = false) {
                 let uploads = data.totalUploads || 0;
                 let downloads = data.lifetimeDownloads || 0;
 
-                // NAYA LOGIC: Har user ko pehle 2 download free. Uske baad har 1 upload par 2 download.
                 let allowedDownloads = 2 + (uploads * 2);
 
                 if (downloads >= allowedDownloads && !IS_SUPER_ADMIN) {
@@ -751,12 +764,16 @@ function openDownloadPageLocal(slug, skipPushState = false) {
                     document.getElementById('admin-dashboard-panel').classList.add('active');
                     switchAdminTabLocal('add');
                     
+                    // UPLOAD GUIDE POPUP TRIGGER
+                    setTimeout(() => {
+                        document.getElementById('uploadPopup').classList.remove('hidden');
+                    }, 500);
+                    
                     btn.innerHTML = originalText; 
                     btn.disabled = false; 
                     return; 
                 }
 
-                // Increment downloads
                 await updateDoc(userRef, { lifetimeDownloads: increment(1) }).catch(e => console.log("Stats error ignored"));
             }
 
@@ -769,7 +786,6 @@ function openDownloadPageLocal(slug, skipPushState = false) {
             btn.innerHTML = originalText; btn.disabled = false;
         }
     };
-    // ==========================================
     
     document.getElementById("dlYoutubeLinkBtn").onclick = function() { 
         if(book.ytLink && book.ytLink !== "#" && book.ytLink !== "") { window.open(book.ytLink, '_blank'); } 
