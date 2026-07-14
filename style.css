@@ -115,14 +115,17 @@ main .premium-copyright { width: calc(100% + 40px); margin-left: -20px; margin-r
 .section-header-title { font-size: 1.1rem; font-weight: 800; color: #fff; letter-spacing: 0.5px; text-transform: uppercase; display: flex; align-items: center; gap: 8px; }
 
 .book-container { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; margin-bottom: 25px; }
-.book-card { background-color: var(--bg-card); border: 1px solid var(--border-color); border-radius: 16px; overflow: hidden; cursor: pointer; display: flex; flex-direction: column; box-shadow: 0 4px 15px rgba(0,0,0,0.5); transform: translateZ(0); transition: transform 0.2s, box-shadow 0.2s; }
+
+/* FIX 3: Removed lag-inducing translateZ(0) */
+.book-card { background-color: var(--bg-card); border: 1px solid var(--border-color); border-radius: 16px; overflow: hidden; cursor: pointer; display: flex; flex-direction: column; box-shadow: 0 4px 15px rgba(0,0,0,0.5); transition: transform 0.2s, box-shadow 0.2s; }
 .book-card:active { transform: scale(0.98); }
 .card-img-wrapper { position: relative; width: 100%; height: 180px; background: #fff; transition: height 0.3s ease;}
 .book-image { width: 100%; height: 100%; object-fit: contain; display: block; }
 
-.badge-free { position: absolute; top: 8px; left: 8px; background: rgba(34, 197, 94, 0.15); color: #4ade80; font-size: 10px; font-weight: 800; padding: 4px 8px; border-radius: 12px; letter-spacing: 0.5px; z-index: 2; border: 1px solid rgba(74, 222, 128, 0.6); box-shadow: 0 0 10px rgba(74, 222, 128, 0.6), inset 0 0 8px rgba(74, 222, 128, 0.3); backdrop-filter: blur(4px); }
-.bookmark-btn { position: absolute; top: 8px; right: 8px; width: 32px; height: 32px; background: rgba(0, 0, 0, 0.55); border-radius: 50%; display: flex; justify-content: center; align-items: center; color: #ffffff; font-size: 15px; z-index: 5; cursor: pointer; transition: all 0.2s ease; backdrop-filter: blur(4px); border: 1px solid rgba(255,255,255,0.1); }
-.bookmark-btn:hover { background: rgba(0, 0, 0, 0.8); transform: scale(1.05); }
+/* FIX 2: Removed lag-inducing backdrop-filter */
+.badge-free { position: absolute; top: 8px; left: 8px; background: rgba(34, 197, 94, 0.15); color: #4ade80; font-size: 10px; font-weight: 800; padding: 4px 8px; border-radius: 12px; letter-spacing: 0.5px; z-index: 2; border: 1px solid rgba(74, 222, 128, 0.6); box-shadow: 0 0 10px rgba(74, 222, 128, 0.6), inset 0 0 8px rgba(74, 222, 128, 0.3); }
+.bookmark-btn { position: absolute; top: 8px; right: 8px; width: 32px; height: 32px; background: rgba(0, 0, 0, 0.7); border-radius: 50%; display: flex; justify-content: center; align-items: center; color: #ffffff; font-size: 15px; z-index: 5; cursor: pointer; transition: all 0.2s ease; border: 1px solid rgba(255,255,255,0.1); }
+.bookmark-btn:hover { background: rgba(0, 0, 0, 0.85); transform: scale(1.05); }
 .bookmark-btn:active { transform: scale(0.9); }
 
 .book-details { padding: 12px; display: flex; flex-direction: column; flex-grow: 1; }
@@ -317,7 +320,6 @@ main .premium-copyright { width: calc(100% + 40px); margin-left: -20px; margin-r
 .login-wrapper *:not(i) { font-family: 'Outfit', sans-serif; }
 .logo-container { text-align: center; margin-bottom: 25px; width: 100%; }
 
-/* --- LOGO BORDER CHANGED TO WHITE HERE --- */
 .brand-logo { width: 115px; height: 115px; border-radius: 22px; object-fit: cover; margin-bottom: 20px; border: 6px solid #ffffff; box-shadow: 0 15px 40px rgba(0,0,0,0.9); transition: transform 0.3s ease; }
 .brand-logo:hover { transform: scale(1.05); }
 
@@ -342,7 +344,6 @@ main .premium-copyright { width: calc(100% + 40px); margin-left: -20px; margin-r
 .btn-login { width: 100%; background: rgba(255, 255, 255, 0.95); color: #000000; border: none; padding: 14px; border-radius: 8px; font-size: 16px; font-weight: 700; cursor: pointer; transition: all 0.3s ease; box-shadow: 0 4px 15px rgba(255, 255, 255, 0.15); display: flex; justify-content: center; align-items: center; gap: 10px;}
 .btn-login:hover { transform: translateY(-2px); background: #ffffff; box-shadow: 0 8px 20px rgba(255, 255, 255, 0.3); }
 
-/* --- NEW DIVIDER STYLES --- */
 .divider-container { display: flex; align-items: center; text-align: center; margin: 20px 0 5px 0; }
 .divider-container::before, .divider-container::after { content: ''; flex: 1; border-bottom: 1px solid rgba(255, 255, 255, 0.15); }
 .divider-container span { padding: 0 15px; color: #a1a1aa; font-size: 12px; font-weight: 600; letter-spacing: 1px; }
@@ -407,8 +408,6 @@ select.adm-input { appearance: none; -webkit-appearance: none; padding-right: 40
 .telegram-copy-btn { background: transparent; border: none; color: #ffffff; display: flex; align-items: center; gap: 8px; font-weight: 700; cursor: pointer; font-size: 12px; padding: 10px 15px; border-radius: 6px; transition: 0.2s; width: 100%; justify-content: center; outline: none;}
 .telegram-copy-btn:active { transform: scale(0.97); background: rgba(255,255,255,0.1); }
 
-/* --- UNUSED TUTORIALS CSS REMAINS BUT WON'T HURT --- */
-
 .app-filter-icon { width: 36px; height: 36px; display: flex; align-items: center; justify-content: center; background: rgba(255, 255, 255, 0.04); border-radius: 12px; cursor: pointer; transition: 0.2s; border: 1px solid rgba(255,255,255,0.12); flex-shrink: 0; }
 .app-filter-icon:active { transform: scale(0.9); background: rgba(255,255,255,0.08); border-color: rgba(255,255,255,0.3); }
 
@@ -428,9 +427,17 @@ select.adm-input { appearance: none; -webkit-appearance: none; padding-right: 40
 .f-close { width: 34px; height: 34px; border-radius: 50%; background: transparent; display: flex; justify-content: center; align-items: center; color: #a1a1aa; cursor: pointer; border: 1px solid rgba(255,255,255,0.15); transition: 0.2s; }
 .f-close:active { transform: scale(0.9); background: rgba(255,255,255,0.1); }
 
+/* --- APPENDED MISSING FILTER CSS --- */
+.f-options-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; overflow-y: auto; padding-bottom: 20px; max-height: 50vh; }
+.f-options-grid::-webkit-scrollbar { display: none; }
+
+.f-pill { text-align: center; padding: 12px 10px; background: linear-gradient(145deg, rgba(255,255,255,0.06), rgba(255,255,255,0.02)); border: 1px solid rgba(255,255,255,0.08); border-radius: 12px; color: #a1a1aa; font-weight: 600; font-size: 0.85rem; cursor: pointer; transition: all 0.2s ease; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; user-select: none; box-shadow: 0 4px 10px rgba(0,0,0,0.2); }
+.f-pill:hover { background: rgba(255,255,255,0.1); transform: translateY(-2px); color: #fff; border-color: rgba(255,255,255,0.2); }
+.f-pill:active { transform: scale(0.95); }
+.f-pill.active { background: rgba(16, 185, 129, 0.1); border-color: #10b981; color: #10b981; box-shadow: 0 4px 15px rgba(16, 185, 129, 0.2); font-weight: 800; }
+
 @media (max-width: 420px) {
     .brand-title { font-size: 29px; } 
-    /* BORDER ALSO WHITE FOR MOBILE VIEW */
     .brand-logo { width: 95px; height: 95px; border: 4px solid #ffffff; box-shadow: 0 10px 25px rgba(0,0,0,0.9); }
     .brand-subtitle { font-size: 9px; } 
     .glass-card { padding: 35px 25px; }
@@ -539,12 +546,3 @@ select.adm-input { appearance: none; -webkit-appearance: none; padding-right: 40
 .ug-action-btn:hover::before { left: 100%; }
 .ug-action-btn:hover { transform: translateY(-2px); background: linear-gradient(145deg, #404040, #141414); box-shadow: inset 0 4px 20px rgba(255, 255, 255, 0.45), inset 0 0 10px rgba(255, 255, 255, 0.25), inset 0 -3px 10px rgba(0, 0, 0, 0.9), 0 10px 25px rgba(0, 0, 0, 0.8); }
 .ug-action-btn:active { transform: translateY(1px); box-shadow: inset 0 2px 5px rgba(255, 255, 255, 0.1), inset 0 4px 10px rgba(0, 0, 0, 0.9); }
-
-.f-options-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; overflow-y: auto; padding-bottom: 20px; max-height: 50vh; }
-.f-options-grid::-webkit-scrollbar { display: none; }
-
-.f-pill { text-align: center; padding: 12px 10px; background: linear-gradient(145deg, rgba(255,255,255,0.06), rgba(255,255,255,0.02)); border: 1px solid rgba(255,255,255,0.08); border-radius: 12px; color: #a1a1aa; font-weight: 600; font-size: 0.85rem; cursor: pointer; transition: all 0.2s ease; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; user-select: none; box-shadow: 0 4px 10px rgba(0,0,0,0.2); }
-.f-pill:hover { background: rgba(255,255,255,0.1); transform: translateY(-2px); color: #fff; border-color: rgba(255,255,255,0.2); }
-.f-pill:active { transform: scale(0.95); }
-.f-pill.active { background: rgba(16, 185, 129, 0.1); border-color: #10b981; color: #10b981; box-shadow: 0 4px 15px rgba(16, 185, 129, 0.2); font-weight: 800; }
-
