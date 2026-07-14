@@ -260,13 +260,7 @@ onAuthStateChanged(auth, async (user) => {
         });
     });
 
-    onSnapshot(query(collection(db, "tutorials"), orderBy("createdAt", "desc")), (snapshot) => {
-        const grid = document.getElementById('adminTutorialsGrid');
-        if(grid) {
-            grid.innerHTML = '';
-            snapshot.forEach(doc => { renderTutorialCard(doc.data()); });
-        }
-    });
+    // NOTE: Hata Diya Gaya Hai "Tutorials" Listener Lag / Performance Improve Karne Ke Liye 
 
     const q = query(collection(db, "books"), orderBy("createdAt", "desc"));
     onSnapshot(q, (snapshot) => {
@@ -307,40 +301,6 @@ function copyPromptTextLocal(text, btnId) {
     }).catch(err => { showToast("Failed to copy!"); });
 };
 
-async function renderTutorialCard(data) {
-    try {
-        const videoUrl = data.url;
-        const customViews = sanitizeHTML(data.views) || "10K"; 
-        const customDuration = sanitizeHTML(data.duration) || "10:00";
-        const customAvatar = data.avatarUrl || "https://i.postimg.cc/D0BF1b77/file-000000000e847207a64f6711d825a859.png"; 
-        const videoIdMatch = videoUrl.match(/(?:youtu\.be\/|youtube\.com\/(?:[^\/]+\/.+\/|(?:v|e(?:mbed)?)\/|.*[?&]v=)|youtube\.com\/shorts\/)([^"&?\/\s]{11})/i);
-        if (!videoIdMatch) return;
-        const videoId = videoIdMatch[1];
-        const standardUrl = `https://www.youtube.com/watch?v=${videoId}`;
-        let title = "YouTube Video"; let channelName = "Tutorial";
-        try {
-            const response = await fetch(`https://noembed.com/embed?url=${standardUrl}`);
-            const vidData = await response.json();
-            if(vidData.title) title = vidData.title;
-            if(vidData.author_name) channelName = vidData.author_name;
-        } catch(e) {}
-        
-        title = sanitizeHTML(title);
-        channelName = sanitizeHTML(channelName);
-        
-        const thumbnailUrl = `https://img.youtube.com/vi/${videoId}/maxresdefault.jpg`;
-        const fallbackUrl = `https://img.youtube.com/vi/${videoId}/hqdefault.jpg`;
-        const cardHTML = `<div class="yt-card" data-url="${videoUrl}"><div class="yt-thumbnail-wrapper"><img src="${thumbnailUrl}" class="yt-thumbnail-img" alt="Thumbnail" onerror="this.src='${fallbackUrl}'" oncontextmenu="return false;" draggable="false" style="-webkit-touch-callout: none; pointer-events: none;"><div class="yt-duration">${customDuration}</div></div><div class="yt-info-box"><img src="${customAvatar}" class="yt-avatar" alt="Avatar" oncontextmenu="return false;" draggable="false" style="-webkit-touch-callout: none; pointer-events: none;"><div class="yt-text-content"><div class="yt-video-title">${title}</div><div class="yt-channel-name">${channelName} • ${customViews} views</div></div></div></div>`;
-        document.getElementById('adminTutorialsGrid').innerHTML += cardHTML;
-    } catch (error) {}
-}
-
-document.getElementById('adminTutorialsGrid').addEventListener('click', (e) => {
-    const card = e.target.closest('.yt-card');
-    if(card) {
-        window.open(card.getAttribute('data-url'), '_blank');
-    }
-});
 
 document.getElementById('loginForm').addEventListener('submit', async (e) => {
     e.preventDefault(); 
@@ -880,7 +840,6 @@ document.querySelectorAll('.adm-tab-btn').forEach(btn => {
         let tab = 'add';
         if(btn.id === 'admTabManage') tab = 'manage';
         if(btn.id === 'admTabPrompt') tab = 'prompt';
-        if(btn.id === 'admTabVideo') tab = 'tutorial';
         switchAdminTabLocal(tab);
     });
 });
@@ -891,7 +850,6 @@ function switchAdminTabLocal(tabName) {
     if(tabName === 'add') { document.getElementById('sectionAddBook').classList.add('active'); document.getElementById('admTabAdd').classList.add('active'); }
     else if(tabName === 'manage') { document.getElementById('sectionManageBooks').classList.add('active'); document.getElementById('admTabManage').classList.add('active'); }
     else if(tabName === 'prompt') { document.getElementById('sectionPrompt').classList.add('active'); document.getElementById('admTabPrompt').classList.add('active'); }
-    else if(tabName === 'tutorial') { document.getElementById('sectionTutorial').classList.add('active'); document.getElementById('admTabVideo').classList.add('active'); }
 }
 
 document.getElementById('adminSearchBook').addEventListener('input', (e) => {
