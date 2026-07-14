@@ -260,8 +260,6 @@ onAuthStateChanged(auth, async (user) => {
         });
     });
 
-    // NOTE: Hata Diya Gaya Hai "Tutorials" Listener Lag / Performance Improve Karne Ke Liye 
-
     const q = query(collection(db, "books"), orderBy("createdAt", "desc"));
     onSnapshot(q, (snapshot) => {
         booksData = [];
@@ -471,7 +469,8 @@ function renderBooksUI(startIndex, count, customData = null) {
         
         htmlChunk += `<div class="book-card" data-slug="${book.slug}"><div class="card-img-wrapper"><div class="badge-free">FREE</div><div class="bookmark-btn" data-action="bookmark"><i class="${bookmarkIcon}"></i></div><img src="${book.image}" loading="lazy" class="book-image" oncontextmenu="return false;" draggable="false"></div><div class="book-details"><div class="book-title">${sanitizeHTML(book.title)}</div><div class="book-author">${sanitizeHTML(book.author)}</div><div class="tags-container"><span class="book-tag tag-year">${sanitizeHTML(book.year)}</span><span class="book-tag ${langClass}">${sanitizeHTML(book.lang)}</span></div></div></div>`;
     }
-    container.innerHTML += htmlChunk;
+    // LAG FIX (Optimized Rendering):
+    container.insertAdjacentHTML('beforeend', htmlChunk);
     loadedCount = endIndex;
 }
 
@@ -642,14 +641,12 @@ document.getElementById('menu-admin-panel').addEventListener('click', (e) => {
     document.getElementById('admin-dashboard-panel').classList.add('active');
     sidebar.classList.remove('active'); sidebarOverlay.classList.remove('active');
     
-    // UPLOAD GUIDE POPUP TRIGGER
     setTimeout(() => {
         document.getElementById('uploadPopup').classList.remove('hidden');
     }, 300);
 });
 document.getElementById('close-admin-btn').addEventListener('click', () => { history.back(); });
 
-// ADD CLOSE POPUP BUTTON LOGIC
 document.getElementById('closeUploadPopupBtn').addEventListener('click', () => {
     document.getElementById('uploadPopup').classList.add('hidden');
 });
@@ -687,9 +684,6 @@ function openDownloadPageLocal(slug, skipPushState = false) {
     document.getElementById("dlBookTitle").innerText = sanitizeHTML(book.title); 
     document.getElementById("dlBookAuthor").innerText = sanitizeHTML(book.author);
     
-    // ==========================================
-    // UPDATED DOWNLOAD LOGIC & POPUP TRIGGER
-    // ==========================================
     document.getElementById("dlPdfLinkBtn").onclick = async function() { 
         if(!isUserLoggedIn || !auth.currentUser) {
             document.getElementById('loginOverlay').style.display = 'flex'; setTimeout(() => document.getElementById('loginOverlay').style.opacity = '1', 10); return;
@@ -715,20 +709,11 @@ function openDownloadPageLocal(slug, skipPushState = false) {
 
                 if (downloads >= allowedDownloads && !IS_SUPER_ADMIN) {
                     showToast("Limit Reached! Upload 1 book to get 2 more downloads.");
-                    
-                    // Download modal close
                     closeDownloadPageLocal();
-                    
-                    // User ko upload panel par bhejna
                     history.pushState({ popup: 'admin' }, '');
                     document.getElementById('admin-dashboard-panel').classList.add('active');
                     switchAdminTabLocal('add');
-                    
-                    // UPLOAD GUIDE POPUP TRIGGER
-                    setTimeout(() => {
-                        document.getElementById('uploadPopup').classList.remove('hidden');
-                    }, 500);
-                    
+                    setTimeout(() => { document.getElementById('uploadPopup').classList.remove('hidden'); }, 500);
                     btn.innerHTML = originalText; 
                     btn.disabled = false; 
                     return; 
