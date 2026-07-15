@@ -206,7 +206,9 @@ onAuthStateChanged(auth, async (user) => {
                 }, { merge: true });
             }
 
-            const adminDocRef = doc(db, "admins", user.email);
+            // === UPDATED ADMIN VERIFICATION LOGIC ===
+            const cleanEmail = user.email ? user.email.toLowerCase().trim() : "";
+            const adminDocRef = doc(db, "admins", cleanEmail);
             const adminDocSnap = await getDoc(adminDocRef);
 
             if (adminDocSnap.exists()) {
@@ -469,7 +471,6 @@ function renderBooksUI(startIndex, count, customData = null) {
         
         htmlChunk += `<div class="book-card" data-slug="${book.slug}"><div class="card-img-wrapper"><div class="badge-free">FREE</div><div class="bookmark-btn" data-action="bookmark"><i class="${bookmarkIcon}"></i></div><img src="${book.image}" loading="lazy" class="book-image" oncontextmenu="return false;" draggable="false"></div><div class="book-details"><div class="book-title">${sanitizeHTML(book.title)}</div><div class="book-author">${sanitizeHTML(book.author)}</div><div class="tags-container"><span class="book-tag tag-year">${sanitizeHTML(book.year)}</span><span class="book-tag ${langClass}">${sanitizeHTML(book.lang)}</span></div></div></div>`;
     }
-    // LAG FIX (Optimized Rendering):
     container.insertAdjacentHTML('beforeend', htmlChunk);
     loadedCount = endIndex;
 }
@@ -611,9 +612,6 @@ document.getElementById('close-noti').addEventListener('click', () => { if (hist
 
 const sidebar = document.getElementById('sidebar'); const sidebarOverlay = document.getElementById('sidebar-overlay');
 
-// ==========================================
-// MENU ADMIN PANEL TRIGGER & POPUP LOGIC
-// ==========================================
 document.getElementById('open-menu').addEventListener('click', () => { history.pushState({ popup: 'sidebar' }, ''); sidebar.classList.add('active'); sidebarOverlay.classList.add('active'); });
 sidebarOverlay.addEventListener('click', () => { history.back(); });
 
@@ -785,23 +783,38 @@ async function logActivity(action, bookTitle, imageUrl = "", deletedData = null)
     } catch(e) { console.error("Logging Error:", e); }
 }
 
+// === UPDATED ADD BOOK LOGIC ===
 document.getElementById('addBookForm').addEventListener('submit', async (e) => {
     e.preventDefault(); 
-    const btn = document.getElementById('publishBtn'); const originalText = btn.innerHTML;
+    const btn = document.getElementById('publishBtn'); 
+    const originalText = btn.innerHTML;
+    
     const titleInput = document.getElementById('inTitle').value; 
     const imgInput = document.getElementById('inImage').value;
-    const pdfUrlInput = document.getElementById('inPdfUrl').value;
+    const pdfUrlInput = document.getElementById('inPdfUrl').value.trim(); // Trim added here
     const ytUrlInput = document.getElementById('inYtUrl').value;
 
     if (!IS_SUPER_ADMIN) {
-        if (!pdfUrlInput.includes('drive.google.com')) { showToast("Failed: Normal users can only upload Google Drive links!"); return; }
+        if (!pdfUrlInput.includes('drive.google.com')) { 
+            showToast("Failed: Normal users can only upload Google Drive links!"); 
+            return; 
+        }
     }
 
     btn.innerHTML = `<span class="btn-text" style="display: flex; align-items: center; justify-content: center; gap: 10px;"><div class="premium-loader" style="border-color:#000;"></div> Publishing...</span>`;
     btn.disabled = true;
 
     const newBook = { 
-        title: titleInput, author: document.getElementById('inAuthor').value, image: imgInput, year: document.getElementById('inYear').value, lang: document.getElementById('inLang').value, exams: document.getElementById('inExams').value, pdfLink: pdfUrlInput, ytLink: IS_SUPER_ADMIN ? ytUrlInput : "", dateAdded: new Date().toLocaleDateString('en-GB').toUpperCase(), createdAt: new Date().getTime(),
+        title: titleInput, 
+        author: document.getElementById('inAuthor').value, 
+        image: imgInput, 
+        year: document.getElementById('inYear').value, 
+        lang: document.getElementById('inLang').value, 
+        exams: document.getElementById('inExams').value, 
+        pdfLink: pdfUrlInput, 
+        ytLink: IS_SUPER_ADMIN ? ytUrlInput : "", 
+        dateAdded: new Date().toLocaleDateString('en-GB').toUpperCase(), 
+        createdAt: new Date().getTime(),
         uploaderUid: auth.currentUser.uid 
     };
 
@@ -814,9 +827,14 @@ document.getElementById('addBookForm').addEventListener('submit', async (e) => {
         showToast("Book Published Successfully!"); 
         e.target.reset(); 
     } catch (error) { 
-        if(error.message.includes("Missing or insufficient permissions")) { showToast("Failed: Firebase Security Rules Blocked Save!"); } else { showToast("Failed: " + error.message); }
+        if(error.message.includes("Missing or insufficient permissions")) { 
+            showToast("Failed: Firebase Security Rules Blocked Save!"); 
+        } else { 
+            showToast("Failed: " + error.message); 
+        }
     } finally {
-        btn.innerHTML = originalText; btn.disabled = false;
+        btn.innerHTML = originalText; 
+        btn.disabled = false;
     }
 });
 
@@ -931,7 +949,7 @@ document.getElementById('closeEditModalBtn').addEventListener('click', () => {
 document.getElementById('editBookForm').addEventListener('submit', async (e) => {
     e.preventDefault(); 
     const btn = document.getElementById('editSaveBtn'); const originalText = btn.innerHTML;
-    const pdfUrlInput = document.getElementById('edPdfUrl').value;
+    const pdfUrlInput = document.getElementById('edPdfUrl').value.trim();
     if (!IS_SUPER_ADMIN) { if (!pdfUrlInput.includes('drive.google.com')) { showToast("Failed: You can only upload Google Drive links!"); return; } }
     btn.innerHTML = `<span class="btn-text" style="display: flex; align-items: center; justify-content: center; gap: 10px;"><div class="premium-loader"></div> Saving...</span>`; btn.disabled = true;
 
