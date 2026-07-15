@@ -206,7 +206,6 @@ onAuthStateChanged(auth, async (user) => {
                 }, { merge: true });
             }
 
-            // === UPDATED ADMIN VERIFICATION LOGIC ===
             const cleanEmail = user.email ? user.email.toLowerCase().trim() : "";
             const adminDocRef = doc(db, "admins", cleanEmail);
             const adminDocSnap = await getDoc(adminDocRef);
@@ -534,6 +533,10 @@ document.getElementById('dynamic-noti-container').addEventListener('click', (e) 
 
 document.getElementById('sidebarHeader').addEventListener('click', openMyProfileLocal);
 
+
+// ==========================================
+// 🚀 UPDATED PROFESSIONAL RANKING LOGIC
+// ==========================================
 async function openMyProfileLocal() {
     if(!isUserLoggedIn || !auth.currentUser) {
         document.getElementById('sidebar').classList.remove('active');
@@ -562,8 +565,8 @@ async function openMyProfileLocal() {
 
         if (userSnap.exists()) {
             const data = userSnap.data();
-            uploads = data.totalUploads || 0;
-            downloads = data.lifetimeDownloads || 0;
+            uploads = parseInt(data.totalUploads) || 0; // parseInt taaki text numbers create na karein problem
+            downloads = parseInt(data.lifetimeDownloads) || 0;
         }
         document.getElementById('profile-uploads').innerText = uploads;
         document.getElementById('profile-downloads').innerText = downloads;
@@ -576,14 +579,23 @@ async function openMyProfileLocal() {
             allUsers.push({ id: docSnap.id, ...docSnap.data() });
         });
 
+        // 🌟 ADVANCED SORTING START 🌟
         allUsers.sort((a, b) => {
-            let uploadsA = a.totalUploads || 0;
-            let uploadsB = b.totalUploads || 0;
-            if (uploadsB !== uploadsA) return uploadsB - uploadsA; 
-            let timeA = a.createdAt || 0;
-            let timeB = b.createdAt || 0;
+            let uploadsA = parseInt(a.totalUploads) || 0;
+            let uploadsB = parseInt(b.totalUploads) || 0;
+            
+            // Step 1: Uploads ke basis pe rank (Highest first)
+            if (uploadsB !== uploadsA) {
+                return uploadsB - uploadsA; 
+            } 
+            
+            // Step 2: Agar uploads barabar (equal) hain (jaise 0-0), toh naye user ko sabse peeche bhejo
+            // Number.MAX_SAFE_INTEGER isliye taki jinka date na ho wo by default end mein jayein
+            let timeA = parseInt(a.createdAt) || Number.MAX_SAFE_INTEGER;
+            let timeB = parseInt(b.createdAt) || Number.MAX_SAFE_INTEGER;
             return timeA - timeB; 
         });
+        // 🌟 ADVANCED SORTING END 🌟
 
         let rank = 1;
         for (let i = 0; i < allUsers.length; i++) {
@@ -593,12 +605,38 @@ async function openMyProfileLocal() {
             }
         }
 
-        document.getElementById('profile-rank').innerText = "#" + rank;
+        // 🎨 UI ENHANCEMENT FOR RANKS 🎨
+        const rankElement = document.getElementById('profile-rank');
+        rankElement.style.fontSize = "17px"; // Reset font size
+        
+        if (rank === 1 && uploads > 0) {
+            rankElement.style.color = "#fbbf24"; // Gold color for #1
+            rankElement.innerHTML = `<i class="fas fa-crown"></i> #1`;
+        } else if (rank === 2 && uploads > 0) {
+            rankElement.style.color = "#9ca3af"; // Silver color for #2
+            rankElement.innerText = "#" + rank;
+        } else if (rank === 3 && uploads > 0) {
+            rankElement.style.color = "#b45309"; // Bronze color for #3
+            rankElement.innerText = "#" + rank;
+        } else {
+            rankElement.style.color = ""; // Default color
+            
+            // Agar ekdum naya user hai jisne aaj tak kuch upload nahi kiya
+            if (uploads === 0) {
+                rankElement.style.fontSize = "12px"; // Thoda chota text
+                rankElement.innerText = "#" + rank + " (Upload to Rank Up!)";
+            } else {
+                rankElement.innerText = "#" + rank;
+            }
+        }
+
     } catch (error) {
         console.error("Error fetching profile stats:", error);
         showToast("Error loading profile data");
     }
 }
+// ==========================================
+
 
 document.getElementById('closeProfileBtn').addEventListener('click', closeMyProfileLocal);
 function closeMyProfileLocal() {
@@ -783,7 +821,6 @@ async function logActivity(action, bookTitle, imageUrl = "", deletedData = null)
     } catch(e) { console.error("Logging Error:", e); }
 }
 
-// === UPDATED ADD BOOK LOGIC ===
 document.getElementById('addBookForm').addEventListener('submit', async (e) => {
     e.preventDefault(); 
     const btn = document.getElementById('publishBtn'); 
@@ -791,7 +828,7 @@ document.getElementById('addBookForm').addEventListener('submit', async (e) => {
     
     const titleInput = document.getElementById('inTitle').value; 
     const imgInput = document.getElementById('inImage').value;
-    const pdfUrlInput = document.getElementById('inPdfUrl').value.trim(); // Trim added here
+    const pdfUrlInput = document.getElementById('inPdfUrl').value.trim(); 
     const ytUrlInput = document.getElementById('inYtUrl').value;
 
     if (!IS_SUPER_ADMIN) {
