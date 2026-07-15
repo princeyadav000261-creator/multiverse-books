@@ -535,7 +535,7 @@ document.getElementById('sidebarHeader').addEventListener('click', openMyProfile
 
 
 // ==========================================
-// 🚀 UPDATED PROFESSIONAL RANKING LOGIC
+// 🚀 100% REAL-TIME ADVANCED RANKING LOGIC
 // ==========================================
 async function openMyProfileLocal() {
     if(!isUserLoggedIn || !auth.currentUser) {
@@ -565,12 +565,13 @@ async function openMyProfileLocal() {
 
         if (userSnap.exists()) {
             const data = userSnap.data();
-            uploads = parseInt(data.totalUploads) || 0; // parseInt taaki text numbers create na karein problem
+            uploads = parseInt(data.totalUploads) || 0; 
             downloads = parseInt(data.lifetimeDownloads) || 0;
         }
         document.getElementById('profile-uploads').innerText = uploads;
         document.getElementById('profile-downloads').innerText = downloads;
 
+        // Saare users fetch kar rahe hain for exact calculation
         const usersRef = collection(db, "users");
         const querySnapshot = await getDocs(usersRef);
         
@@ -579,55 +580,54 @@ async function openMyProfileLocal() {
             allUsers.push({ id: docSnap.id, ...docSnap.data() });
         });
 
-        // 🌟 ADVANCED SORTING START 🌟
+        // 🌟 FLAWLESS 3-STEP SORTING ENGINE 🌟
         allUsers.sort((a, b) => {
             let uploadsA = parseInt(a.totalUploads) || 0;
             let uploadsB = parseInt(b.totalUploads) || 0;
             
-            // Step 1: Uploads ke basis pe rank (Highest first)
+            // 1. Sabse pehle uploads compare karo (Jiske zyada wo top par)
             if (uploadsB !== uploadsA) {
                 return uploadsB - uploadsA; 
             } 
             
-            // Step 2: Agar uploads barabar (equal) hain (jaise 0-0), toh naye user ko sabse peeche bhejo
-            // Number.MAX_SAFE_INTEGER isliye taki jinka date na ho wo by default end mein jayein
-            let timeA = parseInt(a.createdAt) || Number.MAX_SAFE_INTEGER;
-            let timeB = parseInt(b.createdAt) || Number.MAX_SAFE_INTEGER;
-            return timeA - timeB; 
+            // 2. Agar uploads barabar hain (jaise dono 0 par hain), toh Time check karo
+            let timeA = parseInt(a.createdAt) || 9999999999999; 
+            let timeB = parseInt(b.createdAt) || 9999999999999;
+            
+            if (timeA !== timeB) {
+                return timeA - timeB; // Purana user aage jayega, naya user peeche
+            }
+            
+            // 3. Ultimate Tie-Breaker (No 2 users will ever have the exact same rank)
+            // Agar ek hi millisecond par join kiya, toh UID compare karke decide karega
+            return a.id.localeCompare(b.id);
         });
-        // 🌟 ADVANCED SORTING END 🌟
 
         let rank = 1;
         for (let i = 0; i < allUsers.length; i++) {
             if (allUsers[i].id === auth.currentUser.uid) {
-                rank = i + 1;
+                rank = i + 1; // Unki list mein jo index hai uske hisaab se rank assign
                 break;
             }
         }
 
-        // 🎨 UI ENHANCEMENT FOR RANKS 🎨
+        // 🎨 CLEAN AND PROFESSIONAL RANK UI 🎨
         const rankElement = document.getElementById('profile-rank');
-        rankElement.style.fontSize = "17px"; // Reset font size
+        rankElement.style.fontSize = "17px"; 
         
         if (rank === 1 && uploads > 0) {
-            rankElement.style.color = "#fbbf24"; // Gold color for #1
+            rankElement.style.color = "#fbbf24"; 
             rankElement.innerHTML = `<i class="fas fa-crown"></i> #1`;
         } else if (rank === 2 && uploads > 0) {
-            rankElement.style.color = "#9ca3af"; // Silver color for #2
+            rankElement.style.color = "#9ca3af"; 
             rankElement.innerText = "#" + rank;
         } else if (rank === 3 && uploads > 0) {
-            rankElement.style.color = "#b45309"; // Bronze color for #3
+            rankElement.style.color = "#b45309"; 
             rankElement.innerText = "#" + rank;
         } else {
-            rankElement.style.color = ""; // Default color
-            
-            // Agar ekdum naya user hai jisne aaj tak kuch upload nahi kiya
-            if (uploads === 0) {
-                rankElement.style.fontSize = "12px"; // Thoda chota text
-                rankElement.innerText = "#" + rank + " (Upload to Rank Up!)";
-            } else {
-                rankElement.innerText = "#" + rank;
-            }
+            rankElement.style.color = ""; 
+            // TEXT REMOVED! Ab seedha #Rank dikhega beshak zero uploads kyun na ho.
+            rankElement.innerText = "#" + rank;
         }
 
     } catch (error) {
