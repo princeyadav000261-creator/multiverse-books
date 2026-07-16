@@ -780,11 +780,15 @@ function shareBookLocal() {
     else { navigator.clipboard.writeText(shareUrl); alert("Link Copied!"); }
 }
 
+// 🌟 UPDATED: DELETE MESSAGE SHOWS IN RED WITH TRASH ICON
 function showToast(message) {
     const toast = document.getElementById('toast'); 
     const lowerMsg = message.toLowerCase();
     
-    if (lowerMsg.includes('failed') || lowerMsg.includes('error') || lowerMsg.includes('invalid') || lowerMsg.includes('limit') || lowerMsg.includes('exhausted') || lowerMsg.includes('logout') || lowerMsg.includes('logged out')) {
+    if (lowerMsg.includes('deleted')) {
+        toast.style.background = '#ef4444'; 
+        toast.innerHTML = `<i class="fas fa-trash"></i> <span id="toastMsg">${sanitizeHTML(message)}</span>`;
+    } else if (lowerMsg.includes('failed') || lowerMsg.includes('error') || lowerMsg.includes('invalid') || lowerMsg.includes('limit') || lowerMsg.includes('exhausted') || lowerMsg.includes('logout') || lowerMsg.includes('logged out')) {
         toast.style.background = '#ef4444'; 
         toast.innerHTML = `<i class="fas fa-exclamation-circle"></i> <span id="toastMsg">${sanitizeHTML(message)}</span>`;
     } else {
@@ -814,7 +818,6 @@ document.getElementById('addBookForm').addEventListener('submit', async (e) => {
     const pdfUrlInput = document.getElementById('inPdfUrl').value.trim(); 
 
     if (!IS_SUPER_ADMIN) {
-        // 🌟 UPDATED LOGIC TO ALLOW GOOGLE DRIVE, MEGA, OR MEDIAFIRE FOR NORMAL USERS
         const lowerUrl = pdfUrlInput.toLowerCase();
         if (!(lowerUrl.includes('drive.google.com') || lowerUrl.includes('mega.nz') || lowerUrl.includes('mega.io') || lowerUrl.includes('mediafire.com'))) { 
             showToast("Failed: You can only upload Google Drive, MEGA, or MediaFire links!"); 
@@ -971,7 +974,6 @@ document.getElementById('editBookForm').addEventListener('submit', async (e) => 
     const pdfUrlInput = document.getElementById('edPdfUrl').value.trim();
 
     if (!IS_SUPER_ADMIN) { 
-        // 🌟 UPDATED LOGIC FOR EDIT AS WELL
         const lowerUrl = pdfUrlInput.toLowerCase();
         if (!(lowerUrl.includes('drive.google.com') || lowerUrl.includes('mega.nz') || lowerUrl.includes('mega.io') || lowerUrl.includes('mediafire.com'))) { 
             showToast("Failed: You can only upload Google Drive, MEGA, or MediaFire links!"); 
