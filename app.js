@@ -215,15 +215,11 @@ onAuthStateChanged(auth, async (user) => {
                 document.getElementById('sidebarRoleText').innerText = "Super Admin";
                 document.getElementById('uploadMenuText').innerText = "Manage Vault";
                 document.getElementById('admTabManage').style.display = 'inline-flex';
-                document.getElementById('addYtLinkContainer').style.display = 'flex'; 
-                document.getElementById('editYtLinkContainer').style.display = 'flex'; 
             } else {
                 IS_SUPER_ADMIN = false;
                 document.getElementById('sidebarRoleText').innerText = "Verified User";
                 document.getElementById('uploadMenuText').innerText = "Upload Books";
                 document.getElementById('admTabManage').style.display = 'none';
-                document.getElementById('addYtLinkContainer').style.display = 'none'; 
-                document.getElementById('editYtLinkContainer').style.display = 'none'; 
                 switchAdminTabLocal('add');
             }
         } catch (error) {
@@ -447,8 +443,9 @@ mainElement.addEventListener('scroll', () => {
             if (mainElement.scrollTop + mainElement.clientHeight >= mainElement.scrollHeight - 100) {
                 const noResultsMsg = document.getElementById('no-results-msg');
                 if (loadedCount < mainFilteredData.length && !isLoadingMore && noResultsMsg.style.display !== 'flex') {
-                    isLoadingMore = true; document.getElementById("bottomSpinner").style.display = "flex";
-                    setTimeout(() => { renderBooksUI(loadedCount, getBatchSize(), mainFilteredData); document.getElementById("bottomSpinner").style.display = "none"; isLoadingMore = false; }, 800); 
+                    isLoadingMore = true;
+                    renderBooksUI(loadedCount, getBatchSize(), mainFilteredData);
+                    isLoadingMore = false;
                 }
             }
             scrollTimeout = null;
@@ -571,7 +568,6 @@ async function openMyProfileLocal() {
         document.getElementById('profile-uploads').innerText = uploads;
         document.getElementById('profile-downloads').innerText = downloads;
 
-        // Saare users fetch kar rahe hain for exact calculation
         const usersRef = collection(db, "users");
         const querySnapshot = await getDocs(usersRef);
         
@@ -585,33 +581,28 @@ async function openMyProfileLocal() {
             let uploadsA = parseInt(a.totalUploads) || 0;
             let uploadsB = parseInt(b.totalUploads) || 0;
             
-            // 1. Sabse pehle uploads compare karo (Jiske zyada wo top par)
             if (uploadsB !== uploadsA) {
                 return uploadsB - uploadsA; 
             } 
             
-            // 2. Agar uploads barabar hain (jaise dono 0 par hain), toh Time check karo
             let timeA = parseInt(a.createdAt) || 9999999999999; 
             let timeB = parseInt(b.createdAt) || 9999999999999;
             
             if (timeA !== timeB) {
-                return timeA - timeB; // Purana user aage jayega, naya user peeche
+                return timeA - timeB; 
             }
             
-            // 3. Ultimate Tie-Breaker (No 2 users will ever have the exact same rank)
-            // Agar ek hi millisecond par join kiya, toh UID compare karke decide karega
             return a.id.localeCompare(b.id);
         });
 
         let rank = 1;
         for (let i = 0; i < allUsers.length; i++) {
             if (allUsers[i].id === auth.currentUser.uid) {
-                rank = i + 1; // Unki list mein jo index hai uske hisaab se rank assign
+                rank = i + 1; 
                 break;
             }
         }
 
-        // 🎨 CLEAN AND PROFESSIONAL RANK UI 🎨
         const rankElement = document.getElementById('profile-rank');
         rankElement.style.fontSize = "17px"; 
         
@@ -626,7 +617,6 @@ async function openMyProfileLocal() {
             rankElement.innerText = "#" + rank;
         } else {
             rankElement.style.color = ""; 
-            // TEXT REMOVED! Ab seedha #Rank dikhega beshak zero uploads kyun na ho.
             rankElement.innerText = "#" + rank;
         }
 
@@ -646,7 +636,6 @@ function closeMyProfileLocal() {
 
 document.getElementById('open-search').addEventListener('click', () => { history.pushState({ popup: 'search' }, ''); document.getElementById('search-box').classList.add('active'); setTimeout(() => { searchInputEl.focus(); }, 300); });
 document.getElementById('open-noti').addEventListener('click', () => { history.pushState({ popup: 'noti' }, ''); document.getElementById('noti-panel').classList.add('active'); document.querySelector('.blink-dot').style.display = 'none'; });
-document.getElementById('close-noti').addEventListener('click', () => { if (history.state && history.state.popup) { history.back(); } else { document.getElementById('noti-panel').classList.remove('active'); }});
 
 const sidebar = document.getElementById('sidebar'); const sidebarOverlay = document.getElementById('sidebar-overlay');
 
@@ -769,9 +758,9 @@ function openDownloadPageLocal(slug, skipPushState = false) {
     };
     
     document.getElementById("dlYoutubeLinkBtn").onclick = function() { 
-        if(book.ytLink && book.ytLink !== "#" && book.ytLink !== "") { window.open(book.ytLink, '_blank'); } 
-        else { window.open('https://youtube.com/@madxprince', '_blank'); }
+        window.open('https://youtube.com/@spidystudyhub', '_blank'); 
     };
+    
     let examsArray = (book.exams || "General").split(',').map(item => sanitizeHTML(item.trim()));
     document.getElementById("dlModalTags").innerHTML = examsArray.map(exam => `<div class="dl-modal-tag">${exam}</div>`).join('');
     activeBookSlug = book.slug; activeBookTitle = book.title;
@@ -829,7 +818,6 @@ document.getElementById('addBookForm').addEventListener('submit', async (e) => {
     const titleInput = document.getElementById('inTitle').value; 
     const imgInput = document.getElementById('inImage').value;
     const pdfUrlInput = document.getElementById('inPdfUrl').value.trim(); 
-    const ytUrlInput = document.getElementById('inYtUrl').value;
 
     if (!IS_SUPER_ADMIN) {
         if (!pdfUrlInput.includes('drive.google.com')) { 
@@ -849,7 +837,6 @@ document.getElementById('addBookForm').addEventListener('submit', async (e) => {
         lang: document.getElementById('inLang').value, 
         exams: document.getElementById('inExams').value, 
         pdfLink: pdfUrlInput, 
-        ytLink: IS_SUPER_ADMIN ? ytUrlInput : "", 
         dateAdded: new Date().toLocaleDateString('en-GB').toUpperCase(), 
         createdAt: new Date().getTime(),
         uploaderUid: auth.currentUser.uid 
@@ -975,7 +962,6 @@ function openAdminEditModalLocal(id) {
     document.getElementById('edExams').value = book.exams || ""; 
     document.getElementById('edImage').value = book.image; 
     document.getElementById('edPdfUrl').value = book.pdfLink || ""; 
-    document.getElementById('edYtUrl').value = book.ytLink || ""; 
     document.getElementById('adminEditModal').style.display = 'flex';
 }
 
@@ -991,7 +977,7 @@ document.getElementById('editBookForm').addEventListener('submit', async (e) => 
     btn.innerHTML = `<span class="btn-text" style="display: flex; align-items: center; justify-content: center; gap: 10px;"><div class="premium-loader"></div> Saving...</span>`; btn.disabled = true;
 
     const docId = document.getElementById('editDocId').value;
-    const updatedData = { title: document.getElementById('edTitle').value, author: document.getElementById('edAuthor').value, year: document.getElementById('edYear').value, lang: document.getElementById('edLang').value, exams: document.getElementById('edExams').value, image: document.getElementById('edImage').value, pdfLink: pdfUrlInput, ytLink: IS_SUPER_ADMIN ? document.getElementById('edYtUrl').value : "" };
+    const updatedData = { title: document.getElementById('edTitle').value, author: document.getElementById('edAuthor').value, year: document.getElementById('edYear').value, lang: document.getElementById('edLang').value, exams: document.getElementById('edExams').value, image: document.getElementById('edImage').value, pdfLink: pdfUrlInput };
 
     try { 
         await updateDoc(doc(db, "books", docId), updatedData); await logActivity("EDIT", updatedData.title, updatedData.image); 
