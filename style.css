@@ -101,6 +101,8 @@ main { flex: 1; overflow-y: auto; overflow-x: hidden; padding: 15px 20px 0px; di
 main::-webkit-scrollbar { display: none; }
 main .premium-copyright { width: calc(100% + 40px); margin-left: -20px; margin-right: -20px; margin-top: auto; }
 .dl-content-wrapper .premium-copyright { width: calc(100% + 40px); margin-left: -20px; margin-right: -20px; margin-top: auto; }
+/* Applied edge-to-edge footer stretch on dmca and dev scroll areas */
+.dmca-content .premium-copyright, .dev-scroll-area .premium-copyright { width: calc(100% + 40px); margin-left: -20px; margin-right: -20px; margin-top: auto; }
 
 .quote-card { background: linear-gradient(135deg, rgba(255, 255, 255, 0.08) 0%, rgba(255, 255, 255, 0.02) 100%); backdrop-filter: blur(20px); border: 1px solid rgba(255, 255, 255, 0.25); border-top: 1px solid rgba(255, 255, 255, 0.4); border-left: 1px solid rgba(255, 255, 255, 0.3); border-radius: 24px; padding: 26px 22px; margin-bottom: 25px; position: relative; overflow: hidden; box-shadow: 0 15px 35px rgba(0, 0, 0, 0.7), 0 0 25px rgba(255, 255, 255, 0.12), inset 0 0 20px rgba(255, 255, 255, 0.05); flex-shrink: 0; transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1); }
 .quote-card:hover { transform: translateY(-4px); box-shadow: 0 20px 40px rgba(0, 0, 0, 0.8), 0 0 35px rgba(255, 255, 255, 0.22), inset 0 0 25px rgba(255, 255, 255, 0.08); }
@@ -117,20 +119,19 @@ main .premium-copyright { width: calc(100% + 40px); margin-left: -20px; margin-r
 .book-container { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; margin-bottom: 25px; }
 
 .book-card { background-color: var(--bg-card); border: 1px solid var(--border-color); border-radius: 16px; overflow: hidden; cursor: pointer; display: flex; flex-direction: column; box-shadow: 0 4px 15px rgba(0,0,0,0.5); transition: transform 0.2s, box-shadow 0.2s; }
-/* NAYA FIX: Bookmark button press karne se ab card nahi hilega */
 .book-card:not(:has(.bookmark-btn:active)):not(:has(.bookmark-btn:hover)):active { transform: scale(0.98); }
 
 .card-img-wrapper { position: relative; width: 100%; height: 180px; background: #fff; transition: height 0.3s ease;}
 .book-image { width: 100%; height: 100%; object-fit: contain; display: block; }
 
-/* NAYA FIX: FREE Tag par premium glow effect add kiya gaya hai */
+/* FIX: FREE Tag Solid Green with NO external glow */
 .badge-free { 
     position: absolute; top: 8px; left: 8px; 
-    background: rgba(34, 197, 94, 0.15); 
-    color: #4ade80; font-size: 10px; font-weight: 800; 
+    background: #22c55e; 
+    color: #ffffff; font-size: 10px; font-weight: 800; 
     padding: 4px 8px; border-radius: 12px; letter-spacing: 0.5px; z-index: 2; 
-    border: 1px solid rgba(74, 222, 128, 0.6); 
-    box-shadow: 0 0 15px rgba(34, 197, 94, 0.4), 0 4px 12px rgba(34, 197, 94, 0.2); 
+    border: none; 
+    box-shadow: 0 4px 6px rgba(0,0,0,0.3); 
 }
 
 .bookmark-btn { position: absolute; top: 8px; right: 8px; width: 32px; height: 32px; background: rgba(0, 0, 0, 0.7); border-radius: 50%; display: flex; justify-content: center; align-items: center; color: #ffffff; font-size: 15px; z-index: 5; cursor: pointer; transition: all 0.2s ease; border: 1px solid rgba(255,255,255,0.1); }
@@ -218,8 +219,6 @@ main .premium-copyright { width: calc(100% + 40px); margin-left: -20px; margin-r
 .noti-main-title { font-size: 17px; font-weight: 800; color: #ffffff; display: flex; align-items: center; gap: 6px; font-family: 'Poppins', sans-serif; letter-spacing: 0.5px; }
 .noti-sub-title { font-size: 12px; color: var(--text-secondary); font-weight: 500; margin-top: 2px; }
 .verified-icon-svg { width: 14px; height: 14px; flex-shrink: 0; filter: drop-shadow(0px 2px 5px rgba(0, 0, 0, 0.4)); }
-.noti-circle-btn { width: 36px; height: 36px; border-radius: 50%; background-color: transparent; border: 1px solid rgba(255, 255, 255, 0.25); display: flex; justify-content: center; align-items: center; color: #ffffff; font-size: 15px; cursor: pointer; transition: 0.2s ease; backdrop-filter: blur(4px); }
-.noti-circle-btn:active { transform: scale(0.9); background-color: rgba(255, 255, 255, 0.1); }
 .noti-body { flex: 1; padding: 20px; overflow-y: auto; display: flex; flex-direction: column; gap: 15px; background-color: #000000; -webkit-overflow-scrolling: touch; transform: translateZ(0); will-change: transform; overscroll-behavior-y: contain;}
 .noti-body::-webkit-scrollbar { display: none; }
 .noti-card-dynamic { display: flex; gap: 15px; align-items: center; background-color: rgba(20, 20, 20, 0.95); border-radius: 16px; padding: 15px; border: 1px solid rgba(255, 255, 255, 0.1); box-shadow: 0 10px 30px rgba(0, 0, 0, 0.7); }
@@ -227,8 +226,6 @@ main .premium-copyright { width: calc(100% + 40px); margin-left: -20px; margin-r
 .noti-card-content { display: flex; flex-direction: column; gap: 4px; flex: 1; }
 .noti-card-title { font-size: 0.95rem; color: #ffffff; font-weight: 700; line-height: 1.3;}
 .noti-card-desc { font-size: 0.8rem; color: var(--text-secondary); }
-
-.panel-fixed-footer { position: relative; width: 100%; padding: 20px 10px; padding-bottom: calc(20px + env(safe-area-inset-bottom, 0px)); text-align: center; font-size: 9px; font-weight: 700; color: #ffffff; letter-spacing: 0.8px; text-transform: uppercase; background: transparent; border-top: 1px solid rgba(255, 255, 255, 0.15); margin-top: auto; }
 
 .dev-scroll-area { flex: 1; width: 100%; overflow-y: auto; overflow-x: hidden; padding-bottom: 0px; display: flex; flex-direction: column; background-color: #000000; -webkit-overflow-scrolling: touch; transform: translateZ(0); will-change: transform; overscroll-behavior-y: contain; overscroll-behavior-x: none; }
 .dev-scroll-area::-webkit-scrollbar { display: none; }
