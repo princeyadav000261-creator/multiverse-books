@@ -530,10 +530,6 @@ document.getElementById('dynamic-noti-container').addEventListener('click', (e) 
 
 document.getElementById('sidebarHeader').addEventListener('click', openMyProfileLocal);
 
-
-// ==========================================
-// 🚀 100% REAL-TIME ADVANCED RANKING LOGIC
-// ==========================================
 async function openMyProfileLocal() {
     if(!isUserLoggedIn || !auth.currentUser) {
         document.getElementById('sidebar').classList.remove('active');
@@ -576,7 +572,6 @@ async function openMyProfileLocal() {
             allUsers.push({ id: docSnap.id, ...docSnap.data() });
         });
 
-        // 🌟 FLAWLESS 3-STEP SORTING ENGINE 🌟
         allUsers.sort((a, b) => {
             let uploadsA = parseInt(a.totalUploads) || 0;
             let uploadsB = parseInt(b.totalUploads) || 0;
@@ -625,7 +620,6 @@ async function openMyProfileLocal() {
         showToast("Error loading profile data");
     }
 }
-// ==========================================
 
 
 document.getElementById('closeProfileBtn').addEventListener('click', closeMyProfileLocal);
@@ -820,8 +814,10 @@ document.getElementById('addBookForm').addEventListener('submit', async (e) => {
     const pdfUrlInput = document.getElementById('inPdfUrl').value.trim(); 
 
     if (!IS_SUPER_ADMIN) {
-        if (!pdfUrlInput.includes('drive.google.com')) { 
-            showToast("Failed: Normal users can only upload Google Drive links!"); 
+        // 🌟 UPDATED LOGIC TO ALLOW GOOGLE DRIVE, MEGA, OR MEDIAFIRE FOR NORMAL USERS
+        const lowerUrl = pdfUrlInput.toLowerCase();
+        if (!(lowerUrl.includes('drive.google.com') || lowerUrl.includes('mega.nz') || lowerUrl.includes('mega.io') || lowerUrl.includes('mediafire.com'))) { 
+            showToast("Failed: You can only upload Google Drive, MEGA, or MediaFire links!"); 
             return; 
         }
     }
@@ -973,7 +969,16 @@ document.getElementById('editBookForm').addEventListener('submit', async (e) => 
     e.preventDefault(); 
     const btn = document.getElementById('editSaveBtn'); const originalText = btn.innerHTML;
     const pdfUrlInput = document.getElementById('edPdfUrl').value.trim();
-    if (!IS_SUPER_ADMIN) { if (!pdfUrlInput.includes('drive.google.com')) { showToast("Failed: You can only upload Google Drive links!"); return; } }
+
+    if (!IS_SUPER_ADMIN) { 
+        // 🌟 UPDATED LOGIC FOR EDIT AS WELL
+        const lowerUrl = pdfUrlInput.toLowerCase();
+        if (!(lowerUrl.includes('drive.google.com') || lowerUrl.includes('mega.nz') || lowerUrl.includes('mega.io') || lowerUrl.includes('mediafire.com'))) { 
+            showToast("Failed: You can only upload Google Drive, MEGA, or MediaFire links!"); 
+            return; 
+        } 
+    }
+
     btn.innerHTML = `<span class="btn-text" style="display: flex; align-items: center; justify-content: center; gap: 10px;"><div class="premium-loader"></div> Saving...</span>`; btn.disabled = true;
 
     const docId = document.getElementById('editDocId').value;
