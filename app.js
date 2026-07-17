@@ -515,12 +515,12 @@ document.getElementById('savedBooksContainer').addEventListener('click', (e) => 
 function generateNotifications() {
     const notiContainer = document.getElementById('dynamic-noti-container'); 
     notiContainer.innerHTML = ''; 
-    // 🔥 CHANGED NOTIFICATION COUNT TO 45 🔥
+    // 🔥 LIMIT CHANGED TO 45 & TEXT STYLE UPDATED 🔥
     booksData.slice(0, 45).forEach((book) => {
         let dateStr = "00/00/0000";
         if (book.dateAdded) { dateStr = sanitizeHTML(book.dateAdded); } 
         else if (book.createdAt) { const d = new Date(book.createdAt); dateStr = `${String(d.getDate()).padStart(2, '0')}/${String(d.getMonth()+1).padStart(2, '0')}/${d.getFullYear()}`; }
-        notiContainer.innerHTML += `<div class="noti-card-dynamic" data-slug="${book.slug}" style="cursor:pointer;"><img src="${book.image}" loading="lazy" class="noti-card-img" alt="Logo"><div class="noti-card-content"><div class="noti-card-title">${sanitizeHTML(book.title)} Book Added ✅</div><div class="noti-card-desc">New book is now available.</div><div style="font-size: 10px; color: #10b981; margin-top: 2px; font-weight: 700; display: flex; align-items: center; gap: 4px;"><i class="far fa-calendar-alt"></i> Added: ${dateStr}</div></div></div>`;
+        notiContainer.innerHTML += `<div class="noti-card-dynamic" data-slug="${book.slug}" style="cursor:pointer;"><img src="${book.image}" loading="lazy" class="noti-card-img" alt="Logo"><div class="noti-card-content"><div class="noti-card-title"><span style="color:#ffffff; font-weight:700;">${sanitizeHTML(book.title)}</span> <span style="font-weight:500; color:#a1a1aa; font-size:0.85rem;">Book Added ✅</span></div><div class="noti-card-desc">New book is now available.</div><div style="font-size: 10px; color: #10b981; margin-top: 2px; font-weight: 700; display: flex; align-items: center; gap: 4px;"><i class="far fa-calendar-alt"></i> Added: ${dateStr}</div></div></div>`;
     });
 }
 
