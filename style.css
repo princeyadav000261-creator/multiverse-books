@@ -25,9 +25,32 @@
     --dev-text-secondary: #a1a1aa;
 }
 
-* { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Inter', 'Poppins', sans-serif; -webkit-tap-highlight-color: transparent; }
+/* 🌟 GLOBAL TEXT SELECTION & LONG PRESS DISABLE */
+* { 
+    margin: 0; padding: 0; box-sizing: border-box; font-family: 'Inter', 'Poppins', sans-serif; -webkit-tap-highlight-color: transparent; 
+    -webkit-touch-callout: none; /* iOS Safari/Android popup disable */
+    -webkit-user-select: none; /* Safari text selection disable */
+    -moz-user-select: none; /* Firefox */
+    -ms-user-select: none; /* IE/Edge */
+    user-select: none; /* Standard */
+}
+
+/* INPUT FIELDS KE LIYE TEXT SELECTION ON RAKHNA ZARURI HAI */
+input, textarea, select {
+    -webkit-touch-callout: default;
+    -webkit-user-select: auto;
+    -moz-user-select: auto;
+    -ms-user-select: auto;
+    user-select: auto;
+}
+
+/* 🌟 IMAGE DOWNLOAD & HOLD POPUP BLOCKER */
+img { 
+    -webkit-touch-callout: none; -webkit-user-select: none; -khtml-user-select: none; -moz-user-select: none; -ms-user-select: none; user-select: none; 
+    pointer-events: none; /* Prevents any interaction/download popup */
+}
+
 body { background-color: #000000; color: #ffffff; display: flex; justify-content: center; height: 100vh; height: 100dvh; position: relative; overflow: hidden; }
-img { -webkit-touch-callout: none; -webkit-user-select: none; -khtml-user-select: none; -moz-user-select: none; -ms-user-select: none; user-select: none; }
 
 .app-container { width: 100%; max-width: 414px; height: 100%; height: 100dvh; background-color: var(--bg-main); position: relative; overflow: hidden; display: flex; flex-direction: column; box-shadow: 0 0 20px rgba(0,0,0,0.8); }
 
@@ -222,7 +245,7 @@ main .premium-copyright { width: calc(100% + 40px); margin-left: -20px; margin-r
 .noti-card-dynamic { display: flex; gap: 15px; align-items: center; background-color: rgba(20, 20, 20, 0.95); border-radius: 16px; padding: 15px; border: 1px solid rgba(255, 255, 255, 0.1); box-shadow: 0 10px 30px rgba(0, 0, 0, 0.7); }
 .noti-card-img { width: 45px; height: 60px; border-radius: 6px; object-fit: contain; background: #fff; flex-shrink: 0; }
 .noti-card-content { display: flex; flex-direction: column; gap: 4px; flex: 1; }
-.noti-card-title { font-size: 0.95rem; line-height: 1.3;}
+.noti-card-title { font-size: 0.95rem; color: #ffffff; font-weight: 700; line-height: 1.3;}
 .noti-card-desc { font-size: 0.8rem; color: var(--text-secondary); }
 
 .dev-scroll-area { flex: 1; width: 100%; overflow-y: auto; overflow-x: hidden; padding-bottom: 0px; display: flex; flex-direction: column; background-color: #000000; -webkit-overflow-scrolling: touch; transform: translateZ(0); will-change: transform; overscroll-behavior-y: contain; overscroll-behavior-x: none; }
@@ -453,7 +476,6 @@ select.adm-input { appearance: none; -webkit-appearance: none; padding-right: 40
 .filter-bottom-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.7); backdrop-filter: blur(4px); z-index: 999999; display: flex; align-items: flex-end; opacity: 0; pointer-events: none; transition: opacity 0.3s ease; }
 .filter-bottom-overlay.active { opacity: 1; pointer-events: all; }
 
-/* 🌟 FILTER SHEET OPENS TO 92vh */
 .filter-bottom-sheet { 
     width: 100%; 
     background: #121212; 
@@ -478,7 +500,6 @@ select.adm-input { appearance: none; -webkit-appearance: none; padding-right: 40
 .f-close { width: 34px; height: 34px; border-radius: 50%; background: transparent; display: flex; justify-content: center; align-items: center; color: #a1a1aa; cursor: pointer; border: 1px solid rgba(255,255,255,0.15); transition: 0.2s; }
 .f-close:active { transform: scale(0.9); background: rgba(255,255,255,0.1); }
 
-/* 🌟 UPDATED FILTER GRID FIX - ITEMS WON'T SHRINK ANYMORE */
 .f-options-grid { 
     display: grid; 
     grid-template-columns: repeat(2, 1fr); 
@@ -490,11 +511,10 @@ select.adm-input { appearance: none; -webkit-appearance: none; padding-right: 40
 }
 .f-options-grid::-webkit-scrollbar { display: none; }
 
-/* 🌟 PERFECT CENTER FIX & HEIGHT FIX */
 .f-pill { 
     display: block; 
     width: 100%;
-    height: 46px; /* Bada Size (Premium look) */
+    height: 46px; 
     line-height: 24px; 
     text-align: center; 
     padding: 10px 12px; 
