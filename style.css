@@ -285,14 +285,13 @@ main .premium-copyright { width: calc(100% + 40px); margin-left: -20px; margin-r
 .dmca-contact-link { display: inline-flex; align-items: center; gap: 8px; color: #ffffff; font-weight: 700; text-decoration: none; margin-top: 15px; padding: 12px 20px; background: rgba(255, 255, 255, 0.1); border: 1px solid rgba(255, 255, 255, 0.2); border-radius: 14px; font-size: 0.9rem; transition: all 0.2s ease; }
 .dmca-contact-link:active { transform: scale(0.95); background: rgba(255, 255, 255, 0.2); }
 
-/* 🌟 UPDATED LOADER LOGO FIXES */
 .loader-screen { position: fixed; inset: 0; display: flex; justify-content: center; align-items: center; flex-direction: column; background-color: #000000; z-index: 9999999; overflow: hidden; transition: opacity .3s; padding-bottom: 12vh; }
 .loader-logo { 
     width: 115px; 
     height: 115px; 
     border-radius: 30px; 
     overflow: hidden; 
-    border: 5px solid #71717a; /* ONLY GRAY BORDER NOW */
+    border: 5px solid #71717a; 
     z-index: 5; 
     position: relative; 
     background: transparent;
@@ -491,7 +490,26 @@ select.adm-input { appearance: none; -webkit-appearance: none; padding-right: 40
 }
 .f-options-grid::-webkit-scrollbar { display: none; }
 
-.f-pill { display: flex; align-items: center; justify-content: center; min-height: 44px; text-align: center; padding: 10px 10px; background: linear-gradient(145deg, rgba(255,255,255,0.06), rgba(255,255,255,0.02)); border: 1px solid rgba(255,255,255,0.08); border-radius: 12px; color: #a1a1aa; font-weight: 600; font-size: 0.85rem; cursor: pointer; transition: all 0.2s ease; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; user-select: none; box-shadow: 0 4px 10px rgba(0,0,0,0.2); }
+/* 🌟 PERFECT CENTER FIX */
+.f-pill { 
+    display: block; 
+    line-height: 20px; 
+    text-align: center; 
+    padding: 12px 10px; 
+    background: linear-gradient(145deg, rgba(255,255,255,0.06), rgba(255,255,255,0.02)); 
+    border: 1px solid rgba(255,255,255,0.08); 
+    border-radius: 12px; 
+    color: #a1a1aa; 
+    font-weight: 600; 
+    font-size: 0.85rem; 
+    cursor: pointer; 
+    transition: all 0.2s ease; 
+    white-space: nowrap; 
+    overflow: hidden; 
+    text-overflow: ellipsis; 
+    user-select: none; 
+    box-shadow: 0 4px 10px rgba(0,0,0,0.2); 
+}
 .f-pill:hover { background: rgba(255,255,255,0.1); transform: translateY(-2px); color: #fff; border-color: rgba(255,255,255,0.2); }
 .f-pill:active { transform: scale(0.95); }
 .f-pill.active { background: rgba(16, 185, 129, 0.1); border-color: #10b981; color: #10b981; box-shadow: 0 4px 15px rgba(16, 185, 129, 0.2); font-weight: 800; }
