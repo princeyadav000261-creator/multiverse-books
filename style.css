@@ -245,7 +245,7 @@ main .premium-copyright { width: calc(100% + 40px); margin-left: -20px; margin-r
 .noti-card-dynamic { display: flex; gap: 15px; align-items: center; background-color: rgba(20, 20, 20, 0.95); border-radius: 16px; padding: 15px; border: 1px solid rgba(255, 255, 255, 0.1); box-shadow: 0 10px 30px rgba(0, 0, 0, 0.7); }
 .noti-card-img { width: 45px; height: 60px; border-radius: 6px; object-fit: contain; background: #fff; flex-shrink: 0; }
 .noti-card-content { display: flex; flex-direction: column; gap: 4px; flex: 1; }
-.noti-card-title { font-size: 0.95rem; color: #ffffff; font-weight: 700; line-height: 1.3;}
+.noti-card-title { font-size: 0.95rem; line-height: 1.3;}
 .noti-card-desc { font-size: 0.8rem; color: var(--text-secondary); }
 
 .dev-scroll-area { flex: 1; width: 100%; overflow-y: auto; overflow-x: hidden; padding-bottom: 0px; display: flex; flex-direction: column; background-color: #000000; -webkit-overflow-scrolling: touch; transform: translateZ(0); will-change: transform; overscroll-behavior-y: contain; overscroll-behavior-x: none; }
@@ -355,14 +355,46 @@ main .premium-copyright { width: calc(100% + 40px); margin-left: -20px; margin-r
 .login-wrapper *:not(i) { font-family: 'Outfit', sans-serif; }
 .logo-container { text-align: center; margin-bottom: 25px; width: 100%; }
 
-.brand-logo { width: 115px; height: 115px; border-radius: 22px; object-fit: cover; margin-bottom: 20px; border: 6px solid #ffffff; box-shadow: 0 15px 40px rgba(0,0,0,0.9); transition: transform 0.3s ease; }
+/* 🌟 UPDATED: LOGO BORDER COLOR GRAY */
+.brand-logo { width: 115px; height: 115px; border-radius: 22px; object-fit: cover; margin-bottom: 20px; border: 6px solid #71717a; box-shadow: 0 15px 40px rgba(0,0,0,0.9); transition: transform 0.3s ease; }
 .brand-logo:hover { transform: scale(1.05); }
 
 .brand-title { font-size: 35px; font-weight: 800; letter-spacing: 1.5px; text-transform: uppercase; text-shadow: 0 4px 15px rgba(0,0,0,0.8); margin-top: 10px; color: #fff; }
 .brand-subtitle { font-size: 11px; letter-spacing: 0.5px; color: #71717a; margin-top: 8px; text-transform: uppercase; font-weight: 600; width: 100%; }
-.glass-card { background: linear-gradient(135deg, rgba(255, 255, 255, 0.08) 0%, rgba(255, 255, 255, 0.01) 100%); backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px); border-radius: 16px; padding: 40px 30px; width: 100%; border-top: 1px solid rgba(255, 255, 255, 0.45); border-left: 1px solid rgba(255, 255, 255, 0.3); border-bottom: 1px solid rgba(255, 255, 255, 0.05); border-right: 1px solid rgba(255, 255, 255, 0.05); box-shadow: inset 0 0 35px rgba(255, 255, 255, 0.12), inset 0 4px 20px rgba(255, 255, 255, 0.35), 0 30px 60px rgba(0, 0, 0, 0.7); transition: all 0.4s cubic-bezier(0.25, 0.8, 0.25, 1); position: relative; overflow: hidden; }
-.glass-card::before { content: ''; position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: radial-gradient(circle at 0% 0%, rgba(255, 255, 255, 0.2) 0%, transparent 60%); pointer-events: none; z-index: 0; }
-.glass-card:hover { transform: translateY(-3px); box-shadow: inset 0 0 40px rgba(255, 255, 255, 0.15), inset 0 4px 25px rgba(255, 255, 255, 0.4), 0 40px 75px rgba(0, 0, 0, 0.9); }
+
+/* 🌟 UPDATED: PREMIUM LOGIN CARD GLOW */
+.glass-card { 
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.1) 0%, rgba(255, 255, 255, 0.02) 100%); 
+    backdrop-filter: blur(20px); 
+    -webkit-backdrop-filter: blur(20px); 
+    border-radius: 16px; 
+    padding: 40px 30px; 
+    width: 100%; 
+    border-top: 1px solid rgba(255, 255, 255, 0.5); 
+    border-left: 1px solid rgba(255, 255, 255, 0.3); 
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05); 
+    border-right: 1px solid rgba(255, 255, 255, 0.05); 
+    box-shadow: inset 0 0 60px rgba(255, 255, 255, 0.18), inset 0 4px 25px rgba(255, 255, 255, 0.4), 0 30px 60px rgba(0, 0, 0, 0.8); 
+    transition: all 0.4s cubic-bezier(0.25, 0.8, 0.25, 1); 
+    position: relative; 
+    overflow: hidden; 
+}
+.glass-card::before { 
+    content: ''; 
+    position: absolute; top: -50%; left: -50%; width: 200%; height: 200%; 
+    background: radial-gradient(circle at 50% 50%, rgba(255, 255, 255, 0.12) 0%, transparent 50%); 
+    pointer-events: none; z-index: 0; 
+    animation: premiumGlow 5s infinite alternate ease-in-out; 
+}
+@keyframes premiumGlow { 
+    0% { transform: scale(0.9); opacity: 0.7; } 
+    100% { transform: scale(1.1); opacity: 1; } 
+}
+.glass-card:hover { 
+    transform: translateY(-3px); 
+    box-shadow: inset 0 0 80px rgba(255, 255, 255, 0.25), inset 0 4px 30px rgba(255, 255, 255, 0.5), 0 40px 75px rgba(0, 0, 0, 0.95); 
+}
+
 .form-header, #loginForm, .social-login { position: relative; z-index: 1; }
 .form-header { display: flex; align-items: center; justify-content: center; gap: 10px; font-size: 22px; font-weight: 600; margin-bottom: 35px; color: #fff; letter-spacing: 1px; }
 .form-header i { color: #ffffff; font-size: 22px; text-shadow: 0 2px 12px rgba(255, 255, 255, 0.4); } 
@@ -536,9 +568,11 @@ select.adm-input { appearance: none; -webkit-appearance: none; padding-right: 40
 .f-pill:active { transform: scale(0.95); }
 .f-pill.active { background: rgba(16, 185, 129, 0.1); border-color: #10b981; color: #10b981; box-shadow: 0 4px 15px rgba(16, 185, 129, 0.2); font-weight: 800; }
 
+/* 🌟 MEDIA QUERIES & MOBILE ADJUSTMENTS */
 @media (max-width: 420px) {
     .brand-title { font-size: 29px; } 
-    .brand-logo { width: 95px; height: 95px; border: 4px solid #ffffff; box-shadow: 0 10px 25px rgba(0,0,0,0.9); }
+    /* 🌟 LOGO BORDER COLOR GRAY FOR MOBILE */
+    .brand-logo { width: 95px; height: 95px; border: 4px solid #71717a; box-shadow: 0 10px 25px rgba(0,0,0,0.9); }
     .brand-subtitle { font-size: 9px; } 
     .glass-card { padding: 35px 25px; }
 }
@@ -646,3 +680,4 @@ select.adm-input { appearance: none; -webkit-appearance: none; padding-right: 40
 .ug-action-btn:hover::before { left: 100%; }
 .ug-action-btn:hover { transform: translateY(-2px); background: linear-gradient(145deg, #404040, #141414); box-shadow: inset 0 4px 20px rgba(255, 255, 255, 0.45), inset 0 0 10px rgba(255, 255, 255, 0.25), inset 0 -3px 10px rgba(0, 0, 0, 0.9), 0 10px 25px rgba(0, 0, 0, 0.8); }
 .ug-action-btn:active { transform: translateY(1px); box-shadow: inset 0 2px 5px rgba(255, 255, 255, 0.1), inset 0 4px 10px rgba(0, 0, 0, 0.9); }
+
