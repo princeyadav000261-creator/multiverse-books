@@ -515,7 +515,8 @@ document.getElementById('savedBooksContainer').addEventListener('click', (e) => 
 function generateNotifications() {
     const notiContainer = document.getElementById('dynamic-noti-container'); 
     notiContainer.innerHTML = ''; 
-    booksData.slice(0, 15).forEach((book) => {
+    // 🔥 CHANGED NOTIFICATION COUNT TO 45 🔥
+    booksData.slice(0, 45).forEach((book) => {
         let dateStr = "00/00/0000";
         if (book.dateAdded) { dateStr = sanitizeHTML(book.dateAdded); } 
         else if (book.createdAt) { const d = new Date(book.createdAt); dateStr = `${String(d.getDate()).padStart(2, '0')}/${String(d.getMonth()+1).padStart(2, '0')}/${d.getFullYear()}`; }
@@ -780,7 +781,6 @@ function shareBookLocal() {
     else { navigator.clipboard.writeText(shareUrl); alert("Link Copied!"); }
 }
 
-// 🌟 UPDATED: DELETE MESSAGE SHOWS IN RED WITH TRASH ICON
 function showToast(message) {
     const toast = document.getElementById('toast'); 
     const lowerMsg = message.toLowerCase();
