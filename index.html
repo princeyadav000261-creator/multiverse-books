@@ -468,8 +468,66 @@
                                     <select id="inLang" class="adm-input"><option value="Hindi">Hindi</option><option value="English">English</option><option value="Bilingual">Bilingual</option></select>
                                 </div>
                                 <div class="adm-form-group"><label class="adm-label">Exam Relevance</label><input type="text" id="inExams" class="adm-input" placeholder="e.g. SSC, BPSC, RRB" required autocomplete="off"></div>
-                                <div class="adm-form-group"><label class="adm-label">Cover Image URL</label><input type="url" id="inImage" class="adm-input" placeholder="https://example.com/image.jpg" required autocomplete="off"></div>
-                                <div class="adm-form-group"><label class="adm-label">Direct PDF Link</label><input type="url" id="inPdfUrl" class="adm-input" placeholder="Google Drive Link" required autocomplete="off"></div>
+                                
+                                <!-- 🌟 COVER IMAGE UPLOAD (URL WALA HATA DIYA HAI) -->
+                                <div class="adm-form-group">
+                                    <div class="upload-card upload-purple">
+                                        <div class="uc-header">
+                                            <i class="fas fa-image"></i> COVER IMAGE <span class="uc-badge badge-purple">Image</span>
+                                        </div>
+                                        <div class="uc-body">
+                                            <div class="uc-illustration">
+                                                <i class="fas fa-photo-video uc-icon uc-purple-glow"></i>
+                                                <div class="uc-upload-btn-circle"><i class="fas fa-cloud-upload-alt"></i></div>
+                                            </div>
+                                            <div class="uc-actions">
+                                                <p>Drag & Drop Cover Image</p>
+                                                <div class="uc-divider"><span>or</span></div>
+                                                <label class="uc-btn">
+                                                    <i class="fas fa-image"></i> Choose from Gallery
+                                                    <input type="file" accept="image/*" hidden id="fileCoverGallery">
+                                                </label>
+                                                <label class="uc-btn">
+                                                    <i class="fas fa-folder-open"></i> Browse Files
+                                                    <input type="file" accept="image/*" hidden id="fileCoverBrowse">
+                                                </label>
+                                            </div>
+                                        </div>
+                                        <div class="uc-footer">JPG, PNG, WEBP • Max 5MB</div>
+                                        <!-- Note: app.js error na de isliye ise hidden rakha hai -->
+                                        <input type="hidden" id="inImage" value="">
+                                    </div>
+                                </div>
+
+                                <!-- 🌟 BOOK PDF UPLOAD (URL WALA HATA DIYA HAI) -->
+                                <div class="adm-form-group">
+                                    <div class="upload-card upload-red">
+                                        <div class="uc-header">
+                                            <i class="far fa-file-pdf"></i> BOOK PDF FILE <span class="uc-badge badge-red">PDF</span>
+                                        </div>
+                                        <div class="uc-body">
+                                            <div class="uc-illustration">
+                                                <i class="fas fa-file-pdf uc-icon uc-red-glow"></i>
+                                                <div class="uc-upload-btn-circle red-circle"><i class="fas fa-cloud-upload-alt"></i></div>
+                                            </div>
+                                            <div class="uc-actions">
+                                                <p>Drag & Drop PDF File</p>
+                                                <div class="uc-divider"><span>or</span></div>
+                                                <label class="uc-btn">
+                                                    <i class="fas fa-image"></i> Choose from Gallery
+                                                    <input type="file" accept=".pdf" hidden id="filePdfGallery">
+                                                </label>
+                                                <label class="uc-btn">
+                                                    <i class="fas fa-folder-open"></i> Browse Files
+                                                    <input type="file" accept=".pdf" hidden id="filePdfBrowse">
+                                                </label>
+                                            </div>
+                                        </div>
+                                        <div class="uc-footer">PDF • Max 50MB</div>
+                                        <!-- Note: app.js error na de isliye ise hidden rakha hai -->
+                                        <input type="hidden" id="inPdfUrl" value="">
+                                    </div>
+                                </div>
                                 
                                 <button type="submit" id="publishBtn" class="adm-submit-btn">
                                     <span class="btn-text" style="display: flex; align-items: center; justify-content: center; gap: 10px;"><i class="fas fa-cloud-upload-alt"></i> Publish Book</span>
@@ -514,6 +572,7 @@
         </div>
     </div>
 
+    <!-- Edit Modal (Isme URL abhi rakha hai, agar edit upload bhi chahiye toh bata dena) -->
     <div class="adm-modal-overlay" id="adminEditModal">
         <div class="adm-modal-box">
             <h3 style="color: #fff; margin-bottom: 15px; font-size: 1.1rem; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 10px; font-weight: 800;">
