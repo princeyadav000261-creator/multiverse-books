@@ -433,8 +433,6 @@ main .premium-copyright { width: calc(100% + 40px); margin-left: -20px; margin-r
 .adm-section.active { display: block; }
 @keyframes admFadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
 
-
-/* 🌟 NEW: SEAMLESS HEADER FOR ADD BOOK */
 .seamless-header {
     display: flex; align-items: center; gap: 15px; 
     margin-bottom: 25px; padding-bottom: 15px; 
@@ -486,7 +484,6 @@ main .premium-copyright { width: calc(100% + 40px); margin-left: -20px; margin-r
 .adm-form-group { display: flex; flex-direction: column; gap: 8px; margin-bottom: 20px; }
 .adm-label { font-size: 0.75rem; color: #d4d4d8; font-weight: 800 !important; text-transform: uppercase; letter-spacing: 0.8px; margin-left: 2px;} 
 
-/* 🌟 UPDATED: INPUT FIELDS (PREMIUM LOOK) */
 .adm-input { 
     width: 100%; 
     background: #121212; 
@@ -776,27 +773,37 @@ select.adm-input { appearance: none; -webkit-appearance: none; padding-right: 40
     height: 140px; position: relative; width: 100%;
 }
 
-/* 🌟 PDF Logo Stretching Fix */
+/* 🌟 FIX: Icon stretching solved */
 .uc-icon { 
     font-size: 75px; 
     line-height: 1; 
     display: block;
     text-align: center;
     flex-shrink: 0; /* Prevents icon from getting squished */
+    position: relative;
+    z-index: 1;
 }
 
 .uc-purple-glow { color: rgba(168, 85, 247, 0.9); filter: drop-shadow(0 0 15px rgba(168, 85, 247, 0.6)); }
 .uc-red-glow { color: rgba(239, 68, 68, 0.9); filter: drop-shadow(0 0 15px rgba(239, 68, 68, 0.6)); }
 
-/* Small Upload Button Over Icon */
+/* 🌟 FIX: Locked Small Upload Button to Bottom-Right of Icon */
 .uc-upload-btn-circle {
-    position: absolute; bottom: 5px; right: 25px;
-    width: 38px; height: 38px; border-radius: 50%;
-    background: #a855f7; color: #fff; font-size: 16px;
+    position: absolute; 
+    top: 50%;
+    left: 50%;
+    margin-top: 8px; /* Moves it exactly to the bottom corner */
+    margin-left: 18px; /* Moves it exactly to the right corner */
+    width: 32px; height: 32px; border-radius: 50%;
+    background: #a855f7; color: #fff; font-size: 13px;
     display: flex; justify-content: center; align-items: center;
-    border: 4px solid #0d0d12; box-shadow: 0 0 15px rgba(168, 85, 247, 0.6);
+    border: 3px solid #0d0d12; box-shadow: 0 0 12px rgba(168, 85, 247, 0.8);
+    z-index: 2;
 }
-.uc-upload-btn-circle.red-circle { background: #ef4444; box-shadow: 0 0 15px rgba(239, 68, 68, 0.6); }
+.uc-upload-btn-circle.red-circle { 
+    background: #ef4444; 
+    box-shadow: 0 0 12px rgba(239, 68, 68, 0.8); 
+}
 
 /* Actions (Right Side Buttons) */
 .uc-actions {
@@ -830,5 +837,5 @@ select.adm-input { appearance: none; -webkit-appearance: none; padding-right: 40
     .uc-actions { border-left: none; border-top: 1px dashed rgba(255,255,255,0.15); padding-left: 0; padding-top: 20px; width: 100%; }
     .uc-illustration { height: 110px; }
     .uc-icon { font-size: 70px; }
-    .uc-upload-btn-circle { right: 35%; }
+    /* Note: Remove overlapping right/bottom tags here so it stays fixed to the center logic */
 }
