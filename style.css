@@ -245,7 +245,7 @@ main .premium-copyright { width: calc(100% + 40px); margin-left: -20px; margin-r
 .noti-card-title { font-size: 0.95rem; line-height: 1.3;}
 .noti-card-desc { font-size: 0.8rem; color: var(--text-secondary); }
 
-.dev-scroll-area { flex: 1; width: 100%; overflow-y: auto; overflow-x: hidden; padding-bottom: 0px; display: flex; flex-direction: column; background-color: #000000; -webkit-overflow-scrolling: touch; transform: translateZ(0); will-change: transform; overscroll-behavior-y: contain; overscroll-behavior-x: none; }
+.dev-scroll-area { flex: 1; width: 100%; overflow-y: auto; overflow-x: hidden; padding: 0px; display: flex; flex-direction: column; background-color: #000000; -webkit-overflow-scrolling: touch; transform: translateZ(0); will-change: transform; overscroll-behavior-y: contain; overscroll-behavior-x: none; }
 .dev-scroll-area::-webkit-scrollbar { display: none; }
 .dev-back-btn { position: absolute; top: 20px; left: 20px; width: 42px; height: 42px; border-radius: 50%; background-color: transparent; border: 1px solid rgba(255, 255, 255, 0.25); color: #ffffff; font-size: 18px; display: flex; justify-content: center; align-items: center; cursor: pointer; z-index: 1001; outline: none; transition: 0.2s ease; }
 .dev-back-btn:active { transform: scale(0.90); background-color: rgba(255, 255, 255, 0.1); }
@@ -773,32 +773,53 @@ select.adm-input { appearance: none; -webkit-appearance: none; padding-right: 40
     height: 140px; position: relative; width: 100%;
 }
 
-/* 🌟 FIX: Icon stretching solved */
+/* 🌟 FIX: Custom Cut-out PDF Text Container 🌟 */
+.custom-pdf-wrap {
+    position: relative;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
 .uc-icon { 
     font-size: 75px; 
     line-height: 1; 
     display: block;
     text-align: center;
-    flex-shrink: 0; /* Prevents icon from getting squished */
+    flex-shrink: 0;
     position: relative;
     z-index: 1;
+}
+
+/* 🌟 FIX: Text precisely centered on the File shape 🌟 */
+.pdf-center-text {
+    position: absolute;
+    top: 56%; /* Slightly lower to adjust for the folded file corner */
+    left: 50%;
+    transform: translate(-50%, -50%);
+    font-size: 19px;
+    font-weight: 900;
+    color: #0d0d12; /* Matches the background so it looks transparent/cut out! */
+    z-index: 2;
+    font-family: 'Poppins', sans-serif;
+    letter-spacing: 1px;
 }
 
 .uc-purple-glow { color: rgba(168, 85, 247, 0.9); filter: drop-shadow(0 0 15px rgba(168, 85, 247, 0.6)); }
 .uc-red-glow { color: rgba(239, 68, 68, 0.9); filter: drop-shadow(0 0 15px rgba(239, 68, 68, 0.6)); }
 
-/* 🌟 FIX: Locked Small Upload Button to Bottom-Right of Icon */
+/* 🌟 FIX: Upload Button locked to Bottom Right Corner of Icon 🌟 */
 .uc-upload-btn-circle {
     position: absolute; 
     top: 50%;
     left: 50%;
-    margin-top: 8px; /* Moves it exactly to the bottom corner */
-    margin-left: 18px; /* Moves it exactly to the right corner */
-    width: 32px; height: 32px; border-radius: 50%;
+    margin-top: 10px; /* Locked bottom distance */
+    margin-left: 20px; /* Locked right distance */
+    width: 34px; height: 34px; border-radius: 50%;
     background: #a855f7; color: #fff; font-size: 13px;
     display: flex; justify-content: center; align-items: center;
     border: 3px solid #0d0d12; box-shadow: 0 0 12px rgba(168, 85, 247, 0.8);
-    z-index: 2;
+    z-index: 3; /* Kept above everything */
 }
 .uc-upload-btn-circle.red-circle { 
     background: #ef4444; 
@@ -837,5 +858,5 @@ select.adm-input { appearance: none; -webkit-appearance: none; padding-right: 40
     .uc-actions { border-left: none; border-top: 1px dashed rgba(255,255,255,0.15); padding-left: 0; padding-top: 20px; width: 100%; }
     .uc-illustration { height: 110px; }
     .uc-icon { font-size: 70px; }
-    /* Note: Remove overlapping right/bottom tags here so it stays fixed to the center logic */
+    /* Note: Small upload button values are locked to the center, so no mobile adjustments needed for it! */
 }
