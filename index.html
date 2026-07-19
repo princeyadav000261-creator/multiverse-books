@@ -455,7 +455,6 @@
                 <div class="adm-content-area">
                     <div id="sectionAddBook" class="adm-section active">
                         
-                        <!-- 🌟 NEW SEAMLESS HEADER FOR ADD BOOK (Card removed) -->
                         <div class="seamless-header">
                             <div class="icon-wrapper"><i class="fas fa-pen-nib"></i></div>
                             <h2>Enter Book Details</h2>
@@ -509,7 +508,11 @@
                                     </div>
                                     <div class="uc-body">
                                         <div class="uc-illustration">
-                                            <i class="fas fa-file-pdf uc-icon uc-red-glow"></i>
+                                            <!-- 🌟 FIX: CUSTOM PDF ICON WRAPPER 🌟 -->
+                                            <div class="custom-pdf-wrap">
+                                                <i class="fas fa-file uc-icon uc-red-glow"></i>
+                                                <span class="pdf-center-text">PDF</span>
+                                            </div>
                                             <div class="uc-upload-btn-circle red-circle"><i class="fas fa-cloud-upload-alt"></i></div>
                                         </div>
                                         <div class="uc-actions">
