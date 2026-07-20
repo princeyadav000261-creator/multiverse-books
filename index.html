@@ -182,65 +182,85 @@
                 </div>
             </div>
 
+            <!-- PROPER FULL PAGE MY PROFILE PANEL -->
             <div class="overlay-panel" id="my-profile-panel">
-                <div style="display: flex; align-items: center; justify-content: center; height: 100%; padding: 20px;">
-                    <div class="profile-card">
-                        <div class="card-cover">
-                            <button class="close-btn" id="closeProfileBtn" aria-label="Close">
-                                <i class="fas fa-times"></i>
-                            </button>
-                        </div>
-                        
-                        <div class="profile-info">
-                            <div class="avatar-ring">
-                                <div class="avatar-inner">
-                                    <img id="profile-avatar-ui" src="https://i.postimg.cc/D0BF1b77/file-000000000e847207a64f6711d825a859.png" alt="Profile">
+                <div class="modal-header-fixed">
+                    <div class="header-content-wrapper" style="display: flex; align-items: center; gap: 15px; flex-grow: 1;">
+                        <button class="back-btn" id="closeProfileBtn"><i class="fas fa-arrow-left"></i></button>
+                        <h1 class="modal-title">MY PROFILE</h1>
+                    </div>
+                    <img src="https://i.postimg.cc/fygCB079/file-00000000d51c720780078a0d21adc0f6.png" class="header-right-logo" alt="Logo" oncontextmenu="return false;" draggable="false">
+                </div>
+                
+                <div class="dev-scroll-area">
+                    <!-- Profile Banner & Avatar (Matches Dev Page format) -->
+                    <div class="dev-hero-banner" style="background-image: url('https://i.postimg.cc/pVKbmQmR/IMG-20260626-WA0009.jpg'); min-height: 200px;">
+                        <div class="banner-fade-bottom"></div>
+                        <div class="hero-content-wrapper" style="justify-content: center; padding-bottom: 0;">
+                            <div class="profile-avatar-container" style="transform: translateY(35px);">
+                                <div class="dev-profile-img-wrapper" style="width: 110px; height: 110px;">
+                                    <img id="profile-avatar-ui" src="https://i.postimg.cc/D0BF1b77/file-000000000e847207a64f6711d825a859.png" class="dev-profile-img" oncontextmenu="return false;" draggable="false">
                                 </div>
-                                <div class="shield-badge"><i class="fas fa-shield-alt"></i></div>
-                            </div>
-                            <h2 class="user-name" id="profile-name-ui">Loading...</h2>
-                            <p class="user-email" id="profile-email-ui">Loading...</p>
-                        </div>
-
-                        <div class="divider"></div>
-
-                        <div class="stats-container">
-                            <div class="stat-card card-upload">
-                                <div class="icon-box"><i class="fas fa-cloud-upload-alt"></i></div>
-                                <div class="stat-info">
-                                    <div class="stat-label">Upload</div>
-                                    <div class="stat-value" id="profile-uploads">0</div>
-                                </div>
-                            </div>
-
-                            <div class="stat-card card-download">
-                                <div class="icon-box"><i class="fas fa-cloud-download-alt"></i></div>
-                                <div class="stat-info">
-                                    <div class="stat-label">Download</div>
-                                    <div class="stat-value" id="profile-downloads">0</div>
-                                </div>
-                            </div>
-
-                            <div class="stat-card card-bookmark">
-                                <div class="icon-box"><i class="fas fa-bookmark"></i></div>
-                                <div class="stat-info">
-                                    <div class="stat-label">Save</div>
-                                    <div class="stat-value" id="profile-saved">0</div>
-                                </div>
-                            </div>
-
-                            <div class="stat-card card-premium">
-                                <div class="icon-box"><i class="fas fa-crown"></i></div>
-                                <div class="stat-info">
-                                    <div class="stat-label">Rank</div>
-                                    <div class="stat-value premium-text" id="profile-rank">#--</div>
-                                </div>
+                                <div class="profile-shield" style="background: linear-gradient(135deg, #ec4899, #8b5cf6); border-color: #000; box-shadow: 0 4px 10px rgba(236, 72, 153, 0.5);"><i class="fas fa-shield-alt"></i></div>
                             </div>
                         </div>
+                    </div>
+
+                    <div class="premium-bio-section" style="margin-top: 30px; padding-bottom: 25px;">
+                        <div class="bio-greeting" id="profile-name-ui" style="font-size: 1.6rem; font-family: 'Plus Jakarta Sans', sans-serif;">Loading...</div>
+                        <div class="bio-quote" id="profile-email-ui" style="color: #a1a1aa; font-family: 'Plus Jakarta Sans', sans-serif; font-size: 0.9rem;">Loading...</div>
+                    </div>
+
+                    <!-- Stat Cards Grid -->
+                    <div class="stats-container" style="padding: 0 20px 25px; display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; width: 100%;">
+                        <div class="stat-card card-upload" style="backdrop-filter: blur(10px); border-radius: 16px; padding: 12px 10px; display: flex; align-items: center; gap: 10px;">
+                            <div class="icon-box" style="width: 36px; height: 36px; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 15px;"><i class="fas fa-cloud-upload-alt"></i></div>
+                            <div class="stat-info" style="display: flex; flex-direction: column; justify-content: center;">
+                                <div class="stat-label" style="font-size: 10px; color: #9ca3af; font-weight: 800; text-transform: uppercase;">Upload</div>
+                                <div class="stat-value" id="profile-uploads" style="font-size: 17px; font-weight: 800; color: #ffffff;">0</div>
+                            </div>
+                        </div>
+
+                        <div class="stat-card card-download" style="backdrop-filter: blur(10px); border-radius: 16px; padding: 12px 10px; display: flex; align-items: center; gap: 10px;">
+                            <div class="icon-box" style="width: 36px; height: 36px; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 15px;"><i class="fas fa-cloud-download-alt"></i></div>
+                            <div class="stat-info" style="display: flex; flex-direction: column; justify-content: center;">
+                                <div class="stat-label" style="font-size: 10px; color: #9ca3af; font-weight: 800; text-transform: uppercase;">Download</div>
+                                <div class="stat-value" id="profile-downloads" style="font-size: 17px; font-weight: 800; color: #ffffff;">0</div>
+                            </div>
+                        </div>
+
+                        <div class="stat-card card-bookmark" style="backdrop-filter: blur(10px); border-radius: 16px; padding: 12px 10px; display: flex; align-items: center; gap: 10px;">
+                            <div class="icon-box" style="width: 36px; height: 36px; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 15px;"><i class="fas fa-bookmark"></i></div>
+                            <div class="stat-info" style="display: flex; flex-direction: column; justify-content: center;">
+                                <div class="stat-label" style="font-size: 10px; color: #9ca3af; font-weight: 800; text-transform: uppercase;">Save</div>
+                                <div class="stat-value" id="profile-saved" style="font-size: 17px; font-weight: 800; color: #ffffff;">0</div>
+                            </div>
+                        </div>
+
+                        <div class="stat-card card-premium" style="backdrop-filter: blur(10px); border-radius: 16px; padding: 12px 10px; display: flex; align-items: center; gap: 10px;">
+                            <div class="icon-box" style="width: 36px; height: 36px; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 15px;"><i class="fas fa-crown"></i></div>
+                            <div class="stat-info" style="display: flex; flex-direction: column; justify-content: center;">
+                                <div class="stat-label" style="font-size: 10px; color: #9ca3af; font-weight: 800; text-transform: uppercase;">Rank</div>
+                                <div class="stat-value premium-text" id="profile-rank" style="font-size: 17px; font-weight: 800;">#--</div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- NEW TOP 10 LEADERBOARD -->
+                    <div style="padding: 0 20px 30px;">
+                        <div class="section-header-title" style="margin-bottom: 20px; justify-content: center;"><i class="fas fa-trophy" style="color: #fbbf24;"></i> TOP 10 CONTRIBUTORS</div>
+                        <div id="leaderboard-container" style="display: flex; flex-direction: column; gap: 12px;">
+                            <div style="text-align:center; color:#a1a1aa; font-weight:600;">Loading Leaderboard...</div>
+                        </div>
+                    </div>
+                    
+                    <div class="premium-copyright">
+                        © 2026 SPIDY BOOK HUB <span style="margin: 0 5px;">|</span> MADE WITH <i class="fas fa-heart" style="color: #ff4757; margin: 0 3px;"></i> BY MADxPRINCE
                     </div>
                 </div>
             </div>
 
+            <!-- Download Modal -->
             <div class="download-modal" id="downloadModal">
                 <div class="modal-header-fixed">
                     <div class="header-content-wrapper" style="display: flex; align-items: center; gap: 15px; flex-grow: 1;">
@@ -453,8 +473,8 @@
                 </div>
 
                 <div class="adm-content-area">
+                    <!-- Dashboard code as is -->
                     <div id="sectionAddBook" class="adm-section active">
-                        
                         <div class="seamless-header">
                             <div class="icon-wrapper"><i class="fas fa-pen-nib"></i></div>
                             <h2>Enter Book Details</h2>
@@ -475,9 +495,7 @@
                             
                             <div class="adm-form-group" style="margin-top: 10px;">
                                 <div class="upload-card upload-purple">
-                                    <div class="uc-header">
-                                        <i class="fas fa-image"></i> COVER IMAGE <span class="uc-badge badge-purple">Image</span>
-                                    </div>
+                                    <div class="uc-header"><i class="fas fa-image"></i> COVER IMAGE <span class="uc-badge badge-purple">Image</span></div>
                                     <div class="uc-body">
                                         <div class="uc-illustration">
                                             <i class="fas fa-photo-video uc-icon uc-purple-glow"></i>
@@ -486,14 +504,8 @@
                                         <div class="uc-actions">
                                             <p>Drag & Drop Cover Image</p>
                                             <div class="uc-divider"><span>or</span></div>
-                                            <label class="uc-btn">
-                                                <i class="fas fa-image"></i> Choose from Gallery
-                                                <input type="file" accept="image/*" hidden id="fileCoverGallery">
-                                            </label>
-                                            <label class="uc-btn">
-                                                <i class="fas fa-folder-open"></i> Browse Files
-                                                <input type="file" accept="image/*" hidden id="fileCoverBrowse">
-                                            </label>
+                                            <label class="uc-btn"><i class="fas fa-image"></i> Choose from Gallery<input type="file" accept="image/*" hidden id="fileCoverGallery"></label>
+                                            <label class="uc-btn"><i class="fas fa-folder-open"></i> Browse Files<input type="file" accept="image/*" hidden id="fileCoverBrowse"></label>
                                         </div>
                                     </div>
                                     <div class="uc-footer">JPG, PNG, WEBP • Max 5MB</div>
@@ -503,12 +515,9 @@
 
                             <div class="adm-form-group">
                                 <div class="upload-card upload-red">
-                                    <div class="uc-header">
-                                        <i class="far fa-file-pdf"></i> BOOK PDF FILE <span class="uc-badge badge-red">PDF</span>
-                                    </div>
+                                    <div class="uc-header"><i class="far fa-file-pdf"></i> BOOK PDF FILE <span class="uc-badge badge-red">PDF</span></div>
                                     <div class="uc-body">
                                         <div class="uc-illustration">
-                                            <!-- 🌟 FIX: CUSTOM PDF ICON WRAPPER 🌟 -->
                                             <div class="custom-pdf-wrap">
                                                 <i class="fas fa-file uc-icon uc-red-glow"></i>
                                                 <span class="pdf-center-text">PDF</span>
@@ -518,14 +527,8 @@
                                         <div class="uc-actions">
                                             <p>Drag & Drop PDF File</p>
                                             <div class="uc-divider"><span>or</span></div>
-                                            <label class="uc-btn">
-                                                <i class="fas fa-image"></i> Choose from Gallery
-                                                <input type="file" accept=".pdf" hidden id="filePdfGallery">
-                                            </label>
-                                            <label class="uc-btn">
-                                                <i class="fas fa-folder-open"></i> Browse Files
-                                                <input type="file" accept=".pdf" hidden id="filePdfBrowse">
-                                            </label>
+                                            <label class="uc-btn"><i class="fas fa-image"></i> Choose from Gallery<input type="file" accept=".pdf" hidden id="filePdfGallery"></label>
+                                            <label class="uc-btn"><i class="fas fa-folder-open"></i> Browse Files<input type="file" accept=".pdf" hidden id="filePdfBrowse"></label>
                                         </div>
                                     </div>
                                     <div class="uc-footer">PDF • Max 50MB</div>
@@ -537,7 +540,6 @@
                                 <span class="btn-text" style="display: flex; align-items: center; justify-content: center; gap: 10px;"><i class="fas fa-cloud-upload-alt"></i> Publish Book</span>
                             </button>
                         </form>
-
                     </div>
 
                     <div id="sectionPrompt" class="adm-section">
@@ -619,7 +621,8 @@
                     <span class="ug-blink-dot"></span>
                 </h2>
                 <div class="ug-text">
-​Kya aapko book upload karne mein pareshani ho raha hai? Hamara step-by-step tutorial dekhein aur platform par easily apni books live karein.                </div>
+Kya aapko book upload karne mein pareshani ho raha hai? Hamara step-by-step tutorial dekhein aur platform par easily apni books live karein.
+                </div>
                 <button class="ug-action-btn" onclick="window.open('https://youtube.com/@madxprince', '_blank')">
                     <svg class="upload-icon" viewBox="0 0 24 24" style="width: 20px; height: 20px; stroke: #ffffff; stroke-width: 2.5; fill: none; stroke-linecap: round; stroke-linejoin: round; filter: drop-shadow(0 0 2px rgba(255,255,255,0.5));">
                         <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
