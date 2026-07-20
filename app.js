@@ -73,7 +73,6 @@ let isAppReady = { auth: false, data: false };
 let hasTransitioned = false;
 let popupShown = false;
 
-// 🟢 NEW FAKE-TO-REAL LOADING SYNC LOGIC 🟢
 let loadingProgress = 0;
 let loaderInterval;
 
@@ -91,7 +90,6 @@ function updateLoaderUI(percent) {
     }
 }
 
-// Ye tab tak dheere-dheere chalega jab tak Firebase data nahi aa jata (Maximum 85% tak)
 loaderInterval = setInterval(() => {
     if (loadingProgress < 85) {
         loadingProgress += Math.floor(Math.random() * 5) + 2; 
@@ -498,7 +496,6 @@ document.getElementById('dynamic-noti-container').addEventListener('click', (e) 
     if(card) openDownloadPageLocal(card.getAttribute('data-slug'));
 });
 
-// 🟢 NEW FULL PAGE MY PROFILE PANEL LOGIC & LEADERBOARD 🟢
 document.getElementById('sidebarHeader').addEventListener('click', openMyProfileLocal);
 async function openMyProfileLocal() {
     if(!isUserLoggedIn || !auth.currentUser) {
@@ -513,7 +510,6 @@ async function openMyProfileLocal() {
     document.getElementById('sidebar-overlay').classList.remove('active');
 
     document.getElementById('profile-name-ui').innerText = sanitizeHTML(CURRENT_ADMIN_NAME);
-    document.getElementById('profile-email-ui').innerText = sanitizeHTML(CURRENT_ADMIN_EMAIL);
     document.getElementById('profile-avatar-ui').src = CURRENT_ADMIN_PHOTO;
     document.getElementById('profile-saved').innerText = savedBooks.length;
 
@@ -576,7 +572,6 @@ async function openMyProfileLocal() {
                 <img src="${photo}" class="lb-avatar" oncontextmenu="return false;" draggable="false">
                 <div class="lb-info">
                     <div class="lb-name">${sanitizeHTML(u.name || "User")}</div>
-                    <div class="lb-email">${sanitizeHTML(u.email || "")}</div>
                 </div>
                 <div class="lb-uploads"><i class="fas fa-upload"></i> ${userUploads}</div>
             </div>`;
