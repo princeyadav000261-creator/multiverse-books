@@ -207,15 +207,15 @@ document.getElementById('daily-quote-text').innerHTML = `<i class="fas fa-quote-
 document.getElementById('daily-quote-author').innerText = `— ${sanitizeHTML(quotes[currentQuoteIndex].author)}`;
 
 // ==========================================
-// AUTHENTICATION & LIVE CREDITS
+// 🚀 NAYA CREDITS SYSTEM (2 DOWNLOADS PER 24 HRS)
 // ==========================================
-function updateLiveCredits(uploads, downloads) {
+function updateLiveCredits(recentDownloadsCount) {
     if (IS_SUPER_ADMIN) {
         document.getElementById('profile-credits').innerHTML = `<span style="font-size: 24px;">&infin;</span>`; 
         return;
     }
-    let allowedDownloads = 2 + (uploads * 2);
-    let remainingCredits = allowedDownloads - downloads;
+    // Limit is strictly 2 books in 24 hours. No upload dependency.
+    let remainingCredits = 2 - recentDownloadsCount;
     if (remainingCredits < 0) remainingCredits = 0;
     document.getElementById('profile-credits').innerText = remainingCredits;
 }
@@ -252,12 +252,18 @@ onAuthStateChanged(auth, async (user) => {
                 switchAdminTabLocal('add');
             }
 
+            let recentCount = 0;
             if (!userSnap.exists()) {
-                await setDoc(userRef, { email: user.email, name: dName, photo: user.photoURL || "", totalUploads: 0, lifetimeDownloads: 0, createdAt: new Date().getTime() }, { merge: true });
-                updateLiveCredits(0, 0); 
+                await setDoc(userRef, { email: user.email, name: dName, photo: user.photoURL || "", recentDownloads: [], lifetimeDownloads: 0, createdAt: new Date().getTime() }, { merge: true });
+                updateLiveCredits(0); 
             } else {
                 let data = userSnap.data();
-                updateLiveCredits(data.totalUploads || 0, data.lifetimeDownloads || 0);
+                let now = Date.now();
+                let downloadsArr = data.recentDownloads || [];
+                // Filter out older than 24 hours
+                downloadsArr = downloadsArr.filter(time => now - time < 24 * 60 * 60 * 1000);
+                recentCount = downloadsArr.length;
+                updateLiveCredits(recentCount);
             }
 
         } catch (error) { console.error("Verification failed:", error); IS_SUPER_ADMIN = false; }
@@ -593,12 +599,19 @@ document.getElementById('sidebarHeader').addEventListener('click', async () => {
 
     try {
         const userRef = doc(db, "users", auth.currentUser.uid); const userSnap = await getDoc(userRef);
-        let uploads = 0; let downloads = 0;
-        if (userSnap.exists()) { const data = userSnap.data(); uploads = parseInt(data.totalUploads) || 0; downloads = parseInt(data.lifetimeDownloads) || 0; updateLiveCredits(uploads, downloads); }
-        document.getElementById('profile-downloads').innerText = downloads;
+        let recentDownloadsArr = []; 
+        if (userSnap.exists()) {
+            const data = userSnap.data(); 
+            let now = Date.now();
+            recentDownloadsArr = (data.recentDownloads || []).filter(t => now - t < 24 * 60 * 60 * 1000);
+            updateLiveCredits(recentDownloadsArr.length); 
+            document.getElementById('profile-downloads').innerText = data.lifetimeDownloads || 0;
+        }
 
+        // Leaderboard calculation based on lifetime downloads or uploads if needed.
         const usersRef = collection(db, "users"); const querySnapshot = await getDocs(usersRef); let allUsers = [];
         querySnapshot.forEach((docSnap) => { allUsers.push({ id: docSnap.id, ...docSnap.data() }); });
+        
         allUsers.sort((a, b) => {
             let upA = parseInt(a.totalUploads) || 0; let upB = parseInt(b.totalUploads) || 0;
             if (upB !== upA) return upB - upA; 
@@ -608,8 +621,8 @@ document.getElementById('sidebarHeader').addEventListener('click', async () => {
 
         let rank = 1; for (let i = 0; i < allUsers.length; i++) { if (allUsers[i].id === auth.currentUser.uid) { rank = i + 1; break; } }
         const rankElement = document.getElementById('profile-rank');
-        if (rank === 1 && uploads > 0) { rankElement.style.color = "#fbbf24"; rankElement.innerHTML = `<i class="fas fa-crown"></i> #1`; } 
-        else if (rank <= 3 && uploads > 0) { rankElement.style.color = rank===2?"#9ca3af":"#b45309"; rankElement.innerText = "#" + rank; } 
+        if (rank === 1) { rankElement.style.color = "#fbbf24"; rankElement.innerHTML = `<i class="fas fa-crown"></i> #1`; } 
+        else if (rank <= 3) { rankElement.style.color = rank===2?"#9ca3af":"#b45309"; rankElement.innerText = "#" + rank; } 
         else { rankElement.style.color = ""; rankElement.innerText = "#" + rank; }
     } catch (error) { showToast("Error loading profile data"); }
 });
@@ -645,10 +658,10 @@ window.addEventListener('popstate', (e) => {
 });
 
 // ==========================================
-// 🌟 SECURE DOWNLOAD PAGE & TOKEN SYSTEM 🌟
+// 🌟 SECURE DOWNLOAD PAGE & 2 BOOKS LIMIT 🌟
 // ==========================================
 
-// Token URL Detector - Runs immediately
+// URL se Token Check karega
 const detectTokenFromUrl = new URLSearchParams(window.location.search).get('t');
 if (detectTokenFromUrl) {
     document.getElementById('tokenInput').value = detectTokenFromUrl;
@@ -670,7 +683,7 @@ function openDownloadPageLocal(slug, skipPushState = false) {
     document.getElementById("dlBookTitle").innerText = sanitizeHTML(book.title); 
     document.getElementById("dlBookAuthor").innerText = sanitizeHTML(book.author);
     
-    // DOWNLOAD BUTTON LOGIC (NOW WITH TOKEN API)
+    // DOWNLOAD BUTTON LOGIC (TOKEN API + 2 BOOK LIMIT)
     document.getElementById("dlPdfLinkBtn").onclick = async function() { 
         if(!isUserLoggedIn || !auth.currentUser) { document.getElementById('loginOverlay').style.display = 'flex'; setTimeout(() => document.getElementById('loginOverlay').style.opacity = '1', 10); return; }
         
@@ -682,42 +695,46 @@ function openDownloadPageLocal(slug, skipPushState = false) {
         btn.disabled = true;
 
         try {
-            // 1. Credit Validation Check (Original Security)
+            // 1. Strict 2 Books Limit per 24 Hours Check
             const userRef = doc(db, "users", uid);
             const userSnap = await getDoc(userRef);
-            let uploads = 0, downloads = 0;
+            let recentDownloadsArr = [];
+            let now = Date.now();
 
             if (userSnap.exists()) {
                 let data = userSnap.data(); 
-                uploads = data.totalUploads || 0; 
-                downloads = data.lifetimeDownloads || 0;
-                let allowedDownloads = 2 + (uploads * 2);
+                recentDownloadsArr = data.recentDownloads || [];
+                // Purane (24 hour se zyada wale) timestamps hatao
+                recentDownloadsArr = recentDownloadsArr.filter(t => now - t < 24 * 60 * 60 * 1000);
                 
-                if (downloads >= allowedDownloads && !IS_SUPER_ADMIN) {
-                    showToast("Limit Reached! Upload 1 book to get 2 more downloads."); 
-                    closeDownloadPageLocal(); 
-                    document.getElementById('nav-upload').click(); 
+                if (recentDownloadsArr.length >= 2 && !IS_SUPER_ADMIN) {
+                    showToast("Limit Reached! You can only download 2 books in 24 hours."); 
                     btn.innerHTML = originalText; btn.disabled = false; return; 
                 }
             }
 
-            // 2. Token Security Validation (New Next.js API)
-            const response = await fetch(`/api/get-book?bookId=${book.id}`); // Pings backend for cookie check
+            // 2. Token Security Validation (Next.js Cookie API)
+            const response = await fetch(`/api/get-book?bookId=${book.id}`); 
             
             if (response.ok) {
-                // VERIFIED: Has HTTPOnly Cookie
-                await updateDoc(userRef, { lifetimeDownloads: increment(1) });
-                updateLiveCredits(uploads, downloads + 1);
+                // TOKEN VERIFIED
+                recentDownloadsArr.push(now); // Naya download count me jodo
+                await updateDoc(userRef, { 
+                    recentDownloads: recentDownloadsArr,
+                    lifetimeDownloads: increment(1) 
+                });
+                
+                updateLiveCredits(recentDownloadsArr.length);
                 
                 if(book.pdfLink) { window.open(book.pdfLink, '_blank'); }
                 btn.innerHTML = originalText; btn.disabled = false;
             } else {
-                // NOT VERIFIED: Show Token Generator Modal
+                // TOKEN NOT VERIFIED -> Show Token Modal
                 btn.innerHTML = originalText; btn.disabled = false;
                 document.getElementById('tokenModalOverlay').style.display = 'flex';
             }
         } catch (error) { 
-            showToast("Network Error: Could not check security token."); 
+            showToast("Network Error: Could not verify secure access."); 
             btn.innerHTML = originalText; btn.disabled = false; 
         }
     };
@@ -872,10 +889,7 @@ document.getElementById('addBookForm').addEventListener('submit', async (e) => {
             dateAdded: new Date().toLocaleDateString('en-GB').toUpperCase(), createdAt: new Date().getTime(), uploaderUid: auth.currentUser.uid 
         };
         await addDoc(collection(db, "books"), newBook); 
-        const userRef = doc(db, "users", auth.currentUser.uid); await updateDoc(userRef, { totalUploads: increment(1) });
-        const userSnap = await getDoc(userRef);
-        if(userSnap.exists()){ let data = userSnap.data(); updateLiveCredits(data.totalUploads, data.lifetimeDownloads || 0); }
-
+        
         showToast("Book Published Successfully!"); e.target.reset(); selectedCoverFile = null; selectedPdfFile = null;
         document.querySelectorAll('.uc-actions p').forEach(p => p.innerText = "Drag & Drop File");
     } catch (error) { 
