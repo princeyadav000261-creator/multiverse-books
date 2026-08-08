@@ -1,0 +1,11 @@
+{
+  "name": "spidy-book-hub",
+  "version": "1.0.0",
+  "description": "Backend for Spidy Book Hub",
+  "dependencies": {
+    "cookie": "^0.6.0",
+    "firebase-admin": "^12.0.0",
+    "uuid": "^9.0.1"
+  }
+}
+
