@@ -207,7 +207,7 @@ document.getElementById('daily-quote-text').innerHTML = `<i class="fas fa-quote-
 document.getElementById('daily-quote-author').innerText = `— ${sanitizeHTML(quotes[currentQuoteIndex].author)}`;
 
 // ==========================================
-// 🚀 NAYA CREDITS SYSTEM (2 DOWNLOADS PER 24 HRS)
+// 🚀 CREDITS SYSTEM (2 DOWNLOADS PER 24 HRS)
 // ==========================================
 function updateLiveCredits(recentDownloadsCount) {
     if (IS_SUPER_ADMIN) {
@@ -608,7 +608,6 @@ document.getElementById('sidebarHeader').addEventListener('click', async () => {
             document.getElementById('profile-downloads').innerText = data.lifetimeDownloads || 0;
         }
 
-        // Leaderboard calculation based on lifetime downloads or uploads if needed.
         const usersRef = collection(db, "users"); const querySnapshot = await getDocs(usersRef); let allUsers = [];
         querySnapshot.forEach((docSnap) => { allUsers.push({ id: docSnap.id, ...docSnap.data() }); });
         
@@ -704,7 +703,6 @@ function openDownloadPageLocal(slug, skipPushState = false) {
             if (userSnap.exists()) {
                 let data = userSnap.data(); 
                 recentDownloadsArr = data.recentDownloads || [];
-                // Purane (24 hour se zyada wale) timestamps hatao
                 recentDownloadsArr = recentDownloadsArr.filter(t => now - t < 24 * 60 * 60 * 1000);
                 
                 if (recentDownloadsArr.length >= 2 && !IS_SUPER_ADMIN) {
@@ -718,7 +716,7 @@ function openDownloadPageLocal(slug, skipPushState = false) {
             
             if (response.ok) {
                 // TOKEN VERIFIED
-                recentDownloadsArr.push(now); // Naya download count me jodo
+                recentDownloadsArr.push(now); 
                 await updateDoc(userRef, { 
                     recentDownloads: recentDownloadsArr,
                     lifetimeDownloads: increment(1) 
@@ -761,7 +759,7 @@ document.getElementById('shareBookBtn').addEventListener('click', () => {
 });
 
 // ==========================================
-// TOKEN MODAL BUTTON LOGICS
+// 🌟 TOKEN MODAL BUTTON LOGICS (WITH AROLINKS) 🌟
 // ==========================================
 document.getElementById('closeTokenModalBtn').addEventListener('click', () => {
     document.getElementById('tokenModalOverlay').style.display = 'none';
@@ -772,10 +770,8 @@ document.getElementById('getKeyBtn').addEventListener('click', () => {
     btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Generating...';
     
     setTimeout(() => {
-        // GPlinks Redirect
-        // Change "YOUR_GPLINKS_API_KEY" to your actual shortlink API key
-        const myApiUrl = encodeURIComponent(window.location.origin + '/api/generate');
-        window.location.href = `https://gplinks.in/api?api=YOUR_GPLINKS_API_KEY&url=${myApiUrl}`;
+        // Naya Arolinks wala shortlink
+        window.location.href = "https://arolinks.com/6RTf5";
     }, 800);
 });
 
