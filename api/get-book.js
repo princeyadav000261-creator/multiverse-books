@@ -1,11 +1,11 @@
 const { db } = require('../utils/firebaseAdmin');
 
 module.exports = async function handler(req, res) {
-  // Check HTTPOnly Cookie
+  // Check strict HTTPOnly Cookie
   const authCookie = req.cookies.spidy_auth;
   
-  if (!authCookie || authCookie !== 'verified_session') {
-    return res.status(401).json({ error: 'Unauthorized. Token Verify Karein.' });
+  if (!authCookie || !authCookie.startsWith('verified_')) {
+    return res.status(401).json({ error: 'Unauthorized Access. Please Verify Token First.' });
   }
 
   // Agar verified hai, toh Firebase se book ka URL do
@@ -18,4 +18,3 @@ module.exports = async function handler(req, res) {
 
   res.status(200).json({ success: true, data: bookDoc.data() });
 };
-
