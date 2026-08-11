@@ -82,7 +82,7 @@ function showToast(message) {
 // Custom Toast for Token Modal
 function showTokenToast(message, type = 'error') {
     const toast = document.getElementById('customToast');
-    if(!toast) { showToast(message); return; } // Fallback
+    if(!toast) { showToast(message); return; } 
     toast.innerHTML = type === 'success' 
         ? `<i class="fas fa-circle-check" style="color: #10b981; font-size: 16px;"></i> ${sanitizeHTML(message)}`
         : `<i class="fas fa-circle-exclamation" style="color: #ef4444; font-size: 16px;"></i> ${sanitizeHTML(message)}`;
@@ -120,12 +120,12 @@ function initPremiumPopups() {
         if(telegramPopup && !telegramPopup.classList.contains('manually-closed')) {
             telegramPopup.classList.remove('hide');
         }
-    }, 30000); // 30 sec
+    }, 30000); 
 
     setTimeout(() => {
         if(telegramPopup) telegramPopup.classList.add('hide'); 
         if(whatsappPopup) whatsappPopup.classList.remove('hide');
-    }, 100000); // 100 sec
+    }, 100000); 
 }
 
 // ==========================================
@@ -696,15 +696,17 @@ function openDownloadPageLocal(slug, skipPushState = false) {
     document.getElementById("dlBookAuthor").innerText = sanitizeHTML(book.author);
     
     // ----------------------------------------------------
-    // DOWNLOAD PDF BUTTON (LOCKED COMPLETELY)
+    // 1. DOWNLOAD PDF BUTTON (LOCKED COMPLETELY)
     // ----------------------------------------------------
     document.getElementById("dlPdfLinkBtn").onclick = function(e) { 
         e.preventDefault();
-        showToast("Direct download is disabled. Please click 'Read Online' to access this book securely.");
+        // Option: Show Toast or do absolutely nothing.
+        // showToast("Direct download is currently disabled. Please click 'Read Online' instead.");
+        return false;
     };
 
     // ----------------------------------------------------
-    // READ ONLINE (SECURE PDF VIEWER WITH TOKEN & LIMIT)
+    // 2. READ ONLINE (SECURE PDF VIEWER WITH TOKEN & LIMIT)
     // ----------------------------------------------------
     document.getElementById("dlReadOnlineBtn").onclick = async function() {
         if(!isUserLoggedIn || !auth.currentUser) { document.getElementById('loginOverlay').style.display = 'flex'; setTimeout(() => document.getElementById('loginOverlay').style.opacity = '1', 10); return; }
@@ -712,12 +714,19 @@ function openDownloadPageLocal(slug, skipPushState = false) {
         const btn = document.getElementById("dlReadOnlineBtn"); 
         const originalText = btn.innerHTML; 
         const uid = auth.currentUser.uid;
+
+        // 🔥 CHECK TOKEN FIRST 🔥
+        const savedToken = localStorage.getItem('spidy_access_token');
+        if(!savedToken && !IS_SUPER_ADMIN) {
+             document.getElementById('tokenModalOverlay').style.display = 'flex';
+             return; // Stop function and wait for token verification
+        }
         
         btn.innerHTML = `<i class="fas fa-spinner fa-spin"></i> Loading...`; 
         btn.disabled = true;
 
         try {
-            // 1. Strict 2 Books Limit per 24 Hours Check
+            // Check Limits
             const userRef = doc(db, "users", uid);
             const userSnap = await getDoc(userRef);
             let recentDownloadsArr = [];
@@ -734,15 +743,7 @@ function openDownloadPageLocal(slug, skipPushState = false) {
                 }
             }
 
-            // 2. Token Security Validation Check
-            const savedToken = localStorage.getItem('spidy_access_token');
-            if(!savedToken && !IS_SUPER_ADMIN) {
-                 btn.innerHTML = originalText; btn.disabled = false;
-                 document.getElementById('tokenModalOverlay').style.display = 'flex';
-                 return;
-            }
-
-            // Record Action & Update Limit
+            // Update Limits
             recentDownloadsArr.push(now); 
             await updateDoc(userRef, { 
                 recentDownloads: recentDownloadsArr,
@@ -750,7 +751,7 @@ function openDownloadPageLocal(slug, skipPushState = false) {
             });
             updateLiveCredits(recentDownloadsArr.length);
             
-            // 3. Open PDF in Secure Viewer
+            // Open PDF Securely
             const pdfViewer = document.getElementById('pdfViewerOverlay');
             const iframe = document.getElementById('pdfIframe');
             const title = document.getElementById('pdfViewerTitle');
@@ -762,7 +763,7 @@ function openDownloadPageLocal(slug, skipPushState = false) {
             btn.innerHTML = originalText; btn.disabled = false;
 
         } catch (error) { 
-            showToast("Network Error: Could not verify secure access."); 
+            showToast("Network Error: Could not load the book."); 
             btn.innerHTML = originalText; btn.disabled = false; 
         }
     };
@@ -770,10 +771,10 @@ function openDownloadPageLocal(slug, skipPushState = false) {
     // Close PDF Viewer
     document.getElementById("closePdfViewerBtn").onclick = function() {
         document.getElementById('pdfViewerOverlay').style.display = 'none';
-        document.getElementById('pdfIframe').src = ""; // Clear memory
+        document.getElementById('pdfIframe').src = ""; // Clear iframe to stop loading
     };
 
-    // Prevent right click on PDF Container
+    // Prevent Right Click on PDF Container
     document.getElementById("pdfContainer").addEventListener('contextmenu', event => event.preventDefault());
 
     let examsArray = (book.exams || "General").split(',').map(item => sanitizeHTML(item.trim()));
@@ -919,6 +920,7 @@ document.getElementById('verifyBtn').addEventListener('click', async () => {
             setTimeout(() => {
                 document.getElementById('tokenModalOverlay').style.display = 'none';
                 btn.innerHTML = '<i class="fas fa-shield-halved"></i> Verify';
+                // Trigger Read Online automatically
                 document.getElementById("dlReadOnlineBtn").click();
             }, 1000);
 
@@ -928,7 +930,7 @@ document.getElementById('verifyBtn').addEventListener('click', async () => {
             btn.innerHTML = '<i class="fas fa-shield-halved"></i> Verify';
         }
     } catch (err) {
-        // Fallback for Demo without Backend
+        // Fallback for Demo
         inputBox.classList.add('success-state');
         showTokenToast('Demo Verified! Valid for 10 Days.', 'success');
         localStorage.setItem('spidy_access_token', tokenValue);
@@ -940,7 +942,6 @@ document.getElementById('verifyBtn').addEventListener('click', async () => {
         }, 1000);
     }
 });
-
 
 // ==========================================
 // DIRECT CLOUDFLARE R2 UPLOAD LOGIC
