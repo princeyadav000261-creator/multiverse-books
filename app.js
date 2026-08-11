@@ -670,7 +670,7 @@ window.addEventListener('popstate', (e) => {
 
 
 // ==========================================
-// 🌟 SECURE DOWNLOAD & PDF READ ONLINE PAGE 🌟
+// 🌟 SECURE READ ONLINE (PDF VIEWER) & DOWNLOAD LOCK 🌟
 // ==========================================
 
 // URL Token Check
@@ -693,53 +693,27 @@ function openDownloadPageLocal(slug, skipPushState = false) {
     previewImg.onload = () => { previewImg.classList.remove("image-loading-skeleton"); };
 
     document.getElementById("dlBookTitle").innerText = sanitizeHTML(book.title); 
-    // Fix Author name in Premium Pill
     document.getElementById("dlBookAuthor").innerText = sanitizeHTML(book.author);
     
     // ----------------------------------------------------
-    // READ ONLINE (SECURE PDF VIEWER)
+    // DOWNLOAD PDF BUTTON (LOCKED COMPLETELY)
+    // ----------------------------------------------------
+    document.getElementById("dlPdfLinkBtn").onclick = function(e) { 
+        e.preventDefault();
+        showToast("Direct download is disabled. Please click 'Read Online' to access this book securely.");
+    };
+
+    // ----------------------------------------------------
+    // READ ONLINE (SECURE PDF VIEWER WITH TOKEN & LIMIT)
     // ----------------------------------------------------
     document.getElementById("dlReadOnlineBtn").onclick = async function() {
         if(!isUserLoggedIn || !auth.currentUser) { document.getElementById('loginOverlay').style.display = 'flex'; setTimeout(() => document.getElementById('loginOverlay').style.opacity = '1', 10); return; }
         
-        // Ensure user has access token first
-        const hasToken = localStorage.getItem('spidy_access_token');
-        if(!hasToken && !IS_SUPER_ADMIN) {
-            document.getElementById('tokenModalOverlay').style.display = 'flex';
-            return;
-        }
-
-        const pdfViewer = document.getElementById('pdfViewerOverlay');
-        const iframe = document.getElementById('pdfIframe');
-        const title = document.getElementById('pdfViewerTitle');
-        
-        title.innerText = sanitizeHTML(book.title);
-        // #toolbar=0&navpanes=0 removes download/print buttons in default viewers
-        iframe.src = book.pdfLink + "#toolbar=0&navpanes=0&scrollbar=0"; 
-        
-        pdfViewer.style.display = 'flex';
-    };
-
-    // Close PDF Viewer
-    document.getElementById("closePdfViewerBtn").onclick = function() {
-        document.getElementById('pdfViewerOverlay').style.display = 'none';
-        document.getElementById('pdfIframe').src = ""; // Stop loading to save memory
-    };
-
-    // Prevent right click on PDF Container
-    document.getElementById("pdfContainer").addEventListener('contextmenu', event => event.preventDefault());
-
-    // ----------------------------------------------------
-    // DOWNLOAD BUTTON LOGIC (TOKEN API + 2 BOOK LIMIT)
-    // ----------------------------------------------------
-    document.getElementById("dlPdfLinkBtn").onclick = async function() { 
-        if(!isUserLoggedIn || !auth.currentUser) { document.getElementById('loginOverlay').style.display = 'flex'; setTimeout(() => document.getElementById('loginOverlay').style.opacity = '1', 10); return; }
-        
-        const btn = document.getElementById("dlPdfLinkBtn"); 
+        const btn = document.getElementById("dlReadOnlineBtn"); 
         const originalText = btn.innerHTML; 
         const uid = auth.currentUser.uid;
         
-        btn.innerHTML = `<i class="fas fa-spinner fa-spin"></i> Checking Access...`; 
+        btn.innerHTML = `<i class="fas fa-spinner fa-spin"></i> Loading...`; 
         btn.disabled = true;
 
         try {
@@ -755,7 +729,7 @@ function openDownloadPageLocal(slug, skipPushState = false) {
                 recentDownloadsArr = recentDownloadsArr.filter(t => now - t < 24 * 60 * 60 * 1000);
                 
                 if (recentDownloadsArr.length >= 2 && !IS_SUPER_ADMIN) {
-                    showToast("Limit Reached! You can only download 2 books in 24 hours."); 
+                    showToast("Limit Reached! You can only access 2 books in 24 hours."); 
                     btn.innerHTML = originalText; btn.disabled = false; return; 
                 }
             }
@@ -768,16 +742,23 @@ function openDownloadPageLocal(slug, skipPushState = false) {
                  return;
             }
 
-            // Record Download & update limit
+            // Record Action & Update Limit
             recentDownloadsArr.push(now); 
             await updateDoc(userRef, { 
                 recentDownloads: recentDownloadsArr,
                 lifetimeDownloads: increment(1) 
             });
-            
             updateLiveCredits(recentDownloadsArr.length);
             
-            if(book.pdfLink) { window.open(book.pdfLink, '_blank'); }
+            // 3. Open PDF in Secure Viewer
+            const pdfViewer = document.getElementById('pdfViewerOverlay');
+            const iframe = document.getElementById('pdfIframe');
+            const title = document.getElementById('pdfViewerTitle');
+            
+            title.innerText = sanitizeHTML(book.title);
+            iframe.src = book.pdfLink + "#toolbar=0&navpanes=0&scrollbar=0"; 
+            pdfViewer.style.display = 'flex';
+
             btn.innerHTML = originalText; btn.disabled = false;
 
         } catch (error) { 
@@ -785,7 +766,16 @@ function openDownloadPageLocal(slug, skipPushState = false) {
             btn.innerHTML = originalText; btn.disabled = false; 
         }
     };
-    
+
+    // Close PDF Viewer
+    document.getElementById("closePdfViewerBtn").onclick = function() {
+        document.getElementById('pdfViewerOverlay').style.display = 'none';
+        document.getElementById('pdfIframe').src = ""; // Clear memory
+    };
+
+    // Prevent right click on PDF Container
+    document.getElementById("pdfContainer").addEventListener('contextmenu', event => event.preventDefault());
+
     let examsArray = (book.exams || "General").split(',').map(item => sanitizeHTML(item.trim()));
     document.getElementById("dlModalTags").innerHTML = examsArray.map(exam => `<div class="dl-modal-tag">${exam}</div>`).join('');
     activeBookSlug = book.slug; activeBookTitle = book.title;
@@ -803,11 +793,12 @@ function closeDownloadPageLocal() {
 }
 document.getElementById('shareBookBtn').addEventListener('click', () => {
     const shareUrl = window.location.origin + window.location.pathname + "?book=" + activeBookSlug;
-    if (navigator.share) navigator.share({ title: activeBookTitle, text: "Download free book", url: shareUrl }); else { navigator.clipboard.writeText(shareUrl); showToast("Link Copied!"); }
+    if (navigator.share) navigator.share({ title: activeBookTitle, text: "Read this book online", url: shareUrl }); else { navigator.clipboard.writeText(shareUrl); showToast("Link Copied!"); }
 });
 
+
 // ==========================================
-// 🌟 NEW: REPORT ISSUE MODAL LOGIC 🌟
+// 🌟 REPORT ISSUE MODAL LOGIC 🌟
 // ==========================================
 document.getElementById('reportLinkBtn').addEventListener('click', () => {
     document.getElementById('reportModalOverlay').classList.add('active');
@@ -837,7 +828,6 @@ reportOptions.forEach(opt => {
 submitReportBtn.addEventListener('click', () => {
     const selectedOption = document.querySelector('.rm-option.selected');
     if (selectedOption) {
-        // You can save this report to Firestore here if needed
         submitReportBtn.innerHTML = '<i class="fas fa-check-circle"></i> Successfully Reported';
         submitReportBtn.style.background = '#10b981';
         submitReportBtn.style.boxShadow = '0 4px 15px rgba(16, 185, 129, 0.4)';
@@ -858,8 +848,29 @@ submitReportBtn.addEventListener('click', () => {
 // ==========================================
 // 🌟 TOKEN MODAL BUTTON LOGICS (NEW DESIGN) 🌟
 // ==========================================
+// Particles Generator
+const particleContainer = document.getElementById('particles');
+if(particleContainer) {
+    for (let i = 0; i < 35; i++) {
+        let particle = document.createElement('div');
+        particle.classList.add('particle');
+        let size = Math.random() * 2.2 + 1.8; 
+        let posX = Math.random() * 100; 
+        let delay = Math.random() * 12; 
+        let duration = Math.random() * 10 + 8; 
+        particle.style.width = size + 'px'; particle.style.height = size + 'px';
+        particle.style.left = posX + '%'; particle.style.animationDelay = `-${delay}s`;
+        particle.style.animationDuration = duration + 's';
+        particleContainer.appendChild(particle);
+    }
+}
+
 document.getElementById('closeTokenModalBtn').addEventListener('click', () => {
     document.getElementById('tokenModalOverlay').style.display = 'none';
+});
+
+document.getElementById('tokenInput').addEventListener('input', () => {
+    document.getElementById('inputBoxWrapperToken').classList.remove('error-state', 'success-state');
 });
 
 document.getElementById('getKeyBtn').addEventListener('click', () => {
@@ -868,7 +879,6 @@ document.getElementById('getKeyBtn').addEventListener('click', () => {
     btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Loading...';
     
     setTimeout(() => {
-        // Naya Arolinks wala shortlink
         window.location.href = "https://arolinks.com/6RTf5";
         btn.innerHTML = originalContent;
     }, 600);
@@ -904,14 +914,12 @@ document.getElementById('verifyBtn').addEventListener('click', async () => {
             inputBox.classList.add('success-state');
             showTokenToast('Access Granted! Valid for 10 Days.', 'success');
             
-            // Save token to localstorage
             localStorage.setItem('spidy_access_token', tokenValue);
 
             setTimeout(() => {
                 document.getElementById('tokenModalOverlay').style.display = 'none';
                 btn.innerHTML = '<i class="fas fa-shield-halved"></i> Verify';
-                // Trigger download automatically
-                document.getElementById("dlPdfLinkBtn").click();
+                document.getElementById("dlReadOnlineBtn").click();
             }, 1000);
 
         } else {
@@ -928,7 +936,7 @@ document.getElementById('verifyBtn').addEventListener('click', async () => {
         setTimeout(() => {
             document.getElementById('tokenModalOverlay').style.display = 'none';
             btn.innerHTML = '<i class="fas fa-shield-halved"></i> Verify';
-            document.getElementById("dlPdfLinkBtn").click();
+            document.getElementById("dlReadOnlineBtn").click();
         }, 1000);
     }
 });
