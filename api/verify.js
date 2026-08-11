@@ -35,7 +35,7 @@ module.exports = async function handler(req, res) {
     httpOnly: true,
     secure: process.env.NODE_ENV === 'production',
     sameSite: 'strict',
-    maxAge: 10 * 24 * 60 * 60, // 10 Days valid cookie
+    maxAge: 24 * 60 * 60, // 10 Days valid cookie
     path: '/'
   });
 
