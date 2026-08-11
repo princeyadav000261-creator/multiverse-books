@@ -67,23 +67,18 @@ function showToast(message, type = 'success') {
     const toast = document.getElementById('customToast');
     if(!toast) return; 
     
-    // Naya toast aane par purana timeout clear karein taaki chipka na rahe
     clearTimeout(globalToastTimeout);
     
-    // Message create karein
     toast.innerHTML = type === 'success' 
         ? `<i class="fas fa-circle-check" style="color: #10b981; font-size: 16px;"></i> ${sanitizeHTML(message)}`
         : `<i class="fas fa-circle-exclamation" style="color: #ef4444; font-size: 16px;"></i> ${sanitizeHTML(message)}`;
     
-    // Border color type ke hisaab se
     toast.style.borderLeft = type === 'success' ? '4px solid #10b981' : '4px solid #ef4444';
 
-    // Animation restart karne ke liye trick
     toast.classList.remove('show');
-    void toast.offsetWidth; // trigger reflow
+    void toast.offsetWidth; 
     toast.classList.add('show');
 
-    // Sirf 2 second mein hata dein
     globalToastTimeout = setTimeout(() => {
         toast.classList.remove('show');
     }, 2000);
@@ -730,7 +725,7 @@ function openDownloadPageLocal(slug, skipPushState = false) {
     // 1. DOWNLOAD PDF BUTTON (LOCKED COMPLETELY)
     // ----------------------------------------------------
     const dlPdfBtn = document.getElementById("dlPdfLinkBtn");
-    dlPdfBtn.style.pointerEvents = "none"; // CSS se button ko totally lock kar diya gaya hai
+    dlPdfBtn.style.pointerEvents = "none"; 
     dlPdfBtn.onclick = function(e) { 
         e.preventDefault();
         return false;
@@ -744,7 +739,6 @@ function openDownloadPageLocal(slug, skipPushState = false) {
         
         const btn = document.getElementById("dlReadOnlineBtn"); 
         const originalText = btn.innerHTML; 
-        const uid = auth.currentUser.uid;
 
         // 🔥 CHECK STRICT FINGERPRINT TOKEN 🔥
         const savedData = localStorage.getItem('spidy_secure_session');
@@ -759,19 +753,20 @@ function openDownloadPageLocal(slug, skipPushState = false) {
             } catch(e) {}
         }
 
+        // Agar token invalid ya expire ho chuka hai, toh seedha verification modal kholo (No error toast)
         if(!hasValidToken && !IS_SUPER_ADMIN) {
              document.getElementById('tokenModalOverlay').style.display = 'flex';
              return; 
         }
         
-        btn.innerHTML = `<i class="fas fa-spinner fa-spin"></i> Loading...`; 
+        btn.innerHTML = `<i class="fas fa-spinner fa-spin"></i> Getting Secure Access...`; 
         btn.disabled = true;
 
         try {
             // Get Firebase Auth Token securely
             const userToken = await auth.currentUser.getIdToken(true);
 
-            // Fetch Secure PDF Link from our Vercel Backend
+            // Fetch Secure PDF Link from our Vercel Backend (`api/get-book.js`)
             const response = await fetch('/api/get-book', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
@@ -815,22 +810,19 @@ function openDownloadPageLocal(slug, skipPushState = false) {
                 pdfViewer.style.display = 'flex';
 
             } else {
-                showToast(data.error || "Failed to load book securely.", "error");
+                // 🔥 AGAR SERVER SE 401 UNAUTHORIZED AAYE, TOH TOKEN MODAL KHOLO 🔥
+                if (response.status === 401 || (data.error && data.error.includes('Unauthorized'))) {
+                    localStorage.removeItem('spidy_secure_session'); // Clear expired session
+                    document.getElementById('tokenModalOverlay').style.display = 'flex';
+                } else {
+                    showToast(data.error || "Failed to load book securely.", "error");
+                }
             }
 
             btn.innerHTML = originalText; btn.disabled = false;
 
         } catch (error) { 
-            // Demo fallback if backend is not setup properly yet
-            showToast("Demo Fallback. Opening book...", "success");
-            const pdfViewer = document.getElementById('pdfViewerOverlay');
-            const iframe = document.getElementById('pdfIframe');
-            const title = document.getElementById('pdfViewerTitle');
-            
-            title.innerText = sanitizeHTML(book.title);
-            iframe.src = book.pdfLink + "#toolbar=0&navpanes=0&scrollbar=0"; 
-            pdfViewer.style.display = 'flex';
-
+            showToast("Network Error: Could not load the book.", "error"); 
             btn.innerHTML = originalText; btn.disabled = false; 
         }
     };
@@ -838,7 +830,7 @@ function openDownloadPageLocal(slug, skipPushState = false) {
     // Close PDF Viewer
     document.getElementById("closePdfViewerBtn").onclick = function() {
         document.getElementById('pdfViewerOverlay').style.display = 'none';
-        document.getElementById('pdfIframe').src = ""; // Clear iframe to stop loading
+        document.getElementById('pdfIframe').src = ""; 
     };
 
     // Prevent Right Click on PDF Container
@@ -988,13 +980,12 @@ document.getElementById('verifyBtn').addEventListener('click', async () => {
             localStorage.setItem('spidy_secure_session', JSON.stringify({
                 token: tokenValue,
                 fp: currentFingerprint,
-                expiry: Date.now() + 24 * 60 * 60 * 1000 // 24 hours local expiry
+                expiry: Date.now() + 24 * 60 * 60 * 1000 
             }));
 
             setTimeout(() => {
                 document.getElementById('tokenModalOverlay').style.display = 'none';
                 btn.innerHTML = '<i class="fas fa-shield-halved"></i> Verify';
-                // Trigger Read Online automatically
                 document.getElementById("dlReadOnlineBtn").click();
             }, 1000);
 
@@ -1004,21 +995,9 @@ document.getElementById('verifyBtn').addEventListener('click', async () => {
             btn.innerHTML = '<i class="fas fa-shield-halved"></i> Verify';
         }
     } catch (err) {
-        // Fallback for Demo
-        inputBox.classList.add('success-state');
-        showToast('Demo Verified! Valid for 24 Hours.', 'success');
-        
-        localStorage.setItem('spidy_secure_session', JSON.stringify({
-            token: tokenValue,
-            fp: currentFingerprint,
-            expiry: Date.now() + 24 * 60 * 60 * 1000 // 24 hours local expiry
-        }));
-        
-        setTimeout(() => {
-            document.getElementById('tokenModalOverlay').style.display = 'none';
-            btn.innerHTML = '<i class="fas fa-shield-halved"></i> Verify';
-            document.getElementById("dlReadOnlineBtn").click();
-        }, 1000);
+        inputBox.classList.add('error-state');
+        showToast('Server Error! Cannot verify token right now.', 'error');
+        btn.innerHTML = '<i class="fas fa-shield-halved"></i> Verify';
     }
 });
 
