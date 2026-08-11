@@ -971,7 +971,7 @@ document.getElementById('verifyBtn').addEventListener('click', async () => {
             localStorage.setItem('spidy_secure_session', JSON.stringify({
                 token: tokenValue,
                 fp: currentFingerprint,
-                expiry: Date.now() + 10 * 24 * 60 * 60 * 1000 // 10 days local expiry
+                expiry: Date.now() + 24 * 60 * 60 * 1000 // 10 days local expiry
             }));
 
             setTimeout(() => {
@@ -994,7 +994,7 @@ document.getElementById('verifyBtn').addEventListener('click', async () => {
         localStorage.setItem('spidy_secure_session', JSON.stringify({
             token: tokenValue,
             fp: currentFingerprint,
-            expiry: Date.now() + 10 * 24 * 60 * 60 * 1000 
+            expiry: Date.now() + 24 * 60 * 60 * 1000 
         }));
         
         setTimeout(() => {
