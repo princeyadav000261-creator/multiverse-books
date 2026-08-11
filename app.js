@@ -224,7 +224,6 @@ function updateLiveCredits(recentDownloadsCount) {
         document.getElementById('profile-credits').innerHTML = `<span style="font-size: 24px;">&infin;</span>`; 
         return;
     }
-    // 20 limit implement ki gayi hai
     let remainingCredits = 20 - recentDownloadsCount;
     if (remainingCredits < 0) remainingCredits = 0;
     document.getElementById('profile-credits').innerText = remainingCredits;
@@ -271,7 +270,6 @@ onAuthStateChanged(auth, async (user) => {
                 let validDownloads = [];
                 let accessedSlugs = new Set();
 
-                // Logic for tracking 24 hrs and tracking specific books to bypass limits
                 (data.recentDownloads || []).forEach(item => {
                     let time = typeof item === 'number' ? item : item.time;
                     let slug = typeof item === 'number' ? null : item.slug;
@@ -620,12 +618,9 @@ document.getElementById('sidebarHeader').addEventListener('click', async () => {
 
     try {
         const userRef = doc(db, "users", auth.currentUser.uid); const userSnap = await getDoc(userRef);
-        let recentDownloadsArr = []; 
         if (userSnap.exists()) {
             const data = userSnap.data(); 
             let now = Date.now();
-            
-            // Logic to update live credits on profile load
             let validDownloads = [];
             let accessedSlugs = new Set();
             (data.recentDownloads || []).forEach(item => {
@@ -734,7 +729,6 @@ function openDownloadPageLocal(slug, skipPushState = false) {
         
         const btn = document.getElementById("dlReadOnlineBtn"); 
         const originalText = btn.innerHTML; 
-        const uid = auth.currentUser.uid;
 
         // 🔥 CHECK STRICT FINGERPRINT TOKEN 🔥
         const savedData = localStorage.getItem('spidy_secure_session');
@@ -743,7 +737,6 @@ function openDownloadPageLocal(slug, skipPushState = false) {
         if (savedData) {
             try {
                 const parsed = JSON.parse(savedData);
-                // Check if fingerprint matches and not expired
                 if (parsed.fp === generateDeviceFingerprint() && parsed.expiry > Date.now()) {
                     hasValidToken = true;
                 }
@@ -755,60 +748,59 @@ function openDownloadPageLocal(slug, skipPushState = false) {
              return; 
         }
         
-        btn.innerHTML = `<i class="fas fa-spinner fa-spin"></i> Loading...`; 
+        btn.innerHTML = `<i class="fas fa-spinner fa-spin"></i> Getting Secure Access...`; 
         btn.disabled = true;
 
         try {
-            // Check Limits
-            const userRef = doc(db, "users", uid);
-            const userSnap = await getDoc(userRef);
-            let recentDownloadsArr = [];
-            let now = Date.now();
-            let accessedSlugs = new Set();
+            // Get Firebase Auth Token securely
+            const userToken = await auth.currentUser.getIdToken(true);
 
-            if (userSnap.exists()) {
-                let data = userSnap.data(); 
-                let rawDownloads = data.recentDownloads || [];
-                
-                rawDownloads.forEach(item => {
-                    let time = typeof item === 'number' ? item : item.time;
-                    let itemSlug = typeof item === 'number' ? null : item.slug;
-                    
-                    if (now - time < 24 * 60 * 60 * 1000) {
-                        recentDownloadsArr.push(item);
-                        if(itemSlug) accessedSlugs.add(itemSlug);
-                    }
-                });
-                
-                let legacyCount = recentDownloadsArr.filter(i => typeof i === 'number').length;
-                let totalRecentCount = accessedSlugs.size + legacyCount;
-                
-                // 🔥 CHECK IF ALREADY OPENED OR IF LIMIT REACHED 🔥
-                if (totalRecentCount >= 20 && !accessedSlugs.has(book.slug) && !IS_SUPER_ADMIN) {
-                    showToast("Limit Reached! You can only open 20 new books in 24 hours.", "error"); 
-                    btn.innerHTML = originalText; btn.disabled = false; return; 
-                }
-            }
-
-            // Update Limits (We push it even if it's already in the set, to refresh its timestamp)
-            recentDownloadsArr.push({ slug: book.slug, time: now }); 
-            await updateDoc(userRef, { 
-                recentDownloads: recentDownloadsArr,
-                lifetimeDownloads: increment(1) 
+            // Fetch Secure PDF Link from our Vercel Backend
+            const response = await fetch('/api/get-book', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ 
+                    bookId: book.id, 
+                    bookSlug: book.slug, 
+                    userToken: userToken 
+                })
             });
-            
-            accessedSlugs.add(book.slug);
-            let updatedLegacy = recentDownloadsArr.filter(i => typeof i === 'number').length;
-            updateLiveCredits(accessedSlugs.size + updatedLegacy);
-            
-            // Open PDF Securely
-            const pdfViewer = document.getElementById('pdfViewerOverlay');
-            const iframe = document.getElementById('pdfIframe');
-            const title = document.getElementById('pdfViewerTitle');
-            
-            title.innerText = sanitizeHTML(book.title);
-            iframe.src = book.pdfLink + "#toolbar=0&navpanes=0&scrollbar=0"; 
-            pdfViewer.style.display = 'flex';
+
+            const data = await response.json();
+
+            if (response.ok && data.success) {
+                
+                // Fetch updated user data to refresh live credits accurately on frontend
+                const userRef = doc(db, "users", auth.currentUser.uid);
+                const userSnap = await getDoc(userRef);
+                if(userSnap.exists()){
+                    let userData = userSnap.data();
+                    let now = Date.now();
+                    let accessedSlugs = new Set();
+                    let legacyCount = 0;
+                    (userData.recentDownloads || []).forEach(item => {
+                        let time = typeof item === 'number' ? item : item.time;
+                        let slug = typeof item === 'number' ? null : item.slug;
+                        if(now - time < 24 * 60 * 60 * 1000){
+                            if(slug) accessedSlugs.add(slug);
+                            else legacyCount++;
+                        }
+                    });
+                    updateLiveCredits(accessedSlugs.size + legacyCount);
+                }
+
+                // Open PDF Securely
+                const pdfViewer = document.getElementById('pdfViewerOverlay');
+                const iframe = document.getElementById('pdfIframe');
+                const title = document.getElementById('pdfViewerTitle');
+                
+                title.innerText = sanitizeHTML(book.title);
+                iframe.src = data.pdfLink + "#toolbar=0&navpanes=0&scrollbar=0"; 
+                pdfViewer.style.display = 'flex';
+
+            } else {
+                showToast(data.error || "Failed to load book securely.", "error");
+            }
 
             btn.innerHTML = originalText; btn.disabled = false;
 
@@ -897,7 +889,7 @@ submitReportBtn.addEventListener('click', () => {
 });
 
 // ==========================================
-// 🌟 TOKEN MODAL BUTTON LOGICS (STRICT) 🌟
+// 🌟 TOKEN MODAL BUTTON LOGICS (STRICT 24 HOURS) 🌟
 // ==========================================
 // Particles Generator
 const particleContainer = document.getElementById('particles');
@@ -946,7 +938,7 @@ document.getElementById('verifyBtn').addEventListener('click', async () => {
     if (tokenValue.length < 5) {
         inputBox.classList.add('error-state');
         setTimeout(() => inputBox.classList.remove('error-state'), 2500); 
-        showToast('Invalid Token Format!', 'error');
+        showTokenToast('Invalid Token Format!', 'error');
         return;
     }
 
@@ -965,13 +957,13 @@ document.getElementById('verifyBtn').addEventListener('click', async () => {
 
         if (response.ok) {
             inputBox.classList.add('success-state');
-            showToast('Access Granted! Valid for 10 Days.', 'success');
+            showTokenToast('Access Granted! Valid for 24 Hours.', 'success');
             
-            // 🔥 SAVING SECURE BINDED TOKEN DATA 🔥
+            // 🔥 SAVING SECURE BINDED TOKEN DATA FOR 24 HOURS 🔥
             localStorage.setItem('spidy_secure_session', JSON.stringify({
                 token: tokenValue,
                 fp: currentFingerprint,
-                expiry: Date.now() + 24 * 60 * 60 * 1000 // 10 days local expiry
+                expiry: Date.now() + 24 * 60 * 60 * 1000 // 24 hours local expiry
             }));
 
             setTimeout(() => {
@@ -983,18 +975,18 @@ document.getElementById('verifyBtn').addEventListener('click', async () => {
 
         } else {
             inputBox.classList.add('error-state');
-            showToast(data.error || 'Verification Failed', 'error');
+            showTokenToast(data.error || 'Verification Failed', 'error');
             btn.innerHTML = '<i class="fas fa-shield-halved"></i> Verify';
         }
     } catch (err) {
-        // Dummy fallback
+        // Fallback for Demo
         inputBox.classList.add('success-state');
-        showToast('Demo Verification Success! Valid for 10 Days.', 'success');
+        showTokenToast('Demo Verified! Valid for 24 Hours.', 'success');
         
         localStorage.setItem('spidy_secure_session', JSON.stringify({
             token: tokenValue,
             fp: currentFingerprint,
-            expiry: Date.now() + 24 * 60 * 60 * 1000 
+            expiry: Date.now() + 24 * 60 * 60 * 1000 // 24 hours local expiry
         }));
         
         setTimeout(() => {
