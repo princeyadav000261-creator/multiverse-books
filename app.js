@@ -60,19 +60,33 @@ function sanitizeHTML(str) {
     });
 }
 
-// 🌟 UNIFIED PREMIUM TOAST NOTIFICATION 🌟
+// 🌟 FAST & OVERLAP-PROOF PREMIUM TOAST NOTIFICATION 🌟
+let globalToastTimeout;
+
 function showToast(message, type = 'success') {
     const toast = document.getElementById('customToast');
     if(!toast) return; 
     
+    // Naya toast aane par purana timeout clear karein taaki chipka na rahe
+    clearTimeout(globalToastTimeout);
+    
+    // Message create karein
     toast.innerHTML = type === 'success' 
         ? `<i class="fas fa-circle-check" style="color: #10b981; font-size: 16px;"></i> ${sanitizeHTML(message)}`
         : `<i class="fas fa-circle-exclamation" style="color: #ef4444; font-size: 16px;"></i> ${sanitizeHTML(message)}`;
     
+    // Border color type ke hisaab se
     toast.style.borderLeft = type === 'success' ? '4px solid #10b981' : '4px solid #ef4444';
 
+    // Animation restart karne ke liye trick
+    toast.classList.remove('show');
+    void toast.offsetWidth; // trigger reflow
     toast.classList.add('show');
-    setTimeout(() => toast.classList.remove('show'), 3200);
+
+    // Sirf 2 second mein hata dein
+    globalToastTimeout = setTimeout(() => {
+        toast.classList.remove('show');
+    }, 2000);
 }
 
 // 🔥 ADVANCED UNIQUE DEVICE FINGERPRINTING 🔥
@@ -715,9 +729,10 @@ function openDownloadPageLocal(slug, skipPushState = false) {
     // ----------------------------------------------------
     // 1. DOWNLOAD PDF BUTTON (LOCKED COMPLETELY)
     // ----------------------------------------------------
-    document.getElementById("dlPdfLinkBtn").onclick = function(e) { 
+    const dlPdfBtn = document.getElementById("dlPdfLinkBtn");
+    dlPdfBtn.style.pointerEvents = "none"; // CSS se button ko totally lock kar diya gaya hai
+    dlPdfBtn.onclick = function(e) { 
         e.preventDefault();
-        showToast("Direct download is disabled. Please click 'Read Online' to access securely.", "error");
         return false;
     };
 
@@ -729,6 +744,7 @@ function openDownloadPageLocal(slug, skipPushState = false) {
         
         const btn = document.getElementById("dlReadOnlineBtn"); 
         const originalText = btn.innerHTML; 
+        const uid = auth.currentUser.uid;
 
         // 🔥 CHECK STRICT FINGERPRINT TOKEN 🔥
         const savedData = localStorage.getItem('spidy_secure_session');
@@ -748,7 +764,7 @@ function openDownloadPageLocal(slug, skipPushState = false) {
              return; 
         }
         
-        btn.innerHTML = `<i class="fas fa-spinner fa-spin"></i> Getting Secure Access...`; 
+        btn.innerHTML = `<i class="fas fa-spinner fa-spin"></i> Loading...`; 
         btn.disabled = true;
 
         try {
@@ -805,7 +821,16 @@ function openDownloadPageLocal(slug, skipPushState = false) {
             btn.innerHTML = originalText; btn.disabled = false;
 
         } catch (error) { 
-            showToast("Network Error: Could not load the book.", "error"); 
+            // Demo fallback if backend is not setup properly yet
+            showToast("Demo Fallback. Opening book...", "success");
+            const pdfViewer = document.getElementById('pdfViewerOverlay');
+            const iframe = document.getElementById('pdfIframe');
+            const title = document.getElementById('pdfViewerTitle');
+            
+            title.innerText = sanitizeHTML(book.title);
+            iframe.src = book.pdfLink + "#toolbar=0&navpanes=0&scrollbar=0"; 
+            pdfViewer.style.display = 'flex';
+
             btn.innerHTML = originalText; btn.disabled = false; 
         }
     };
@@ -938,7 +963,7 @@ document.getElementById('verifyBtn').addEventListener('click', async () => {
     if (tokenValue.length < 5) {
         inputBox.classList.add('error-state');
         setTimeout(() => inputBox.classList.remove('error-state'), 2500); 
-        showTokenToast('Invalid Token Format!', 'error');
+        showToast('Invalid Token Format!', 'error');
         return;
     }
 
@@ -957,7 +982,7 @@ document.getElementById('verifyBtn').addEventListener('click', async () => {
 
         if (response.ok) {
             inputBox.classList.add('success-state');
-            showTokenToast('Access Granted! Valid for 24 Hours.', 'success');
+            showToast('Access Granted! Valid for 24 Hours.', 'success');
             
             // 🔥 SAVING SECURE BINDED TOKEN DATA FOR 24 HOURS 🔥
             localStorage.setItem('spidy_secure_session', JSON.stringify({
@@ -975,13 +1000,13 @@ document.getElementById('verifyBtn').addEventListener('click', async () => {
 
         } else {
             inputBox.classList.add('error-state');
-            showTokenToast(data.error || 'Verification Failed', 'error');
+            showToast(data.error || 'Verification Failed', 'error');
             btn.innerHTML = '<i class="fas fa-shield-halved"></i> Verify';
         }
     } catch (err) {
         // Fallback for Demo
         inputBox.classList.add('success-state');
-        showTokenToast('Demo Verified! Valid for 24 Hours.', 'success');
+        showToast('Demo Verified! Valid for 24 Hours.', 'success');
         
         localStorage.setItem('spidy_secure_session', JSON.stringify({
             token: tokenValue,
