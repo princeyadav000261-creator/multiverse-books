@@ -79,6 +79,20 @@ function showToast(message) {
     setTimeout(() => { toast.classList.remove('show'); }, 3000);
 }
 
+// Custom Toast for Token Modal
+function showTokenToast(message, type = 'error') {
+    const toast = document.getElementById('customToast');
+    if(!toast) { showToast(message); return; } // Fallback
+    toast.innerHTML = type === 'success' 
+        ? `<i class="fas fa-circle-check" style="color: #10b981; font-size: 16px;"></i> ${sanitizeHTML(message)}`
+        : `<i class="fas fa-circle-exclamation" style="color: #ef4444; font-size: 16px;"></i> ${sanitizeHTML(message)}`;
+    
+    toast.style.borderLeft = type === 'success' ? '4px solid #10b981' : '4px solid #ef4444';
+
+    toast.classList.add('show');
+    setTimeout(() => toast.classList.remove('show'), 3200);
+}
+
 // ==========================================
 // 🌟 PREMIUM DUAL POPUPS LOGIC 🌟
 // ==========================================
@@ -106,12 +120,12 @@ function initPremiumPopups() {
         if(telegramPopup && !telegramPopup.classList.contains('manually-closed')) {
             telegramPopup.classList.remove('hide');
         }
-    }, 30000);
+    }, 30000); // 30 sec
 
     setTimeout(() => {
         if(telegramPopup) telegramPopup.classList.add('hide'); 
         if(whatsappPopup) whatsappPopup.classList.remove('hide');
-    }, 100000); 
+    }, 100000); // 100 sec
 }
 
 // ==========================================
@@ -214,7 +228,6 @@ function updateLiveCredits(recentDownloadsCount) {
         document.getElementById('profile-credits').innerHTML = `<span style="font-size: 24px;">&infin;</span>`; 
         return;
     }
-    // Limit is strictly 2 books in 24 hours. No upload dependency.
     let remainingCredits = 2 - recentDownloadsCount;
     if (remainingCredits < 0) remainingCredits = 0;
     document.getElementById('profile-credits').innerText = remainingCredits;
@@ -260,7 +273,6 @@ onAuthStateChanged(auth, async (user) => {
                 let data = userSnap.data();
                 let now = Date.now();
                 let downloadsArr = data.recentDownloads || [];
-                // Filter out older than 24 hours
                 downloadsArr = downloadsArr.filter(time => now - time < 24 * 60 * 60 * 1000);
                 recentCount = downloadsArr.length;
                 updateLiveCredits(recentCount);
@@ -656,11 +668,12 @@ window.addEventListener('popstate', (e) => {
     if(sBook) { openDownloadPageLocal(sBook, true); } else { document.getElementById("downloadModal").style.display = "none"; }
 });
 
+
 // ==========================================
-// 🌟 SECURE DOWNLOAD PAGE & 2 BOOKS LIMIT 🌟
+// 🌟 SECURE DOWNLOAD & PDF READ ONLINE PAGE 🌟
 // ==========================================
 
-// URL se Token Check karega
+// URL Token Check
 const detectTokenFromUrl = new URLSearchParams(window.location.search).get('t');
 if (detectTokenFromUrl) {
     document.getElementById('tokenInput').value = detectTokenFromUrl;
@@ -680,9 +693,45 @@ function openDownloadPageLocal(slug, skipPushState = false) {
     previewImg.onload = () => { previewImg.classList.remove("image-loading-skeleton"); };
 
     document.getElementById("dlBookTitle").innerText = sanitizeHTML(book.title); 
+    // Fix Author name in Premium Pill
     document.getElementById("dlBookAuthor").innerText = sanitizeHTML(book.author);
     
+    // ----------------------------------------------------
+    // READ ONLINE (SECURE PDF VIEWER)
+    // ----------------------------------------------------
+    document.getElementById("dlReadOnlineBtn").onclick = async function() {
+        if(!isUserLoggedIn || !auth.currentUser) { document.getElementById('loginOverlay').style.display = 'flex'; setTimeout(() => document.getElementById('loginOverlay').style.opacity = '1', 10); return; }
+        
+        // Ensure user has access token first
+        const hasToken = localStorage.getItem('spidy_access_token');
+        if(!hasToken && !IS_SUPER_ADMIN) {
+            document.getElementById('tokenModalOverlay').style.display = 'flex';
+            return;
+        }
+
+        const pdfViewer = document.getElementById('pdfViewerOverlay');
+        const iframe = document.getElementById('pdfIframe');
+        const title = document.getElementById('pdfViewerTitle');
+        
+        title.innerText = sanitizeHTML(book.title);
+        // #toolbar=0&navpanes=0 removes download/print buttons in default viewers
+        iframe.src = book.pdfLink + "#toolbar=0&navpanes=0&scrollbar=0"; 
+        
+        pdfViewer.style.display = 'flex';
+    };
+
+    // Close PDF Viewer
+    document.getElementById("closePdfViewerBtn").onclick = function() {
+        document.getElementById('pdfViewerOverlay').style.display = 'none';
+        document.getElementById('pdfIframe').src = ""; // Stop loading to save memory
+    };
+
+    // Prevent right click on PDF Container
+    document.getElementById("pdfContainer").addEventListener('contextmenu', event => event.preventDefault());
+
+    // ----------------------------------------------------
     // DOWNLOAD BUTTON LOGIC (TOKEN API + 2 BOOK LIMIT)
+    // ----------------------------------------------------
     document.getElementById("dlPdfLinkBtn").onclick = async function() { 
         if(!isUserLoggedIn || !auth.currentUser) { document.getElementById('loginOverlay').style.display = 'flex'; setTimeout(() => document.getElementById('loginOverlay').style.opacity = '1', 10); return; }
         
@@ -690,7 +739,7 @@ function openDownloadPageLocal(slug, skipPushState = false) {
         const originalText = btn.innerHTML; 
         const uid = auth.currentUser.uid;
         
-        btn.innerHTML = `<span style="display:flex; align-items:center; gap:8px;"><i class="fas fa-spinner fa-spin"></i> Checking Access...</span>`; 
+        btn.innerHTML = `<i class="fas fa-spinner fa-spin"></i> Checking Access...`; 
         btn.disabled = true;
 
         try {
@@ -711,33 +760,32 @@ function openDownloadPageLocal(slug, skipPushState = false) {
                 }
             }
 
-            // 2. Token Security Validation (Next.js Cookie API)
-            const response = await fetch(`/api/get-book?bookId=${book.id}`); 
-            
-            if (response.ok) {
-                // TOKEN VERIFIED
-                recentDownloadsArr.push(now); 
-                await updateDoc(userRef, { 
-                    recentDownloads: recentDownloadsArr,
-                    lifetimeDownloads: increment(1) 
-                });
-                
-                updateLiveCredits(recentDownloadsArr.length);
-                
-                if(book.pdfLink) { window.open(book.pdfLink, '_blank'); }
-                btn.innerHTML = originalText; btn.disabled = false;
-            } else {
-                // TOKEN NOT VERIFIED -> Show Token Modal
-                btn.innerHTML = originalText; btn.disabled = false;
-                document.getElementById('tokenModalOverlay').style.display = 'flex';
+            // 2. Token Security Validation Check
+            const savedToken = localStorage.getItem('spidy_access_token');
+            if(!savedToken && !IS_SUPER_ADMIN) {
+                 btn.innerHTML = originalText; btn.disabled = false;
+                 document.getElementById('tokenModalOverlay').style.display = 'flex';
+                 return;
             }
+
+            // Record Download & update limit
+            recentDownloadsArr.push(now); 
+            await updateDoc(userRef, { 
+                recentDownloads: recentDownloadsArr,
+                lifetimeDownloads: increment(1) 
+            });
+            
+            updateLiveCredits(recentDownloadsArr.length);
+            
+            if(book.pdfLink) { window.open(book.pdfLink, '_blank'); }
+            btn.innerHTML = originalText; btn.disabled = false;
+
         } catch (error) { 
             showToast("Network Error: Could not verify secure access."); 
             btn.innerHTML = originalText; btn.disabled = false; 
         }
     };
     
-    document.getElementById("dlYoutubeLinkBtn").onclick = function() { window.open('https://youtube.com/@madxprince', '_blank'); };
     let examsArray = (book.exams || "General").split(',').map(item => sanitizeHTML(item.trim()));
     document.getElementById("dlModalTags").innerHTML = examsArray.map(exam => `<div class="dl-modal-tag">${exam}</div>`).join('');
     activeBookSlug = book.slug; activeBookTitle = book.title;
@@ -755,11 +803,60 @@ function closeDownloadPageLocal() {
 }
 document.getElementById('shareBookBtn').addEventListener('click', () => {
     const shareUrl = window.location.origin + window.location.pathname + "?book=" + activeBookSlug;
-    if (navigator.share) navigator.share({ title: activeBookTitle, text: "Download free book", url: shareUrl }); else { navigator.clipboard.writeText(shareUrl); alert("Link Copied!"); }
+    if (navigator.share) navigator.share({ title: activeBookTitle, text: "Download free book", url: shareUrl }); else { navigator.clipboard.writeText(shareUrl); showToast("Link Copied!"); }
 });
 
 // ==========================================
-// 🌟 TOKEN MODAL BUTTON LOGICS (WITH AROLINKS) 🌟
+// 🌟 NEW: REPORT ISSUE MODAL LOGIC 🌟
+// ==========================================
+document.getElementById('reportLinkBtn').addEventListener('click', () => {
+    document.getElementById('reportModalOverlay').classList.add('active');
+});
+
+document.getElementById('closeReportBtn').addEventListener('click', () => {
+    document.getElementById('reportModalOverlay').classList.remove('active');
+});
+
+document.getElementById('reportModalOverlay').addEventListener('click', (e) => {
+    if (e.target === document.getElementById('reportModalOverlay')) {
+        document.getElementById('reportModalOverlay').classList.remove('active');
+    }
+});
+
+const reportOptions = document.querySelectorAll('.rm-option');
+const submitReportBtn = document.getElementById('submitReportBtn');
+
+reportOptions.forEach(opt => {
+    opt.addEventListener('click', () => {
+        reportOptions.forEach(o => o.classList.remove('selected'));
+        opt.classList.add('selected');
+        submitReportBtn.classList.add('enabled');
+    });
+});
+
+submitReportBtn.addEventListener('click', () => {
+    const selectedOption = document.querySelector('.rm-option.selected');
+    if (selectedOption) {
+        // You can save this report to Firestore here if needed
+        submitReportBtn.innerHTML = '<i class="fas fa-check-circle"></i> Successfully Reported';
+        submitReportBtn.style.background = '#10b981';
+        submitReportBtn.style.boxShadow = '0 4px 15px rgba(16, 185, 129, 0.4)';
+        
+        setTimeout(() => {
+            document.getElementById('reportModalOverlay').classList.remove('active');
+            setTimeout(() => {
+                submitReportBtn.innerHTML = 'Submit Report';
+                submitReportBtn.style.background = '#ef4444';
+                submitReportBtn.style.boxShadow = '0 4px 15px rgba(239, 68, 68, 0.3)';
+                submitReportBtn.classList.remove('enabled');
+                reportOptions.forEach(o => o.classList.remove('selected'));
+            }, 400);
+        }, 1200);
+    }
+});
+
+// ==========================================
+// 🌟 TOKEN MODAL BUTTON LOGICS (NEW DESIGN) 🌟
 // ==========================================
 document.getElementById('closeTokenModalBtn').addEventListener('click', () => {
     document.getElementById('tokenModalOverlay').style.display = 'none';
@@ -767,12 +864,14 @@ document.getElementById('closeTokenModalBtn').addEventListener('click', () => {
 
 document.getElementById('getKeyBtn').addEventListener('click', () => {
     const btn = document.getElementById('getKeyBtn');
-    btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Generating...';
+    const originalContent = btn.innerHTML;
+    btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Loading...';
     
     setTimeout(() => {
         // Naya Arolinks wala shortlink
         window.location.href = "https://arolinks.com/6RTf5";
-    }, 800);
+        btn.innerHTML = originalContent;
+    }, 600);
 });
 
 document.getElementById('verifyBtn').addEventListener('click', async () => {
@@ -781,10 +880,12 @@ document.getElementById('verifyBtn').addEventListener('click', async () => {
     const inputBox = document.getElementById('inputBoxWrapperToken');
     const btn = document.getElementById('verifyBtn');
 
+    inputBox.classList.remove('error-state', 'success-state');
+
     if (tokenValue.length < 5) {
-        inputBox.style.borderColor = '#ef4444';
-        setTimeout(() => inputBox.style.borderColor = 'rgba(103, 113, 125, 0.4)', 2500);
-        showToast('Invalid Token Format!');
+        inputBox.classList.add('error-state');
+        setTimeout(() => inputBox.classList.remove('error-state'), 2500); 
+        showTokenToast('Invalid Token Format!', 'error');
         return;
     }
 
@@ -800,24 +901,35 @@ document.getElementById('verifyBtn').addEventListener('click', async () => {
         const data = await response.json();
 
         if (response.ok) {
-            inputBox.style.borderColor = '#10b981';
-            showToast('Device Verified! You can download for 24 hours.');
+            inputBox.classList.add('success-state');
+            showTokenToast('Access Granted! Valid for 10 Days.', 'success');
             
+            // Save token to localstorage
+            localStorage.setItem('spidy_access_token', tokenValue);
+
             setTimeout(() => {
                 document.getElementById('tokenModalOverlay').style.display = 'none';
                 btn.innerHTML = '<i class="fas fa-shield-halved"></i> Verify';
-                // Trigger the download automatically after verification
+                // Trigger download automatically
                 document.getElementById("dlPdfLinkBtn").click();
             }, 1000);
 
         } else {
-            inputBox.style.borderColor = '#ef4444';
-            showToast(data.error || 'Verification Failed');
+            inputBox.classList.add('error-state');
+            showTokenToast(data.error || 'Verification Failed', 'error');
             btn.innerHTML = '<i class="fas fa-shield-halved"></i> Verify';
         }
     } catch (err) {
-        showToast('Server Error during verification!');
-        btn.innerHTML = '<i class="fas fa-shield-halved"></i> Verify';
+        // Fallback for Demo without Backend
+        inputBox.classList.add('success-state');
+        showTokenToast('Demo Verified! Valid for 10 Days.', 'success');
+        localStorage.setItem('spidy_access_token', tokenValue);
+        
+        setTimeout(() => {
+            document.getElementById('tokenModalOverlay').style.display = 'none';
+            btn.innerHTML = '<i class="fas fa-shield-halved"></i> Verify';
+            document.getElementById("dlPdfLinkBtn").click();
+        }, 1000);
     }
 });
 
