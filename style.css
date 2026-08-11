@@ -487,8 +487,8 @@ main::-webkit-scrollbar { display: none; }
 }
 .premium-popup-overlay.hide { opacity: 0; pointer-events: none; display: none !important; }
 .premium-popup-content { background: #000000; width: 90%; max-width: 420px; border-radius: 24px; position: relative; text-align: center; animation: scaleUpPremium 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards; overflow: hidden; }
-#telegramPopup .premium-popup-content { box-shadow: 0 0 45px rgba(42, 171, 238, 0.25), 0 25px 50px rgba(0, 0, 0, 0.9); border: 1.5px solid rgba(42, 171, 238, 0.8); }
-#whatsappPopup .premium-popup-content { box-shadow: 0 0 45px rgba(37, 211, 102, 0.25), 0 25px 50px rgba(0, 0, 0, 0.9); border: 1.5px solid rgba(37, 211, 102, 0.8); }
+#telegramPopup .premium-popup-content { box-shadow: 0 0 45px rgba(42, 171, 238, 0.25), 0 25px 50px rgba(0, 0, 0, 0.9); border: 0.2px solid rgba(42, 171, 238, 0.8); }
+#whatsappPopup .premium-popup-content { box-shadow: 0 0 45px rgba(37, 211, 102, 0.25), 0 25px 50px rgba(0, 0, 0, 0.9); border: 0.2px solid rgba(37, 211, 102, 0.8); }
 .premium-popup-image { width: 100%; display: block; object-fit: cover; }
 .premium-popup-body { padding: 20px; }
 .tg-heading { color: #2AABEE; font-size: 20px; font-weight: 700; margin-bottom: 8px; white-space: nowrap; font-family: 'Poppins', sans-serif; }
