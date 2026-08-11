@@ -50,7 +50,7 @@ let selectedCoverFile = null;
 let selectedPdfFile = null;
 
 // ==========================================
-// UTILITY FUNCTIONS
+// UTILITY FUNCTIONS & SECURITY
 // ==========================================
 function sanitizeHTML(str) {
     if (typeof str !== 'string') return str;
@@ -67,7 +67,7 @@ function showToast(message) {
     if (lowerMsg.includes('deleted')) {
         toast.style.background = 'rgba(239, 68, 68, 0.95)'; 
         toast.innerHTML = `<i class="fas fa-trash"></i> <span id="toastMsg">${sanitizeHTML(message)}</span>`;
-    } else if (lowerMsg.includes('failed') || lowerMsg.includes('error') || lowerMsg.includes('limit') || lowerMsg.includes('select') || lowerMsg.includes('invalid')) {
+    } else if (lowerMsg.includes('failed') || lowerMsg.includes('error') || lowerMsg.includes('limit') || lowerMsg.includes('select') || lowerMsg.includes('invalid') || lowerMsg.includes('unauthorized')) {
         toast.style.background = 'rgba(239, 68, 68, 0.95)'; 
         toast.innerHTML = `<i class="fas fa-exclamation-circle"></i> <span id="toastMsg">${sanitizeHTML(message)}</span>`;
     } else {
@@ -91,6 +91,20 @@ function showTokenToast(message, type = 'error') {
 
     toast.classList.add('show');
     setTimeout(() => toast.classList.remove('show'), 3200);
+}
+
+// 🔥 ADVANCED UNIQUE DEVICE FINGERPRINTING 🔥
+function generateDeviceFingerprint() {
+    const nav = window.navigator;
+    const screen = window.screen;
+    const str = nav.userAgent + nav.language + screen.colorDepth + screen.width + screen.height + new Date().getTimezoneOffset();
+    let hash = 0;
+    for (let i = 0; i < str.length; i++) {
+        let char = str.charCodeAt(i);
+        hash = ((hash << 5) - hash) + char;
+        hash = hash & hash;
+    }
+    return Math.abs(hash).toString(16);
 }
 
 // ==========================================
@@ -700,8 +714,7 @@ function openDownloadPageLocal(slug, skipPushState = false) {
     // ----------------------------------------------------
     document.getElementById("dlPdfLinkBtn").onclick = function(e) { 
         e.preventDefault();
-        // Option: Show Toast or do absolutely nothing.
-        // showToast("Direct download is currently disabled. Please click 'Read Online' instead.");
+        // Sirf button press ko block kiya hai. Popup na aaye isliye empty return.
         return false;
     };
 
@@ -715,11 +728,23 @@ function openDownloadPageLocal(slug, skipPushState = false) {
         const originalText = btn.innerHTML; 
         const uid = auth.currentUser.uid;
 
-        // 🔥 CHECK TOKEN FIRST 🔥
-        const savedToken = localStorage.getItem('spidy_access_token');
-        if(!savedToken && !IS_SUPER_ADMIN) {
+        // 🔥 CHECK STRICT FINGERPRINT TOKEN 🔥
+        const savedData = localStorage.getItem('spidy_secure_session');
+        let hasValidToken = false;
+
+        if (savedData) {
+            try {
+                const parsed = JSON.parse(savedData);
+                // Check if fingerprint matches and not expired
+                if (parsed.fp === generateDeviceFingerprint() && parsed.expiry > Date.now()) {
+                    hasValidToken = true;
+                }
+            } catch(e) {}
+        }
+
+        if(!hasValidToken && !IS_SUPER_ADMIN) {
              document.getElementById('tokenModalOverlay').style.display = 'flex';
-             return; // Stop function and wait for token verification
+             return; 
         }
         
         btn.innerHTML = `<i class="fas fa-spinner fa-spin"></i> Loading...`; 
@@ -847,7 +872,7 @@ submitReportBtn.addEventListener('click', () => {
 });
 
 // ==========================================
-// 🌟 TOKEN MODAL BUTTON LOGICS (NEW DESIGN) 🌟
+// 🌟 TOKEN MODAL BUTTON LOGICS (STRICT) 🌟
 // ==========================================
 // Particles Generator
 const particleContainer = document.getElementById('particles');
@@ -902,11 +927,13 @@ document.getElementById('verifyBtn').addEventListener('click', async () => {
 
     btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Verifying...';
 
+    const currentFingerprint = generateDeviceFingerprint();
+
     try {
         const response = await fetch('/api/verify', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ token: tokenValue })
+            body: JSON.stringify({ token: tokenValue, fingerprint: currentFingerprint })
         });
 
         const data = await response.json();
@@ -915,7 +942,12 @@ document.getElementById('verifyBtn').addEventListener('click', async () => {
             inputBox.classList.add('success-state');
             showTokenToast('Access Granted! Valid for 10 Days.', 'success');
             
-            localStorage.setItem('spidy_access_token', tokenValue);
+            // 🔥 SAVING SECURE BINDED TOKEN DATA 🔥
+            localStorage.setItem('spidy_secure_session', JSON.stringify({
+                token: tokenValue,
+                fp: currentFingerprint,
+                expiry: Date.now() + 10 * 24 * 60 * 60 * 1000 // 10 days local expiry
+            }));
 
             setTimeout(() => {
                 document.getElementById('tokenModalOverlay').style.display = 'none';
@@ -930,16 +962,9 @@ document.getElementById('verifyBtn').addEventListener('click', async () => {
             btn.innerHTML = '<i class="fas fa-shield-halved"></i> Verify';
         }
     } catch (err) {
-        // Fallback for Demo
-        inputBox.classList.add('success-state');
-        showTokenToast('Demo Verified! Valid for 10 Days.', 'success');
-        localStorage.setItem('spidy_access_token', tokenValue);
-        
-        setTimeout(() => {
-            document.getElementById('tokenModalOverlay').style.display = 'none';
-            btn.innerHTML = '<i class="fas fa-shield-halved"></i> Verify';
-            document.getElementById("dlReadOnlineBtn").click();
-        }, 1000);
+        inputBox.classList.add('error-state');
+        showTokenToast('Server Error! Cannot verify token right now.', 'error');
+        btn.innerHTML = '<i class="fas fa-shield-halved"></i> Verify';
     }
 });
 
