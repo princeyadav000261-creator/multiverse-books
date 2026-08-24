@@ -885,9 +885,26 @@ reportOptions.forEach(opt => {
     });
 });
 
-submitReportBtn.addEventListener('click', () => {
+submitReportBtn.addEventListener('click', async () => {
     const selectedOption = document.querySelector('.rm-option.selected');
     if (selectedOption) {
+        const issueType = selectedOption.querySelector('span').innerText;
+        
+        // 🌟 FIREBASE MEIN REPORT BHEJNE KA LOGIC 🌟
+        try {
+            await addDoc(collection(db, "reports"), {
+                bookTitle: activeBookTitle || "Unknown",
+                bookSlug: activeBookSlug || "Unknown",
+                issueType: issueType,
+                status: 'Pending',
+                reportedBy: (auth.currentUser && auth.currentUser.email) ? auth.currentUser.email : 'Unknown User',
+                createdAt: new Date().getTime()
+            });
+        } catch (error) {
+            console.error("Failed to send report:", error);
+        }
+
+        // 🌟 SUCCESS ANIMATION 🌟
         submitReportBtn.innerHTML = '<i class="fas fa-check-circle"></i> Successfully Reported';
         submitReportBtn.style.background = '#10b981';
         submitReportBtn.style.boxShadow = '0 4px 15px rgba(16, 185, 129, 0.4)';
