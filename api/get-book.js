@@ -1,4 +1,5 @@
 const admin = require('firebase-admin');
+const crypto = require('crypto'); // Built-in Node.js module
 
 // Firebase Admin Initialize (Sirf ek baar)
 if (!admin.apps.length) {
@@ -13,7 +14,6 @@ if (!admin.apps.length) {
 const db = admin.firestore();
 
 module.exports = async function handler(req, res) {
-  // POST request only
   if (req.method !== 'POST') return res.status(405).json({ error: 'Method Not Allowed' });
 
   const { bookId, userToken, bookSlug } = req.body;
@@ -25,11 +25,9 @@ module.exports = async function handler(req, res) {
     const decodedToken = await admin.auth().verifyIdToken(userToken);
     const uid = decodedToken.uid;
 
-    // Super Admin Check
     const adminDoc = await db.collection('admins').doc(decodedToken.email.toLowerCase()).get();
     const isSuperAdmin = adminDoc.exists;
 
-    // Check Daily Limit (20 Books)
     const userRef = db.collection('users').doc(uid);
     const userSnap = await userRef.get();
     let recentDownloadsArr = [];
@@ -49,30 +47,37 @@ module.exports = async function handler(req, res) {
         }
       });
 
-      let legacyCount = recentDownloadsArr.filter(i => typeof i === 'number').length;
-      let totalRecentCount = accessedSlugs.size + legacyCount;
-
+      let totalRecentCount = accessedSlugs.size + recentDownloadsArr.filter(i => typeof i === 'number').length;
+      
+      // Limit Check
       if (totalRecentCount >= 20 && !accessedSlugs.has(bookSlug) && !isSuperAdmin) {
         return res.status(403).json({ error: 'Limit Reached! You can only open 20 new books in 24 hours.' });
       }
     }
 
-    // Update Firebase with new accessed book
     recentDownloadsArr.push({ slug: bookSlug, time: now });
     await userRef.set({
       recentDownloads: recentDownloadsArr,
       lifetimeDownloads: admin.firestore.FieldValue.increment(1)
     }, { merge: true });
 
-    // Fetch Book
     const bookDoc = await db.collection('books').doc(bookId).get();
     if (!bookDoc.exists) return res.status(404).json({ error: 'Book not found' });
 
-    // 🔥 MAIN MAGIC: Asli URL ki jagah API Proxy URL bhejenge
+    // 🔥 THE ENGINEERING MAGIC: Generate Secure URL for Cloudflare Worker 🔥
     const fileKey = bookDoc.data().pdfLink;
-    const maskedUrl = `/api/read-file?key=${encodeURIComponent(fileKey)}`;
+    const expiry = Date.now() + (2 * 60 * 60 * 1000); // 2 hours expiration
+    const secret = process.env.SECURE_SECRET; // Vercel & CF shared secret
+    const workerBaseUrl = process.env.WORKER_URL; // e.g., https://spidy-vault...
 
-    res.status(200).json({ success: true, pdfLink: maskedUrl });
+    // Creating HMAC-SHA256 Signature
+    const dataToSign = `${fileKey}-${expiry}`;
+    const signature = crypto.createHmac('sha256', secret).update(dataToSign).digest('hex');
+
+    // Final URL (Maksed and Secure)
+    const secureWorkerUrl = `${workerBaseUrl}/?file=${encodeURIComponent(fileKey)}&exp=${expiry}&sig=${signature}`;
+
+    res.status(200).json({ success: true, pdfLink: secureWorkerUrl });
 
   } catch (error) {
     console.error("Auth Error:", error);
