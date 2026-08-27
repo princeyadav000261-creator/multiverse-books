@@ -23,10 +23,10 @@ const provider = new GoogleAuthProvider();
 const analytics = getAnalytics(app); 
 
 // ==========================================
-// 2. CLOUDFLARE R2 DIRECT API CONFIGURATION
+// 2. R2 PUBLIC URL (For Cover Images Only)
 // ==========================================
-const R2_UPLOAD_API_URL = "https://your-worker-name.your-subdomain.workers.dev/upload";
-const R2_API_TOKEN = "YOUR_SECURE_API_HASH_TOKEN";
+// YAHAN APNA CLOUDFLARE R2 PUBLIC DOMAIN DAALO (jaise: https://pub-xyz.r2.dev)
+const R2_PUBLIC_IMAGE_URL = "https://your-cloudflare-public-domain.r2.dev"; 
 
 // ==========================================
 // GLOBAL VARIABLES
@@ -60,9 +60,7 @@ function sanitizeHTML(str) {
     });
 }
 
-// 🌟 FAST & OVERLAP-PROOF PREMIUM TOAST NOTIFICATION 🌟
 let globalToastTimeout;
-
 function showToast(message, type = 'success') {
     const toast = document.getElementById('customToast');
     if(!toast) return; 
@@ -84,7 +82,6 @@ function showToast(message, type = 'success') {
     }, 2000);
 }
 
-// 🔥 ADVANCED UNIQUE DEVICE FINGERPRINTING 🔥
 function generateDeviceFingerprint() {
     const nav = window.navigator;
     const screen = window.screen;
@@ -305,6 +302,7 @@ onAuthStateChanged(auth, async (user) => {
 
     isAppReady.auth = true; tryTransition();
 
+    // PROMPTS LISTENER
     onSnapshot(query(collection(db, "prompts"), orderBy("createdAt", "asc")), (snapshot) => {
         const container = document.getElementById('promptsContainer');
         container.innerHTML = '';
@@ -320,6 +318,7 @@ onAuthStateChanged(auth, async (user) => {
         });
     });
 
+    // BOOKS LISTENER
     const q = query(collection(db, "books"), orderBy("createdAt", "desc"));
     onSnapshot(q, (snapshot) => {
         booksData = [];
@@ -696,7 +695,7 @@ window.addEventListener('popstate', (e) => {
 
 
 // ==========================================
-// 🌟 SECURE READ ONLINE (PDF VIEWER) & DOWNLOAD LOCK 🌟
+// 🌟 SECURE READ ONLINE (API PROXY) & DOWNLOAD LOCK 🌟
 // ==========================================
 
 // URL Token Check
@@ -732,7 +731,7 @@ function openDownloadPageLocal(slug, skipPushState = false) {
     };
 
     // ----------------------------------------------------
-    // 2. READ ONLINE (SECURE PDF VIEWER WITH TOKEN & LIMIT)
+    // 2. READ ONLINE (SECURE PROXY VIEWER)
     // ----------------------------------------------------
     document.getElementById("dlReadOnlineBtn").onclick = async function() {
         if(!isUserLoggedIn || !auth.currentUser) { document.getElementById('loginOverlay').style.display = 'flex'; setTimeout(() => document.getElementById('loginOverlay').style.opacity = '1', 10); return; }
@@ -753,7 +752,6 @@ function openDownloadPageLocal(slug, skipPushState = false) {
             } catch(e) {}
         }
 
-        // Agar token invalid ya expire ho chuka hai, toh seedha verification modal kholo (No error toast)
         if(!hasValidToken && !IS_SUPER_ADMIN) {
              document.getElementById('tokenModalOverlay').style.display = 'flex';
              return; 
@@ -766,7 +764,7 @@ function openDownloadPageLocal(slug, skipPushState = false) {
             // Get Firebase Auth Token securely
             const userToken = await auth.currentUser.getIdToken(true);
 
-            // Fetch Secure PDF Link from our Vercel Backend (`api/get-book.js`)
+            // Fetch Secure Proxy Link from our Vercel Backend
             const response = await fetch('/api/get-book', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
@@ -806,11 +804,12 @@ function openDownloadPageLocal(slug, skipPushState = false) {
                 const title = document.getElementById('pdfViewerTitle');
                 
                 title.innerText = sanitizeHTML(book.title);
-                iframe.src = data.pdfLink + "#toolbar=0&navpanes=0&scrollbar=0"; 
+                
+                // 🔥 URL mein API Proxy hai jisme `?key=xxx` pehle se hai, toh hum aage `&` layenge
+                iframe.src = data.pdfLink + "&toolbar=0&navpanes=0&scrollbar=0"; 
                 pdfViewer.style.display = 'flex';
 
             } else {
-                // 🔥 AGAR SERVER SE 401 UNAUTHORIZED AAYE, TOH TOKEN MODAL KHOLO 🔥
                 if (response.status === 401 || (data.error && data.error.includes('Unauthorized'))) {
                     localStorage.removeItem('spidy_secure_session'); // Clear expired session
                     document.getElementById('tokenModalOverlay').style.display = 'flex';
@@ -890,7 +889,6 @@ submitReportBtn.addEventListener('click', async () => {
     if (selectedOption) {
         const issueType = selectedOption.querySelector('span').innerText;
         
-        // 🌟 FIREBASE MEIN REPORT BHEJNE KA LOGIC 🌟
         try {
             await addDoc(collection(db, "reports"), {
                 bookTitle: activeBookTitle || "Unknown",
@@ -904,7 +902,6 @@ submitReportBtn.addEventListener('click', async () => {
             console.error("Failed to send report:", error);
         }
 
-        // 🌟 SUCCESS ANIMATION 🌟
         submitReportBtn.innerHTML = '<i class="fas fa-check-circle"></i> Successfully Reported';
         submitReportBtn.style.background = '#10b981';
         submitReportBtn.style.boxShadow = '0 4px 15px rgba(16, 185, 129, 0.4)';
@@ -925,7 +922,6 @@ submitReportBtn.addEventListener('click', async () => {
 // ==========================================
 // 🌟 TOKEN MODAL BUTTON LOGICS (STRICT 24 HOURS) 🌟
 // ==========================================
-// Particles Generator
 const particleContainer = document.getElementById('particles');
 if(particleContainer) {
     for (let i = 0; i < 35; i++) {
@@ -993,7 +989,6 @@ document.getElementById('verifyBtn').addEventListener('click', async () => {
             inputBox.classList.add('success-state');
             showToast('Access Granted! Valid for 24 Hours.', 'success');
             
-            // 🔥 SAVING SECURE BINDED TOKEN DATA FOR 24 HOURS 🔥
             localStorage.setItem('spidy_secure_session', JSON.stringify({
                 token: tokenValue,
                 fp: currentFingerprint,
@@ -1019,7 +1014,7 @@ document.getElementById('verifyBtn').addEventListener('click', async () => {
 });
 
 // ==========================================
-// DIRECT CLOUDFLARE R2 UPLOAD LOGIC
+// 🌟 SECURE CLOUDFLARE R2 UPLOAD LOGIC 🌟
 // ==========================================
 ['fileCoverGallery', 'fileCoverBrowse'].forEach(id => {
     document.getElementById(id).addEventListener('change', function(e) {
@@ -1036,8 +1031,8 @@ document.getElementById('verifyBtn').addEventListener('click', async () => {
     });
 });
 
-function uploadFileToR2(file, type) {
-    return new Promise((resolve, reject) => {
+async function uploadFileToR2(file, type) {
+    return new Promise(async (resolve, reject) => {
         const r2Overlay = document.getElementById('r2UploadOverlay');
         const progressBar = document.getElementById('r2ProgressBar');
         const progressText = document.getElementById('r2ProgressText');
@@ -1045,22 +1040,52 @@ function uploadFileToR2(file, type) {
         const icon = document.getElementById('r2UploadIcon');
         const title = document.getElementById('r2UploadTitle');
 
-        if(type === 'image') { icon.className = "fas fa-image"; title.innerText = "Upload Cover Image"; statusText.innerText = "Uploading Cover Image..."; } 
-        else { icon.className = "fas fa-file-pdf"; title.innerText = "Upload PDF File"; statusText.innerText = "Securely transferring to Cloudflare R2..."; }
+        if(type === 'image') { icon.className = "fas fa-image"; title.innerText = "Upload Cover Image"; statusText.innerText = "Generating Secure Link..."; } 
+        else { icon.className = "fas fa-file-pdf"; title.innerText = "Upload PDF File"; statusText.innerText = "Generating Secure Link..."; }
 
         r2Overlay.style.display = 'flex'; progressBar.style.width = '0%'; progressText.innerText = '0%';
-        const xhr = new XMLHttpRequest(); xhr.open("POST", R2_UPLOAD_API_URL, true); xhr.setRequestHeader("Authorization", "Bearer " + R2_API_TOKEN); 
-        const formData = new FormData(); formData.append("file", file); formData.append("type", type);
-        xhr.upload.addEventListener("progress", (e) => {
-            if (e.lengthComputable) { let p = Math.round((e.loaded / e.total) * 100); progressBar.style.width = p + '%'; progressText.innerText = p + '%'; }
-        });
-        xhr.onload = function() {
-            if (xhr.status >= 200 && xhr.status < 300) {
-                try { const res = JSON.parse(xhr.responseText); setTimeout(() => { r2Overlay.style.display = 'none'; }, 500); resolve(res.url); } 
-                catch(e) { r2Overlay.style.display = 'none'; reject("Invalid Response"); }
-            } else { r2Overlay.style.display = 'none'; reject("Upload Failed"); }
-        };
-        xhr.onerror = function() { r2Overlay.style.display = 'none'; reject("Network Error"); }; xhr.send(formData);
+
+        try {
+            // Step 1: Request Presigned URL from Backend
+            const userToken = await auth.currentUser.getIdToken(true);
+            const authResponse = await fetch('/api/generate-upload-url', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ fileName: file.name, fileType: file.type, userToken: userToken })
+            });
+            const authData = await authResponse.json();
+
+            if (!authResponse.ok) throw new Error(authData.error || "Permission Denied");
+
+            // Step 2: Upload direct to Cloudflare R2
+            statusText.innerText = "Securely transferring to Cloudflare R2...";
+            
+            const xhr = new XMLHttpRequest(); 
+            xhr.open("PUT", authData.uploadUrl, true); 
+            xhr.setRequestHeader("Content-Type", file.type); 
+
+            xhr.upload.addEventListener("progress", (e) => {
+                if (e.lengthComputable) { let p = Math.round((e.loaded / e.total) * 100); progressBar.style.width = p + '%'; progressText.innerText = p + '%'; }
+            });
+
+            xhr.onload = function() {
+                if (xhr.status >= 200 && xhr.status < 300) {
+                    setTimeout(() => { r2Overlay.style.display = 'none'; }, 500); 
+                    
+                    if (type === 'image') resolve(`${R2_PUBLIC_IMAGE_URL}/${authData.fileKey}`);
+                    else resolve(authData.fileKey); 
+
+                } else { 
+                    r2Overlay.style.display = 'none'; reject("Upload Failed"); 
+                }
+            };
+            xhr.onerror = function() { r2Overlay.style.display = 'none'; reject("Network Error"); }; 
+            xhr.send(file);
+
+        } catch (error) {
+            r2Overlay.style.display = 'none';
+            reject(error.message || "Upload Failed");
+        }
     });
 }
 
@@ -1073,12 +1098,20 @@ document.getElementById('addBookForm').addEventListener('submit', async (e) => {
     btn.innerHTML = `<span class="btn-text" style="display: flex; align-items: center; justify-content: center; gap: 10px;"><div class="premium-loader" style="border-color:#000;"></div> Publishing...</span>`; btn.disabled = true;
 
     try {
-        let coverR2Url = await uploadFileToR2(selectedCoverFile, 'image'); let pdfR2Url = await uploadFileToR2(selectedPdfFile, 'pdf');
+        let coverR2Url = await uploadFileToR2(selectedCoverFile, 'image'); 
+        let pdfR2Key = await uploadFileToR2(selectedPdfFile, 'pdf');
+        
         const newBook = { 
-            title: document.getElementById('inTitle').value, author: document.getElementById('inAuthor').value, 
-            year: document.getElementById('inYear').value, lang: document.getElementById('inLang').value, 
-            exams: document.getElementById('inExams').value, image: coverR2Url, pdfLink: pdfR2Url, 
-            dateAdded: new Date().toLocaleDateString('en-GB').toUpperCase(), createdAt: new Date().getTime(), uploaderUid: auth.currentUser.uid 
+            title: document.getElementById('inTitle').value, 
+            author: document.getElementById('inAuthor').value, 
+            year: document.getElementById('inYear').value, 
+            lang: document.getElementById('inLang').value, 
+            exams: document.getElementById('inExams').value, 
+            image: coverR2Url, 
+            pdfLink: pdfR2Key, 
+            dateAdded: new Date().toLocaleDateString('en-GB').toUpperCase(), 
+            createdAt: new Date().getTime(), 
+            uploaderUid: auth.currentUser.uid 
         };
         await addDoc(collection(db, "books"), newBook); 
         
