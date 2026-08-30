@@ -173,7 +173,6 @@ function tryTransition() {
     }
 }
 
-// Quote Generator
 const quotes = [
     { text: "The only way to do great work is to love what you do.", author: "Steve Jobs" },
     { text: "Whatever you are, be a good one.", author: "Abraham Lincoln" },
@@ -385,7 +384,7 @@ document.getElementById('categoryFilterGrid').addEventListener('click', (e) => {
 document.getElementById('languageFilterGrid').addEventListener('click', (e) => {
     if(e.target.classList.contains('f-pill')) { document.querySelectorAll('#languageFilterGrid .f-pill').forEach(el => el.classList.remove('active')); e.target.classList.add('active'); currentSelectedLanguage = e.target.getAttribute('data-lang'); }
 });
-document.getElementById('applyFiltersBtn').addEventListener('click', () => { closePanelOrModal('filterBottomOverlay'); applyMasterFilter(); });
+document.getElementById('applyFiltersBtn').addEventListener('click', () => { handleCloseBackLogic(); applyMasterFilter(); });
 
 function applyMasterFilter() {
     const searchInputRaw = document.getElementById('app-search-input').value.trim(); const searchStr = searchInputRaw.toLowerCase();
@@ -512,7 +511,29 @@ const contextOverlay = document.getElementById('contextOverlay');
 contextOverlay.addEventListener('click', (e) => { if (e.target === contextOverlay) handleCloseBackLogic(); });
 
 function openContextMenu(postEl) {
-    window.activePost = postEl; openPanelWithHistory('contextOverlay'); if (navigator.vibrate) navigator.vibrate(20);
+    window.activePost = postEl; 
+    
+    // Dynamic "Open Book" Button handling based on slug
+    const slug = postEl.getAttribute('data-slug');
+    const cmOptions = document.querySelector('.cm-options');
+    let openBookBtn = document.getElementById('cm-open-book-btn');
+    
+    if (slug) {
+        if (!openBookBtn) {
+            openBookBtn = document.createElement('div');
+            openBookBtn.id = 'cm-open-book-btn';
+            openBookBtn.className = 'cm-item';
+            openBookBtn.innerHTML = '<i class="fas fa-book-open" style="font-size: 18px; width: 20px; text-align: center; color: #10b981;"></i> <span style="color: #10b981; font-weight: 700;">Open Book</span>';
+            cmOptions.insertBefore(openBookBtn, cmOptions.firstChild);
+        }
+        openBookBtn.onclick = () => { handleCloseBackLogic(); openDownloadPageLocal(slug); };
+        openBookBtn.style.display = 'flex';
+    } else {
+        if (openBookBtn) openBookBtn.style.display = 'none';
+    }
+
+    openPanelWithHistory('contextOverlay'); 
+    if (navigator.vibrate) navigator.vibrate(20);
 }
 
 window.addReactionFromMenu = function(emojiSymbol) {
@@ -640,11 +661,11 @@ onSnapshot(query(collection(db, "messages"), orderBy("createdAt", "asc")), (snap
         bubble.addEventListener('touchend', e => { clearTimeout(pressTimer); });
         bubble.addEventListener('touchmove', e => { clearTimeout(pressTimer); });
         
+        // CLICK PAR HAMESHA CONTEXT MENU KHULEGA
         bubble.addEventListener('click', (e) => {
             if(e.target.closest('.reaction-pill')) return; 
-            const slug = bubble.getAttribute('data-slug');
-            if(slug) { openDownloadPageLocal(slug); } 
-            else { openContextMenu(bubble); }
+            if(e.target.tagName === 'A') return; // Ignore if user clicks a link inside text
+            openContextMenu(bubble);
         });
     });
 
