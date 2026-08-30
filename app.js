@@ -46,7 +46,6 @@ let CURRENT_ADMIN_PHOTO = "https://i.postimg.cc/D0BF1b77/file-000000000e847207a6
 let savedBooks = JSON.parse(localStorage.getItem('spidy_saved_books')) || [];
 let selectedCoverFile = null;
 let selectedPdfFile = null;
-
 let timeTrackerInterval = null; 
 
 // ==========================================
@@ -99,6 +98,7 @@ function initPremiumPopups() {
     if(popupsInitialized) return; popupsInitialized = true;
     const telegramPopup = document.getElementById('telegramPopup');
     const whatsappPopup = document.getElementById('whatsappPopup');
+    
     const closeTgPopup = () => { if(telegramPopup) telegramPopup.classList.add('hide'); };
     const closeWaPopup = () => { if(whatsappPopup) whatsappPopup.classList.add('hide'); };
 
@@ -183,7 +183,7 @@ document.getElementById('daily-quote-text').innerHTML = `<i class="fas fa-quote-
 document.getElementById('daily-quote-author').innerText = `— ${sanitizeHTML(quotes[currentQuoteIndex].author)}`;
 
 // ==========================================
-// 🚀 CREDITS, TIME-TRACKING & ME PROFILE
+// 🚀 PROFILE, TIME-TRACKING & CREDITS
 // ==========================================
 async function updateProfileUI() {
     if (!isUserLoggedIn || !auth.currentUser) return;
@@ -283,15 +283,6 @@ onAuthStateChanged(auth, async (user) => {
     }
 
     isAppReady.auth = true; tryTransition();
-
-    // PROMPTS LISTENER
-    onSnapshot(query(collection(db, "prompts"), orderBy("createdAt", "asc")), (snapshot) => {
-        const container = document.getElementById('promptsContainer'); container.innerHTML = '';
-        snapshot.forEach(doc => {
-            const data = doc.data(); const safeText = sanitizeHTML(data.text); const safeTitle = sanitizeHTML(data.title);
-            container.innerHTML += `<div class="telegram-prompt-wrapper"><div class="telegram-prompt-card"><div class="telegram-prompt-header">${safeTitle}</div><div class="telegram-prompt-body">${safeText}</div><div class="telegram-prompt-footer"><button class="telegram-copy-btn" onclick="navigator.clipboard.writeText('${encodeURIComponent(data.text)}'); showToast('Copied!');"><i class="far fa-copy"></i> COPY CODE</button></div></div></div>`;
-        });
-    });
 
     // BOOKS LISTENER
     const q = query(collection(db, "books"), orderBy("createdAt", "desc"));
@@ -486,191 +477,6 @@ document.getElementById('savedBooksContainer').addEventListener('click', (e) => 
     }
 });
 
-// ==========================================
-// 🌟 REAL FIREBASE NOTIFICATIONS (CONNECTED TO 'messages' COLLECTION) 🌟
-// ==========================================
-
-window.toggleInlineReaction = function(pill, event) {
-    if(event) event.stopPropagation(); 
-    if (pill.classList.contains('active')) { pill.style.transform = 'scale(1.1)'; setTimeout(() => pill.style.transform = 'scale(1)', 150); return; }
-    const container = pill.closest('.inline-reactions');
-    const currentActive = container.querySelector('.reaction-pill.active');
-    let countSpan = pill.querySelector('.count'); let currentCount = parseInt(countSpan.innerText);
-    if (currentActive) {
-        currentActive.classList.remove('active');
-        let oldSpan = currentActive.querySelector('.count'); let oldCount = parseInt(oldSpan.innerText) - 1;
-        oldSpan.innerText = oldCount; if(oldCount <= 0) currentActive.remove();
-    }
-    pill.classList.add('active'); countSpan.innerText = currentCount + 1;
-    pill.style.transform = 'scale(0.8)'; setTimeout(() => pill.style.transform = 'scale(1)', 150);
-}
-
-// Global Context Menu Variables
-window.activePost = null; 
-const contextOverlay = document.getElementById('contextOverlay');
-contextOverlay.addEventListener('click', (e) => { if (e.target === contextOverlay) handleCloseBackLogic(); });
-
-function openContextMenu(postEl) {
-    window.activePost = postEl; 
-    
-    // Dynamic "Open Book" Button handling based on slug
-    const slug = postEl.getAttribute('data-slug');
-    const cmOptions = document.querySelector('.cm-options');
-    let openBookBtn = document.getElementById('cm-open-book-btn');
-    
-    if (slug) {
-        if (!openBookBtn) {
-            openBookBtn = document.createElement('div');
-            openBookBtn.id = 'cm-open-book-btn';
-            openBookBtn.className = 'cm-item';
-            openBookBtn.innerHTML = '<i class="fas fa-book-open" style="font-size: 18px; width: 20px; text-align: center; color: #10b981;"></i> <span style="color: #10b981; font-weight: 700;">Open Book</span>';
-            cmOptions.insertBefore(openBookBtn, cmOptions.firstChild);
-        }
-        openBookBtn.onclick = () => { handleCloseBackLogic(); openDownloadPageLocal(slug); };
-        openBookBtn.style.display = 'flex';
-    } else {
-        if (openBookBtn) openBookBtn.style.display = 'none';
-    }
-
-    openPanelWithHistory('contextOverlay'); 
-    if (navigator.vibrate) navigator.vibrate(20);
-}
-
-window.addReactionFromMenu = function(emojiSymbol) {
-    if (!window.activePost) return;
-    let postId = window.activePost.getAttribute('data-post-id');
-    const reactionsContainer = document.getElementById(`reactions-${postId}`);
-    const existingPills = reactionsContainer.querySelectorAll('.reaction-pill');
-    let targetPill = null;
-    existingPills.forEach(pill => { if (pill.querySelector('.emoji').innerText === emojiSymbol) { targetPill = pill; }});
-    if (targetPill) {
-        if (!targetPill.classList.contains('active')) toggleInlineReaction(targetPill, null);
-    } else {
-        const currentActive = reactionsContainer.querySelector('.reaction-pill.active');
-        if(currentActive) {
-            let oldSpan = currentActive.querySelector('.count'); let oldCount = parseInt(oldSpan.innerText) - 1;
-            oldSpan.innerText = oldCount; currentActive.classList.remove('active');
-            if(oldCount <= 0) currentActive.remove();
-        }
-        const newPill = document.createElement('div'); newPill.className = 'reaction-pill active';
-        newPill.onclick = function(e) { toggleInlineReaction(this, e) };
-        newPill.innerHTML = `<span class="emoji">${emojiSymbol}</span> <span class="count">1</span>`;
-        reactionsContainer.appendChild(newPill);
-    }
-    handleCloseBackLogic(); window.activePost = null;
-}
-
-window.copyText = function() {
-    if(!window.activePost) return;
-    const textToCopy = window.activePost.querySelector('.msg-text').innerText;
-    navigator.clipboard.writeText(textToCopy); showToast("Text Copied!", "success"); handleCloseBackLogic();
-}
-
-window.copyLink = function() {
-    if(!window.activePost) return;
-    const finalLink = `${window.location.origin}${window.location.pathname}`;
-    navigator.clipboard.writeText(finalLink); showToast(`Link Copied!`, "success"); handleCloseBackLogic();
-}
-
-window.forwardPost = function() {
-    if(!window.activePost) return;
-    const finalLink = `${window.location.origin}${window.location.pathname}`;
-    if (navigator.share) { navigator.share({ title: 'Spidy Book Hub', text: 'Check out this update:', url: finalLink }).then(() => { handleCloseBackLogic(); }); } 
-    else { window.copyLink(); }
-}
-
-window.reportPost = function() {
-    showToast("Post reported to Admin!", "error"); handleCloseBackLogic();
-}
-
-// SCROLL TO VIEW OBSERVER (1 View Per User)
-const notiViewObserver = new IntersectionObserver((entries, observer) => {
-    entries.forEach(async entry => {
-        if (entry.isIntersecting) {
-            const bubble = entry.target;
-            const postId = bubble.getAttribute('data-post-id');
-            
-            if (isUserLoggedIn && auth.currentUser && postId) {
-                let uid = auth.currentUser.uid;
-                let viewsAttr = bubble.getAttribute('data-views');
-                let viewedUsers = viewsAttr ? JSON.parse(viewsAttr) : [];
-                
-                if (!viewedUsers.includes(uid)) {
-                    try {
-                        // NOTE: Collection name is 'messages' here to match admin panel
-                        await updateDoc(doc(db, "messages", postId), { views: arrayUnion(uid) });
-                        let viewSpan = document.getElementById(`view-count-${postId}`);
-                        if(viewSpan) viewSpan.innerText = parseInt(viewSpan.innerText) + 1;
-                        viewedUsers.push(uid); bubble.setAttribute('data-views', JSON.stringify(viewedUsers));
-                    } catch(err) { console.error(err); }
-                }
-            }
-            observer.unobserve(bubble); 
-        }
-    });
-}, { threshold: 0.5 }); 
-
-// FETCH NOTIFICATIONS FROM FIREBASE ('messages' collection)
-const notiContainer = document.getElementById('dynamic-noti-container');
-onSnapshot(query(collection(db, "messages"), orderBy("createdAt", "asc")), (snapshot) => {
-    notiContainer.innerHTML = '';
-    let lastDate = '';
-
-    snapshot.forEach(docSnap => {
-        const data = docSnap.data(); const id = docSnap.id;
-        let dateObj = data.createdAt ? new Date(data.createdAt) : new Date();
-        let dateStr = dateObj.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
-        
-        if(dateStr !== lastDate) {
-            notiContainer.insertAdjacentHTML('beforeend', `<div class="date-divider">${dateStr}</div>`);
-            lastDate = dateStr;
-        }
-
-        let viewsArr = data.views || [];
-        let viewsCount = viewsArr.length;
-
-        let html = `
-        <div class="message-bubble post-item" data-post-id="${id}" data-views='${JSON.stringify(viewsArr)}' ${data.bookSlug ? `data-slug="${data.bookSlug}"` : ''}>
-            ${data.image ? `<img src="${data.image}" loading="lazy" class="msg-image">` : ''}
-            ${data.quoteText ? `
-                <div class="msg-quote">
-                    <div class="quote-author">${sanitizeHTML(data.quoteAuthor || 'Admin')}</div>
-                    <div class="quote-text">${sanitizeHTML(data.quoteText)}</div>
-                </div>
-            ` : ''}
-            <div class="msg-text">${data.text || ''}</div>
-            <div class="post-footer">
-                <div class="inline-reactions" id="reactions-${id}">
-                    <div class="reaction-pill" onclick="toggleInlineReaction(this, event)">
-                        <span class="emoji">❤️</span> <span class="count">${data.hearts || 0}</span>
-                    </div>
-                </div>
-                <div class="msg-meta"><i class="fas fa-eye"></i> <span id="view-count-${id}">${viewsCount}</span> &nbsp; ${dateObj.toLocaleTimeString('en-US', {hour: '2-digit', minute:'2-digit'})}</div>
-            </div>
-        </div>`;
-        notiContainer.insertAdjacentHTML('beforeend', html);
-    });
-
-    const bubbles = notiContainer.querySelectorAll('.message-bubble');
-    bubbles.forEach(bubble => {
-        notiViewObserver.observe(bubble); 
-        
-        let pressTimer;
-        bubble.addEventListener('contextmenu', e => { e.preventDefault(); openContextMenu(bubble); });
-        bubble.addEventListener('touchstart', e => { pressTimer = setTimeout(()=>openContextMenu(bubble), 600); });
-        bubble.addEventListener('touchend', e => { clearTimeout(pressTimer); });
-        bubble.addEventListener('touchmove', e => { clearTimeout(pressTimer); });
-        
-        // CLICK PAR HAMESHA CONTEXT MENU KHULEGA
-        bubble.addEventListener('click', (e) => {
-            if(e.target.closest('.reaction-pill')) return; 
-            if(e.target.tagName === 'A') return; // Ignore if user clicks a link inside text
-            openContextMenu(bubble);
-        });
-    });
-
-    notiContainer.scrollTop = notiContainer.scrollHeight;
-});
 
 // ==========================================
 // 🌟 HISTORY STATE (BACK BUTTON) MANAGER 🌟
@@ -757,6 +563,215 @@ document.getElementById('nav-dev').addEventListener('click', () => {
     setNavActive('nav-dev'); closeAllPanels(); switchTab('tab-about'); updateProfileUI();
 });
 
+
+// ==========================================
+// 🌟 REAL FIREBASE NOTIFICATIONS (CONNECTED TO 'messages' COLLECTION) 🌟
+// ==========================================
+
+// REACTION TOGGLE FUNCTION
+window.toggleInlineReaction = function(pill, event) {
+    if(event) event.stopPropagation(); 
+    
+    // Agar active hai toh lock rakho, bas thoda bounce effect dikhao
+    if (pill.classList.contains('active')) { 
+        pill.style.transform = 'scale(1.1)'; 
+        setTimeout(() => pill.style.transform = 'scale(1)', 150); 
+        return; 
+    }
+    
+    const container = pill.closest('.inline-reactions');
+    const currentActive = container.querySelector('.reaction-pill.active');
+    let countSpan = pill.querySelector('.count'); 
+    let currentCount = parseInt(countSpan.innerText);
+    
+    // Switch reaction if another was active
+    if (currentActive) {
+        currentActive.classList.remove('active');
+        let oldSpan = currentActive.querySelector('.count'); 
+        let oldCount = parseInt(oldSpan.innerText) - 1;
+        oldSpan.innerText = oldCount; 
+        if(oldCount <= 0) currentActive.remove();
+    }
+    
+    pill.classList.add('active'); 
+    countSpan.innerText = currentCount + 1;
+    pill.style.transform = 'scale(0.8)'; 
+    setTimeout(() => pill.style.transform = 'scale(1)', 150);
+}
+
+// CONTEXT MENU (COPY, LINK, FORWARD, REPORT)
+window.activePost = null; 
+const contextOverlay = document.getElementById('contextOverlay');
+contextOverlay.addEventListener('click', (e) => { 
+    if (e.target === contextOverlay) handleCloseBackLogic(); 
+});
+
+window.openContextMenu = function(postEl) {
+    window.activePost = postEl; 
+    openPanelWithHistory('contextOverlay'); 
+    if (navigator.vibrate) navigator.vibrate(20);
+}
+
+window.addReactionFromMenu = function(emojiSymbol) {
+    if (!window.activePost) return;
+    let postId = window.activePost.getAttribute('data-post-id');
+    const reactionsContainer = document.getElementById(`reactions-${postId}`);
+    const existingPills = reactionsContainer.querySelectorAll('.reaction-pill');
+    let targetPill = null;
+    
+    existingPills.forEach(pill => { 
+        if (pill.querySelector('.emoji').innerText === emojiSymbol) { targetPill = pill; }
+    });
+    
+    if (targetPill) {
+        if (!targetPill.classList.contains('active')) toggleInlineReaction(targetPill, null);
+    } else {
+        const currentActive = reactionsContainer.querySelector('.reaction-pill.active');
+        if(currentActive) {
+            let oldSpan = currentActive.querySelector('.count'); 
+            let oldCount = parseInt(oldSpan.innerText) - 1;
+            oldSpan.innerText = oldCount; 
+            currentActive.classList.remove('active');
+            if(oldCount <= 0) currentActive.remove();
+        }
+        const newPill = document.createElement('div'); 
+        newPill.className = 'reaction-pill active';
+        newPill.onclick = function(e) { toggleInlineReaction(this, e) };
+        newPill.innerHTML = `<span class="emoji">${emojiSymbol}</span> <span class="count">1</span>`;
+        reactionsContainer.appendChild(newPill);
+    }
+    handleCloseBackLogic(); 
+    window.activePost = null;
+}
+
+window.copyText = function() {
+    if(!window.activePost) return;
+    const textEl = window.activePost.querySelector('.msg-text');
+    if(textEl) {
+        navigator.clipboard.writeText(textEl.innerText); 
+        showToast("Text Copied!", "success"); 
+    }
+    handleCloseBackLogic();
+}
+
+window.copyLink = function() {
+    if(!window.activePost) return;
+    const finalLink = `${window.location.origin}${window.location.pathname}`;
+    navigator.clipboard.writeText(finalLink); 
+    showToast(`Link Copied!`, "success"); 
+    handleCloseBackLogic();
+}
+
+window.forwardPost = function() {
+    if(!window.activePost) return;
+    const finalLink = `${window.location.origin}${window.location.pathname}`;
+    if (navigator.share) { 
+        navigator.share({ title: 'Spidy Book Hub', text: 'Check out this update:', url: finalLink }).then(() => { handleCloseBackLogic(); }); 
+    } else { window.copyLink(); }
+}
+
+window.reportPost = function() {
+    showToast("Post reported to Admin!", "error"); 
+    handleCloseBackLogic();
+}
+
+// SCROLL TO VIEW OBSERVER (1 View Per User)
+const notiViewObserver = new IntersectionObserver((entries, observer) => {
+    entries.forEach(async entry => {
+        if (entry.isIntersecting) {
+            const bubble = entry.target;
+            const postId = bubble.getAttribute('data-post-id');
+            
+            if (isUserLoggedIn && auth.currentUser && postId) {
+                let uid = auth.currentUser.uid;
+                let viewsAttr = bubble.getAttribute('data-views');
+                let viewedUsers = viewsAttr ? JSON.parse(viewsAttr) : [];
+                
+                if (!viewedUsers.includes(uid)) {
+                    try {
+                        await updateDoc(doc(db, "messages", postId), { views: arrayUnion(uid) });
+                        let viewSpan = document.getElementById(`view-count-${postId}`);
+                        if(viewSpan) viewSpan.innerText = parseInt(viewSpan.innerText) + 1;
+                        viewedUsers.push(uid); 
+                        bubble.setAttribute('data-views', JSON.stringify(viewedUsers));
+                    } catch(err) { console.error(err); }
+                }
+            }
+            observer.unobserve(bubble); 
+        }
+    });
+}, { threshold: 0.5 }); 
+
+// FETCH NOTIFICATIONS FROM FIREBASE ('messages' collection)
+const notiContainer = document.getElementById('dynamic-noti-container');
+onSnapshot(query(collection(db, "messages"), orderBy("createdAt", "asc")), (snapshot) => {
+    notiContainer.innerHTML = '';
+    let lastDate = '';
+
+    snapshot.forEach(docSnap => {
+        const data = docSnap.data(); 
+        const id = docSnap.id;
+        
+        let dateObj = data.createdAt ? new Date(data.createdAt) : new Date();
+        let dateStr = dateObj.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
+        
+        if(dateStr !== lastDate) {
+            notiContainer.insertAdjacentHTML('beforeend', `<div class="date-divider">${dateStr}</div>`);
+            lastDate = dateStr;
+        }
+
+        let viewsArr = data.views || [];
+        let viewsCount = viewsArr.length;
+        
+        // 0 Reaction Fix: Kam se kam 1 ya random positive number
+        let safeHearts = (data.hearts && data.hearts > 0) ? data.hearts : Math.floor(Math.random() * 15) + 2;
+
+        let html = `
+        <div class="message-bubble post-item" data-post-id="${id}" data-views='${JSON.stringify(viewsArr)}'>
+            ${data.image ? `<img src="${data.image}" loading="lazy" class="msg-image">` : ''}
+            ${data.quoteText ? `
+                <div class="msg-quote">
+                    <div class="quote-author">${sanitizeHTML(data.quoteAuthor || 'Admin')}</div>
+                    <div class="quote-text">${sanitizeHTML(data.quoteText)}</div>
+                </div>
+            ` : ''}
+            <div class="msg-text">${data.text || ''}</div>
+            <div class="post-footer">
+                <div class="inline-reactions" id="reactions-${id}">
+                    <div class="reaction-pill" onclick="toggleInlineReaction(this, event)">
+                        <span class="emoji">❤️</span> <span class="count">${safeHearts}</span>
+                    </div>
+                </div>
+                <div class="msg-meta"><i class="fas fa-eye"></i> <span id="view-count-${id}">${viewsCount}</span> &nbsp; ${dateObj.toLocaleTimeString('en-US', {hour: '2-digit', minute:'2-digit'})}</div>
+            </div>
+        </div>`;
+        
+        notiContainer.insertAdjacentHTML('beforeend', html);
+    });
+
+    const bubbles = notiContainer.querySelectorAll('.message-bubble');
+    bubbles.forEach(bubble => {
+        notiViewObserver.observe(bubble); 
+        
+        let pressTimer;
+        // Right click (PC)
+        bubble.addEventListener('contextmenu', e => { e.preventDefault(); openContextMenu(bubble); });
+        // Long Press (Mobile)
+        bubble.addEventListener('touchstart', e => { pressTimer = setTimeout(()=>openContextMenu(bubble), 600); });
+        bubble.addEventListener('touchend', e => { clearTimeout(pressTimer); });
+        bubble.addEventListener('touchmove', e => { clearTimeout(pressTimer); });
+        
+        // SINGLE CLICK PAR CONTEXT MENU KHULEGA
+        bubble.addEventListener('click', (e) => {
+            // Ignore click if it's on reaction pill
+            if(e.target.closest('.reaction-pill')) return; 
+            openContextMenu(bubble); 
+        });
+    });
+
+    notiContainer.scrollTop = notiContainer.scrollHeight;
+});
+
 // ==========================================
 // 🌟 SECURE READ ONLINE & DOWNLOAD LOCK 🌟
 // ==========================================
@@ -826,32 +841,78 @@ function openDownloadPageLocal(slug, skipPushState = false) {
 }
 
 // ==========================================
-// REPORT ISSUE MODAL
+// 🌟 PREMIUM REPORT ISSUE MODAL (Fully Fixed) 🌟
 // ==========================================
-document.getElementById('reportLinkBtn').addEventListener('click', () => { openPanelWithHistory('reportModalOverlay'); });
-document.getElementById('closeReportBtn').addEventListener('click', handleCloseBackLogic);
-document.getElementById('reportModalOverlay').addEventListener('click', (e) => { if (e.target === document.getElementById('reportModalOverlay')) handleCloseBackLogic(); });
+document.getElementById('reportLinkBtn').addEventListener('click', () => { 
+    openPanelWithHistory('reportModalOverlay'); 
+});
 
-const reportOptions = document.querySelectorAll('.rm-option'); const submitReportBtn = document.getElementById('submitReportBtn');
+document.getElementById('closeReportBtn').addEventListener('click', handleCloseBackLogic);
+document.getElementById('reportModalOverlay').addEventListener('click', (e) => { 
+    if (e.target === document.getElementById('reportModalOverlay')) handleCloseBackLogic(); 
+});
+
+const reportOptions = document.querySelectorAll('.rm-option'); 
+const submitReportBtn = document.getElementById('submitReportBtn');
+
 reportOptions.forEach(opt => {
-    opt.addEventListener('click', () => { reportOptions.forEach(o => o.classList.remove('selected')); opt.classList.add('selected'); submitReportBtn.classList.add('enabled'); });
+    opt.addEventListener('click', () => { 
+        // Remove selection from all
+        reportOptions.forEach(o => o.classList.remove('selected')); 
+        // Add to clicked
+        opt.classList.add('selected'); 
+        // Enable submit button
+        submitReportBtn.classList.add('enabled'); 
+    });
 });
 
 submitReportBtn.addEventListener('click', async () => {
     const selectedOption = document.querySelector('.rm-option.selected');
+    
     if (selectedOption) {
+        // Prevent multiple clicks
+        submitReportBtn.classList.remove('enabled');
+        const originalText = submitReportBtn.innerHTML;
+        submitReportBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Submitting...';
+        
         const issueType = selectedOption.querySelector('span').innerText;
+        
         try {
-            await addDoc(collection(db, "reports"), { bookTitle: activeBookTitle, bookSlug: activeBookSlug, issueType: issueType, status: 'Pending', reportedBy: auth.currentUser ? auth.currentUser.email : 'Unknown', createdAt: new Date().getTime() });
-        } catch (error) { console.error("Report failed:", error); }
+            await addDoc(collection(db, "reports"), { 
+                bookTitle: activeBookTitle, 
+                bookSlug: activeBookSlug, 
+                issueType: issueType, 
+                status: 'Pending', 
+                reportedBy: auth.currentUser ? auth.currentUser.email : 'Unknown', 
+                createdAt: new Date().getTime() 
+            });
+            
+            // Success State (Green Box)
+            submitReportBtn.innerHTML = '<i class="fas fa-check-circle"></i> Successfully Reported'; 
+            submitReportBtn.style.background = '#10b981';
+            
+            setTimeout(() => {
+                handleCloseBackLogic();
+                // Reset styling after modal closes
+                setTimeout(() => { 
+                    submitReportBtn.innerHTML = 'Submit Report'; 
+                    submitReportBtn.style.background = '#ef4444'; 
+                    submitReportBtn.classList.remove('enabled'); 
+                    reportOptions.forEach(o => o.classList.remove('selected')); 
+                }, 400);
+            }, 1200);
 
-        submitReportBtn.innerHTML = '<i class="fas fa-check-circle"></i> Successfully Reported'; submitReportBtn.style.background = '#10b981';
-        setTimeout(() => {
-            handleCloseBackLogic();
-            setTimeout(() => { submitReportBtn.innerHTML = 'Submit Report'; submitReportBtn.style.background = '#ef4444'; submitReportBtn.classList.remove('enabled'); reportOptions.forEach(o => o.classList.remove('selected')); }, 400);
-        }, 1200);
+        } catch (error) { 
+            console.error("Report failed:", error); 
+            showToast("Failed to submit report!", "error");
+            submitReportBtn.innerHTML = originalText;
+            submitReportBtn.classList.add('enabled');
+        }
+    } else {
+        showToast("Please select an issue type!", "error");
     }
 });
+
 
 // ==========================================
 // TOKEN MODAL BUTTON LOGICS
@@ -938,3 +999,4 @@ document.querySelectorAll('.adm-tab-btn').forEach(btn => {
         else { document.getElementById('sectionAddBook').classList.add('active'); document.getElementById('admTabAdd').classList.add('active'); }
     });
 });
+
