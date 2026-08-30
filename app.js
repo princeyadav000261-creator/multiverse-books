@@ -1,5 +1,5 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
-import { getFirestore, collection, addDoc, doc, updateDoc, onSnapshot, query, orderBy, setDoc, getDoc, increment, getDocs, arrayUnion } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
+import { getFirestore, collection, addDoc, doc, updateDoc, onSnapshot, query, orderBy, setDoc, getDoc, increment, getDocs } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
 import { getAuth, signInWithEmailAndPassword, GoogleAuthProvider, signInWithPopup, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js";
 import { getAnalytics } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-analytics.js";
 
@@ -23,8 +23,9 @@ const provider = new GoogleAuthProvider();
 const analytics = getAnalytics(app); 
 
 // ==========================================
-// 2. R2 PUBLIC URL (For Cover Images)
+// 2. R2 PUBLIC URL (For Cover Images Only)
 // ==========================================
+// YAHAN APNA CLOUDFLARE R2 PUBLIC DOMAIN DAALO (jaise: https://pub-xyz.r2.dev)
 const R2_PUBLIC_IMAGE_URL = "https://your-cloudflare-public-domain.r2.dev"; 
 
 // ==========================================
@@ -41,16 +42,15 @@ let IS_SUPER_ADMIN = false;
 let isUserLoggedIn = false; 
 
 let CURRENT_ADMIN_NAME = "USER";
+let CURRENT_ADMIN_EMAIL = "";
 let CURRENT_ADMIN_PHOTO = "https://i.postimg.cc/D0BF1b77/file-000000000e847207a64f6711d825a859.png";
 
 let savedBooks = JSON.parse(localStorage.getItem('spidy_saved_books')) || [];
 let selectedCoverFile = null;
 let selectedPdfFile = null;
 
-let timeTrackerInterval = null; 
-
 // ==========================================
-// UTILITY FUNCTIONS & PREMIUM TOAST
+// UTILITY FUNCTIONS & PREMIUM TOAST NOTIFICATIONS
 // ==========================================
 function sanitizeHTML(str) {
     if (typeof str !== 'string') return str;
@@ -61,7 +61,7 @@ function sanitizeHTML(str) {
 }
 
 let globalToastTimeout;
-window.showToast = function(message, type = 'success') {
+function showToast(message, type = 'success') {
     const toast = document.getElementById('customToast');
     if(!toast) return; 
     
@@ -77,16 +77,20 @@ window.showToast = function(message, type = 'success') {
     void toast.offsetWidth; 
     toast.classList.add('show');
 
-    globalToastTimeout = setTimeout(() => { toast.classList.remove('show'); }, 2000);
+    globalToastTimeout = setTimeout(() => {
+        toast.classList.remove('show');
+    }, 2000);
 }
 
 function generateDeviceFingerprint() {
-    const nav = window.navigator; const screen = window.screen;
+    const nav = window.navigator;
+    const screen = window.screen;
     const str = nav.userAgent + nav.language + screen.colorDepth + screen.width + screen.height + new Date().getTimezoneOffset();
     let hash = 0;
     for (let i = 0; i < str.length; i++) {
         let char = str.charCodeAt(i);
-        hash = ((hash << 5) - hash) + char; hash = hash & hash;
+        hash = ((hash << 5) - hash) + char;
+        hash = hash & hash;
     }
     return Math.abs(hash).toString(16);
 }
@@ -95,21 +99,35 @@ function generateDeviceFingerprint() {
 // 🌟 PREMIUM DUAL POPUPS LOGIC 🌟
 // ==========================================
 let popupsInitialized = false;
+
 function initPremiumPopups() {
-    if(popupsInitialized) return; popupsInitialized = true;
+    if(popupsInitialized) return; 
+    popupsInitialized = true;
+
     const telegramPopup = document.getElementById('telegramPopup');
     const whatsappPopup = document.getElementById('whatsappPopup');
-    
+    const tgMaybeLaterBtn = document.getElementById('tgMaybeLaterBtn');
+    const waMaybeLaterBtn = document.getElementById('waMaybeLaterBtn');
+
     const closeTgPopup = () => { if(telegramPopup) telegramPopup.classList.add('hide'); };
     const closeWaPopup = () => { if(whatsappPopup) whatsappPopup.classList.add('hide'); };
 
-    document.getElementById('tgMaybeLaterBtn')?.addEventListener('click', closeTgPopup);
-    document.getElementById('waMaybeLaterBtn')?.addEventListener('click', closeWaPopup);
-    telegramPopup?.addEventListener('click', (e) => { if (e.target === telegramPopup) closeTgPopup(); });
-    whatsappPopup?.addEventListener('click', (e) => { if (e.target === whatsappPopup) closeWaPopup(); });
+    if(tgMaybeLaterBtn) tgMaybeLaterBtn.addEventListener('click', closeTgPopup);
+    if(waMaybeLaterBtn) waMaybeLaterBtn.addEventListener('click', closeWaPopup);
 
-    setTimeout(() => { if(telegramPopup) telegramPopup.classList.remove('hide'); }, 30000); 
-    setTimeout(() => { if(telegramPopup) telegramPopup.classList.add('hide'); if(whatsappPopup) whatsappPopup.classList.remove('hide'); }, 100000); 
+    if(telegramPopup) telegramPopup.addEventListener('click', (e) => { if (e.target === telegramPopup) closeTgPopup(); });
+    if(whatsappPopup) whatsappPopup.addEventListener('click', (e) => { if (e.target === whatsappPopup) closeWaPopup(); });
+
+    setTimeout(() => {
+        if(telegramPopup && !telegramPopup.classList.contains('manually-closed')) {
+            telegramPopup.classList.remove('hide');
+        }
+    }, 30000); 
+
+    setTimeout(() => {
+        if(telegramPopup) telegramPopup.classList.add('hide'); 
+        if(whatsappPopup) whatsappPopup.classList.remove('hide');
+    }, 100000); 
 }
 
 // ==========================================
@@ -127,6 +145,7 @@ if (isDeepLinkLoad) {
 let isAppReady = { auth: false, data: false }; 
 let hasTransitioned = false;
 let loadingProgress = 0;
+let loaderInterval;
 
 function updateLoaderUI(percent) {
     const loaderFill = document.getElementById('loaderFill');
@@ -142,7 +161,7 @@ function updateLoaderUI(percent) {
     }
 }
 
-let loaderInterval = setInterval(() => {
+loaderInterval = setInterval(() => {
     if (loadingProgress < 85) {
         loadingProgress += Math.floor(Math.random() * 5) + 2; 
         if (loadingProgress > 85) loadingProgress = 85;
@@ -152,96 +171,84 @@ let loaderInterval = setInterval(() => {
 
 function tryTransition() {
     if (isAppReady.auth && isAppReady.data && !hasTransitioned) {
-        hasTransitioned = true; clearInterval(loaderInterval); 
+        hasTransitioned = true;
+        clearInterval(loaderInterval); 
         
         let fastLoad = setInterval(() => {
             loadingProgress += 4;
             if(loadingProgress >= 100) {
-                loadingProgress = 100; updateLoaderUI(100); clearInterval(fastLoad);
+                loadingProgress = 100;
+                updateLoaderUI(100);
+                clearInterval(fastLoad);
 
                 setTimeout(() => {
                     document.getElementById('mainAppWrapper').style.display = 'block';
+
                     if (isDeepLinkLoad && pendingBookSlug) {
                         if (isUserLoggedIn) { openDownloadPageLocal(pendingBookSlug, true); } 
-                        else { openPanelWithHistory('loginOverlay'); }
-                    } else { initPremiumPopups(); }
-                    
+                        else {
+                            const loginOverlay = document.getElementById('loginOverlay');
+                            loginOverlay.style.display = 'flex';
+                            setTimeout(() => loginOverlay.style.opacity = '1', 10);
+                        }
+                    } else {
+                        initPremiumPopups(); 
+                    }
                     const loader = document.getElementById("loaderScreen");
-                    loader.style.opacity = "0"; setTimeout(() => { loader.style.display = "none"; }, 300);
+                    loader.style.opacity = "0"; 
+                    setTimeout(() => { loader.style.display = "none"; }, 300);
                 }, 400); 
-            } else { updateLoaderUI(loadingProgress); }
+            } else {
+                updateLoaderUI(loadingProgress);
+            }
         }, 15);
     }
 }
 
+// ==========================================
+// QUOTE GENERATOR
+// ==========================================
 const quotes = [
     { text: "The only way to do great work is to love what you do.", author: "Steve Jobs" },
+    { text: "In the middle of difficulty lies opportunity.", author: "Albert Einstein" },
+    { text: "Be the change that you wish to see in the world.", author: "Mahatma Gandhi" },
     { text: "Whatever you are, be a good one.", author: "Abraham Lincoln" },
-    { text: "Action is the foundational key to all success.", author: "Pablo Picasso" }
+    { text: "Action is the foundational key to all success.", author: "Pablo Picasso" },
+    { text: "Tough times never last, but tough people do.", author: "Robert H. Schuller" },
+    { text: "If you're going through hell, keep going.", author: "Winston Churchill" }
 ];
-const currentQuoteIndex = Math.floor(Date.now() / 86400000) % quotes.length;
+const todayDays = Math.floor(Date.now() / (1000 * 60 * 60 * 24));
+const currentQuoteIndex = todayDays % quotes.length;
 document.getElementById('daily-quote-text').innerHTML = `<i class="fas fa-quote-left" style="color: rgba(255,255,255,0.3); margin-right:5px;"></i> ${sanitizeHTML(quotes[currentQuoteIndex].text)}`;
 document.getElementById('daily-quote-author').innerText = `— ${sanitizeHTML(quotes[currentQuoteIndex].author)}`;
 
 // ==========================================
-// 🚀 PROFILE, TIME-TRACKING & CREDITS
+// 🚀 CREDITS SYSTEM (20 DOWNLOADS PER 24 HRS)
 // ==========================================
-async function updateProfileUI() {
-    if (!isUserLoggedIn || !auth.currentUser) return;
-    
-    try {
-        const userRef = doc(db, "users", auth.currentUser.uid);
-        const userSnap = await getDoc(userRef);
-        
-        if (userSnap.exists()) {
-            const data = userSnap.data();
-            let now = Date.now();
-            let accessedSlugs = new Set();
-            
-            (data.recentDownloads || []).forEach(item => {
-                let time = typeof item === 'number' ? item : item.time;
-                let slug = typeof item === 'number' ? null : item.slug;
-                if (now - time < 24 * 60 * 60 * 1000) { if(slug) accessedSlugs.add(slug); }
-            });
-
-            let remainingCredits = IS_SUPER_ADMIN ? "&infin;" : Math.max(0, 20 - accessedSlugs.size);
-            document.getElementById('profile-credits').innerHTML = remainingCredits;
-
-            let booksReadCount = data.readSlugs ? data.readSlugs.length : 0;
-            let totalBooksCount = booksData.length || 0;
-            document.getElementById('profile-downloads').innerText = `${booksReadCount} / ${totalBooksCount}`;
-
-            const usersRef = collection(db, "users");
-            const querySnapshot = await getDocs(usersRef);
-            let allUsers = [];
-            querySnapshot.forEach((docSnap) => { allUsers.push({ id: docSnap.id, ...docSnap.data() }); });
-            
-            allUsers.sort((a, b) => (b.totalTimeSpent || 0) - (a.totalTimeSpent || 0));
-            
-            let rank = 1; 
-            for (let i = 0; i < allUsers.length; i++) { if (allUsers[i].id === auth.currentUser.uid) { rank = i + 1; break; } }
-            
-            const rankElement = document.getElementById('profile-rank');
-            if (rank === 1) { rankElement.style.color = "#fbbf24"; rankElement.innerHTML = `<i class="fas fa-crown"></i> #1`; } 
-            else { rankElement.style.color = "#ffffff"; rankElement.innerHTML = `#${rank}`; }
-        }
-        
-        document.getElementById('profile-saved').innerText = savedBooks.length;
-    } catch (error) { console.error("Error updating profile stats", error); }
+function updateLiveCredits(recentDownloadsCount) {
+    if (IS_SUPER_ADMIN) {
+        document.getElementById('profile-credits').innerHTML = `<span style="font-size: 24px;">&infin;</span>`; 
+        return;
+    }
+    let remainingCredits = 20 - recentDownloadsCount;
+    if (remainingCredits < 0) remainingCredits = 0;
+    document.getElementById('profile-credits').innerText = remainingCredits;
 }
 
 onAuthStateChanged(auth, async (user) => {
     if (user) {
-        isUserLoggedIn = true; localStorage.setItem('isUserLoggedIn', 'true');
+        isUserLoggedIn = true;
+        localStorage.setItem('isUserLoggedIn', 'true');
 
         let dName = user.displayName || user.email.split('@')[0];
         document.getElementById('sidebarProfileName').innerText = sanitizeHTML(dName);
-        document.getElementById('profile-name-ui').innerText = sanitizeHTML(dName);
-        document.getElementById('profile-email-ui').innerText = sanitizeHTML(user.email);
         
+        const sidebarAvatar = document.getElementById('sidebarProfileImg');
         CURRENT_ADMIN_PHOTO = user.photoURL ? user.photoURL : "https://i.postimg.cc/D0BF1b77/file-000000000e847207a64f6711d825a859.png";
-        document.getElementById('sidebarProfileImg').src = CURRENT_ADMIN_PHOTO;
-        document.getElementById('profile-avatar-ui').src = CURRENT_ADMIN_PHOTO;
+        sidebarAvatar.src = CURRENT_ADMIN_PHOTO;
+        
+        CURRENT_ADMIN_NAME = dName;
+        CURRENT_ADMIN_EMAIL = user.email;
 
         try {
             const userRef = doc(db, "users", user.uid);
@@ -252,45 +259,62 @@ onAuthStateChanged(auth, async (user) => {
             const adminDocSnap = await getDoc(adminDocRef);
 
             if (adminDocSnap.exists()) {
-                IS_SUPER_ADMIN = true; document.getElementById('sidebarRoleText').innerText = "Super Admin";
+                IS_SUPER_ADMIN = true;
+                document.getElementById('sidebarRoleText').innerText = "Super Admin";
             } else {
-                IS_SUPER_ADMIN = false; document.getElementById('sidebarRoleText').innerText = "Verified User";
-                document.getElementById('sectionAddBook').classList.remove('active'); 
-                document.getElementById('sectionPrompt').classList.add('active'); 
+                IS_SUPER_ADMIN = false;
+                document.getElementById('sidebarRoleText').innerText = "Verified User";
+                switchAdminTabLocal('add');
             }
 
             if (!userSnap.exists()) {
-                await setDoc(userRef, { email: user.email, name: dName, photo: user.photoURL || "", recentDownloads: [], readSlugs: [], totalTimeSpent: 0, createdAt: new Date().getTime() }, { merge: true });
-            }
+                await setDoc(userRef, { email: user.email, name: dName, photo: user.photoURL || "", recentDownloads: [], lifetimeDownloads: 0, createdAt: new Date().getTime() }, { merge: true });
+                updateLiveCredits(0); 
+            } else {
+                let data = userSnap.data();
+                let now = Date.now();
+                let validDownloads = [];
+                let accessedSlugs = new Set();
 
-            if(!timeTrackerInterval) {
-                timeTrackerInterval = setInterval(async () => {
-                    if (isUserLoggedIn && auth.currentUser) {
-                        try { await updateDoc(doc(db, "users", auth.currentUser.uid), { totalTimeSpent: increment(1) }); } catch(e) {}
+                (data.recentDownloads || []).forEach(item => {
+                    let time = typeof item === 'number' ? item : item.time;
+                    let slug = typeof item === 'number' ? null : item.slug;
+
+                    if (now - time < 24 * 60 * 60 * 1000) {
+                        validDownloads.push(item);
+                        if(slug) accessedSlugs.add(slug);
                     }
-                }, 60000);
-            }
+                });
 
-            updateProfileUI();
+                let legacyCount = validDownloads.filter(i => typeof i === 'number').length;
+                let totalRecentCount = accessedSlugs.size + legacyCount;
+                updateLiveCredits(totalRecentCount);
+            }
 
         } catch (error) { console.error("Verification failed:", error); IS_SUPER_ADMIN = false; }
     } else {
         isUserLoggedIn = false; IS_SUPER_ADMIN = false; localStorage.removeItem('isUserLoggedIn');
-        clearInterval(timeTrackerInterval); timeTrackerInterval = null;
         document.getElementById('sidebarProfileName').innerText = "Guest User";
         document.getElementById('sidebarRoleText').innerText = "Please Login";
-        document.getElementById('profile-name-ui').innerText = "Please login";
-        document.getElementById('profile-email-ui').innerText = "";
+        document.getElementById('sidebarProfileImg').src = "https://i.postimg.cc/D0BF1b77/file-000000000e847207a64f6711d825a859.png";
+        document.getElementById('profile-credits').innerText = "--";
     }
 
     isAppReady.auth = true; tryTransition();
 
     // PROMPTS LISTENER
     onSnapshot(query(collection(db, "prompts"), orderBy("createdAt", "asc")), (snapshot) => {
-        const container = document.getElementById('promptsContainer'); container.innerHTML = '';
+        const container = document.getElementById('promptsContainer');
+        container.innerHTML = '';
+        if(snapshot.empty) { container.innerHTML = `<div style="text-align:center; padding:20px; color:#a1a1aa; font-weight:800;">No prompts available yet.</div>`; return; }
         snapshot.forEach(doc => {
-            const data = doc.data(); const safeText = sanitizeHTML(data.text); const safeTitle = sanitizeHTML(data.title);
-            container.innerHTML += `<div class="telegram-prompt-wrapper"><div class="telegram-prompt-card"><div class="telegram-prompt-header">${safeTitle}</div><div class="telegram-prompt-body">${safeText}</div><div class="telegram-prompt-footer"><button class="telegram-copy-btn" onclick="navigator.clipboard.writeText('${encodeURIComponent(data.text)}'); showToast('Copied!');"><i class="far fa-copy"></i> COPY CODE</button></div></div></div>`;
+            const data = doc.data(); const id = doc.id;
+            const safeText = sanitizeHTML(data.text);
+            const safeInstruction = data.instruction ? sanitizeHTML(data.instruction).replace(/\n/g, "<br>") : "";
+            const safeTitle = sanitizeHTML(data.title);
+            let instructionHTML = '';
+            if(safeInstruction) { instructionHTML = `<div style="color: #ffffff; font-weight: 600; font-size: 14px; margin-bottom: 8px; margin-left: 2px; line-height: 1.5; font-family: 'Inter', sans-serif;">${safeInstruction}</div>`; }
+            container.innerHTML += `<div class="telegram-prompt-wrapper">${instructionHTML}<div class="telegram-prompt-card"><div class="telegram-prompt-header" style="display:flex; align-items:center;">${safeTitle}</div><div class="telegram-prompt-body">${safeText}</div><div class="telegram-prompt-footer"><button class="telegram-copy-btn" data-text="${encodeURIComponent(data.text)}" id="copy-btn-${id}"><i class="far fa-copy"></i> COPY CODE</button></div></div></div>`;
         });
     });
 
@@ -304,21 +328,48 @@ onAuthStateChanged(auth, async (user) => {
             booksData.push(data);
         });
         mainFilteredData = [...booksData]; 
-        updateDynamicFilters(); applyMasterFilter(); 
-        updateProfileUI(); 
+        updateDynamicFilters(); applyMasterFilter(); generateNotifications();
+        
         isAppReady.data = true; tryTransition();
     });
+});
+
+document.getElementById('promptsContainer').addEventListener('click', (e) => {
+    const copyBtn = e.target.closest('.telegram-copy-btn');
+    if (copyBtn) {
+        const textToCopy = decodeURIComponent(copyBtn.getAttribute('data-text'));
+        navigator.clipboard.writeText(textToCopy).then(() => {
+            const originalHtml = copyBtn.innerHTML;
+            copyBtn.innerHTML = '<i class="fas fa-check"></i> COPIED!';
+            copyBtn.style.background = 'rgba(16, 185, 129, 0.2)';
+            copyBtn.style.color = '#10b981';
+            copyBtn.style.border = '1px solid rgba(16, 185, 129, 0.4)';
+            setTimeout(() => {
+                copyBtn.innerHTML = originalHtml;
+                copyBtn.style.background = 'transparent';
+                copyBtn.style.color = '#ffffff';
+                copyBtn.style.border = 'none';
+            }, 2000);
+        }).catch(err => { showToast("Failed to copy text!", "error"); });
+    }
 });
 
 // ==========================================
 // LOGIN & LOGOUT SYSTEM
 // ==========================================
 function closeLoginOverlayLocal() {
-    handleCloseBackLogic(); 
-    if (isDeepLinkLoad && !isUserLoggedIn) { isDeepLinkLoad = false; window.history.replaceState({}, '', window.location.pathname); initPremiumPopups(); }
+    const loginOverlay = document.getElementById('loginOverlay');
+    loginOverlay.style.opacity = '0';
+    setTimeout(() => { 
+        loginOverlay.style.display = 'none'; 
+        if (isDeepLinkLoad && !isUserLoggedIn) {
+            isDeepLinkLoad = false;
+            window.history.replaceState({}, '', window.location.pathname);
+            initPremiumPopups(); 
+        }
+    }, 500);
 }
 document.getElementById('closeLoginBtn').addEventListener('click', closeLoginOverlayLocal);
-
 document.getElementById('toggleEye').addEventListener('click', () => {
     const passInput = document.getElementById('loginPassword'); const eyeIcon = document.getElementById('toggleEye');
     if (passInput.type === 'password') { passInput.type = 'text'; eyeIcon.classList.replace('fa-eye', 'fa-eye-slash'); eyeIcon.style.color = '#00d2ff'; } 
@@ -326,70 +377,118 @@ document.getElementById('toggleEye').addEventListener('click', () => {
 });
 
 document.getElementById('loginForm').addEventListener('submit', async (e) => {
-    e.preventDefault(); const email = document.getElementById('loginEmail').value; const pass = document.getElementById('loginPassword').value;
-    const btn = document.getElementById('loginBtn'); const originalContent = btn.innerHTML;
+    e.preventDefault(); 
+    const email = document.getElementById('loginEmail').value; 
+    const pass = document.getElementById('loginPassword').value;
+    const btn = document.getElementById('loginBtn'); 
+    const originalContent = btn.innerHTML;
     btn.innerHTML = `<span style="display:flex; align-items:center; gap:8px;"><div class="premium-loader"></div> Authenticating...</span>`;
     try { 
-        await signInWithEmailAndPassword(auth, email, pass); e.target.reset(); showToast("Login Successful!", "success"); btn.innerHTML = originalContent; 
-        closeLoginOverlayLocal();
-        if (isDeepLinkLoad && pendingBookSlug) { document.getElementById('mainAppWrapper').style.display = 'block'; setTimeout(() => { openDownloadPageLocal(pendingBookSlug, true); }, 300); }
+        await signInWithEmailAndPassword(auth, email, pass); 
+        e.target.reset(); showToast("Login Successful!", "success"); btn.innerHTML = originalContent; closeLoginOverlayLocal();
+        if (isDeepLinkLoad && pendingBookSlug) {
+            document.getElementById('mainAppWrapper').style.display = 'block';
+            setTimeout(() => { openDownloadPageLocal(pendingBookSlug, true); }, 300);
+        }
     } catch(err) { showToast("Failed: Invalid Credentials!", "error"); btn.innerHTML = originalContent; } 
 });
 
 document.getElementById('googleSignInBtn').addEventListener('click', async () => { 
+    const btn = document.getElementById('googleSignInBtn');
+    const originalContent = btn.innerHTML;
+    btn.innerHTML = `<span style="display:flex; align-items:center; gap:8px;"><div class="premium-loader"></div> Connecting...</span>`;
     try { 
-        await signInWithPopup(auth, provider); showToast("Google Login Successful!", "success"); closeLoginOverlayLocal();
-        if (isDeepLinkLoad && pendingBookSlug) { document.getElementById('mainAppWrapper').style.display = 'block'; setTimeout(() => { openDownloadPageLocal(pendingBookSlug, true); }, 300); }
-    } catch(err) { showToast("Failed: Google Sign-In Error.", "error"); } 
+        await signInWithPopup(auth, provider); 
+        showToast("Google Login Successful!", "success"); btn.innerHTML = originalContent; closeLoginOverlayLocal();
+        if (isDeepLinkLoad && pendingBookSlug) {
+            document.getElementById('mainAppWrapper').style.display = 'block';
+            setTimeout(() => { openDownloadPageLocal(pendingBookSlug, true); }, 300);
+        }
+    } catch(err) { showToast("Failed: Google Sign-In Error.", "error"); btn.innerHTML = originalContent; } 
 });
 
 const logoutBtn = document.getElementById('admin-logout-btn');
-if (logoutBtn) logoutBtn.addEventListener('click', () => { openPanelWithHistory('customLogoutOverlay'); });
-document.getElementById('cancelLogoutBtn')?.addEventListener('click', handleCloseBackLogic);
-document.getElementById('confirmLogoutBtn')?.addEventListener('click', async () => {
-    try { await signOut(auth); localStorage.removeItem('isUserLoggedIn'); window.location.reload(); } catch (error) { showToast("Error signing out!", "error"); }
-});
+const logoutOverlay = document.getElementById('customLogoutOverlay');
+const cancelLogoutBtn = document.getElementById('cancelLogoutBtn');
+const confirmLogoutBtn = document.getElementById('confirmLogoutBtn');
+
+if (logoutBtn) logoutBtn.addEventListener('click', () => { if (logoutOverlay) { logoutOverlay.style.display = 'flex'; setTimeout(() => logoutOverlay.classList.add('show'), 10); } });
+if (cancelLogoutBtn) cancelLogoutBtn.addEventListener('click', () => { if (logoutOverlay) { logoutOverlay.classList.remove('show'); setTimeout(() => logoutOverlay.style.display = 'none', 300); } });
+if (confirmLogoutBtn) {
+    confirmLogoutBtn.addEventListener('click', async () => {
+        confirmLogoutBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
+        try {
+            await signOut(auth);
+            localStorage.removeItem('isUserLoggedIn');
+            window.location.reload();
+        } catch (error) { showToast("Error signing out!", "error"); }
+    });
+}
 
 // ==========================================
 // ADVANCED DUAL FILTER SYSTEM
 // ==========================================
 const EXAM_CATEGORY_MAP = {
-    "Ssc": ["SSC", "CGL", "CHSL", "MTS", "CPO", "GD", "STENOGRAPHER"], "Railway": ["RAILWAY", "RRB", "NTPC", "GROUP D", "ALP"], "Defence": ["NDA", "CDS", "NAVY", "ARMY", "AIRFORCE"],
-    "Banking": ["BANK", "IBPS", "SBI", "PO", "CLERK"], "Teaching": ["CTET", "STET", "UPTET", "KVS", "BPSC TRE"], "Upsc": ["UPSC", "BPSC", "UPPSC", "STATE PSC", "PCS"],
-    "Police": ["POLICE", "UP POLICE", "DELHI POLICE", "BIHAR POLICE", "SI", "CONSTABLE"], "Jee": ["JEE", "IIT", "MAINS", "ADVANCED"], "Neet": ["NEET", "MEDICAL", "AIIMS"]
+    "Ssc": ["SSC", "CGL", "CHSL", "MTS", "CPO", "GD", "STENOGRAPHER", "SELECTION POST"],
+    "Railway": ["RAILWAY", "RRB", "NTPC", "GROUP D", "ALP", "TECHNICIAN", "RPF"],
+    "Defence": ["NDA", "CDS", "AFCAT", "NAVY", "ARMY", "AIRFORCE", "AGNIVEER"],
+    "Banking": ["BANK", "IBPS", "SBI", "PO", "CLERK", "RBI", "LIC"],
+    "Teaching": ["CTET", "STET", "UPTET", "KVS", "NVS", "BPSC TRE", "DSSSB"],
+    "Upsc": ["UPSC", "BPSC", "UPPSC", "MPPSC", "STATE PSC", "PCS", "CIVIL SERVICES"],
+    "Police": ["POLICE", "UP POLICE", "DELHI POLICE", "BIHAR POLICE", "SI", "CONSTABLE", "DAROGA"],
+    "Jee": ["JEE", "IIT", "MAINS", "ADVANCED", "BITSAT"],
+    "Neet": ["NEET", "MEDICAL", "AIIMS"]
 };
-let currentSelectedCategory = "All"; let currentSelectedLanguage = "All";
+
+let currentSelectedCategory = "All";
+let currentSelectedLanguage = "All";
 
 function updateDynamicFilters() {
     const activeCategories = new Set();
     booksData.forEach(book => {
-        if(!book.exams) return; let bookExamsString = book.exams.toUpperCase(); let matchedMainCategory = false;
+        if(!book.exams) return;
+        let bookExamsString = book.exams.toUpperCase();
+        let matchedMainCategory = false;
         for (let mainCategory in EXAM_CATEGORY_MAP) {
             let keywords = EXAM_CATEGORY_MAP[mainCategory];
             if (keywords.some(keyword => bookExamsString.includes(keyword))) { activeCategories.add(mainCategory); matchedMainCategory = true; }
         }
         if (!matchedMainCategory) {
-            book.exams.split(',').forEach(exam => { let cleanExam = exam.trim(); if (cleanExam.length > 0) activeCategories.add(cleanExam.charAt(0).toUpperCase() + cleanExam.slice(1).toLowerCase()); });
+            book.exams.split(',').forEach(exam => {
+                let cleanExam = exam.trim();
+                if (cleanExam.length > 0) activeCategories.add(cleanExam.charAt(0).toUpperCase() + cleanExam.slice(1).toLowerCase());
+            });
         }
     });
 
-    const sortedCategories = Array.from(activeCategories).sort(); const catGrid = document.getElementById('categoryFilterGrid'); 
+    const sortedCategories = Array.from(activeCategories).sort();
+    const catGrid = document.getElementById('categoryFilterGrid'); 
     let html = `<div class="f-pill ${currentSelectedCategory === 'All' ? 'active' : ''}" data-category="All">All</div>`;
     sortedCategories.forEach(category => { html += `<div class="f-pill ${category === currentSelectedCategory ? 'active' : ''}" data-category="${sanitizeHTML(category)}">${sanitizeHTML(category)}</div>`; });
     catGrid.innerHTML = html;
 }
 
 document.getElementById('categoryFilterGrid').addEventListener('click', (e) => {
-    if(e.target.classList.contains('f-pill')) { document.querySelectorAll('#categoryFilterGrid .f-pill').forEach(el => el.classList.remove('active')); e.target.classList.add('active'); currentSelectedCategory = e.target.getAttribute('data-category'); }
+    if(e.target.classList.contains('f-pill')) {
+        document.querySelectorAll('#categoryFilterGrid .f-pill').forEach(el => el.classList.remove('active'));
+        e.target.classList.add('active'); currentSelectedCategory = e.target.getAttribute('data-category');
+    }
 });
+
 document.getElementById('languageFilterGrid').addEventListener('click', (e) => {
-    if(e.target.classList.contains('f-pill')) { document.querySelectorAll('#languageFilterGrid .f-pill').forEach(el => el.classList.remove('active')); e.target.classList.add('active'); currentSelectedLanguage = e.target.getAttribute('data-lang'); }
+    if(e.target.classList.contains('f-pill')) {
+        document.querySelectorAll('#languageFilterGrid .f-pill').forEach(el => el.classList.remove('active'));
+        e.target.classList.add('active'); currentSelectedLanguage = e.target.getAttribute('data-lang');
+    }
 });
-document.getElementById('applyFiltersBtn').addEventListener('click', () => { handleCloseBackLogic(); applyMasterFilter(); });
+
+document.getElementById('applyFiltersBtn').addEventListener('click', () => { document.getElementById('filterBottomOverlay').classList.remove('active'); applyMasterFilter(); });
 
 function applyMasterFilter() {
-    const searchInputRaw = document.getElementById('app-search-input').value.trim(); const searchStr = searchInputRaw.toLowerCase();
-    let normalizedSearch = searchInputRaw.toLowerCase().replace(/[^a-z0-9\s]/g, ''); let searchTokens = normalizedSearch.split(/\s+/).filter(token => token.length > 0);
+    const searchInputRaw = document.getElementById('app-search-input').value.trim();
+    const searchStr = searchInputRaw.toLowerCase();
+    let normalizedSearch = searchInputRaw.toLowerCase().replace(/[^a-z0-9\s]/g, '');
+    let searchTokens = normalizedSearch.split(/\s+/).filter(token => token.length > 0);
 
     mainFilteredData = booksData.filter(book => {
         let matchesCategory = true;
@@ -420,11 +519,15 @@ function applyMasterFilter() {
 
 const searchInputEl = document.getElementById('app-search-input'); let searchTimeout;
 searchInputEl.addEventListener('input', () => { clearTimeout(searchTimeout); searchTimeout = setTimeout(() => { applyMasterFilter(); }, 300); });
+document.getElementById('close-search').addEventListener('click', () => { searchInputEl.value = ''; applyMasterFilter(); document.getElementById('search-box').classList.remove('active'); if (history.state && history.state.popup === 'search') { history.back(); }});
+document.getElementById('openAuthorFilterBtn').addEventListener('click', () => { document.getElementById('filterBottomOverlay').classList.add('active'); });
+document.getElementById('closeAuthorFilterBtn').addEventListener('click', () => { document.getElementById('filterBottomOverlay').classList.remove('active'); });
 
 // ==========================================
 // RENDERING UI & INFINITE SCROLL
 // ==========================================
 function getBatchSize() { let w = window.innerWidth; return (w >= 1200 ? 5 : w >= 900 ? 4 : w >= 600 ? 3 : 2) * 4; }
+
 const infiniteScrollObserver = new IntersectionObserver((entries) => {
     entries.forEach(entry => {
         if (entry.isIntersecting && loadedCount < mainFilteredData.length && !isLoadingMore && document.getElementById('no-results-msg').style.display !== 'flex') {
@@ -437,15 +540,20 @@ const infiniteScrollObserver = new IntersectionObserver((entries) => {
         }
     });
 }, { root: document.getElementById('mainContentArea'), rootMargin: '0px 0px 200px 0px', threshold: 0.1 });
+
 if (document.getElementById('scroll-sentinel')) infiniteScrollObserver.observe(document.getElementById('scroll-sentinel'));
 
 function renderBooksUI(startIndex, count, customData = null) {
-    const container = document.getElementById("bookContainer"); let dataToRender = customData ? customData : mainFilteredData;
+    const container = document.getElementById("bookContainer");
+    let dataToRender = customData ? customData : mainFilteredData;
     let endIndex = Math.min(startIndex + count, dataToRender.length);
-    if(startIndex === 0) container.innerHTML = ""; let htmlChunk = "";
+    if(startIndex === 0) container.innerHTML = "";
+    let htmlChunk = "";
     for(let i = startIndex; i < endIndex; i++) {
-        let book = dataToRender[i]; let langClass = book.lang.toLowerCase() === 'hindi' ? 'tag-lang-hindi' : 'tag-lang-english';
-        let isSaved = savedBooks.includes(book.slug); let bookmarkIcon = isSaved ? 'fas fa-bookmark' : 'far fa-bookmark';
+        let book = dataToRender[i];
+        let langClass = book.lang.toLowerCase() === 'hindi' ? 'tag-lang-hindi' : 'tag-lang-english';
+        let isSaved = savedBooks.includes(book.slug);
+        let bookmarkIcon = isSaved ? 'fas fa-bookmark' : 'far fa-bookmark';
         htmlChunk += `<div class="book-card" data-slug="${book.slug}"><div class="card-img-wrapper"><div class="badge-free">FREE</div><div class="bookmark-btn" data-action="bookmark"><i class="${bookmarkIcon}"></i></div><img src="${book.image}" loading="lazy" class="book-image" oncontextmenu="return false;" draggable="false"></div><div class="book-details"><div class="book-title">${sanitizeHTML(book.title)}</div><div class="book-author">${sanitizeHTML(book.author)}</div><div class="tags-container"><span class="book-tag tag-year">${sanitizeHTML(book.year)}</span><span class="book-tag ${langClass}">${sanitizeHTML(book.lang)}</span></div></div></div>`;
     }
     container.insertAdjacentHTML('beforeend', htmlChunk); loadedCount = endIndex;
@@ -454,7 +562,8 @@ function renderBooksUI(startIndex, count, customData = null) {
 document.getElementById('bookContainer').addEventListener('click', (e) => {
     const card = e.target.closest('.book-card');
     if(card) {
-        const slug = card.getAttribute('data-slug'); const bookmarkBtn = e.target.closest('.bookmark-btn');
+        const slug = card.getAttribute('data-slug');
+        const bookmarkBtn = e.target.closest('.bookmark-btn');
         if(bookmarkBtn) toggleBookmarkLocal(bookmarkBtn.querySelector('i'), slug); else openDownloadPageLocal(slug);
     }
 });
@@ -464,7 +573,6 @@ function toggleBookmarkLocal(iconElement, slug) {
     if (index === -1) { savedBooks.push(slug); iconElement.className = "fas fa-bookmark"; } 
     else { savedBooks.splice(index, 1); iconElement.className = "far fa-bookmark"; }
     localStorage.setItem('spidy_saved_books', JSON.stringify(savedBooks));
-    updateProfileUI(); 
     if(document.getElementById('bookmarks-panel').classList.contains('active')) renderSavedBooksUI(); 
 }
 
@@ -482,105 +590,128 @@ function renderSavedBooksUI() {
 document.getElementById('savedBooksContainer').addEventListener('click', (e) => {
     const card = e.target.closest('.book-card');
     if(card) {
-        const slug = card.getAttribute('data-slug'); const bookmarkBtn = e.target.closest('.bookmark-btn');
+        const slug = card.getAttribute('data-slug');
+        const bookmarkBtn = e.target.closest('.bookmark-btn');
         if(bookmarkBtn) toggleBookmarkLocal(bookmarkBtn.querySelector('i'), slug); else openDownloadPageLocal(slug); 
     }
 });
 
-// ==========================================
-// 🌟 HISTORY STATE (BACK BUTTON) MANAGER 🌟
-// ==========================================
-function openPanelWithHistory(panelId) {
-    const el = document.getElementById(panelId);
-    if (!el) return;
-    
-    if(panelId === 'downloadModal' || panelId === 'reportModalOverlay' || panelId === 'pdfViewerOverlay' || panelId === 'tokenModalOverlay' || panelId === 'loginOverlay' || panelId === 'uploadPopup' || panelId === 'customLogoutOverlay') {
-        el.style.display = (panelId === 'tokenModalOverlay') ? 'grid' : 'flex';
-        if(panelId === 'loginOverlay' || panelId === 'uploadPopup') setTimeout(() => el.style.opacity = '1', 10);
-        if(panelId === 'uploadPopup') el.classList.remove('hidden');
-        if(panelId === 'customLogoutOverlay') setTimeout(() => el.classList.add('show'), 10);
-    } else {
-        el.classList.add('active');
-        if(panelId === 'contextOverlay') el.classList.add('show');
-    }
-    history.pushState({ popup: panelId }, '');
+function generateNotifications() {
+    const notiContainer = document.getElementById('dynamic-noti-container'); notiContainer.innerHTML = ''; 
+    booksData.slice(0, 45).forEach((book) => {
+        let dateStr = "00/00/0000";
+        if (book.dateAdded) { dateStr = sanitizeHTML(book.dateAdded); } 
+        else if (book.createdAt) { const d = new Date(book.createdAt); dateStr = `${String(d.getDate()).padStart(2, '0')}/${String(d.getMonth()+1).padStart(2, '0')}/${d.getFullYear()}`; }
+        notiContainer.innerHTML += `<div class="noti-card-dynamic" data-slug="${book.slug}" style="cursor:pointer;"><img src="${book.image}" loading="lazy" class="noti-card-img"><div class="noti-card-content"><div class="noti-card-title">${sanitizeHTML(book.title)} Book Added ✅</div><div class="noti-card-desc">New book is now available.</div><div style="font-size: 10px; color: #10b981; margin-top: 2px; font-weight: 700; display: flex; align-items: center; gap: 4px;"><i class="far fa-calendar-alt"></i> Added: ${dateStr}</div></div></div>`;
+    });
 }
-
-function closePanelOrModal(panelId) {
-    const el = document.getElementById(panelId);
-    if (!el) return;
-
-    if(panelId === 'downloadModal' || panelId === 'reportModalOverlay' || panelId === 'pdfViewerOverlay' || panelId === 'tokenModalOverlay' || panelId === 'loginOverlay' || panelId === 'uploadPopup' || panelId === 'customLogoutOverlay') {
-        if(panelId === 'loginOverlay' || panelId === 'uploadPopup') el.style.opacity = '0';
-        if(panelId === 'uploadPopup') el.classList.add('hidden');
-        if(panelId === 'customLogoutOverlay') el.classList.remove('show');
-        setTimeout(() => el.style.display = 'none', 300);
-    } else {
-        el.classList.remove('active');
-        el.classList.remove('show');
-    }
-}
-
-function closeAllPanels() {
-    const panels = ['noti-panel', 'sidebar', 'dmca-panel', 'bookmarks-panel', 'search-box', 'filterBottomOverlay', 'contextOverlay', 'downloadModal', 'reportModalOverlay', 'pdfViewerOverlay', 'tokenModalOverlay', 'loginOverlay', 'uploadPopup', 'customLogoutOverlay'];
-    panels.forEach(id => closePanelOrModal(id));
-    document.getElementById('sidebar-overlay')?.classList.remove('active');
-}
-
-function handleCloseBackLogic() {
-    if (history.state && history.state.popup) { history.back(); } 
-    else { closeAllPanels(); }
-}
-
-window.addEventListener('popstate', (e) => {
-    closeAllPanels();
-    const sBook = new URLSearchParams(window.location.search).get('book');
-    if(sBook) { openDownloadPageLocal(sBook, true); }
+document.getElementById('dynamic-noti-container').addEventListener('click', (e) => {
+    const card = e.target.closest('.noti-card-dynamic'); if(card) openDownloadPageLocal(card.getAttribute('data-slug'));
 });
 
-// Bind UI Close buttons to handleCloseBackLogic
-document.getElementById('close-search')?.addEventListener('click', handleCloseBackLogic);
-document.getElementById('sidebar-overlay')?.addEventListener('click', handleCloseBackLogic);
-document.getElementById('close-dmca-btn')?.addEventListener('click', handleCloseBackLogic);
-document.getElementById('close-bookmarks-btn')?.addEventListener('click', handleCloseBackLogic);
-document.getElementById('closeAuthorFilterBtn')?.addEventListener('click', handleCloseBackLogic);
-document.getElementById('closeUploadPopupBtn')?.addEventListener('click', handleCloseBackLogic);
-document.getElementById('closeDlBtn')?.addEventListener('click', () => {
-    if(history.state && history.state.popup === 'downloadModal') history.back();
-    else { document.getElementById("downloadModal").style.display = "none"; window.history.replaceState({}, '', window.location.pathname); }
+// ==========================================
+// NAVIGATION & OVERLAYS
+// ==========================================
+document.getElementById('sidebarHeader').addEventListener('click', async () => {
+    if(!isUserLoggedIn || !auth.currentUser) {
+        document.getElementById('sidebar').classList.remove('active'); document.getElementById('sidebar-overlay').classList.remove('active');
+        document.getElementById('loginOverlay').style.display = 'flex'; setTimeout(() => document.getElementById('loginOverlay').style.opacity = '1', 10); return;
+    }
+    document.getElementById('sidebar').classList.remove('active'); document.getElementById('sidebar-overlay').classList.remove('active');
+    document.getElementById('profile-name-ui').innerText = sanitizeHTML(CURRENT_ADMIN_NAME);
+    document.getElementById('profile-email-ui').innerText = auth.currentUser.email || "No Email linked"; document.getElementById('profile-email-ui').style.display = 'block';
+    document.getElementById('profile-avatar-ui').src = CURRENT_ADMIN_PHOTO;
+    document.getElementById('profile-saved').innerText = savedBooks.length;
+    document.getElementById('my-profile-panel').classList.add('active'); history.pushState({ popup: 'profile' }, '');
+
+    try {
+        const userRef = doc(db, "users", auth.currentUser.uid); const userSnap = await getDoc(userRef);
+        if (userSnap.exists()) {
+            const data = userSnap.data(); 
+            let now = Date.now();
+            let validDownloads = [];
+            let accessedSlugs = new Set();
+            (data.recentDownloads || []).forEach(item => {
+                let time = typeof item === 'number' ? item : item.time;
+                let slug = typeof item === 'number' ? null : item.slug;
+                if (now - time < 24 * 60 * 60 * 1000) {
+                    validDownloads.push(item);
+                    if(slug) accessedSlugs.add(slug);
+                }
+            });
+            let legacyCount = validDownloads.filter(i => typeof i === 'number').length;
+            updateLiveCredits(accessedSlugs.size + legacyCount);
+
+            document.getElementById('profile-downloads').innerText = data.lifetimeDownloads || 0;
+        }
+
+        const usersRef = collection(db, "users"); const querySnapshot = await getDocs(usersRef); let allUsers = [];
+        querySnapshot.forEach((docSnap) => { allUsers.push({ id: docSnap.id, ...docSnap.data() }); });
+        
+        allUsers.sort((a, b) => {
+            let upA = parseInt(a.totalUploads) || 0; let upB = parseInt(b.totalUploads) || 0;
+            if (upB !== upA) return upB - upA; 
+            let tA = parseInt(a.createdAt) || 9999999999999; let tB = parseInt(b.createdAt) || 9999999999999;
+            if (tA !== tB) return tA - tB; return a.id.localeCompare(b.id);
+        });
+
+        let rank = 1; for (let i = 0; i < allUsers.length; i++) { if (allUsers[i].id === auth.currentUser.uid) { rank = i + 1; break; } }
+        const rankElement = document.getElementById('profile-rank');
+        if (rank === 1) { rankElement.style.color = "#fbbf24"; rankElement.innerHTML = `<i class="fas fa-crown"></i> #1`; } 
+        else if (rank <= 3) { rankElement.style.color = rank===2?"#9ca3af":"#b45309"; rankElement.innerText = "#" + rank; } 
+        else { rankElement.style.color = ""; rankElement.innerText = "#" + rank; }
+    } catch (error) { showToast("Error loading profile data", "error"); }
 });
 
-// Trigger Opens with History State
-document.getElementById('open-search').addEventListener('click', () => { openPanelWithHistory('search-box'); setTimeout(() => { searchInputEl.focus(); }, 300); });
-document.getElementById('open-noti').addEventListener('click', () => { openPanelWithHistory('noti-panel'); document.querySelector('.blink-dot').style.display = 'none'; });
-document.getElementById('open-menu').addEventListener('click', () => { openPanelWithHistory('sidebar'); document.getElementById('sidebar-overlay').classList.add('active'); });
-document.getElementById('menu-dmca').addEventListener('click', (e) => { e.preventDefault(); closePanelOrModal('sidebar'); document.getElementById('sidebar-overlay').classList.remove('active'); openPanelWithHistory('dmca-panel'); });
-document.getElementById('menu-bookmarks').addEventListener('click', (e) => { e.preventDefault(); closePanelOrModal('sidebar'); document.getElementById('sidebar-overlay').classList.remove('active'); openPanelWithHistory('bookmarks-panel'); renderSavedBooksUI(); });
-document.getElementById('openAuthorFilterBtn').addEventListener('click', () => { openPanelWithHistory('filterBottomOverlay'); });
+document.getElementById('closeProfileBtn').addEventListener('click', () => { if (history.state && history.state.popup === 'profile') { history.back(); } else { document.getElementById('my-profile-panel').classList.remove('active'); }});
+document.getElementById('open-search').addEventListener('click', () => { history.pushState({ popup: 'search' }, ''); document.getElementById('search-box').classList.add('active'); setTimeout(() => { searchInputEl.focus(); }, 300); });
+document.getElementById('open-noti').addEventListener('click', () => { history.pushState({ popup: 'noti' }, ''); document.getElementById('noti-panel').classList.add('active'); document.querySelector('.blink-dot').style.display = 'none'; });
 
-// Tabs Logic
+const sidebar = document.getElementById('sidebar'); const sidebarOverlay = document.getElementById('sidebar-overlay');
+document.getElementById('open-menu').addEventListener('click', () => { history.pushState({ popup: 'sidebar' }, ''); sidebar.classList.add('active'); sidebarOverlay.classList.add('active'); });
+sidebarOverlay.addEventListener('click', () => { history.back(); });
+document.getElementById('menu-dmca').addEventListener('click', (e) => { e.preventDefault(); history.replaceState({ popup: 'dmca' }, ''); document.getElementById('dmca-panel').classList.add('active'); sidebar.classList.remove('active'); sidebarOverlay.classList.remove('active'); });
+document.getElementById('close-dmca-btn').addEventListener('click', () => { history.back(); });
+document.getElementById('menu-bookmarks').addEventListener('click', (e) => { e.preventDefault(); history.replaceState({ popup: 'bookmarks' }, ''); document.getElementById('bookmarks-panel').classList.add('active'); sidebar.classList.remove('active'); sidebarOverlay.classList.remove('active'); renderSavedBooksUI(); });
+document.getElementById('close-bookmarks-btn').addEventListener('click', () => { history.back(); });
+
 function switchTab(tabId) { document.querySelectorAll('.app-tab').forEach(tab => { tab.style.display = 'none'; tab.classList.remove('active'); }); const target = document.getElementById(tabId); if(target) { target.style.display = 'flex'; setTimeout(() => target.classList.add('active'), 10); } }
 function setNavActive(id) { document.querySelectorAll('.bottom-nav-item').forEach(el => el.classList.remove('active')); document.getElementById(id).classList.add('active'); }
+function closeAllPanels() { document.getElementById('noti-panel').classList.remove('active'); document.getElementById('sidebar').classList.remove('active'); document.getElementById('sidebar-overlay').classList.remove('active'); document.getElementById('dmca-panel').classList.remove('active'); document.getElementById('bookmarks-panel').classList.remove('active'); document.getElementById('search-box').classList.remove('active'); document.getElementById('my-profile-panel').classList.remove('active'); }
 
 document.getElementById('nav-home').addEventListener('click', () => { setNavActive('nav-home'); closeAllPanels(); switchTab('tab-home'); window.history.replaceState({}, '', window.location.pathname); });
 document.getElementById('nav-upload').addEventListener('click', () => {
-    if(!isUserLoggedIn) { openPanelWithHistory('loginOverlay'); setNavActive('nav-home'); return; }
-    setNavActive('nav-upload'); closeAllPanels(); switchTab('tab-upload'); setTimeout(() => { openPanelWithHistory('uploadPopup'); }, 300);
+    if(!isUserLoggedIn) { document.getElementById('loginOverlay').style.display = 'flex'; setTimeout(() => document.getElementById('loginOverlay').style.opacity = '1', 10); setNavActive('nav-home'); return; }
+    setNavActive('nav-upload'); closeAllPanels(); switchTab('tab-upload'); setTimeout(() => { document.getElementById('uploadPopup').classList.remove('hidden'); }, 300);
 });
-document.getElementById('nav-dev').addEventListener('click', () => { 
-    if(!isUserLoggedIn) { openPanelWithHistory('loginOverlay'); setNavActive('nav-home'); return; }
-    setNavActive('nav-dev'); closeAllPanels(); switchTab('tab-about'); updateProfileUI();
+document.getElementById('nav-dev').addEventListener('click', () => { setNavActive('nav-dev'); closeAllPanels(); switchTab('tab-about'); });
+document.getElementById('closeUploadPopupBtn').addEventListener('click', () => { document.getElementById('uploadPopup').classList.add('hidden'); });
+
+window.addEventListener('popstate', (e) => {
+    closeAllPanels(); applyMasterFilter();
+    const sBook = new URLSearchParams(window.location.search).get('book');
+    if(sBook) { openDownloadPageLocal(sBook, true); } else { document.getElementById("downloadModal").style.display = "none"; }
 });
 
+
 // ==========================================
-// 🌟 SECURE READ ONLINE & DOWNLOAD LOCK 🌟
+// 🌟 SECURE READ ONLINE (API PROXY) & DOWNLOAD LOCK 🌟
 // ==========================================
+
+// URL Token Check
+const detectTokenFromUrl = new URLSearchParams(window.location.search).get('t');
+if (detectTokenFromUrl) {
+    document.getElementById('tokenInput').value = detectTokenFromUrl;
+    window.history.replaceState({}, document.title, window.location.pathname);
+    document.getElementById('tokenModalOverlay').style.display = 'flex';
+}
 
 function openDownloadPageLocal(slug, skipPushState = false) {
-    if(!isUserLoggedIn) { openPanelWithHistory('loginOverlay'); return; }
+    if(!isUserLoggedIn) {
+        document.getElementById('loginOverlay').style.display = 'flex'; setTimeout(() => document.getElementById('loginOverlay').style.opacity = '1', 10); return;
+    }
     const book = booksData.find(b => b.slug === slug); if(!book) return;
-    
-    openPanelWithHistory('downloadModal');
+    document.getElementById("downloadModal").style.display = "flex";
     
     const previewImg = document.getElementById("dlPreviewImage");
     previewImg.classList.add("image-loading-skeleton"); previewImg.src = book.image; 
@@ -589,188 +720,376 @@ function openDownloadPageLocal(slug, skipPushState = false) {
     document.getElementById("dlBookTitle").innerText = sanitizeHTML(book.title); 
     document.getElementById("dlBookAuthor").innerText = sanitizeHTML(book.author);
     
+    // ----------------------------------------------------
+    // 1. DOWNLOAD PDF BUTTON (LOCKED COMPLETELY)
+    // ----------------------------------------------------
     const dlPdfBtn = document.getElementById("dlPdfLinkBtn");
-    dlPdfBtn.style.pointerEvents = "none"; dlPdfBtn.onclick = function(e) { e.preventDefault(); return false; };
+    dlPdfBtn.style.pointerEvents = "none"; 
+    dlPdfBtn.onclick = function(e) { 
+        e.preventDefault();
+        return false;
+    };
 
-    // READ ONLINE (SECURE PROXY VIEWER)
+    // ----------------------------------------------------
+    // 2. READ ONLINE (SECURE PROXY VIEWER)
+    // ----------------------------------------------------
     document.getElementById("dlReadOnlineBtn").onclick = async function() {
-        if(!isUserLoggedIn || !auth.currentUser) return;
-        const btn = document.getElementById("dlReadOnlineBtn"); const originalText = btn.innerHTML; 
+        if(!isUserLoggedIn || !auth.currentUser) { document.getElementById('loginOverlay').style.display = 'flex'; setTimeout(() => document.getElementById('loginOverlay').style.opacity = '1', 10); return; }
+        
+        const btn = document.getElementById("dlReadOnlineBtn"); 
+        const originalText = btn.innerHTML; 
 
+        // 🔥 CHECK STRICT FINGERPRINT TOKEN 🔥
         const savedData = localStorage.getItem('spidy_secure_session');
         let hasValidToken = false;
-        if (savedData) { try { const parsed = JSON.parse(savedData); if (parsed.fp === generateDeviceFingerprint() && parsed.expiry > Date.now()) hasValidToken = true; } catch(e) {} }
 
-        if(!hasValidToken && !IS_SUPER_ADMIN) { openPanelWithHistory('tokenModalOverlay'); return; }
+        if (savedData) {
+            try {
+                const parsed = JSON.parse(savedData);
+                if (parsed.fp === generateDeviceFingerprint() && parsed.expiry > Date.now()) {
+                    hasValidToken = true;
+                }
+            } catch(e) {}
+        }
+
+        if(!hasValidToken && !IS_SUPER_ADMIN) {
+             document.getElementById('tokenModalOverlay').style.display = 'flex';
+             return; 
+        }
         
-        btn.innerHTML = `<i class="fas fa-spinner fa-spin"></i> Getting Secure Access...`; btn.disabled = true;
+        btn.innerHTML = `<i class="fas fa-spinner fa-spin"></i> Getting Secure Access...`; 
+        btn.disabled = true;
 
         try {
-            const userRef = doc(db, "users", auth.currentUser.uid);
-            await updateDoc(userRef, { readSlugs: arrayUnion(book.slug) });
-            updateProfileUI(); 
-
+            // Get Firebase Auth Token securely
             const userToken = await auth.currentUser.getIdToken(true);
+
+            // Fetch Secure Proxy Link from our Vercel Backend
             const response = await fetch('/api/get-book', {
-                method: 'POST', headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ bookId: book.id, bookSlug: book.slug, userToken: userToken })
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ 
+                    bookId: book.id, 
+                    bookSlug: book.slug, 
+                    userToken: userToken 
+                })
             });
 
             const data = await response.json();
+
             if (response.ok && data.success) {
+                
+                // Fetch updated user data to refresh live credits accurately on frontend
+                const userRef = doc(db, "users", auth.currentUser.uid);
+                const userSnap = await getDoc(userRef);
+                if(userSnap.exists()){
+                    let userData = userSnap.data();
+                    let now = Date.now();
+                    let accessedSlugs = new Set();
+                    let legacyCount = 0;
+                    (userData.recentDownloads || []).forEach(item => {
+                        let time = typeof item === 'number' ? item : item.time;
+                        let slug = typeof item === 'number' ? null : item.slug;
+                        if(now - time < 24 * 60 * 60 * 1000){
+                            if(slug) accessedSlugs.add(slug);
+                            else legacyCount++;
+                        }
+                    });
+                    updateLiveCredits(accessedSlugs.size + legacyCount);
+                }
+
+                // Open PDF Securely
+                const pdfViewer = document.getElementById('pdfViewerOverlay');
                 const iframe = document.getElementById('pdfIframe');
-                document.getElementById('pdfViewerTitle').innerText = sanitizeHTML(book.title);
+                const title = document.getElementById('pdfViewerTitle');
+                
+                title.innerText = sanitizeHTML(book.title);
+                
+                // 🔥 URL mein API Proxy hai jisme `?key=xxx` pehle se hai, toh hum aage `&` layenge
                 iframe.src = data.pdfLink + "&toolbar=0&navpanes=0&scrollbar=0"; 
-                openPanelWithHistory('pdfViewerOverlay');
+                pdfViewer.style.display = 'flex';
+
             } else {
-                if (response.status === 401 || (data.error && data.error.includes('Unauthorized'))) { localStorage.removeItem('spidy_secure_session'); openPanelWithHistory('tokenModalOverlay'); } 
-                else { showToast(data.error || "Failed to load book securely.", "error"); }
+                if (response.status === 401 || (data.error && data.error.includes('Unauthorized'))) {
+                    localStorage.removeItem('spidy_secure_session'); // Clear expired session
+                    document.getElementById('tokenModalOverlay').style.display = 'flex';
+                } else {
+                    showToast(data.error || "Failed to load book securely.", "error");
+                }
             }
+
             btn.innerHTML = originalText; btn.disabled = false;
-        } catch (error) { showToast("Network Error: Could not load the book.", "error"); btn.innerHTML = originalText; btn.disabled = false; }
+
+        } catch (error) { 
+            showToast("Network Error: Could not load the book.", "error"); 
+            btn.innerHTML = originalText; btn.disabled = false; 
+        }
     };
 
-    document.getElementById("closePdfViewerBtn").onclick = function() { handleCloseBackLogic(); document.getElementById('pdfIframe').src = ""; };
+    // Close PDF Viewer
+    document.getElementById("closePdfViewerBtn").onclick = function() {
+        document.getElementById('pdfViewerOverlay').style.display = 'none';
+        document.getElementById('pdfIframe').src = ""; 
+    };
+
+    // Prevent Right Click on PDF Container
     document.getElementById("pdfContainer").addEventListener('contextmenu', event => event.preventDefault());
 
     let examsArray = (book.exams || "General").split(',').map(item => sanitizeHTML(item.trim()));
     document.getElementById("dlModalTags").innerHTML = examsArray.map(exam => `<div class="dl-modal-tag">${exam}</div>`).join('');
     activeBookSlug = book.slug; activeBookTitle = book.title;
-    
-    if (!skipPushState) { history.replaceState({ popup: 'downloadModal' }, '', '?book=' + book.slug); }
+    if (!skipPushState) { history.pushState({ popup: 'book' }, '', '?book=' + book.slug); }
 }
 
-// ==========================================
-// 🌟 PREMIUM REPORT ISSUE MODAL (Fully Fixed) 🌟
-// ==========================================
-document.getElementById('reportLinkBtn').addEventListener('click', () => { 
-    openPanelWithHistory('reportModalOverlay'); 
+document.getElementById('closeDlBtn').addEventListener('click', closeDownloadPageLocal);
+function closeDownloadPageLocal() {
+    if (history.state && history.state.popup === 'book') { history.back(); } 
+    else { document.getElementById("downloadModal").style.display = "none"; window.history.replaceState({}, '', window.location.pathname); }
+    if(isDeepLinkLoad) {
+        isDeepLinkLoad = false; const loader = document.getElementById("loaderScreen"); loader.style.display = "flex"; loader.style.opacity = "1"; updateLoaderUI(100);
+        setTimeout(() => { loader.style.opacity = "0"; setTimeout(() => { loader.style.display = "none"; initPremiumPopups(); }, 300); }, 1500); 
+    }
+}
+document.getElementById('shareBookBtn').addEventListener('click', () => {
+    const shareUrl = window.location.origin + window.location.pathname + "?book=" + activeBookSlug;
+    if (navigator.share) navigator.share({ title: activeBookTitle, text: "Read this book online", url: shareUrl }); else { navigator.clipboard.writeText(shareUrl); showToast("Link Copied!", "success"); }
 });
 
-document.getElementById('closeReportBtn').addEventListener('click', handleCloseBackLogic);
-document.getElementById('reportModalOverlay').addEventListener('click', (e) => { 
-    if (e.target === document.getElementById('reportModalOverlay')) handleCloseBackLogic(); 
+
+// ==========================================
+// 🌟 REPORT ISSUE MODAL LOGIC 🌟
+// ==========================================
+document.getElementById('reportLinkBtn').addEventListener('click', () => {
+    document.getElementById('reportModalOverlay').classList.add('active');
 });
 
-const reportOptions = document.querySelectorAll('.rm-option'); 
+document.getElementById('closeReportBtn').addEventListener('click', () => {
+    document.getElementById('reportModalOverlay').classList.remove('active');
+});
+
+document.getElementById('reportModalOverlay').addEventListener('click', (e) => {
+    if (e.target === document.getElementById('reportModalOverlay')) {
+        document.getElementById('reportModalOverlay').classList.remove('active');
+    }
+});
+
+const reportOptions = document.querySelectorAll('.rm-option');
 const submitReportBtn = document.getElementById('submitReportBtn');
 
 reportOptions.forEach(opt => {
-    opt.addEventListener('click', () => { 
-        reportOptions.forEach(o => o.classList.remove('selected')); 
-        opt.classList.add('selected'); 
-        submitReportBtn.classList.add('enabled'); 
+    opt.addEventListener('click', () => {
+        reportOptions.forEach(o => o.classList.remove('selected'));
+        opt.classList.add('selected');
+        submitReportBtn.classList.add('enabled');
     });
 });
 
 submitReportBtn.addEventListener('click', async () => {
     const selectedOption = document.querySelector('.rm-option.selected');
-    
     if (selectedOption) {
-        submitReportBtn.classList.remove('enabled');
-        const originalText = submitReportBtn.innerHTML;
-        submitReportBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Submitting...';
-        
         const issueType = selectedOption.querySelector('span').innerText;
         
         try {
-            await addDoc(collection(db, "reports"), { 
-                bookTitle: activeBookTitle, 
-                bookSlug: activeBookSlug, 
-                issueType: issueType, 
-                status: 'Pending', 
-                reportedBy: auth.currentUser ? auth.currentUser.email : 'Unknown', 
-                createdAt: new Date().getTime() 
+            await addDoc(collection(db, "reports"), {
+                bookTitle: activeBookTitle || "Unknown",
+                bookSlug: activeBookSlug || "Unknown",
+                issueType: issueType,
+                status: 'Pending',
+                reportedBy: (auth.currentUser && auth.currentUser.email) ? auth.currentUser.email : 'Unknown User',
+                createdAt: new Date().getTime()
             });
-            
-            submitReportBtn.innerHTML = '<i class="fas fa-check-circle"></i> Successfully Reported'; 
-            submitReportBtn.style.background = '#10b981';
-            
-            setTimeout(() => {
-                handleCloseBackLogic();
-                setTimeout(() => { 
-                    submitReportBtn.innerHTML = 'Submit Report'; 
-                    submitReportBtn.style.background = '#ef4444'; 
-                    submitReportBtn.classList.remove('enabled'); 
-                    reportOptions.forEach(o => o.classList.remove('selected')); 
-                }, 400);
-            }, 1200);
-
-        } catch (error) { 
-            console.error("Report failed:", error); 
-            showToast("Failed to submit report!", "error");
-            submitReportBtn.innerHTML = originalText;
-            submitReportBtn.classList.add('enabled');
+        } catch (error) {
+            console.error("Failed to send report:", error);
         }
-    } else {
-        showToast("Please select an issue type!", "error");
+
+        submitReportBtn.innerHTML = '<i class="fas fa-check-circle"></i> Successfully Reported';
+        submitReportBtn.style.background = '#10b981';
+        submitReportBtn.style.boxShadow = '0 4px 15px rgba(16, 185, 129, 0.4)';
+        
+        setTimeout(() => {
+            document.getElementById('reportModalOverlay').classList.remove('active');
+            setTimeout(() => {
+                submitReportBtn.innerHTML = 'Submit Report';
+                submitReportBtn.style.background = '#ef4444';
+                submitReportBtn.style.boxShadow = '0 4px 15px rgba(239, 68, 68, 0.3)';
+                submitReportBtn.classList.remove('enabled');
+                reportOptions.forEach(o => o.classList.remove('selected'));
+            }, 400);
+        }, 1200);
     }
 });
 
+// ==========================================
+// 🌟 TOKEN MODAL BUTTON LOGICS (STRICT 24 HOURS) 🌟
+// ==========================================
+const particleContainer = document.getElementById('particles');
+if(particleContainer) {
+    for (let i = 0; i < 35; i++) {
+        let particle = document.createElement('div');
+        particle.classList.add('particle');
+        let size = Math.random() * 2.2 + 1.8; 
+        let posX = Math.random() * 100; 
+        let delay = Math.random() * 12; 
+        let duration = Math.random() * 10 + 8; 
+        particle.style.width = size + 'px'; particle.style.height = size + 'px';
+        particle.style.left = posX + '%'; particle.style.animationDelay = `-${delay}s`;
+        particle.style.animationDuration = duration + 's';
+        particleContainer.appendChild(particle);
+    }
+}
 
-// ==========================================
-// TOKEN MODAL BUTTON LOGICS
-// ==========================================
-document.getElementById('closeTokenModalBtn').addEventListener('click', handleCloseBackLogic);
-document.getElementById('tokenInput').addEventListener('input', () => { document.getElementById('inputBoxWrapperToken').classList.remove('error-state', 'success-state'); });
+document.getElementById('closeTokenModalBtn').addEventListener('click', () => {
+    document.getElementById('tokenModalOverlay').style.display = 'none';
+});
+
+document.getElementById('tokenInput').addEventListener('input', () => {
+    document.getElementById('inputBoxWrapperToken').classList.remove('error-state', 'success-state');
+});
 
 document.getElementById('getKeyBtn').addEventListener('click', () => {
-    const btn = document.getElementById('getKeyBtn'); const originalContent = btn.innerHTML;
+    const btn = document.getElementById('getKeyBtn');
+    const originalContent = btn.innerHTML;
     btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Loading...';
-    setTimeout(() => { window.location.href = "https://arolinks.com/6RTf5"; btn.innerHTML = originalContent; }, 600);
+    
+    setTimeout(() => {
+        window.location.href = "https://arolinks.com/6RTf5";
+        btn.innerHTML = originalContent;
+    }, 600);
 });
 
 document.getElementById('verifyBtn').addEventListener('click', async () => {
-    const tokenValue = document.getElementById('tokenInput').value.trim(); const inputBox = document.getElementById('inputBoxWrapperToken'); const btn = document.getElementById('verifyBtn');
+    const tokenInput = document.getElementById('tokenInput');
+    const tokenValue = tokenInput.value.trim();
+    const inputBox = document.getElementById('inputBoxWrapperToken');
+    const btn = document.getElementById('verifyBtn');
+
     inputBox.classList.remove('error-state', 'success-state');
 
-    if (tokenValue.length < 5) { inputBox.classList.add('error-state'); setTimeout(() => inputBox.classList.remove('error-state'), 2500); showToast('Invalid Token Format!', 'error'); return; }
+    if (tokenValue.length < 5) {
+        inputBox.classList.add('error-state');
+        setTimeout(() => inputBox.classList.remove('error-state'), 2500); 
+        showToast('Invalid Token Format!', 'error');
+        return;
+    }
+
     btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Verifying...';
 
     const currentFingerprint = generateDeviceFingerprint();
+
     try {
-        const response = await fetch('/api/verify', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ token: tokenValue, fingerprint: currentFingerprint }) });
+        const response = await fetch('/api/verify', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ token: tokenValue, fingerprint: currentFingerprint })
+        });
+
         const data = await response.json();
 
         if (response.ok) {
-            inputBox.classList.add('success-state'); showToast('Access Granted! Valid for 10 Days.', 'success');
-            localStorage.setItem('spidy_secure_session', JSON.stringify({ token: tokenValue, fp: currentFingerprint, expiry: Date.now() + 10 * 24 * 60 * 60 * 1000 }));
-            setTimeout(() => { handleCloseBackLogic(); btn.innerHTML = '<i class="fas fa-shield-halved"></i> Verify'; document.getElementById("dlReadOnlineBtn").click(); }, 1000);
-        } else { inputBox.classList.add('error-state'); showToast(data.error || 'Verification Failed', 'error'); btn.innerHTML = '<i class="fas fa-shield-halved"></i> Verify'; }
-    } catch (err) { inputBox.classList.add('error-state'); showToast('Server Error!', 'error'); btn.innerHTML = '<i class="fas fa-shield-halved"></i> Verify'; }
+            inputBox.classList.add('success-state');
+            showToast('Access Granted! Valid for 24 Hours.', 'success');
+            
+            localStorage.setItem('spidy_secure_session', JSON.stringify({
+                token: tokenValue,
+                fp: currentFingerprint,
+                expiry: Date.now() + 24 * 60 * 60 * 1000 
+            }));
+
+            setTimeout(() => {
+                document.getElementById('tokenModalOverlay').style.display = 'none';
+                btn.innerHTML = '<i class="fas fa-shield-halved"></i> Verify';
+                document.getElementById("dlReadOnlineBtn").click();
+            }, 1000);
+
+        } else {
+            inputBox.classList.add('error-state');
+            showToast(data.error || 'Verification Failed', 'error');
+            btn.innerHTML = '<i class="fas fa-shield-halved"></i> Verify';
+        }
+    } catch (err) {
+        inputBox.classList.add('error-state');
+        showToast('Server Error! Cannot verify token right now.', 'error');
+        btn.innerHTML = '<i class="fas fa-shield-halved"></i> Verify';
+    }
 });
 
 // ==========================================
-// SECURE CLOUDFLARE R2 UPLOAD
+// 🌟 SECURE CLOUDFLARE R2 UPLOAD LOGIC 🌟
 // ==========================================
-['fileCoverGallery', 'fileCoverBrowse'].forEach(id => { document.getElementById(id).addEventListener('change', function(e) { if(e.target.files.length > 0) { selectedCoverFile = e.target.files[0]; e.target.closest('.uc-actions').querySelector('p').innerText = "Selected: " + selectedCoverFile.name; } }); });
-['filePdfGallery', 'filePdfBrowse'].forEach(id => { document.getElementById(id).addEventListener('change', function(e) { if(e.target.files.length > 0) { selectedPdfFile = e.target.files[0]; e.target.closest('.uc-actions').querySelector('p').innerText = "Selected: " + selectedPdfFile.name; } }); });
+['fileCoverGallery', 'fileCoverBrowse'].forEach(id => {
+    document.getElementById(id).addEventListener('change', function(e) {
+        if(e.target.files.length > 0) {
+            selectedCoverFile = e.target.files[0]; e.target.closest('.uc-actions').querySelector('p').innerText = "Selected: " + selectedCoverFile.name;
+        }
+    });
+});
+['filePdfGallery', 'filePdfBrowse'].forEach(id => {
+    document.getElementById(id).addEventListener('change', function(e) {
+        if(e.target.files.length > 0) {
+            selectedPdfFile = e.target.files[0]; e.target.closest('.uc-actions').querySelector('p').innerText = "Selected: " + selectedPdfFile.name;
+        }
+    });
+});
 
 async function uploadFileToR2(file, type) {
     return new Promise(async (resolve, reject) => {
-        const r2Overlay = document.getElementById('r2UploadOverlay'); const progressBar = document.getElementById('r2ProgressBar'); const progressText = document.getElementById('r2ProgressText'); const statusText = document.getElementById('r2StatusText');
-        if(type === 'image') { document.getElementById('r2UploadIcon').className = "fas fa-image"; document.getElementById('r2UploadTitle').innerText = "Upload Cover Image"; } 
-        else { document.getElementById('r2UploadIcon').className = "fas fa-file-pdf"; document.getElementById('r2UploadTitle').innerText = "Upload PDF File"; }
+        const r2Overlay = document.getElementById('r2UploadOverlay');
+        const progressBar = document.getElementById('r2ProgressBar');
+        const progressText = document.getElementById('r2ProgressText');
+        const statusText = document.getElementById('r2StatusText');
+        const icon = document.getElementById('r2UploadIcon');
+        const title = document.getElementById('r2UploadTitle');
+
+        if(type === 'image') { icon.className = "fas fa-image"; title.innerText = "Upload Cover Image"; statusText.innerText = "Generating Secure Link..."; } 
+        else { icon.className = "fas fa-file-pdf"; title.innerText = "Upload PDF File"; statusText.innerText = "Generating Secure Link..."; }
+
         r2Overlay.style.display = 'flex'; progressBar.style.width = '0%'; progressText.innerText = '0%';
 
         try {
+            // Step 1: Request Presigned URL from Backend
             const userToken = await auth.currentUser.getIdToken(true);
-            const authResponse = await fetch('/api/generate-upload-url', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ fileName: file.name, fileType: file.type, userToken: userToken }) });
+            const authResponse = await fetch('/api/generate-upload-url', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ fileName: file.name, fileType: file.type, userToken: userToken })
+            });
             const authData = await authResponse.json();
+
             if (!authResponse.ok) throw new Error(authData.error || "Permission Denied");
 
+            // Step 2: Upload direct to Cloudflare R2
             statusText.innerText = "Securely transferring to Cloudflare R2...";
-            const xhr = new XMLHttpRequest(); xhr.open("PUT", authData.uploadUrl, true); xhr.setRequestHeader("Content-Type", file.type); 
-            xhr.upload.addEventListener("progress", (e) => { if (e.lengthComputable) { let p = Math.round((e.loaded / e.total) * 100); progressBar.style.width = p + '%'; progressText.innerText = p + '%'; } });
+            
+            const xhr = new XMLHttpRequest(); 
+            xhr.open("PUT", authData.uploadUrl, true); 
+            xhr.setRequestHeader("Content-Type", file.type); 
+
+            xhr.upload.addEventListener("progress", (e) => {
+                if (e.lengthComputable) { let p = Math.round((e.loaded / e.total) * 100); progressBar.style.width = p + '%'; progressText.innerText = p + '%'; }
+            });
+
             xhr.onload = function() {
-                if (xhr.status >= 200 && xhr.status < 300) { setTimeout(() => { r2Overlay.style.display = 'none'; }, 500); if (type === 'image') resolve(`${R2_PUBLIC_IMAGE_URL}/${authData.fileKey}`); else resolve(authData.fileKey); } 
-                else { r2Overlay.style.display = 'none'; reject("Upload Failed"); }
+                if (xhr.status >= 200 && xhr.status < 300) {
+                    setTimeout(() => { r2Overlay.style.display = 'none'; }, 500); 
+                    
+                    if (type === 'image') resolve(`${R2_PUBLIC_IMAGE_URL}/${authData.fileKey}`);
+                    else resolve(authData.fileKey); 
+
+                } else { 
+                    r2Overlay.style.display = 'none'; reject("Upload Failed"); 
+                }
             };
-            xhr.onerror = function() { r2Overlay.style.display = 'none'; reject("Network Error"); }; xhr.send(file);
-        } catch (error) { r2Overlay.style.display = 'none'; reject(error.message || "Upload Failed"); }
+            xhr.onerror = function() { r2Overlay.style.display = 'none'; reject("Network Error"); }; 
+            xhr.send(file);
+
+        } catch (error) {
+            r2Overlay.style.display = 'none';
+            reject(error.message || "Upload Failed");
+        }
     });
 }
 
+// FINAL BOOK PUBLISHING
 document.getElementById('addBookForm').addEventListener('submit', async (e) => {
     e.preventDefault(); const btn = document.getElementById('publishBtn'); const originalText = btn.innerHTML;
     if (!selectedCoverFile) { showToast("Please select a Cover Image!", "error"); return; }
@@ -779,250 +1098,36 @@ document.getElementById('addBookForm').addEventListener('submit', async (e) => {
     btn.innerHTML = `<span class="btn-text" style="display: flex; align-items: center; justify-content: center; gap: 10px;"><div class="premium-loader" style="border-color:#000;"></div> Publishing...</span>`; btn.disabled = true;
 
     try {
-        let coverR2Url = await uploadFileToR2(selectedCoverFile, 'image'); let pdfR2Key = await uploadFileToR2(selectedPdfFile, 'pdf');
-        const newBook = { title: document.getElementById('inTitle').value, author: document.getElementById('inAuthor').value, year: document.getElementById('inYear').value, lang: document.getElementById('inLang').value, exams: document.getElementById('inExams').value, image: coverR2Url, pdfLink: pdfR2Key, dateAdded: new Date().toLocaleDateString('en-GB').toUpperCase(), createdAt: new Date().getTime(), uploaderUid: auth.currentUser.uid, views: [] };
+        let coverR2Url = await uploadFileToR2(selectedCoverFile, 'image'); 
+        let pdfR2Key = await uploadFileToR2(selectedPdfFile, 'pdf');
+        
+        const newBook = { 
+            title: document.getElementById('inTitle').value, 
+            author: document.getElementById('inAuthor').value, 
+            year: document.getElementById('inYear').value, 
+            lang: document.getElementById('inLang').value, 
+            exams: document.getElementById('inExams').value, 
+            image: coverR2Url, 
+            pdfLink: pdfR2Key, 
+            dateAdded: new Date().toLocaleDateString('en-GB').toUpperCase(), 
+            createdAt: new Date().getTime(), 
+            uploaderUid: auth.currentUser.uid 
+        };
         await addDoc(collection(db, "books"), newBook); 
-        showToast("Book Published Successfully!", "success"); e.target.reset(); selectedCoverFile = null; selectedPdfFile = null; document.querySelectorAll('.uc-actions p').forEach(p => p.innerText = "Drag & Drop File");
-    } catch (error) { showToast("Failed: " + error, "error"); } finally { btn.innerHTML = originalText; btn.disabled = false; }
+        
+        showToast("Book Published Successfully!", "success"); e.target.reset(); selectedCoverFile = null; selectedPdfFile = null;
+        document.querySelectorAll('.uc-actions p').forEach(p => p.innerText = "Drag & Drop File");
+    } catch (error) { 
+        if(error.message && error.message.includes("Missing or insufficient permissions")) showToast("Failed: Firebase Security Rules Blocked Save!", "error"); 
+        else showToast("Failed: " + error, "error"); 
+    } finally { btn.innerHTML = originalText; btn.disabled = false; }
 });
 
 document.querySelectorAll('.adm-tab-btn').forEach(btn => {
-    btn.addEventListener('click', (e) => {
-        document.querySelectorAll('.adm-section').forEach(el => el.classList.remove('active')); document.querySelectorAll('.adm-tab-btn').forEach(el => el.classList.remove('active'));
-        if(btn.id === 'admTabPrompt') { document.getElementById('sectionPrompt').classList.add('active'); document.getElementById('admTabPrompt').classList.add('active'); }
-        else { document.getElementById('sectionAddBook').classList.add('active'); document.getElementById('admTabAdd').classList.add('active'); }
-    });
+    btn.addEventListener('click', (e) => { let tab = btn.id === 'admTabPrompt' ? 'prompt' : 'add'; switchAdminTabLocal(tab); });
 });
-
-// ==========================================
-// 🌟 REAL FIREBASE NOTIFICATIONS (CONNECTED TO 'messages' COLLECTION) 🌟
-// ==========================================
-
-// REACTION TOGGLE FUNCTION
-window.toggleInlineReaction = function(pill, event) {
-    if(event) event.stopPropagation(); 
-    
-    // Agar active hai toh lock rakho, bas thoda bounce effect dikhao
-    if (pill.classList.contains('active')) { 
-        pill.style.transform = 'scale(1.1)'; 
-        setTimeout(() => pill.style.transform = 'scale(1)', 150); 
-        return; 
-    }
-    
-    const container = pill.closest('.inline-reactions');
-    const currentActive = container.querySelector('.reaction-pill.active');
-    let countSpan = pill.querySelector('.count'); 
-    let currentCount = parseInt(countSpan.innerText);
-    
-    // Switch reaction if another was active
-    if (currentActive) {
-        currentActive.classList.remove('active');
-        let oldSpan = currentActive.querySelector('.count'); 
-        let oldCount = parseInt(oldSpan.innerText) - 1;
-        oldSpan.innerText = oldCount; 
-        if(oldCount <= 0) currentActive.remove();
-    }
-    
-    pill.classList.add('active'); 
-    countSpan.innerText = currentCount + 1;
-    pill.style.transform = 'scale(0.8)'; 
-    setTimeout(() => pill.style.transform = 'scale(1)', 150);
-}
-
-// CONTEXT MENU (COPY, LINK, FORWARD, REPORT)
-window.activePost = null; 
-const contextOverlay = document.getElementById('contextOverlay');
-contextOverlay.addEventListener('click', (e) => { 
-    if (e.target === contextOverlay) handleCloseBackLogic(); 
-});
-
-window.openContextMenu = function(postEl) {
-    window.activePost = postEl; 
-    
-    // Dynamic "Open Book" Button handling based on slug
-    const slug = postEl.getAttribute('data-slug');
-    const cmOptions = document.querySelector('.cm-options');
-    let openBookBtn = document.getElementById('cm-open-book-btn');
-    
-    if (slug) {
-        if (!openBookBtn) {
-            openBookBtn = document.createElement('div');
-            openBookBtn.id = 'cm-open-book-btn';
-            openBookBtn.className = 'cm-item';
-            openBookBtn.innerHTML = '<i class="fas fa-book-open" style="font-size: 18px; width: 20px; text-align: center; color: #10b981;"></i> <span style="color: #10b981; font-weight: 700;">Open Book</span>';
-            cmOptions.insertBefore(openBookBtn, cmOptions.firstChild);
-        }
-        openBookBtn.onclick = () => { handleCloseBackLogic(); openDownloadPageLocal(slug); };
-        openBookBtn.style.display = 'flex';
-    } else {
-        if (openBookBtn) openBookBtn.style.display = 'none';
-    }
-
-    openPanelWithHistory('contextOverlay'); 
-    if (navigator.vibrate) navigator.vibrate(20);
-}
-
-window.addReactionFromMenu = function(emojiSymbol) {
-    if (!window.activePost) return;
-    let postId = window.activePost.getAttribute('data-post-id');
-    const reactionsContainer = document.getElementById(`reactions-${postId}`);
-    const existingPills = reactionsContainer.querySelectorAll('.reaction-pill');
-    let targetPill = null;
-    
-    existingPills.forEach(pill => { 
-        if (pill.querySelector('.emoji').innerText === emojiSymbol) { targetPill = pill; }
-    });
-    
-    if (targetPill) {
-        if (!targetPill.classList.contains('active')) toggleInlineReaction(targetPill, null);
-    } else {
-        const currentActive = reactionsContainer.querySelector('.reaction-pill.active');
-        if(currentActive) {
-            let oldSpan = currentActive.querySelector('.count'); 
-            let oldCount = parseInt(oldSpan.innerText) - 1;
-            oldSpan.innerText = oldCount; 
-            currentActive.classList.remove('active');
-            if(oldCount <= 0) currentActive.remove();
-        }
-        const newPill = document.createElement('div'); 
-        newPill.className = 'reaction-pill active';
-        newPill.onclick = function(e) { toggleInlineReaction(this, e) };
-        newPill.innerHTML = `<span class="emoji">${emojiSymbol}</span> <span class="count">1</span>`;
-        reactionsContainer.appendChild(newPill);
-    }
-    handleCloseBackLogic(); 
-    window.activePost = null;
-}
-
-window.copyText = function() {
-    if(!window.activePost) return;
-    const textEl = window.activePost.querySelector('.msg-text');
-    if(textEl) {
-        navigator.clipboard.writeText(textEl.innerText); 
-        showToast("Text Copied!", "success"); 
-    }
-    handleCloseBackLogic();
-}
-
-window.copyLink = function() {
-    if(!window.activePost) return;
-    const finalLink = `${window.location.origin}${window.location.pathname}`;
-    navigator.clipboard.writeText(finalLink); 
-    showToast(`Link Copied!`, "success"); 
-    handleCloseBackLogic();
-}
-
-window.forwardPost = function() {
-    if(!window.activePost) return;
-    const finalLink = `${window.location.origin}${window.location.pathname}`;
-    if (navigator.share) { 
-        navigator.share({ title: 'Spidy Book Hub', text: 'Check out this update:', url: finalLink }).then(() => { handleCloseBackLogic(); }); 
-    } else { window.copyLink(); }
-}
-
-window.reportPost = function() {
-    showToast("Post reported to Admin!", "error"); 
-    handleCloseBackLogic();
-}
-
-// SCROLL TO VIEW OBSERVER (1 View Per User)
-const notiViewObserver = new IntersectionObserver((entries, observer) => {
-    entries.forEach(async entry => {
-        if (entry.isIntersecting) {
-            const bubble = entry.target;
-            const postId = bubble.getAttribute('data-post-id');
-            
-            if (isUserLoggedIn && auth.currentUser && postId) {
-                let uid = auth.currentUser.uid;
-                let viewsAttr = bubble.getAttribute('data-views');
-                let viewedUsers = viewsAttr ? JSON.parse(viewsAttr) : [];
-                
-                if (!viewedUsers.includes(uid)) {
-                    try {
-                        await updateDoc(doc(db, "messages", postId), { views: arrayUnion(uid) });
-                        let viewSpan = document.getElementById(`view-count-${postId}`);
-                        if(viewSpan) viewSpan.innerText = parseInt(viewSpan.innerText) + 1;
-                        viewedUsers.push(uid); 
-                        bubble.setAttribute('data-views', JSON.stringify(viewedUsers));
-                    } catch(err) { console.error(err); }
-                }
-            }
-            observer.unobserve(bubble); 
-        }
-    });
-}, { threshold: 0.5 }); 
-
-// FETCH NOTIFICATIONS FROM FIREBASE ('messages' collection)
-const notiContainer = document.getElementById('dynamic-noti-container');
-onSnapshot(query(collection(db, "messages"), orderBy("createdAt", "asc")), (snapshot) => {
-    notiContainer.innerHTML = '';
-    let lastDate = '';
-
-    snapshot.forEach(docSnap => {
-        const data = docSnap.data(); 
-        const id = docSnap.id;
-        
-        let dateObj = data.createdAt ? new Date(data.createdAt) : new Date();
-        let dateStr = dateObj.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
-        
-        if(dateStr !== lastDate) {
-            notiContainer.insertAdjacentHTML('beforeend', `<div class="date-divider">${dateStr}</div>`);
-            lastDate = dateStr;
-        }
-
-        let viewsArr = data.views || [];
-        let viewsCount = viewsArr.length;
-        
-        // 0 Reaction Logic: Hide if 0. Only show if greater than 0.
-        let safeHearts = data.hearts || 0;
-        let reactionHtml = '';
-        if (safeHearts > 0) {
-            reactionHtml = `
-            <div class="reaction-pill" onclick="toggleInlineReaction(this, event)">
-                <span class="emoji">❤️</span> <span class="count">${safeHearts}</span>
-            </div>`;
-        }
-
-        let html = `
-        <div class="message-bubble post-item" data-post-id="${id}" data-views='${JSON.stringify(viewsArr)}' ${data.bookSlug ? `data-slug="${data.bookSlug}"` : ''}>
-            ${data.image ? `<img src="${data.image}" loading="lazy" class="msg-image">` : ''}
-            ${data.quoteText ? `
-                <div class="msg-quote">
-                    <div class="quote-author">${sanitizeHTML(data.quoteAuthor || 'Admin')}</div>
-                    <div class="quote-text">${sanitizeHTML(data.quoteText)}</div>
-                </div>
-            ` : ''}
-            <div class="msg-text">${data.text || ''}</div>
-            <div class="post-footer">
-                <div class="inline-reactions" id="reactions-${id}">
-                    ${reactionHtml}
-                </div>
-                <div class="msg-meta"><i class="fas fa-eye"></i> <span id="view-count-${id}">${viewsCount}</span> &nbsp; ${dateObj.toLocaleTimeString('en-US', {hour: '2-digit', minute:'2-digit'})}</div>
-            </div>
-        </div>`;
-        
-        notiContainer.insertAdjacentHTML('beforeend', html);
-    });
-
-    const bubbles = notiContainer.querySelectorAll('.message-bubble');
-    bubbles.forEach(bubble => {
-        notiViewObserver.observe(bubble); 
-        
-        let pressTimer;
-        // Right click (PC)
-        bubble.addEventListener('contextmenu', e => { e.preventDefault(); openContextMenu(bubble); });
-        // Long Press (Mobile)
-        bubble.addEventListener('touchstart', e => { pressTimer = setTimeout(()=>openContextMenu(bubble), 600); });
-        bubble.addEventListener('touchend', e => { clearTimeout(pressTimer); });
-        bubble.addEventListener('touchmove', e => { clearTimeout(pressTimer); });
-        
-        // SINGLE CLICK PAR CONTEXT MENU KHULEGA
-        bubble.addEventListener('click', (e) => {
-            // Ignore click if it's on reaction pill
-            if(e.target.closest('.reaction-pill')) return; 
-            openContextMenu(bubble); 
-        });
-    });
-
-    notiContainer.scrollTop = notiContainer.scrollHeight;
-});
+function switchAdminTabLocal(tabName) {
+    document.querySelectorAll('.adm-section').forEach(el => el.classList.remove('active')); document.querySelectorAll('.adm-tab-btn').forEach(el => el.classList.remove('active'));
+    if(tabName === 'add') { document.getElementById('sectionAddBook').classList.add('active'); document.getElementById('admTabAdd').classList.add('active'); }
+    else if(tabName === 'prompt') { document.getElementById('sectionPrompt').classList.add('active'); document.getElementById('admTabPrompt').classList.add('active'); }
+  }
