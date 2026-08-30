@@ -312,7 +312,6 @@ onAuthStateChanged(auth, async (user) => {
         });
         mainFilteredData = [...booksData]; 
         updateDynamicFilters(); applyMasterFilter(); 
-        generateTelegramNotifications(); // Generate Real View Notifications
         updateProfileUI(); // Update total books count in profile
         isAppReady.data = true; tryTransition();
     });
@@ -395,7 +394,7 @@ document.getElementById('categoryFilterGrid').addEventListener('click', (e) => {
 document.getElementById('languageFilterGrid').addEventListener('click', (e) => {
     if(e.target.classList.contains('f-pill')) { document.querySelectorAll('#languageFilterGrid .f-pill').forEach(el => el.classList.remove('active')); e.target.classList.add('active'); currentSelectedLanguage = e.target.getAttribute('data-lang'); }
 });
-document.getElementById('applyFiltersBtn').addEventListener('click', () => { document.getElementById('filterBottomOverlay').classList.remove('active'); applyMasterFilter(); });
+document.getElementById('applyFiltersBtn').addEventListener('click', () => { closePanelOrModal('filterBottomOverlay'); applyMasterFilter(); });
 
 function applyMasterFilter() {
     const searchInputRaw = document.getElementById('app-search-input').value.trim(); const searchStr = searchInputRaw.toLowerCase();
@@ -430,9 +429,6 @@ function applyMasterFilter() {
 
 const searchInputEl = document.getElementById('app-search-input'); let searchTimeout;
 searchInputEl.addEventListener('input', () => { clearTimeout(searchTimeout); searchTimeout = setTimeout(() => { applyMasterFilter(); }, 300); });
-document.getElementById('close-search').addEventListener('click', () => { searchInputEl.value = ''; applyMasterFilter(); document.getElementById('search-box').classList.remove('active');});
-document.getElementById('openAuthorFilterBtn').addEventListener('click', () => { document.getElementById('filterBottomOverlay').classList.add('active'); });
-document.getElementById('closeAuthorFilterBtn').addEventListener('click', () => { document.getElementById('filterBottomOverlay').classList.remove('active'); });
 
 // ==========================================
 // RENDERING UI & INFINITE SCROLL
@@ -501,8 +497,9 @@ document.getElementById('savedBooksContainer').addEventListener('click', (e) => 
 });
 
 // ==========================================
-// 🌟 REAL VIEW TELEGRAM NOTIFICATIONS 🌟
+// 🌟 REAL FIREBASE NOTIFICATIONS WITH SCROLL VIEWS 🌟
 // ==========================================
+
 window.toggleInlineReaction = function(pill, event) {
     if(event) event.stopPropagation(); 
     if (pill.classList.contains('active')) { pill.style.transform = 'scale(1.1)'; setTimeout(() => pill.style.transform = 'scale(1)', 150); return; }
@@ -521,11 +518,11 @@ window.toggleInlineReaction = function(pill, event) {
 // Global Context Menu Variables
 window.activePost = null; 
 const contextOverlay = document.getElementById('contextOverlay');
-contextOverlay.addEventListener('click', (e) => { if (e.target === contextOverlay) contextOverlay.classList.remove('show'); });
+contextOverlay.addEventListener('click', (e) => { if (e.target === contextOverlay) closePanelOrModal('contextOverlay'); });
 
 function openContextMenu(postEl) {
     window.activePost = postEl;
-    contextOverlay.classList.add('show');
+    openPanelWithHistory('contextOverlay');
     if (navigator.vibrate) navigator.vibrate(20);
 }
 
@@ -550,128 +547,212 @@ window.addReactionFromMenu = function(emojiSymbol) {
         newPill.innerHTML = `<span class="emoji">${emojiSymbol}</span> <span class="count">1</span>`;
         reactionsContainer.appendChild(newPill);
     }
-    contextOverlay.classList.remove('show'); window.activePost = null;
+    closePanelOrModal('contextOverlay'); window.activePost = null;
 }
 
 window.copyText = function() {
     if(!window.activePost) return;
     const textToCopy = window.activePost.querySelector('.msg-text').innerText;
     navigator.clipboard.writeText(textToCopy); showToast("Text Copied!", "success");
-    contextOverlay.classList.remove('show');
+    closePanelOrModal('contextOverlay');
 }
 
 window.copyLink = function() {
     if(!window.activePost) return;
-    const slug = window.activePost.getAttribute('data-slug');
-    const finalLink = `${window.location.origin}${window.location.pathname}?book=${slug}`;
+    const finalLink = `${window.location.origin}${window.location.pathname}`;
     navigator.clipboard.writeText(finalLink); showToast(`Link Copied!`, "success");
-    contextOverlay.classList.remove('show');
+    closePanelOrModal('contextOverlay');
 }
 
 window.forwardPost = function() {
     if(!window.activePost) return;
-    const slug = window.activePost.getAttribute('data-slug');
-    const finalLink = `${window.location.origin}${window.location.pathname}?book=${slug}`;
-    if (navigator.share) { navigator.share({ title: 'Spidy Book Hub', text: 'Check out this update:', url: finalLink }).then(() => { contextOverlay.classList.remove('show'); }); } 
+    const finalLink = `${window.location.origin}${window.location.pathname}`;
+    if (navigator.share) { navigator.share({ title: 'Spidy Book Hub', text: 'Check out this update:', url: finalLink }).then(() => { closePanelOrModal('contextOverlay'); }); } 
     else { window.copyLink(); }
 }
 
 window.reportPost = function() {
-    showToast("Post reported to Admin!", "error"); contextOverlay.classList.remove('show');
+    showToast("Post reported to Admin!", "error"); closePanelOrModal('contextOverlay');
 }
 
-function generateTelegramNotifications() {
-    const notiContainer = document.getElementById('dynamic-noti-container'); notiContainer.innerHTML = `<div class="date-divider">Today</div>`; 
-    
-    // Generate posts from recent 20 books
-    booksData.slice(0, 20).forEach((book) => {
-        let viewsCount = book.views ? book.views.length : 0;
-        let randomReaction = Math.floor(Math.random()*40)+10;
+// INTERSECTION OBSERVER FOR SCROLL VIEWS
+const notiViewObserver = new IntersectionObserver((entries, observer) => {
+    entries.forEach(async entry => {
+        if (entry.isIntersecting) {
+            const bubble = entry.target;
+            const postId = bubble.getAttribute('data-post-id');
+            
+            if (isUserLoggedIn && auth.currentUser && postId) {
+                let uid = auth.currentUser.uid;
+                let viewsAttr = bubble.getAttribute('data-views');
+                let viewedUsers = viewsAttr ? JSON.parse(viewsAttr) : [];
+                
+                if (!viewedUsers.includes(uid)) {
+                    try {
+                        // Realtime DB Update
+                        await updateDoc(doc(db, "notifications", postId), { views: arrayUnion(uid) });
+                        
+                        // Local UI Update
+                        let viewSpan = document.getElementById(`view-count-${postId}`);
+                        if(viewSpan) viewSpan.innerText = parseInt(viewSpan.innerText) + 1;
+                        
+                        viewedUsers.push(uid);
+                        bubble.setAttribute('data-views', JSON.stringify(viewedUsers));
+                    } catch(err) { console.error(err); }
+                }
+            }
+            observer.unobserve(bubble); // Stop observing once seen
+        }
+    });
+}, { threshold: 0.5 }); // Post must be 50% visible
+
+// FETCH NOTIFICATIONS FROM FIREBASE (Real Admin Data)
+const notiContainer = document.getElementById('dynamic-noti-container');
+onSnapshot(query(collection(db, "notifications"), orderBy("createdAt", "asc")), (snapshot) => {
+    notiContainer.innerHTML = '';
+    let lastDate = '';
+
+    snapshot.forEach(docSnap => {
+        const data = docSnap.data();
+        const id = docSnap.id;
+
+        // Date Logic
+        let dateObj = data.createdAt ? new Date(data.createdAt) : new Date();
+        let dateStr = dateObj.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
+        if(dateStr !== lastDate) {
+            notiContainer.insertAdjacentHTML('beforeend', `<div class="date-divider">${dateStr}</div>`);
+            lastDate = dateStr;
+        }
+
+        let viewsArr = data.views || [];
+        let viewsCount = viewsArr.length;
 
         let html = `
-        <div class="message-bubble post-item" data-post-id="${book.id}" data-slug="${book.slug}">
-            <img src="${book.image}" loading="lazy" class="msg-image">
-            <div class="msg-text">
-                <b>New Book Uploaded! 🚀</b><br><br>
-                <i>Title:</i> ${sanitizeHTML(book.title)}<br>
-                <i>Author:</i> ${sanitizeHTML(book.author)}<br>
-                <i>Exams:</i> ${sanitizeHTML(book.exams)}<br><br>
-                Click to read online or download!
-            </div>
+        <div class="message-bubble post-item" data-post-id="${id}" data-views='${JSON.stringify(viewsArr)}'>
+            ${data.image ? `<img src="${data.image}" loading="lazy" class="msg-image">` : ''}
+            ${data.quoteText ? `
+                <div class="msg-quote">
+                    <div class="quote-author">${sanitizeHTML(data.quoteAuthor || 'Admin')}</div>
+                    <div class="quote-text">${sanitizeHTML(data.quoteText)}</div>
+                </div>
+            ` : ''}
+            <div class="msg-text">${data.text || ''}</div>
             <div class="post-footer">
-                <div class="inline-reactions" id="reactions-${book.id}">
+                <div class="inline-reactions" id="reactions-${id}">
                     <div class="reaction-pill" onclick="toggleInlineReaction(this, event)">
-                        <span class="emoji">❤️</span> <span class="count">${randomReaction}</span>
+                        <span class="emoji">❤️</span> <span class="count">${data.hearts || 0}</span>
                     </div>
                 </div>
-                <div class="msg-meta"><i class="fas fa-eye"></i> <span id="view-count-${book.id}">${viewsCount}</span> &nbsp; New</div>
+                <div class="msg-meta"><i class="fas fa-eye"></i> <span id="view-count-${id}">${viewsCount}</span> &nbsp; ${dateObj.toLocaleTimeString('en-US', {hour: '2-digit', minute:'2-digit'})}</div>
             </div>
         </div>`;
+
         notiContainer.insertAdjacentHTML('beforeend', html);
     });
 
-    // Attach Click and Context Menu Listeners for Chat Bubbles
+    // Attach Context Menu & Observer to new bubbles
     const bubbles = notiContainer.querySelectorAll('.message-bubble');
     bubbles.forEach(bubble => {
+        notiViewObserver.observe(bubble); // Attach view observer
+        
         let pressTimer;
-        // Right Click (PC)
         bubble.addEventListener('contextmenu', e => { e.preventDefault(); openContextMenu(bubble); });
-        // Long Press (Mobile)
         bubble.addEventListener('touchstart', e => { pressTimer = setTimeout(()=>openContextMenu(bubble), 600); });
         bubble.addEventListener('touchend', e => { clearTimeout(pressTimer); });
         bubble.addEventListener('touchmove', e => { clearTimeout(pressTimer); });
-        
-        // Normal Click to open Book & Real View Increment
-        bubble.addEventListener('click', async (e) => {
-            if(e.target.closest('.reaction-pill')) return; // ignore reaction click
-            
-            const slug = bubble.getAttribute('data-slug');
-            const bookId = bubble.getAttribute('data-post-id');
-            const book = booksData.find(b => b.slug === slug);
-            
-            // Unique Real View Logic
-            if (isUserLoggedIn && auth.currentUser && book) {
-                let uid = auth.currentUser.uid;
-                if (!book.views || !book.views.includes(uid)) {
-                    try {
-                        await updateDoc(doc(db, "books", bookId), { views: arrayUnion(uid) });
-                        let viewSpan = document.getElementById(`view-count-${bookId}`);
-                        if(viewSpan) viewSpan.innerText = parseInt(viewSpan.innerText) + 1;
-                        if(!book.views) book.views = []; book.views.push(uid);
-                    } catch(err) {}
-                }
-            }
-            openDownloadPageLocal(slug);
-        });
     });
+
+    // Scroll to bottom automatically
+    notiContainer.scrollTop = notiContainer.scrollHeight;
+});
+
+// ==========================================
+// 🌟 HISTORY STATE (BACK BUTTON) MANAGER 🌟
+// ==========================================
+
+function openPanelWithHistory(panelId) {
+    const el = document.getElementById(panelId);
+    if (!el) return;
+    
+    // Add active/show or display block based on component
+    if(panelId === 'downloadModal' || panelId === 'reportModalOverlay' || panelId === 'pdfViewerOverlay' || panelId === 'tokenModalOverlay' || panelId === 'loginOverlay' || panelId === 'uploadPopup') {
+        el.style.display = (panelId === 'tokenModalOverlay') ? 'grid' : 'flex';
+        if(panelId === 'loginOverlay' || panelId === 'uploadPopup') setTimeout(() => el.style.opacity = '1', 10);
+        if(panelId === 'uploadPopup') el.classList.remove('hidden');
+    } else {
+        el.classList.add('active');
+        if(panelId === 'contextOverlay') el.classList.add('show');
+    }
+
+    // Push State to History
+    history.pushState({ popup: panelId }, '');
 }
 
-// ==========================================
-// NAVIGATION & OVERLAYS
-// ==========================================
-document.getElementById('open-search').addEventListener('click', () => { document.getElementById('search-box').classList.add('active'); setTimeout(() => { searchInputEl.focus(); }, 300); });
-document.getElementById('open-noti').addEventListener('click', () => { document.getElementById('noti-panel').classList.add('active'); document.querySelector('.blink-dot').style.display = 'none'; });
+function closePanelOrModal(panelId) {
+    const el = document.getElementById(panelId);
+    if (!el) return;
 
-const sidebar = document.getElementById('sidebar'); const sidebarOverlay = document.getElementById('sidebar-overlay');
-document.getElementById('open-menu').addEventListener('click', () => { sidebar.classList.add('active'); sidebarOverlay.classList.add('active'); });
-sidebarOverlay.addEventListener('click', () => { sidebar.classList.remove('active'); sidebarOverlay.classList.remove('active'); });
-document.getElementById('menu-dmca').addEventListener('click', (e) => { e.preventDefault(); document.getElementById('dmca-panel').classList.add('active'); sidebar.classList.remove('active'); sidebarOverlay.classList.remove('active'); });
-document.getElementById('close-dmca-btn').addEventListener('click', () => { document.getElementById('dmca-panel').classList.remove('active'); });
-document.getElementById('menu-bookmarks').addEventListener('click', (e) => { e.preventDefault(); document.getElementById('bookmarks-panel').classList.add('active'); sidebar.classList.remove('active'); sidebarOverlay.classList.remove('active'); renderSavedBooksUI(); });
-document.getElementById('close-bookmarks-btn').addEventListener('click', () => { document.getElementById('bookmarks-panel').classList.remove('active'); });
+    if(panelId === 'downloadModal' || panelId === 'reportModalOverlay' || panelId === 'pdfViewerOverlay' || panelId === 'tokenModalOverlay' || panelId === 'loginOverlay' || panelId === 'uploadPopup') {
+        if(panelId === 'loginOverlay' || panelId === 'uploadPopup') el.style.opacity = '0';
+        if(panelId === 'uploadPopup') el.classList.add('hidden');
+        setTimeout(() => el.style.display = 'none', 300);
+    } else {
+        el.classList.remove('active');
+        el.classList.remove('show');
+    }
+}
 
+function closeAllPanels() {
+    const panels = ['noti-panel', 'sidebar', 'dmca-panel', 'bookmarks-panel', 'search-box', 'filterBottomOverlay', 'contextOverlay', 'downloadModal', 'reportModalOverlay', 'pdfViewerOverlay', 'tokenModalOverlay', 'loginOverlay', 'uploadPopup', 'customLogoutOverlay'];
+    panels.forEach(id => closePanelOrModal(id));
+    document.getElementById('sidebar-overlay')?.classList.remove('active');
+}
+
+// Bind Handle Close to Back Button Logic
+function handleCloseBackLogic() {
+    if (history.state && history.state.popup) { history.back(); } 
+    else { closeAllPanels(); }
+}
+
+window.addEventListener('popstate', (e) => {
+    closeAllPanels();
+    // Check if URL has book to restore state safely
+    const sBook = new URLSearchParams(window.location.search).get('book');
+    if(sBook) { openDownloadPageLocal(sBook, true); }
+});
+
+// Bind UI Close buttons to handleCloseBackLogic
+document.getElementById('close-search')?.addEventListener('click', handleCloseBackLogic);
+document.getElementById('sidebar-overlay')?.addEventListener('click', handleCloseBackLogic);
+document.getElementById('close-dmca-btn')?.addEventListener('click', handleCloseBackLogic);
+document.getElementById('close-bookmarks-btn')?.addEventListener('click', handleCloseBackLogic);
+document.getElementById('closeAuthorFilterBtn')?.addEventListener('click', handleCloseBackLogic);
+document.getElementById('closeUploadPopupBtn')?.addEventListener('click', handleCloseBackLogic);
+document.getElementById('closeDlBtn')?.addEventListener('click', () => {
+    if(history.state && history.state.popup === 'downloadModal') history.back();
+    else { document.getElementById("downloadModal").style.display = "none"; window.history.replaceState({}, '', window.location.pathname); }
+});
+
+// Trigger Opens with History State
+document.getElementById('open-search').addEventListener('click', () => { openPanelWithHistory('search-box'); setTimeout(() => { searchInputEl.focus(); }, 300); });
+document.getElementById('open-noti').addEventListener('click', () => { openPanelWithHistory('noti-panel'); document.querySelector('.blink-dot').style.display = 'none'; });
+document.getElementById('open-menu').addEventListener('click', () => { openPanelWithHistory('sidebar'); document.getElementById('sidebar-overlay').classList.add('active'); });
+document.getElementById('menu-dmca').addEventListener('click', (e) => { e.preventDefault(); closePanelOrModal('sidebar'); document.getElementById('sidebar-overlay').classList.remove('active'); openPanelWithHistory('dmca-panel'); });
+document.getElementById('menu-bookmarks').addEventListener('click', (e) => { e.preventDefault(); closePanelOrModal('sidebar'); document.getElementById('sidebar-overlay').classList.remove('active'); openPanelWithHistory('bookmarks-panel'); renderSavedBooksUI(); });
+document.getElementById('openAuthorFilterBtn').addEventListener('click', () => { openPanelWithHistory('filterBottomOverlay'); });
+
+// Tabs Logic
 function switchTab(tabId) { document.querySelectorAll('.app-tab').forEach(tab => { tab.style.display = 'none'; tab.classList.remove('active'); }); const target = document.getElementById(tabId); if(target) { target.style.display = 'flex'; setTimeout(() => target.classList.add('active'), 10); } }
 function setNavActive(id) { document.querySelectorAll('.bottom-nav-item').forEach(el => el.classList.remove('active')); document.getElementById(id).classList.add('active'); }
-function closeAllPanels() { document.getElementById('noti-panel').classList.remove('active'); document.getElementById('sidebar').classList.remove('active'); document.getElementById('sidebar-overlay').classList.remove('active'); document.getElementById('dmca-panel').classList.remove('active'); document.getElementById('bookmarks-panel').classList.remove('active'); document.getElementById('search-box').classList.remove('active'); document.getElementById('my-profile-panel')?.classList.remove('active'); }
 
 document.getElementById('nav-home').addEventListener('click', () => { setNavActive('nav-home'); closeAllPanels(); switchTab('tab-home'); window.history.replaceState({}, '', window.location.pathname); });
 document.getElementById('nav-upload').addEventListener('click', () => {
-    if(!isUserLoggedIn) { document.getElementById('loginOverlay').style.display = 'flex'; setTimeout(() => document.getElementById('loginOverlay').style.opacity = '1', 10); setNavActive('nav-home'); return; }
-    setNavActive('nav-upload'); closeAllPanels(); switchTab('tab-upload'); setTimeout(() => { document.getElementById('uploadPopup').classList.remove('hidden'); }, 300);
+    if(!isUserLoggedIn) { openPanelWithHistory('loginOverlay'); setNavActive('nav-home'); return; }
+    setNavActive('nav-upload'); closeAllPanels(); switchTab('tab-upload'); setTimeout(() => { openPanelWithHistory('uploadPopup'); }, 300);
 });
 document.getElementById('nav-dev').addEventListener('click', () => { 
-    if(!isUserLoggedIn) { document.getElementById('loginOverlay').style.display = 'flex'; setTimeout(() => document.getElementById('loginOverlay').style.opacity = '1', 10); setNavActive('nav-home'); return; }
-    setNavActive('nav-dev'); closeAllPanels(); switchTab('tab-about'); updateProfileUI(); // Ensure fresh data on tab open
+    if(!isUserLoggedIn) { openPanelWithHistory('loginOverlay'); setNavActive('nav-home'); return; }
+    setNavActive('nav-dev'); closeAllPanels(); switchTab('tab-about'); updateProfileUI();
 });
 
 // ==========================================
@@ -679,9 +760,10 @@ document.getElementById('nav-dev').addEventListener('click', () => {
 // ==========================================
 
 function openDownloadPageLocal(slug, skipPushState = false) {
-    if(!isUserLoggedIn) { document.getElementById('loginOverlay').style.display = 'flex'; setTimeout(() => document.getElementById('loginOverlay').style.opacity = '1', 10); return; }
+    if(!isUserLoggedIn) { openPanelWithHistory('loginOverlay'); return; }
     const book = booksData.find(b => b.slug === slug); if(!book) return;
-    document.getElementById("downloadModal").style.display = "flex";
+    
+    openPanelWithHistory('downloadModal');
     
     const previewImg = document.getElementById("dlPreviewImage");
     previewImg.classList.add("image-loading-skeleton"); previewImg.src = book.image; 
@@ -702,15 +784,15 @@ function openDownloadPageLocal(slug, skipPushState = false) {
         let hasValidToken = false;
         if (savedData) { try { const parsed = JSON.parse(savedData); if (parsed.fp === generateDeviceFingerprint() && parsed.expiry > Date.now()) hasValidToken = true; } catch(e) {} }
 
-        if(!hasValidToken && !IS_SUPER_ADMIN) { document.getElementById('tokenModalOverlay').style.display = 'grid'; return; }
+        if(!hasValidToken && !IS_SUPER_ADMIN) { openPanelWithHistory('tokenModalOverlay'); return; }
         
         btn.innerHTML = `<i class="fas fa-spinner fa-spin"></i> Getting Secure Access...`; btn.disabled = true;
 
         try {
-            // Update User "Read Slugs" Array (Unique count of books read)
+            // Update User "Read Slugs" Array
             const userRef = doc(db, "users", auth.currentUser.uid);
             await updateDoc(userRef, { readSlugs: arrayUnion(book.slug) });
-            updateProfileUI(); // Live update UI
+            updateProfileUI(); 
 
             const userToken = await auth.currentUser.getIdToken(true);
             const response = await fetch('/api/get-book', {
@@ -720,40 +802,34 @@ function openDownloadPageLocal(slug, skipPushState = false) {
 
             const data = await response.json();
             if (response.ok && data.success) {
-                const pdfViewer = document.getElementById('pdfViewerOverlay'); const iframe = document.getElementById('pdfIframe');
+                const iframe = document.getElementById('pdfIframe');
                 document.getElementById('pdfViewerTitle').innerText = sanitizeHTML(book.title);
                 iframe.src = data.pdfLink + "&toolbar=0&navpanes=0&scrollbar=0"; 
-                pdfViewer.style.display = 'flex';
+                openPanelWithHistory('pdfViewerOverlay');
             } else {
-                if (response.status === 401 || (data.error && data.error.includes('Unauthorized'))) { localStorage.removeItem('spidy_secure_session'); document.getElementById('tokenModalOverlay').style.display = 'grid'; } 
+                if (response.status === 401 || (data.error && data.error.includes('Unauthorized'))) { localStorage.removeItem('spidy_secure_session'); openPanelWithHistory('tokenModalOverlay'); } 
                 else { showToast(data.error || "Failed to load book securely.", "error"); }
             }
             btn.innerHTML = originalText; btn.disabled = false;
         } catch (error) { showToast("Network Error: Could not load the book.", "error"); btn.innerHTML = originalText; btn.disabled = false; }
     };
 
-    document.getElementById("closePdfViewerBtn").onclick = function() { document.getElementById('pdfViewerOverlay').style.display = 'none'; document.getElementById('pdfIframe').src = ""; };
+    document.getElementById("closePdfViewerBtn").onclick = function() { handleCloseBackLogic(); document.getElementById('pdfIframe').src = ""; };
     document.getElementById("pdfContainer").addEventListener('contextmenu', event => event.preventDefault());
 
     let examsArray = (book.exams || "General").split(',').map(item => sanitizeHTML(item.trim()));
     document.getElementById("dlModalTags").innerHTML = examsArray.map(exam => `<div class="dl-modal-tag">${exam}</div>`).join('');
     activeBookSlug = book.slug; activeBookTitle = book.title;
-    if (!skipPushState) { history.pushState({ popup: 'book' }, '', '?book=' + book.slug); }
+    
+    if (!skipPushState) { history.replaceState({ popup: 'downloadModal' }, '', '?book=' + book.slug); }
 }
-
-document.getElementById('closeDlBtn').addEventListener('click', () => { document.getElementById("downloadModal").style.display = "none"; window.history.replaceState({}, '', window.location.pathname); });
-document.getElementById('shareBookBtn').addEventListener('click', () => {
-    const shareUrl = window.location.origin + window.location.pathname + "?book=" + activeBookSlug;
-    if (navigator.share) navigator.share({ title: activeBookTitle, text: "Read this book online", url: shareUrl }); 
-    else { navigator.clipboard.writeText(shareUrl); showToast("Link Copied!", "success"); }
-});
 
 // ==========================================
 // REPORT ISSUE MODAL
 // ==========================================
-document.getElementById('reportLinkBtn').addEventListener('click', () => { document.getElementById('reportModalOverlay').classList.add('active'); });
-document.getElementById('closeReportBtn').addEventListener('click', () => { document.getElementById('reportModalOverlay').classList.remove('active'); });
-document.getElementById('reportModalOverlay').addEventListener('click', (e) => { if (e.target === document.getElementById('reportModalOverlay')) document.getElementById('reportModalOverlay').classList.remove('active'); });
+document.getElementById('reportLinkBtn').addEventListener('click', () => { openPanelWithHistory('reportModalOverlay'); });
+document.getElementById('closeReportBtn').addEventListener('click', handleCloseBackLogic);
+document.getElementById('reportModalOverlay').addEventListener('click', (e) => { if (e.target === document.getElementById('reportModalOverlay')) handleCloseBackLogic(); });
 
 const reportOptions = document.querySelectorAll('.rm-option'); const submitReportBtn = document.getElementById('submitReportBtn');
 reportOptions.forEach(opt => {
@@ -770,7 +846,7 @@ submitReportBtn.addEventListener('click', async () => {
 
         submitReportBtn.innerHTML = '<i class="fas fa-check-circle"></i> Successfully Reported'; submitReportBtn.style.background = '#10b981';
         setTimeout(() => {
-            document.getElementById('reportModalOverlay').classList.remove('active');
+            handleCloseBackLogic();
             setTimeout(() => { submitReportBtn.innerHTML = 'Submit Report'; submitReportBtn.style.background = '#ef4444'; submitReportBtn.classList.remove('enabled'); reportOptions.forEach(o => o.classList.remove('selected')); }, 400);
         }, 1200);
     }
@@ -779,7 +855,7 @@ submitReportBtn.addEventListener('click', async () => {
 // ==========================================
 // TOKEN MODAL BUTTON LOGICS
 // ==========================================
-document.getElementById('closeTokenModalBtn').addEventListener('click', () => { document.getElementById('tokenModalOverlay').style.display = 'none'; });
+document.getElementById('closeTokenModalBtn').addEventListener('click', handleCloseBackLogic);
 document.getElementById('tokenInput').addEventListener('input', () => { document.getElementById('inputBoxWrapperToken').classList.remove('error-state', 'success-state'); });
 
 document.getElementById('getKeyBtn').addEventListener('click', () => {
@@ -803,7 +879,7 @@ document.getElementById('verifyBtn').addEventListener('click', async () => {
         if (response.ok) {
             inputBox.classList.add('success-state'); showToast('Access Granted! Valid for 10 Days.', 'success');
             localStorage.setItem('spidy_secure_session', JSON.stringify({ token: tokenValue, fp: currentFingerprint, expiry: Date.now() + 10 * 24 * 60 * 60 * 1000 }));
-            setTimeout(() => { document.getElementById('tokenModalOverlay').style.display = 'none'; btn.innerHTML = '<i class="fas fa-shield-halved"></i> Verify'; document.getElementById("dlReadOnlineBtn").click(); }, 1000);
+            setTimeout(() => { handleCloseBackLogic(); btn.innerHTML = '<i class="fas fa-shield-halved"></i> Verify'; document.getElementById("dlReadOnlineBtn").click(); }, 1000);
         } else { inputBox.classList.add('error-state'); showToast(data.error || 'Verification Failed', 'error'); btn.innerHTML = '<i class="fas fa-shield-halved"></i> Verify'; }
     } catch (err) { inputBox.classList.add('error-state'); showToast('Server Error!', 'error'); btn.innerHTML = '<i class="fas fa-shield-halved"></i> Verify'; }
 });
