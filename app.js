@@ -385,7 +385,7 @@ document.getElementById('categoryFilterGrid').addEventListener('click', (e) => {
 document.getElementById('languageFilterGrid').addEventListener('click', (e) => {
     if(e.target.classList.contains('f-pill')) { document.querySelectorAll('#languageFilterGrid .f-pill').forEach(el => el.classList.remove('active')); e.target.classList.add('active'); currentSelectedLanguage = e.target.getAttribute('data-lang'); }
 });
-document.getElementById('applyFiltersBtn').addEventListener('click', () => { handleCloseBackLogic(); applyMasterFilter(); });
+document.getElementById('applyFiltersBtn').addEventListener('click', () => { closePanelOrModal('filterBottomOverlay'); applyMasterFilter(); });
 
 function applyMasterFilter() {
     const searchInputRaw = document.getElementById('app-search-input').value.trim(); const searchStr = searchInputRaw.toLowerCase();
@@ -488,6 +488,170 @@ document.getElementById('savedBooksContainer').addEventListener('click', (e) => 
 });
 
 // ==========================================
+// 🌟 REAL FIREBASE NOTIFICATIONS (CONNECTED TO 'messages' COLLECTION) 🌟
+// ==========================================
+
+window.toggleInlineReaction = function(pill, event) {
+    if(event) event.stopPropagation(); 
+    if (pill.classList.contains('active')) { pill.style.transform = 'scale(1.1)'; setTimeout(() => pill.style.transform = 'scale(1)', 150); return; }
+    const container = pill.closest('.inline-reactions');
+    const currentActive = container.querySelector('.reaction-pill.active');
+    let countSpan = pill.querySelector('.count'); let currentCount = parseInt(countSpan.innerText);
+    if (currentActive) {
+        currentActive.classList.remove('active');
+        let oldSpan = currentActive.querySelector('.count'); let oldCount = parseInt(oldSpan.innerText) - 1;
+        oldSpan.innerText = oldCount; if(oldCount <= 0) currentActive.remove();
+    }
+    pill.classList.add('active'); countSpan.innerText = currentCount + 1;
+    pill.style.transform = 'scale(0.8)'; setTimeout(() => pill.style.transform = 'scale(1)', 150);
+}
+
+// Global Context Menu Variables
+window.activePost = null; 
+const contextOverlay = document.getElementById('contextOverlay');
+contextOverlay.addEventListener('click', (e) => { if (e.target === contextOverlay) handleCloseBackLogic(); });
+
+function openContextMenu(postEl) {
+    window.activePost = postEl; openPanelWithHistory('contextOverlay'); if (navigator.vibrate) navigator.vibrate(20);
+}
+
+window.addReactionFromMenu = function(emojiSymbol) {
+    if (!window.activePost) return;
+    let postId = window.activePost.getAttribute('data-post-id');
+    const reactionsContainer = document.getElementById(`reactions-${postId}`);
+    const existingPills = reactionsContainer.querySelectorAll('.reaction-pill');
+    let targetPill = null;
+    existingPills.forEach(pill => { if (pill.querySelector('.emoji').innerText === emojiSymbol) { targetPill = pill; }});
+    if (targetPill) {
+        if (!targetPill.classList.contains('active')) toggleInlineReaction(targetPill, null);
+    } else {
+        const currentActive = reactionsContainer.querySelector('.reaction-pill.active');
+        if(currentActive) {
+            let oldSpan = currentActive.querySelector('.count'); let oldCount = parseInt(oldSpan.innerText) - 1;
+            oldSpan.innerText = oldCount; currentActive.classList.remove('active');
+            if(oldCount <= 0) currentActive.remove();
+        }
+        const newPill = document.createElement('div'); newPill.className = 'reaction-pill active';
+        newPill.onclick = function(e) { toggleInlineReaction(this, e) };
+        newPill.innerHTML = `<span class="emoji">${emojiSymbol}</span> <span class="count">1</span>`;
+        reactionsContainer.appendChild(newPill);
+    }
+    handleCloseBackLogic(); window.activePost = null;
+}
+
+window.copyText = function() {
+    if(!window.activePost) return;
+    const textToCopy = window.activePost.querySelector('.msg-text').innerText;
+    navigator.clipboard.writeText(textToCopy); showToast("Text Copied!", "success"); handleCloseBackLogic();
+}
+
+window.copyLink = function() {
+    if(!window.activePost) return;
+    const finalLink = `${window.location.origin}${window.location.pathname}`;
+    navigator.clipboard.writeText(finalLink); showToast(`Link Copied!`, "success"); handleCloseBackLogic();
+}
+
+window.forwardPost = function() {
+    if(!window.activePost) return;
+    const finalLink = `${window.location.origin}${window.location.pathname}`;
+    if (navigator.share) { navigator.share({ title: 'Spidy Book Hub', text: 'Check out this update:', url: finalLink }).then(() => { handleCloseBackLogic(); }); } 
+    else { window.copyLink(); }
+}
+
+window.reportPost = function() {
+    showToast("Post reported to Admin!", "error"); handleCloseBackLogic();
+}
+
+// SCROLL TO VIEW OBSERVER (1 View Per User)
+const notiViewObserver = new IntersectionObserver((entries, observer) => {
+    entries.forEach(async entry => {
+        if (entry.isIntersecting) {
+            const bubble = entry.target;
+            const postId = bubble.getAttribute('data-post-id');
+            
+            if (isUserLoggedIn && auth.currentUser && postId) {
+                let uid = auth.currentUser.uid;
+                let viewsAttr = bubble.getAttribute('data-views');
+                let viewedUsers = viewsAttr ? JSON.parse(viewsAttr) : [];
+                
+                if (!viewedUsers.includes(uid)) {
+                    try {
+                        // NOTE: Collection name is 'messages' here to match admin panel
+                        await updateDoc(doc(db, "messages", postId), { views: arrayUnion(uid) });
+                        let viewSpan = document.getElementById(`view-count-${postId}`);
+                        if(viewSpan) viewSpan.innerText = parseInt(viewSpan.innerText) + 1;
+                        viewedUsers.push(uid); bubble.setAttribute('data-views', JSON.stringify(viewedUsers));
+                    } catch(err) { console.error(err); }
+                }
+            }
+            observer.unobserve(bubble); 
+        }
+    });
+}, { threshold: 0.5 }); 
+
+// FETCH NOTIFICATIONS FROM FIREBASE ('messages' collection)
+const notiContainer = document.getElementById('dynamic-noti-container');
+onSnapshot(query(collection(db, "messages"), orderBy("createdAt", "asc")), (snapshot) => {
+    notiContainer.innerHTML = '';
+    let lastDate = '';
+
+    snapshot.forEach(docSnap => {
+        const data = docSnap.data(); const id = docSnap.id;
+        let dateObj = data.createdAt ? new Date(data.createdAt) : new Date();
+        let dateStr = dateObj.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
+        
+        if(dateStr !== lastDate) {
+            notiContainer.insertAdjacentHTML('beforeend', `<div class="date-divider">${dateStr}</div>`);
+            lastDate = dateStr;
+        }
+
+        let viewsArr = data.views || [];
+        let viewsCount = viewsArr.length;
+
+        let html = `
+        <div class="message-bubble post-item" data-post-id="${id}" data-views='${JSON.stringify(viewsArr)}' ${data.bookSlug ? `data-slug="${data.bookSlug}"` : ''}>
+            ${data.image ? `<img src="${data.image}" loading="lazy" class="msg-image">` : ''}
+            ${data.quoteText ? `
+                <div class="msg-quote">
+                    <div class="quote-author">${sanitizeHTML(data.quoteAuthor || 'Admin')}</div>
+                    <div class="quote-text">${sanitizeHTML(data.quoteText)}</div>
+                </div>
+            ` : ''}
+            <div class="msg-text">${data.text || ''}</div>
+            <div class="post-footer">
+                <div class="inline-reactions" id="reactions-${id}">
+                    <div class="reaction-pill" onclick="toggleInlineReaction(this, event)">
+                        <span class="emoji">❤️</span> <span class="count">${data.hearts || 0}</span>
+                    </div>
+                </div>
+                <div class="msg-meta"><i class="fas fa-eye"></i> <span id="view-count-${id}">${viewsCount}</span> &nbsp; ${dateObj.toLocaleTimeString('en-US', {hour: '2-digit', minute:'2-digit'})}</div>
+            </div>
+        </div>`;
+        notiContainer.insertAdjacentHTML('beforeend', html);
+    });
+
+    const bubbles = notiContainer.querySelectorAll('.message-bubble');
+    bubbles.forEach(bubble => {
+        notiViewObserver.observe(bubble); 
+        
+        let pressTimer;
+        bubble.addEventListener('contextmenu', e => { e.preventDefault(); openContextMenu(bubble); });
+        bubble.addEventListener('touchstart', e => { pressTimer = setTimeout(()=>openContextMenu(bubble), 600); });
+        bubble.addEventListener('touchend', e => { clearTimeout(pressTimer); });
+        bubble.addEventListener('touchmove', e => { clearTimeout(pressTimer); });
+        
+        bubble.addEventListener('click', (e) => {
+            if(e.target.closest('.reaction-pill')) return; 
+            const slug = bubble.getAttribute('data-slug');
+            if(slug) { openDownloadPageLocal(slug); } 
+            else { openContextMenu(bubble); }
+        });
+    });
+
+    notiContainer.scrollTop = notiContainer.scrollHeight;
+});
+
+// ==========================================
 // 🌟 HISTORY STATE (BACK BUTTON) MANAGER 🌟
 // ==========================================
 function openPanelWithHistory(panelId) {
@@ -570,167 +734,6 @@ document.getElementById('nav-upload').addEventListener('click', () => {
 document.getElementById('nav-dev').addEventListener('click', () => { 
     if(!isUserLoggedIn) { openPanelWithHistory('loginOverlay'); setNavActive('nav-home'); return; }
     setNavActive('nav-dev'); closeAllPanels(); switchTab('tab-about'); updateProfileUI();
-});
-
-// ==========================================
-// 🌟 REAL FIREBASE NOTIFICATIONS WITH SCROLL VIEWS 🌟
-// ==========================================
-window.toggleInlineReaction = function(pill, event) {
-    if(event) event.stopPropagation(); 
-    if (pill.classList.contains('active')) { pill.style.transform = 'scale(1.1)'; setTimeout(() => pill.style.transform = 'scale(1)', 150); return; }
-    const container = pill.closest('.inline-reactions');
-    const currentActive = container.querySelector('.reaction-pill.active');
-    let countSpan = pill.querySelector('.count'); let currentCount = parseInt(countSpan.innerText);
-    if (currentActive) {
-        currentActive.classList.remove('active');
-        let oldSpan = currentActive.querySelector('.count'); let oldCount = parseInt(oldSpan.innerText) - 1;
-        oldSpan.innerText = oldCount; if(oldCount <= 0) currentActive.remove();
-    }
-    pill.classList.add('active'); countSpan.innerText = currentCount + 1;
-    pill.style.transform = 'scale(0.8)'; setTimeout(() => pill.style.transform = 'scale(1)', 150);
-}
-
-window.activePost = null; 
-const contextOverlay = document.getElementById('contextOverlay');
-contextOverlay.addEventListener('click', (e) => { if (e.target === contextOverlay) handleCloseBackLogic(); });
-
-function openContextMenu(postEl) {
-    window.activePost = postEl; openPanelWithHistory('contextOverlay'); if (navigator.vibrate) navigator.vibrate(20);
-}
-
-window.addReactionFromMenu = function(emojiSymbol) {
-    if (!window.activePost) return;
-    let postId = window.activePost.getAttribute('data-post-id');
-    const reactionsContainer = document.getElementById(`reactions-${postId}`);
-    const existingPills = reactionsContainer.querySelectorAll('.reaction-pill');
-    let targetPill = null;
-    existingPills.forEach(pill => { if (pill.querySelector('.emoji').innerText === emojiSymbol) { targetPill = pill; }});
-    if (targetPill) {
-        if (!targetPill.classList.contains('active')) toggleInlineReaction(targetPill, null);
-    } else {
-        const currentActive = reactionsContainer.querySelector('.reaction-pill.active');
-        if(currentActive) {
-            let oldSpan = currentActive.querySelector('.count'); let oldCount = parseInt(oldSpan.innerText) - 1;
-            oldSpan.innerText = oldCount; currentActive.classList.remove('active');
-            if(oldCount <= 0) currentActive.remove();
-        }
-        const newPill = document.createElement('div'); newPill.className = 'reaction-pill active';
-        newPill.onclick = function(e) { toggleInlineReaction(this, e) };
-        newPill.innerHTML = `<span class="emoji">${emojiSymbol}</span> <span class="count">1</span>`;
-        reactionsContainer.appendChild(newPill);
-    }
-    handleCloseBackLogic(); window.activePost = null;
-}
-
-window.copyText = function() {
-    if(!window.activePost) return;
-    const textToCopy = window.activePost.querySelector('.msg-text').innerText;
-    navigator.clipboard.writeText(textToCopy); showToast("Text Copied!", "success"); handleCloseBackLogic();
-}
-
-window.copyLink = function() {
-    if(!window.activePost) return;
-    const finalLink = `${window.location.origin}${window.location.pathname}`;
-    navigator.clipboard.writeText(finalLink); showToast(`Link Copied!`, "success"); handleCloseBackLogic();
-}
-
-window.forwardPost = function() {
-    if(!window.activePost) return;
-    const finalLink = `${window.location.origin}${window.location.pathname}`;
-    if (navigator.share) { navigator.share({ title: 'Spidy Book Hub', text: 'Check out this update:', url: finalLink }).then(() => { handleCloseBackLogic(); }); } 
-    else { window.copyLink(); }
-}
-
-window.reportPost = function() {
-    showToast("Post reported to Admin!", "error"); handleCloseBackLogic();
-}
-
-// SCROLL TO VIEW OBSERVER (1 View Per User)
-const notiViewObserver = new IntersectionObserver((entries, observer) => {
-    entries.forEach(async entry => {
-        if (entry.isIntersecting) {
-            const bubble = entry.target;
-            const postId = bubble.getAttribute('data-post-id');
-            
-            if (isUserLoggedIn && auth.currentUser && postId) {
-                let uid = auth.currentUser.uid;
-                let viewsAttr = bubble.getAttribute('data-views');
-                let viewedUsers = viewsAttr ? JSON.parse(viewsAttr) : [];
-                
-                if (!viewedUsers.includes(uid)) {
-                    try {
-                        await updateDoc(doc(db, "notifications", postId), { views: arrayUnion(uid) });
-                        let viewSpan = document.getElementById(`view-count-${postId}`);
-                        if(viewSpan) viewSpan.innerText = parseInt(viewSpan.innerText) + 1;
-                        viewedUsers.push(uid); bubble.setAttribute('data-views', JSON.stringify(viewedUsers));
-                    } catch(err) { console.error(err); }
-                }
-            }
-            observer.unobserve(bubble); 
-        }
-    });
-}, { threshold: 0.5 }); 
-
-// FETCH NOTIFICATIONS FROM FIREBASE
-const notiContainer = document.getElementById('dynamic-noti-container');
-onSnapshot(query(collection(db, "notifications"), orderBy("createdAt", "asc")), (snapshot) => {
-    notiContainer.innerHTML = '';
-    let lastDate = '';
-
-    snapshot.forEach(docSnap => {
-        const data = docSnap.data(); const id = docSnap.id;
-        let dateObj = data.createdAt ? new Date(data.createdAt) : new Date();
-        let dateStr = dateObj.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
-        
-        if(dateStr !== lastDate) {
-            notiContainer.insertAdjacentHTML('beforeend', `<div class="date-divider">${dateStr}</div>`);
-            lastDate = dateStr;
-        }
-
-        let viewsArr = data.views || [];
-        let viewsCount = viewsArr.length;
-
-        let html = `
-        <div class="message-bubble post-item" data-post-id="${id}" data-views='${JSON.stringify(viewsArr)}' ${data.bookSlug ? `data-slug="${data.bookSlug}"` : ''}>
-            ${data.image ? `<img src="${data.image}" loading="lazy" class="msg-image">` : ''}
-            ${data.quoteText ? `
-                <div class="msg-quote">
-                    <div class="quote-author">${sanitizeHTML(data.quoteAuthor || 'Admin')}</div>
-                    <div class="quote-text">${sanitizeHTML(data.quoteText)}</div>
-                </div>
-            ` : ''}
-            <div class="msg-text">${data.text || ''}</div>
-            <div class="post-footer">
-                <div class="inline-reactions" id="reactions-${id}">
-                    <div class="reaction-pill" onclick="toggleInlineReaction(this, event)">
-                        <span class="emoji">❤️</span> <span class="count">${data.hearts || 0}</span>
-                    </div>
-                </div>
-                <div class="msg-meta"><i class="fas fa-eye"></i> <span id="view-count-${id}">${viewsCount}</span> &nbsp; ${dateObj.toLocaleTimeString('en-US', {hour: '2-digit', minute:'2-digit'})}</div>
-            </div>
-        </div>`;
-        notiContainer.insertAdjacentHTML('beforeend', html);
-    });
-
-    const bubbles = notiContainer.querySelectorAll('.message-bubble');
-    bubbles.forEach(bubble => {
-        notiViewObserver.observe(bubble); 
-        
-        let pressTimer;
-        bubble.addEventListener('contextmenu', e => { e.preventDefault(); openContextMenu(bubble); });
-        bubble.addEventListener('touchstart', e => { pressTimer = setTimeout(()=>openContextMenu(bubble), 600); });
-        bubble.addEventListener('touchend', e => { clearTimeout(pressTimer); });
-        bubble.addEventListener('touchmove', e => { clearTimeout(pressTimer); });
-        
-        bubble.addEventListener('click', (e) => {
-            if(e.target.closest('.reaction-pill')) return; 
-            const slug = bubble.getAttribute('data-slug');
-            if(slug) { openDownloadPageLocal(slug); } 
-            else { openContextMenu(bubble); }
-        });
-    });
-
-    notiContainer.scrollTop = notiContainer.scrollHeight;
 });
 
 // ==========================================
