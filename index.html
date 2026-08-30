@@ -26,7 +26,7 @@
 
     <!-- Fonts & Icons -->
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" rel="stylesheet">
-    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@500;600;700;800;900&family=Inter:wght@400;500;600;700;800;900&family=Poppins:ital,wght@0,400;0,600;1,500;0,700;0,800;0,900&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@500;600;700;800&family=Inter:wght@400;500;600;700;800;900&family=Poppins:ital,wght@0,400;0,600;1,500;0,700;0,800;0,900&display=swap" rel="stylesheet">
     
     <!-- Main CSS File -->
     <link rel="stylesheet" href="./style.css">
@@ -54,7 +54,7 @@
 
     <!-- Login Overlay -->
     <div id="loginOverlay" class="login-container" style="display: none; opacity: 0;">
-        <div class="close-login-btn" id="closeLoginBtn"><i class="fas fa-times"></i></div>
+        <div class="close-login-btn" id="closeLoginBtn" style="position: absolute; top: 20px; right: 20px; z-index: 100000;"><i class="fas fa-times"></i></div>
         <div class="login-dots dot-top-left"></div>
         <div class="login-dots dot-bottom-right"></div>
         
@@ -141,11 +141,11 @@
             <!-- SIDEBAR -->
             <div class="sidebar-overlay" id="sidebar-overlay"></div>
             <div class="sidebar" id="sidebar">
-                <div class="sidebar-header-new" id="sidebarHeader">
+                <div class="sidebar-header-new" id="sidebarHeader" style="cursor: pointer; transition: 0.2s;" onmouseover="this.style.background='rgba(255,255,255,0.05)'" onmouseout="this.style.background='transparent'">
                     <img src="https://i.postimg.cc/D0BF1b77/file-000000000e847207a64f6711d825a859.png" alt="Profile" class="profile-img" id="sidebarProfileImg" oncontextmenu="return false;" draggable="false">
                     <div class="profile-info">
                         <div class="profile-name" id="sidebarProfileName">SPIDY BOOK HUB</div>
-                        <div class="sidebar-role-text" id="sidebarRoleText">Please Login</div>
+                        <div style="font-size: 10px; color: #10b981; font-weight: bold; margin-top: 2px;" id="sidebarRoleText">Please Login</div>
                     </div>
                 </div>
                 <div class="sidebar-scroll-area">
@@ -158,10 +158,10 @@
                     </div>
                     <div class="menu-section">
                         <div class="section-title">COMMUNITY</div>
-                        <a href="https://www.instagram.com/madxprince_3030" target="_blank" class="menu-item card-link card-insta" id="link-insta"><i class="fab fa-instagram"></i><span>Instagram</span><i class="fas fa-external-link-square-alt external"></i></a>
-                        <a href="https://youtube.com/@madxprince" target="_blank" class="menu-item card-link card-youtube" id="link-youtube"><i class="fab fa-youtube"></i><span>YouTube Channel</span><i class="fas fa-external-link-square-alt external"></i></a>
-                        <a href="https://t.me/MultiverseBooks" target="_blank" class="menu-item card-link card-telegram" id="link-telegram"><i class="fab fa-telegram-plane"></i><span>Join Telegram</span><i class="fas fa-external-link-square-alt external"></i></a>
-                        <a href="https://whatsapp.com/channel/0029Vb6NBZx1yT2GByTTVf2A" target="_blank" class="menu-item card-link card-whatsapp" id="link-whatsapp"><i class="fab fa-whatsapp"></i><span>Join WhatsApp</span><i class="fas fa-external-link-square-alt external"></i></a>
+                        <a href="https://www.instagram.com/madxprince_3030" class="menu-item card-link card-insta" id="link-insta"><i class="fab fa-instagram"></i><span>Instagram</span><i class="fas fa-external-link-square-alt external"></i></a>
+                        <a href="https://youtube.com/@madxprince" class="menu-item card-link card-youtube" id="link-youtube"><i class="fab fa-youtube"></i><span>YouTube Channel</span><i class="fas fa-external-link-square-alt external"></i></a>
+                        <a href="https://t.me/MultiverseBooks" class="menu-item card-link card-telegram" id="link-telegram"><i class="fab fa-telegram-plane"></i><span>Join Telegram</span><i class="fas fa-external-link-square-alt external"></i></a>
+                        <a href="https://whatsapp.com/channel/0029Vb6NBZx1yT2GByTTVf2A" class="menu-item card-link card-whatsapp" id="link-whatsapp"><i class="fab fa-whatsapp"></i><span>Join WhatsApp</span><i class="fas fa-external-link-square-alt external"></i></a>
                     </div>
                 </div>
                 <div class="sidebar-footer">
@@ -186,8 +186,8 @@
                         <div class="quote-author" id="daily-quote-author"></div>
                     </section>
 
-                    <div class="section-header-row">
-                        <div class="section-header-title"><i class="fas fa-book-open" style="color: #10b981;"></i> Trending Books 🔥 </div>
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+                        <div class="section-header-title" style="margin-bottom: 0;"><i class="fas fa-book-open" style="color: #10b981;"></i> Trending Books 🔥 </div>
                         <div class="app-filter-icon" id="openAuthorFilterBtn">
                             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#a1a1aa" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"></polygon></svg>
                         </div>
@@ -205,9 +205,9 @@
                     </div>
                     
                     <!-- INFINITE SCROLL LOADER -->
-                    <div id="infinite-loader" class="infinite-loader-box">
-                        <i class="fas fa-spinner fa-spin"></i>
-                        <span>LOADING MORE BOOKS...</span>
+                    <div id="infinite-loader" style="display: none; flex-direction: column; align-items: center; justify-content: center; width: 100%; padding: 20px 0; margin-bottom: 20px;">
+                        <i class="fas fa-spinner fa-spin" style="font-size: 26px; color: #10b981;"></i>
+                        <span style="color: #a1a1aa; font-size: 11px; font-weight: 700; letter-spacing: 1px; margin-top: 10px;">LOADING MORE BOOKS...</span>
                     </div>
                     <!-- SCROLL SENTINEL -->
                     <div id="scroll-sentinel" style="height: 1px; width: 100%;"></div>
@@ -217,20 +217,22 @@
 
                 <!-- TAB 2: UPLOAD (Vault Panel) -->
                 <div id="tab-upload" class="app-tab" style="display: none; padding: 0;">
-                    <div class="adm-tabs-container">
-                        <div class="adm-tabs">
+                    <div class="adm-tabs-container" style="padding: 15px 12px 0px; background: #000000; border-bottom: 1px solid rgba(255,255,255,0.08); width: 100%; box-sizing: border-box;">
+                        <div class="adm-tabs" style="display: flex; gap: 10px; padding-bottom: 12px; margin-bottom: 0;">
                             <button class="adm-tab-btn active" id="admTabAdd"><i class="fas fa-plus"></i> Add Book</button>
                             <button class="adm-tab-btn" id="admTabPrompt"><i class="fas fa-terminal"></i> Prompts</button>
                         </div>
                     </div>
 
-                    <div class="adm-content-area">
+                    <div class="adm-content-area" style="padding: 20px 15px 0;">
                         <div id="sectionAddBook" class="adm-section active">
                             <form id="addBookForm" class="seamless-form-container">
                                 
-                                <div class="seamless-header">
-                                    <div class="icon-wrapper"><i class="fas fa-pen-nib"></i></div>
-                                    <h2>Enter Book Details</h2>
+                                <div class="seamless-header" style="display: flex; align-items: center; gap: 15px; margin-bottom: 25px; padding-bottom: 15px; border-bottom: 1px dashed rgba(255,255,255,0.15);">
+                                    <div class="icon-wrapper" style="width: 44px; height: 44px; background: rgba(124, 58, 237, 0.15); border: 1px solid rgba(124, 58, 237, 0.3); border-radius: 12px; display: flex; justify-content: center; align-items: center; color: #c084fc; font-size: 18px; box-shadow: 0 0 15px rgba(124, 58, 237, 0.2); flex-shrink: 0;">
+                                        <i class="fas fa-pen-nib"></i>
+                                    </div>
+                                    <h2 style="font-size: 1.25rem; font-weight: 800; color: #fff; letter-spacing: 0.5px; margin: 0; font-family: 'Poppins', sans-serif;">Enter Book Details</h2>
                                 </div>
 
                                 <div class="adm-form-group"><label class="adm-label">Book Title</label><input type="text" id="inTitle" class="adm-input" placeholder="e.g. Vocab - 15000+ Vocabularies" required autocomplete="off"></div>
@@ -261,6 +263,7 @@
                                             </div>
                                         </div>
                                         <div class="uc-footer">JPG, PNG, WEBP (Uploaded securely to Cloudflare R2)</div>
+                                        <input type="hidden" id="inImage" value="">
                                     </div>
                                 </div>
 
@@ -283,104 +286,85 @@
                                             </div>
                                         </div>
                                         <div class="uc-footer">PDF FILES (Uploaded securely to Cloudflare R2)</div>
+                                        <input type="hidden" id="inPdfUrl" value="">
                                     </div>
                                 </div>
                                 
                                 <button type="submit" id="publishBtn" class="adm-submit-btn">
-                                    <span class="btn-text"><i class="fas fa-cloud-upload-alt"></i> Publish Book</span>
+                                    <span class="btn-text" style="display: flex; align-items: center; justify-content: center; gap: 10px;"><i class="fas fa-cloud-upload-alt"></i> Publish Book</span>
                                 </button>
                             </form>
                         </div>
 
                         <div id="sectionPrompt" class="adm-section">
-                            <div id="promptsContainer">
-                                <div class="prompt-loader-text">Loading prompts...</div>
+                            <div id="promptsContainer" style="display: flex; flex-direction: column; gap: 25px;">
+                                <div style="text-align:center; padding:20px; color:#a1a1aa; font-weight:800;">Loading prompts...</div>
                             </div>
                         </div>
                     </div>
                     <div class="nav-scroll-spacer"></div>
                 </div>
 
-                <!-- TAB 3: "ME" / PREMIUM PROFILE UI -->
-                <div id="tab-about" class="app-tab" style="display: none; padding: 0; position: relative;">
-                    <!-- Premium Background & Particles -->
-                    <div class="premium-bg">
-                        <div class="grid-overlay"></div>
-                        <div class="particles-container" id="particles"></div>
+                <!-- TAB 3: ABOUT (Developer) -->
+                <div id="tab-about" class="app-tab" style="display: none; padding: 0;">
+                    <div class="dev-hero-banner" id="aboutBanner" style="width: 100%; margin: 0;">
+                        <div class="banner-fade-bottom"></div>
+                        <div class="hero-content-wrapper">
+                            <div class="profile-avatar-container">
+                                <div class="dev-profile-img-wrapper">
+                                    <img src="https://i.postimg.cc/D0BF1b77/file-000000000e847207a64f6711d825a859.png" class="dev-profile-img" oncontextmenu="return false;" draggable="false">
+                                </div>
+                                <div class="profile-shield"><i class="fas fa-shield-alt"></i></div>
+                            </div>
+                        </div>
                     </div>
 
-                    <div class="dev-scroll-area profile-scroll">
-                        
-                        <!-- Top Logout Button -->
-                        <button class="back-btn dev-back-btn logout-top-btn" id="admin-logout-btn"><i class="fas fa-power-off"></i></button>
-
-                        <!-- Profile Banner -->
-                        <div class="dev-hero-banner" id="profileBanner">
-                            <div class="banner-fade-bottom"></div>
-                            
-                            <div class="hero-content-wrapper">
-                                <!-- Left Socials -->
-                                <div class="social-bar-left">
-                                    <a href="https://github.com/MADxPRINCE" target="_blank" class="hero-soc-btn"><i class="fab fa-github"></i></a>
-                                    <a href="https://t.me/MultiverseBooks" target="_blank" class="hero-soc-btn tg-color"><i class="fab fa-telegram-plane"></i></a>
-                                    <a href="https://www.instagram.com/madxprince_3030" target="_blank" class="hero-soc-btn ig-color"><i class="fab fa-instagram"></i></a>
-                                    <a href="https://youtube.com/@madxprince" target="_blank" class="hero-soc-btn yt-color"><i class="fab fa-youtube"></i></a>
-                                </div>
-
-                                <!-- Right Avatar -->
-                                <div class="profile-avatar-container">
-                                    <div class="dev-profile-img-wrapper">
-                                        <img id="profile-avatar-ui" src="https://i.postimg.cc/D0BF1b77/file-000000000e847207a64f6711d825a859.png" class="dev-profile-img" alt="Profile">
-                                    </div>
-                                    <div class="profile-shield"><i class="fas fa-shield-alt"></i></div>
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- Info Section -->
-                        <div class="premium-bio-section">
-                            <div class="bio-greeting" id="profile-name-ui">Loading...</div>
-                            <div class="bio-email" id="profile-email-ui">Please login</div>
-                        </div>
-
-                        <!-- Stats Cards -->
-                        <div class="stats-container">
-                            <div class="stat-card card-read">
-                                <div class="icon-box"><i class="fas fa-book-open"></i></div>
-                                <div class="stat-info">
-                                    <div class="stat-label">Read</div>
-                                    <div class="stat-value" id="profile-downloads">0</div>
-                                </div>
-                            </div>
-                            
-                            <div class="stat-card card-bookmark">
-                                <div class="icon-box"><i class="fas fa-bookmark"></i></div>
-                                <div class="stat-info">
-                                    <div class="stat-label">Save</div>
-                                    <div class="stat-value" id="profile-saved">0</div>
-                                </div>
-                            </div>
-
-                            <div class="stat-card card-credit">
-                                <div class="icon-box"><i class="fas fa-bolt"></i></div>
-                                <div class="stat-info">
-                                    <div class="stat-label">Credits</div>
-                                    <div class="stat-value" id="profile-credits">--</div>
-                                </div>
-                            </div>
-
-                            <div class="stat-card card-premium">
-                                <div class="icon-box"><i class="fas fa-crown"></i></div>
-                                <div class="stat-info">
-                                    <div class="stat-label">Rank</div>
-                                    <div class="stat-value" id="profile-rank"><i class="fas fa-crown"></i> #--</div>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div class="profile-footer">© 2026 SPIDY BOOK HUB <span>|</span> MADE WITH <i class="fas fa-heart"></i> BY MADxPRINCE</div>
-
+                    <div class="social-bar-left">
+                        <a href="https://github.com/MADxPRINCE" target="_blank" class="hero-soc-btn" style="box-shadow: 0 0 10px rgba(255,255,255,0.2);"><i class="fab fa-github" style="color: #ffffff;"></i></a>
+                        <a href="https://t.me/MADxPRINCE" target="_blank" class="hero-soc-btn"><i class="fab fa-telegram-plane"></i></a>
+                        <a href="https://www.instagram.com/madxprince_3030" target="_blank" class="hero-soc-btn"><i class="fab fa-instagram"></i></a>
+                        <a href="https://youtube.com/@madxprince" target="_blank" class="hero-soc-btn"><i class="fab fa-youtube"></i></a>
                     </div>
+                    
+                    <div class="premium-bio-section">
+                        <div class="bio-greeting">Hey there! I'm <span class="highlight-name">MADxPRINCE</span></div>
+                        <div class="bio-quote-container">
+                            <div class="bio-quote">"Knowledge Builds Power, Hard Work Creates Success, Never Give Up!"</div>
+                        </div>
+                    </div>
+
+                    <div class="dev-cards-container">
+                        <div class="dev-info-card">
+                            <div class="dev-icon-box"><i class="fas fa-graduation-cap"></i></div>
+                            <div class="dev-card-content">
+                                <div class="dev-card-title">Education</div>
+                                <div class="dev-card-desc"><span class="dev-small-caps">Class</span> 11th (PCMB) <span style="color:#4b5563;">|</span> <span class="dev-small-caps">Batch:</span> 2026-28</div>
+                            </div>
+                        </div>
+                        <div class="dev-info-card">
+                            <div class="dev-icon-box"><i class="fas fa-map-marker-alt"></i></div>
+                            <div class="dev-card-content">
+                                <div class="dev-card-title">Location</div>
+                                <div class="dev-card-desc"><span class="dev-small-caps">Bihar, India</span> 🚩</div>
+                            </div>
+                        </div>
+                        <div class="dev-info-card">
+                            <div class="dev-icon-box"><i class="fas fa-birthday-cake"></i></div>
+                            <div class="dev-card-content">
+                                <div class="dev-card-title">Birthday</div>
+                                <div class="dev-card-desc"><span class="dev-small-caps">6 December</span> 💐💖</div>
+                            </div>
+                        </div>
+                        <div class="dev-info-card">
+                            <div class="dev-icon-box"><i class="fas fa-tools"></i></div>
+                            <div class="dev-card-content">
+                                <div class="dev-card-title">Skills</div>
+                                <div class="dev-card-desc" style="font-family: serif; font-style: italic; font-size: 0.95rem; font-weight: 600; color: #a1a1aa;">Hehe... Nothing ☠️</div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="nav-scroll-spacer"></div>
                 </div>
             </main>
 
@@ -404,47 +388,120 @@
             <div class="filter-bottom-overlay" id="filterBottomOverlay">
                 <div class="filter-bottom-sheet" id="filterBottomSheet">
                     <div class="f-drag-handle"></div>
-                    <div class="f-header">
-                        <h3><div class="f-header-icon"><i class="fas fa-sliders-h"></i></div>Filter Content</h3>
+                    <div class="f-header" style="margin-bottom: 15px; flex-shrink: 0;">
+                        <h3 style="display: flex; align-items: center; gap: 12px; margin: 0;">
+                            <div class="f-header-icon"><i class="fas fa-sliders-h"></i></div>
+                            Filter Content
+                        </h3>
                         <div class="f-close" id="closeAuthorFilterBtn"><i class="fas fa-times"></i></div>
                     </div>
                     
                     <div class="f-scroll-area">
                         <div>
-                            <div class="filter-category-title"><i class="fas fa-book"></i> Select Exam / Board</div>
-                            <div class="f-options-grid" id="categoryFilterGrid"></div>
+                            <div style="font-size: 11px; font-weight: 800; color: #71717a; letter-spacing: 1px; margin-bottom: 12px; text-transform: uppercase;"><i class="fas fa-book" style="margin-right: 5px;"></i> Select Exam / Board</div>
+                            <div class="f-options-grid" id="categoryFilterGrid" style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; padding-bottom: 5px;"></div>
                         </div>
-                        <div class="filter-divider"></div>
+                        <div style="width: 100%; height: 1px; background: rgba(255,255,255,0.08);"></div>
                         <div>
-                            <div class="filter-category-title"><i class="fas fa-globe"></i> Select Medium</div>
-                            <div class="f-options-grid" id="languageFilterGrid">
+                            <div style="font-size: 11px; font-weight: 800; color: #71717a; letter-spacing: 1px; margin-bottom: 12px; text-transform: uppercase;"><i class="fas fa-globe" style="margin-right: 5px;"></i> Select Medium</div>
+                            <div class="f-options-grid" id="languageFilterGrid" style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; padding-bottom: 5px;">
                                 <div class="f-pill active" data-lang="All">All</div>
                                 <div class="f-pill" data-lang="Hindi">Hindi</div>
                                 <div class="f-pill" data-lang="English">English</div>
                                 <div class="f-pill" data-lang="Bilingual">Bilingual</div>
                             </div>
                         </div>
-                        <button id="applyFiltersBtn" class="apply-filter-btn">Apply Filters</button>
+                        <button id="applyFiltersBtn" style="width: 100%; background: #10b981; color: #fff; padding: 14px; border: none; border-radius: 16px; font-size: 16px; font-weight: 800; font-family: 'Poppins', sans-serif; cursor: pointer; box-shadow: 0 4px 15px rgba(16, 185, 129, 0.3); margin-top: 15px; transition: 0.2s ease; flex-shrink: 0; outline: none;">
+                            Apply Filters
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- MY PROFILE PANEL -->
+            <div class="overlay-panel" id="my-profile-panel">
+                <div class="dev-scroll-area" style="display: flex; flex-direction: column; padding: 0;">
+                    <div style="flex: 1;">
+                        <button class="back-btn dev-back-btn" id="closeProfileBtn" style="z-index: 100;"><i class="fas fa-arrow-left"></i></button>
+                        <button class="back-btn dev-back-btn" id="admin-logout-btn" style="right: 20px; left: auto; background: rgba(239, 68, 68, 0.15); color: #ef4444; border: 1px solid rgba(239, 68, 68, 0.3); z-index: 100; box-shadow: 0 0 10px rgba(239, 68, 68, 0.4);"><i class="fas fa-power-off"></i></button>
+
+                        <div class="dev-hero-banner" id="profileBanner" style="background-image: url('https://i.postimg.cc/ydWN7sF8/file-00000000639481f8b111b8b824545a9a.png'); min-height: 220px; margin: 0; width: 100%;">
+                            <div class="banner-fade-bottom"></div>
+                            <div class="hero-content-wrapper" style="justify-content: center; padding-bottom: 0;">
+                                <div class="profile-avatar-container" style="margin: 0 auto;">
+                                    <div class="dev-profile-img-wrapper">
+                                        <img id="profile-avatar-ui" src="https://i.postimg.cc/D0BF1b77/file-000000000e847207a64f6711d825a859.png" class="dev-profile-img" oncontextmenu="return false;" draggable="false">
+                                    </div>
+                                    <div class="profile-shield" style="background: linear-gradient(135deg, #ec4899, #8b5cf6); border-color: #000; box-shadow: 0 4px 10px rgba(236, 72, 153, 0.5); z-index: 10;"><i class="fas fa-shield-alt"></i></div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="premium-bio-section" style="margin-top: 60px; padding-bottom: 25px;">
+                            <div class="bio-greeting" id="profile-name-ui" style="font-size: 1.6rem; font-family: 'Plus Jakarta Sans', sans-serif;">Loading...</div>
+                            <div id="profile-email-ui" style="display: none; font-size: 0.95rem; color: #a1a1aa; font-weight: 600; margin-top: 2px; font-family: 'Inter', sans-serif; letter-spacing: 0.5px;"></div>
+                        </div>
+
+                        <div class="stats-container">
+                            <div class="stat-card card-download">
+                                <div class="icon-box" style="box-shadow: 0 0 10px rgba(16, 185, 129, 0.3);"><i class="fas fa-cloud-download-alt"></i></div>
+                                <div class="stat-info">
+                                    <div class="stat-label">Download</div>
+                                    <div class="stat-value" id="profile-downloads">0</div>
+                                </div>
+                            </div>
+                            
+                            <div class="stat-card card-bookmark">
+                                <div class="icon-box" style="box-shadow: 0 0 10px rgba(168, 85, 247, 0.3);"><i class="fas fa-bookmark"></i></div>
+                                <div class="stat-info">
+                                    <div class="stat-label">Save</div>
+                                    <div class="stat-value" id="profile-saved">0</div>
+                                </div>
+                            </div>
+
+                            <div class="stat-card card-credit">
+                                <div class="icon-box" style="color: #ef4444; background: rgba(239, 68, 68, 0.15); box-shadow: 0 0 10px rgba(239, 68, 68, 0.3);">
+                                    <i class="fas fa-bolt"></i>
+                                </div>
+                                <div class="stat-info">
+                                    <div class="stat-label">Credits</div>
+                                    <div class="stat-value" id="profile-credits">--</div>
+                                </div>
+                            </div>
+
+                            <div class="stat-card card-premium">
+                                <div class="icon-box" style="box-shadow: 0 0 10px rgba(234, 179, 8, 0.3);"><i class="fas fa-crown"></i></div>
+                                <div class="stat-info">
+                                    <div class="stat-label">Rank</div>
+                                    <div class="stat-value premium-text" id="profile-rank">#--</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div style="margin-top: auto; width: 100%; padding: 20px 10px; background: #000000; border-top: 1px solid rgba(255,255,255,0.08); display: flex; justify-content: center; align-items: center; font-size: clamp(8px, 2.5vw, 10px); font-weight: 800; color: #a1a1aa; letter-spacing: 0.5px; flex-shrink: 0; box-sizing: border-box; text-align: center;">
+                        © 2026 SPIDY BOOK HUB <span style="color: #3f3f46; margin: 0 6px;">|</span> MADE WITH <i class="fas fa-heart" style="color: #ff4757; margin: 0 3px;"></i> BY MADxPRINCE
                     </div>
                 </div>
             </div>
 
             <!-- ============================================== -->
-            <!-- 🌟 DOWNLOAD MODAL (NEW DESIGN) 🌟 -->
+            <!-- 🌟 UPDATED DOWNLOAD MODAL (NEW DESIGN) 🌟 -->
             <!-- ============================================== -->
-            <div class="download-modal" id="downloadModal" style="display: none;">
+            <div class="download-modal" id="downloadModal" style="display: none; flex-direction: column;">
                 
                 <div class="modal-header-fixed">
-                    <div class="header-content-wrapper">
+                    <div class="header-content-wrapper" style="display: flex; align-items: center; gap: 15px; flex-grow: 1;">
                         <button class="back-btn" id="closeDlBtn"><i class="fas fa-arrow-left"></i></button>
                         <h1 class="modal-title">SPIDY BOOK HUB</h1>
                     </div>
                     <img src="https://i.postimg.cc/fygCB079/file-00000000d51c720780078a0d21adc0f6.png" class="header-right-logo" alt="Logo" oncontextmenu="return false;" draggable="false">
                 </div>
 
-                <div class="dl-content-wrapper">
+                <div class="dl-content-wrapper" style="display: flex; flex-direction: column; flex: 1; padding: 0;">
                     
-                    <div class="dl-main-padding">
+                    <div style="padding: 15px 20px 15px; flex: 1;">
+                        
                         <div class="dl-img-wrapper-outer">
                             <div class="dl-img-container">
                                 <img id="dlPreviewImage" class="dl-preview-image" src="" oncontextmenu="return false;" draggable="false">
@@ -454,8 +511,11 @@
                         
                         <h2 class="dl-title" id="dlBookTitle"></h2>
                         
+                        <!-- 🌟 COMPACT PROFESSIONAL AUTHOR PILL 🌟 -->
                         <div class="premium-author-pill disable-long-press">
-                            <div class="author-icon-badge"><i class="fas fa-user-pen"></i></div>
+                            <div class="author-icon-badge">
+                                <i class="fas fa-user-pen"></i>
+                            </div>
                             <div class="author-text-group">
                                 <span class="author-prefix">Author »</span>
                                 <span class="author-name" id="dlBookAuthor"></span>
@@ -466,14 +526,25 @@
                             </div>
                         </div>
                         
+                        <!-- 🌟 ACTION BUTTONS (HORIZONTAL) 🌟 -->
                         <div class="action-buttons-wrapper">
-                            <button id="dlReadOnlineBtn" class="dl-secondary-btn disable-long-press"><i class="fas fa-book-open-reader"></i> Read Online</button>
+                            <!-- Read Online Button -->
+                            <button id="dlReadOnlineBtn" class="dl-secondary-btn disable-long-press">
+                                <i class="fas fa-book-open-reader"></i> Read Online
+                            </button>
+                            
+                            <!-- 🌟 PERFECTLY CENTERED DOWNLOAD BUTTON WITH TOP-RIGHT TAG 🌟 -->
                             <button id="dlPdfLinkBtn" class="dl-main-btn disable-long-press">
                                 <i class="fas fa-download"></i> Download PDF
-                                <div class="inline-soon-tag"><i class="fas fa-tag"></i> SOON</div>
+                                
+                                <!-- Attractive Fiery Gradient SOON Tag positioned at top-right -->
+                                <div class="inline-soon-tag">
+                                    <i class="fas fa-tag"></i> SOON
+                                </div>
                             </button>
                         </div>
                         
+                        <!-- File Size Box -->
                         <div class="dl-box disable-long-press">
                             <i class="fas fa-weight-hanging icon" style="color: #10b981;"></i>
                             <div>
@@ -482,6 +553,7 @@
                             </div>
                         </div>
 
+                        <!-- Pages Box -->
                         <div class="dl-box disable-long-press">
                             <i class="fas fa-file-lines icon" style="color: #3b82f6;"></i>
                             <div>
@@ -490,6 +562,7 @@
                             </div>
                         </div>
                         
+                        <!-- Share Box -->
                         <div class="dl-box disable-long-press" id="shareBookBtn">
                             <i class="fas fa-share-nodes icon" style="color: #a855f7;"></i>
                             <div>
@@ -498,15 +571,20 @@
                             </div>
                         </div>
                         
+                        <!-- Exam Tags -->
                         <div class="exam-rel-box">
                             <div class="exam-header"><i class="fas fa-ribbon"></i> EXAM RELEVANCE</div>
                             <div class="exam-tags" id="dlModalTags"></div>
                         </div>
                         
+                        <!-- Report Link Button Trigger -->
                         <div class="report-link-wrapper">
-                            <div class="report-link-btn" id="reportLinkBtn"><i class="fas fa-flag"></i> Report Broken Link</div>
+                            <div class="report-link-btn" id="reportLinkBtn">
+                                <i class="fas fa-flag"></i> Report Broken Link
+                            </div>
                         </div>
 
+                        <!-- Social Icons -->
                         <div class="dl-social-container">
                             <div class="dev-social-row">
                                 <a href="https://youtube.com/@madxprince" target="_blank" class="dev-soc-btn dev-yt"><i class="fab fa-youtube"></i></a>
@@ -515,28 +593,35 @@
                                 <a href="https://whatsapp.com/channel/0029Vb6NBZx1yT2GByTTVf2A" target="_blank" class="dev-soc-btn dev-wa"><i class="fab fa-whatsapp"></i></a>
                             </div>
                         </div>
+
                     </div>
                     
-                    <div class="modal-footer-copy">© 2026 SPIDY BOOK HUB <span>|</span> MADE WITH <i class="fas fa-heart"></i> BY MADxPRINCE</div>
+                    <!-- Footer -->
+                    <div style="margin-top: auto; width: 100%; padding: 15px 10px 20px; background: transparent; border-top: 1px solid rgba(255,255,255,0.08); display: flex; justify-content: center; align-items: center; font-size: clamp(8px, 2.5vw, 10px); font-weight: 800; color: #a1a1aa; letter-spacing: 0.5px; flex-shrink: 0; box-sizing: border-box; text-align: center;">
+                        © 2026 SPIDY BOOK HUB <span style="color: #3f3f46; margin: 0 6px;">|</span> MADE WITH <i class="fas fa-heart" style="color: #ff4757; margin: 0 3px;"></i> BY MADxPRINCE
+                    </div>
+
                 </div>
             </div>
             
             <!-- Bookmarks Panel -->
             <div class="overlay-panel" id="bookmarks-panel">
                 <div class="modal-header-fixed">
-                    <div class="header-content-wrapper">
+                    <div class="header-content-wrapper" style="display: flex; align-items: center; gap: 15px; flex-grow: 1;">
                         <button class="back-btn" id="close-bookmarks-btn"><i class="fas fa-arrow-left"></i></button>
                         <h1 class="modal-title">SAVED BOOKS</h1>
                     </div>
                     <img src="https://i.postimg.cc/fygCB079/file-00000000d51c720780078a0d21adc0f6.png" class="header-right-logo" alt="Logo" oncontextmenu="return false;" draggable="false">
                 </div>
-                <div class="dmca-content dmca-flex">
+                <div class="dmca-content" style="display: flex; flex-direction: column; padding: 0;">
                     
-                    <div class="dmca-inner-pad">
-                        <div class="section-header-title-bm"><i class="fas fa-bookmark"></i> Your Favorites 💖 </div>
+                    <div style="padding: 20px 20px 30px; flex: 1;">
+                        <div style="margin-bottom: 15px;">
+                            <div class="section-header-title" style="margin-bottom: 0;"><i class="fas fa-bookmark" style="color: #3b82f6;"></i> Your Favorites 💖 </div>
+                        </div>
                         <div class="book-container" id="savedBooksContainer"></div>
-                        <div id="no-saved-msg" class="no-saved-flex">
-                            <div class="no-results-card bm-no-card">
+                        <div id="no-saved-msg" style="display: none; padding-bottom: 20px; justify-content: center; height: 100%;">
+                            <div class="no-results-card" style="margin-top: 40px;">
                                 <div class="no-results-icon"><i class="far fa-bookmark"></i></div>
                                 <h2 class="no-results-title">NO SAVED BOOKS</h2>
                                 <p class="no-results-desc">You haven't bookmarked any books yet. Click the bookmark icon on any book to save it here!</p>
@@ -544,48 +629,43 @@
                         </div>
                     </div>
                     
-                    <div class="modal-footer-copy">© 2026 SPIDY BOOK HUB <span>|</span> MADE WITH <i class="fas fa-heart"></i> BY MADxPRINCE</div>
+                    <div style="margin-top: auto; width: 100%; padding: 20px 10px; background: transparent; border-top: 1px solid rgba(255,255,255,0.08); display: flex; justify-content: center; align-items: center; font-size: clamp(8px, 2.5vw, 10px); font-weight: 800; color: #a1a1aa; letter-spacing: 0.5px; flex-shrink: 0; box-sizing: border-box; text-align: center;">
+                        © 2026 SPIDY BOOK HUB <span style="color: #3f3f46; margin: 0 6px;">|</span> MADE WITH <i class="fas fa-heart" style="color: #ff4757; margin: 0 3px;"></i> BY MADxPRINCE
+                    </div>
                 </div>
             </div>
 
-            <!-- CHAT / NOTIFICATIONS UI PANEL -->
+            <!-- Notifications Panel -->
             <div class="notifications-panel" id="noti-panel">
                 <div class="noti-header-premium">
                     <div class="noti-header-left">
-                        <button class="back-btn noti-back" id="closeNotiPanelBtn"><i class="fas fa-arrow-left"></i></button>
                         <div class="noti-logo-wrapper">
                             <img src="https://i.postimg.cc/90fM1bJ2/In-Shot-20260714-083628650.png" class="noti-logo" alt="Logo">
                         </div>
                         <div class="noti-title-stack">
                             <div class="noti-main-title">
-                                Spidy Book Hub Official 
-                                <svg class="verified-icon-svg" viewBox="0 0 100 100"><defs><linearGradient id="pG2" x1="0%" y1="0%" x2="0%" y2="100%"><stop offset="0%" stop-color="#55bbf8" /><stop offset="100%" stop-color="#0a7bd2" /></linearGradient></defs><g fill="url(#pG2)"><circle cx="50" cy="15" r="14" /><circle cx="50" cy="15" r="14" transform="rotate(30 50 50)" /><circle cx="50" cy="15" r="14" transform="rotate(60 50 50)" /><circle cx="50" cy="15" r="14" transform="rotate(90 50 50)" /><circle cx="50" cy="15" r="14" transform="rotate(120 50 50)" /><circle cx="50" cy="15" r="14" transform="rotate(150 50 50)" /><circle cx="50" cy="15" r="14" transform="rotate(180 50 50)" /><circle cx="50" cy="15" r="14" transform="rotate(210 50 50)" /><circle cx="50" cy="15" r="14" transform="rotate(240 50 50)" /><circle cx="50" cy="15" r="14" transform="rotate(270 50 50)" /><circle cx="50" cy="15" r="14" transform="rotate(300 50 50)" /><circle cx="50" cy="15" r="14" transform="rotate(330 50 50)" /><circle cx="50" cy="50" r="33" /></g><path d="M33 52 L43 62 L67 36" fill="none" stroke="#ffffff" stroke-width="8" stroke-linecap="round" stroke-linejoin="round" /></svg>
+                                𝗦𝗽𝗶𝗱𝘆 𝗕𝗼𝗼𝗸 𝗛𝘂𝗯 𝗢𝗳𝗳𝗶𝗰𝗶𝗮𝗹 
+                                <svg class="verified-icon-svg" viewBox="0 0 100 100"><defs><linearGradient id="pG2" x1="0%" y1="0%" x2="0%" y2="100%"><stop offset="0%" stop-color="#55bbf8" /><stop offset="100%" stop-color="#0a7bd2" /></linearGradient></defs><g fill="url(#pG2)"><circle cx="50" cy="15" r="14" /><circle cx="50" cy="15" r="14" transform="rotate(30 50 50)" /><circle cx="50" cy="15" r="14" transform="rotate(60 50 50)" /><circle cx="50" cy="15" r="14" transform="rotate(90 50 50)" /><circle cx="50" cy="15" r="14" transform="rotate(120 50 50)" /><circle cx="50" cy="15" r="14" transform="rotate(150 50 50)" /><circle cx="50" cy="15" r="14" transform="rotate(180 50 50)" /><circle cx="50" cy="15" r="14" transform="rotate(210 50 50)" /><circle cx="50" cy="15" r="14" transform="rotate(240 50 50)" /><circle cx="50" cy="15" r="14" transform="rotate(270 50 50)" /><circle cx="50" cy="15" r="14" transform="rotate(300 50 50)" /><circle cx="50" cy="15" r="14" transform="rotate(330 50 50)" /><circle cx="50" cy="50" r="33" /></g><path d="M33 52 L43 62 L67 36" fill="none" stroke="#ffffff" stroke-width="8" stroke-linecap="round" stroke-linejoin="round" filter="drop-shadow(0px 3px 2px rgba(0,0,0,0.3))" /></svg>
                             </div>
                             <div class="noti-sub-title">Latest Updates & Notifications</div>
                         </div>
                     </div>
                 </div>
-                
-                <div class="chat-body" id="dynamic-noti-container">
-                    <!-- JS WILL INJECT CHAT BUBBLES HERE -->
-                </div>
-                
-                <div class="admin-notice-bar">
-                    <i class="fas fa-lock"></i> Only <span>admins</span> can send messages
-                </div>
+                <div class="noti-body" id="dynamic-noti-container"></div>
             </div>
 
             <!-- DMCA Panel -->
             <div class="overlay-panel" id="dmca-panel">
                 <div class="modal-header-fixed">
-                    <div class="header-content-wrapper">
+                    <div class="header-content-wrapper" style="display: flex; align-items: center; gap: 15px; flex-grow: 1;">
                         <button class="back-btn" id="close-dmca-btn"><i class="fas fa-arrow-left"></i></button>
                         <h1 class="modal-title">DMCA REQUEST</h1>
                     </div>
                     <img src="https://i.postimg.cc/fygCB079/file-00000000d51c720780078a0d21adc0f6.png" class="header-right-logo" alt="Logo" oncontextmenu="return false;" draggable="false">
                 </div>
-                <div class="dmca-content dmca-flex">
-                    <div class="dmca-inner-pad">
+                <div class="dmca-content" style="display: flex; flex-direction: column; padding: 0;">
+                    
+                    <div style="padding: 20px 0 30px; flex: 1;">
                         <div class="dmca-hero">
                             <h1 class="dmca-hero-title">COPYRIGHT DISCLAIMER</h1>
                             <p class="dmca-hero-subtitle">
@@ -596,7 +676,7 @@
                         </div>
                         <div class="dmca-section">
                             <h2 class="dmca-section-title"><span class="dmca-mini-icon icon-ownership"><i class="fas fa-book"></i></span>Content Ownership</h2>
-                            <p>This website is created solely for educational, informational and archival purposes. We do not claim ownership of any copyrighted material shared on this platform.</p>
+                            <p>This website is created solely for educational, informational and archival purposes. We do not claim ownership of any copyrighted material shared on this platform. All copyrights and intellectual property rights belong to their respective authors, publishers and owners.</p>
                         </div>
                         <div class="dmca-section">
                             <h2 class="dmca-section-title"><span class="dmca-mini-icon icon-concerns"><i class="fas fa-copyright"></i></span>Copyright Concerns</h2>
@@ -605,78 +685,105 @@
                         <div class="dmca-section">
                             <h2 class="dmca-section-title"><span class="dmca-mini-icon icon-contact"><i class="fas fa-envelope"></i></span>Contact Information</h2>
                             <a href="https://t.me/SpidyBookHub_Bot" target="_blank" class="dmca-contact-link"><i class="fab fa-telegram-plane"></i> Spidy Book Hub Support</a>
-                            <p class="dmca-review-time">⏱ Review Time: 24–48 Hours</p>
+                            <p style="margin-top: 15px; font-weight: bold; color: #a1a1aa; font-size: 0.75rem;">⏱ Review Time: 24–48 Hours</p>
                         </div>
+                        <!-- 🌟 MISSING DMCA CARDS RESTORED 🌟 -->
                         <div class="dmca-section">
                             <h2 class="dmca-section-title"><span class="dmca-mini-icon icon-notice"><i class="fas fa-shield-alt"></i></span>Important Notice</h2>
-                            <p>The materials shared on this platform are intended for educational, research, review and reference purposes only.</p>
+                            <p>The materials shared on this platform are intended for educational, research, review and reference purposes only. Users are encouraged to support authors and publishers by purchasing original books whenever possible.</p>
                         </div>
                         <div class="dmca-section">
                             <h2 class="dmca-section-title"><span class="dmca-mini-icon icon-resp"><i class="fas fa-user-shield"></i></span>User Responsibility</h2>
-                            <p>Users are solely responsible for how they access, download, share or use any content available through this platform.</p>
+                            <p>Users are solely responsible for how they access, download, share or use any content available through this platform. This website and its administrators cannot be held responsible for any misuse or unauthorized use of the materials.</p>
                         </div>
                     </div>
                     
-                    <div class="modal-footer-copy">© 2026 SPIDY BOOK HUB <span>|</span> MADE WITH <i class="fas fa-heart"></i> BY MADxPRINCE</div>
+                    <div style="margin-top: auto; width: 100%; padding: 20px 10px; background: transparent; border-top: 1px solid rgba(255,255,255,0.08); display: flex; justify-content: center; align-items: center; font-size: clamp(8px, 2.5vw, 10px); font-weight: 800; color: #a1a1aa; letter-spacing: 0.5px; flex-shrink: 0; box-sizing: border-box; text-align: center;">
+                        © 2026 SPIDY BOOK HUB <span style="color: #3f3f46; margin: 0 6px;">|</span> MADE WITH <i class="fas fa-heart" style="color: #ff4757; margin: 0 3px;"></i> BY MADxPRINCE
+                    </div>
                 </div>
             </div>
 
             <!-- ============================================== -->
-            <!-- 🌟 TOKEN VERIFICATION OVERLAY 🌟 -->
+            <!-- 🌟 UPDATED TOKEN VERIFICATION OVERLAY 🌟 -->
             <!-- ============================================== -->
             <div id="tokenModalOverlay" class="modal-overlay-token" style="display: none;">
+                <!-- Animated Background inside Modal -->
                 <div class="premium-bg">
                     <div class="grid-overlay"></div>
-                    <div class="particles-container" id="tokenParticles"></div>
+                    <div class="particles-container" id="particles"></div>
                 </div>
 
                 <div class="modal-container-token">
-                    <button id="closeTokenModalBtn" class="close-modal-btn" title="Close"><i class="fas fa-times"></i></button>
+                    <!-- Close Button -->
+                    <button id="closeTokenModalBtn" class="close-modal-btn" title="Close">
+                        <i class="fas fa-times"></i>
+                    </button>
 
+                    <!-- Logo -->
                     <div class="logo-wrapper-token">
                         <img src="https://i.postimg.cc/VN90Zpys/IMG-20260704-WA0000.jpg" alt="Spidy Book Hub Logo" class="custom-logo-token">
                     </div>
 
+                    <!-- Brand Name & Shield Subtitle -->
                     <h1 class="main-title-token">SPIDY BOOK HUB</h1>
                     <p class="subtitle-token"><i class="fas fa-shield-alt icon-shield-premium"></i> Authenticate your premium access</p>
 
+                    <!-- Input Box -->
                     <div class="input-section-token">
-                        <label class="input-label-token">Access Token <i class="fas fa-info-circle info-tooltip" title="Click 'Get Key' to generate your 10-day access token"></i></label>
+                        <label class="input-label-token">
+                            Access Token
+                            <i class="fas fa-info-circle info-tooltip" title="Click 'Get Key' to generate your 10-day access token"></i>
+                        </label>
                         <div class="input-box-token" id="inputBoxWrapperToken">
                             <i class="fas fa-key input-icon-token"></i>
                             <input type="text" id="tokenInput" placeholder="Paste your token here..." autocomplete="off">
                         </div>
                     </div>
 
+                    <!-- Action Buttons -->
                     <div class="button-group-token">
-                        <button class="btn-token btn-secondary-token" id="getKeyBtn"><i class="fas fa-link"></i> Get Key</button>
-                        <button class="btn-token btn-primary-token" id="verifyBtn"><i class="fas fa-shield-halved"></i> Verify</button>
+                        <button class="btn-token btn-secondary-token" id="getKeyBtn">
+                            <i class="fas fa-link"></i> Get Key
+                        </button>
+                        <button class="btn-token btn-primary-token" id="verifyBtn">
+                            <i class="fas fa-shield-halved"></i> Verify
+                        </button>
                     </div>
 
+                    <!-- Social Links & Support Action -->
                     <div class="social-actions-token">
                         <a href="#" class="social-card-wrapper-token yt-theme-token" id="ytGuideBtn">
                             <div class="social-icon-wrapper-token"><i class="fab fa-youtube"></i></div>
-                            <span class="social-text-token">How to generate key</span><i class="fas fa-chevron-right arrow-icon-token"></i>
+                            <span class="social-text-token">How to generate key</span>
+                            <i class="fas fa-chevron-right arrow-icon-token"></i>
                         </a>
+                        
                         <a href="https://t.me/MultiverseBooks" target="_blank" class="social-card-wrapper-token tg-theme-token" id="tgChannelBtn">
                             <div class="social-icon-wrapper-token"><i class="fab fa-telegram-plane"></i></div>
-                            <span class="social-text-token">Join Telegram channel</span><i class="fas fa-chevron-right arrow-icon-token"></i>
+                            <span class="social-text-token">Join Telegram channel</span>
+                            <i class="fas fa-chevron-right arrow-icon-token"></i>
                         </a>
+
+                        <!-- Help & Support Button -->
                         <a href="https://t.me/MultiverseBooks" target="_blank" class="social-card-wrapper-token support-theme-token">
                             <div class="social-icon-wrapper-token"><i class="fas fa-headset"></i></div>
-                            <span class="social-text-token">Need Help? Contact Us</span><i class="fas fa-chevron-right arrow-icon-token"></i>
+                            <span class="social-text-token">Need Help? Contact Us</span>
+                            <i class="fas fa-chevron-right arrow-icon-token"></i>
                         </a>
                     </div>
 
+                    <!-- Footer -->
                     <div class="security-footer-token">
                         <div class="footer-item-token"><i class="far fa-clock icon-clock-token"></i><span>Valid for 10 days</span></div>
                         <div class="footer-item-token"><i class="fas fa-lock icon-shield-token"></i><span>Secure connection</span></div>
                     </div>
                 </div>
             </div>
+            <!-- ============================================== -->
 
             <!-- ============================================== -->
-            <!-- 🌟 SECURE PDF VIEWER OVERLAY (Read Online) 🌟 -->
+            <!-- 🌟 NEW SECURE PDF VIEWER OVERLAY (Read Online) 🌟 -->
             <!-- ============================================== -->
             <div id="pdfViewerOverlay" class="pdf-viewer-overlay" style="display:none;">
                 <div class="pdf-viewer-header">
@@ -689,7 +796,7 @@
             </div>
 
             <!-- ============================================== -->
-            <!-- 🌟 PREMIUM REPORT ISSUE MODAL 🌟 -->
+            <!-- 🌟 REPORT ISSUE MODAL 🌟 -->
             <!-- ============================================== -->
             <div class="report-modal-overlay" id="reportModalOverlay">
                 <div class="report-modal-box">
@@ -700,10 +807,22 @@
                     <p class="rm-desc">Please let us know what's wrong with this book so we can fix it.</p>
                     
                     <div class="rm-options">
-                        <div class="rm-option" data-val="broken_link"><i class="fas fa-link-slash"></i><span>Link kaam nahi kar raha</span></div>
-                        <div class="rm-option" data-val="new_update"><i class="fas fa-book-medical"></i><span>New updated book upload karo</span></div>
-                        <div class="rm-option" data-val="wrong_book"><i class="fas fa-book-dead"></i><span>Galat book download ho rahi hai</span></div>
-                        <div class="rm-option" data-val="quality_issue"><i class="fas fa-file-circle-exclamation"></i><span>PDF Quality kharab hai / Pages missing</span></div>
+                        <div class="rm-option" data-val="broken_link">
+                            <i class="fas fa-link-slash"></i>
+                            <span>Link kaam nahi kar raha</span>
+                        </div>
+                        <div class="rm-option" data-val="new_update">
+                            <i class="fas fa-book-medical"></i>
+                            <span>New updated book upload karo</span>
+                        </div>
+                        <div class="rm-option" data-val="wrong_book">
+                            <i class="fas fa-book-dead"></i>
+                            <span>Galat book download ho rahi hai</span>
+                        </div>
+                        <div class="rm-option" data-val="quality_issue">
+                            <i class="fas fa-file-circle-exclamation"></i>
+                            <span>PDF Quality kharab hai / Pages missing</span>
+                        </div>
                     </div>
                     
                     <button class="rm-submit-btn" id="submitReportBtn">Submit Report</button>
@@ -713,37 +832,26 @@
         </div>
     </div>
 
-    <!-- TOAST CONTAINERS -->
+    <!-- TOAST CONTAINER FOR NOTIFICATIONS -->
     <div id="toast"></div>
+    <!-- CUSTOM TOAST FOR TOKEN MODAL -->
     <div id="customToast"></div>
-    <div class="toast" id="toastMsg">Link Copied!</div>
 
-    <!-- ============================================== -->
-    <!-- 🌟 PREMIUM UPLOAD POPUP (Rules) 🌟         -->
-    <!-- ============================================== -->
-    <!-- Inline styles completely hide it visually and remove it from flow until JS calls it -->
-    <div class="ug-overlay" id="uploadPopup" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.85); backdrop-filter: blur(5px); justify-content: center; align-items: center; z-index: 9999999; padding: 15px; opacity: 0; transition: opacity 0.3s ease;">
-        <div class="ug-card" style="background-color: #000000; width: 100%; max-width: 380px; border-radius: 20px; overflow: hidden; position: relative; border: 1px solid rgba(255, 255, 255, 0.2); box-shadow: 0 25px 60px rgba(0, 0, 0, 0.95);">
-            <button class="ug-close-btn" id="closeUploadPopupBtn" style="position: absolute; top: 12px; right: 12px; width: 30px; height: 30px; background: rgba(255, 255, 255, 0.1); border: 1px solid rgba(255, 255, 255, 0.15); color: #ffffff; border-radius: 50%; font-size: 14px; font-weight: 700; display: flex; justify-content: center; align-items: center; cursor: pointer; z-index: 10; outline: none; padding: 0; backdrop-filter: blur(5px);">✕</button>
-            <img src="https://i.postimg.cc/1XYDWd3M/file-0000000038f87208b99601cc409d2e5c.png" alt="Book Upload Banner" class="ug-banner" style="width: 100%; height: 200px; object-fit: cover; display: block; background-color: #050505; border-bottom: 1px solid rgba(255, 255, 255, 0.08);">
-            
-            <div class="ug-body" style="padding: 18px 20px 24px; text-align: center;">
-                <h2 class="ug-title" style="font-size: 15px; font-weight: 900; margin-top: -3px; margin-bottom: 15px; color: #ffffff; display: flex; justify-content: center; align-items: center; gap: 8px; white-space: nowrap; text-shadow: 0 2px 5px rgba(0,0,0,0.5); font-family: 'Poppins', sans-serif; letter-spacing: 0.5px;">
-                    <span class="ug-blink-dot" style="width: 6px; height: 6px; background-color: #22c55e; border-radius: 50%; display: inline-block; box-shadow: 0 0 4px rgba(34, 197, 94, 0.5);"></span>
-                    📢 Book Upload Kaise Karein?
-                    <span class="ug-blink-dot" style="width: 6px; height: 6px; background-color: #22c55e; border-radius: 50%; display: inline-block; box-shadow: 0 0 4px rgba(34, 197, 94, 0.5);"></span>
+    <div class="ug-overlay hidden" id="uploadPopup">
+        <div class="ug-card">
+            <button class="ug-close-btn" id="closeUploadPopupBtn">✕</button>
+            <img src="https://i.postimg.cc/1XYDWd3M/file-0000000038f87208b99601cc409d2e5c.png" alt="Book Upload Banner" class="ug-banner">
+            <div class="ug-body">
+                <h2 class="ug-title">
+                    <span class="ug-blink-dot"></span>
+                    📢 Book Upload Kaise Karein ?
+                    <span class="ug-blink-dot"></span>
                 </h2>
-                
-                <div class="ug-text" style="background: rgba(0, 0, 0, 0.2); padding: 12px 14px; border-radius: 10px; border: 1px solid rgba(255, 255, 255, 0.15); border-left: 2px solid #ffffff; box-shadow: inset 0 0 60px rgba(255, 255, 255, 0.25), inset 0 0 15px rgba(255, 255, 255, 0.4), 0 4px 10px rgba(0,0,0,0.5); font-family: 'Inter', sans-serif; font-size: 11.5px; color: #e4e4e7; line-height: 1.45; margin-bottom: 12px; font-weight: 900; text-align: left;">
-                    Kya aapko book upload karne mein pareshani ho rahi hai? Hamara step-by-step tutorial dekhein aur aasani se apni books platform par live karein.
+                <div class="ug-text">
+                    Kya aapko book upload karne mein pareshani ho raha hai? Hamara step-by-step tutorial dekhein aur platform par easily apni books live karein.
                 </div>
-
-                <div class="ug-quote-green" style="background: rgba(0, 0, 0, 0.2); padding: 12px 14px; border-radius: 10px; border: 1px solid rgba(34, 197, 94, 0.3); border-left: 2px solid #22c55e; box-shadow: inset 0 0 60px rgba(34, 197, 94, 0.4), inset 0 0 15px rgba(34, 197, 94, 0.6), 0 4px 10px rgba(0,0,0,0.5); font-family: 'Poppins', sans-serif; font-style: italic; font-size: 11px; color: #f4f4f5; line-height: 1.5; margin-bottom: 22px; font-weight: 900; text-align: left;">
-                    💡 <span class="highlight" style="color: #4ade80; font-weight: 700; font-style: normal; letter-spacing: 0.3px; text-shadow: 0 0 8px rgba(34, 197, 94, 0.8);">Aapki share ki hui ek book</span> kisi student ka exam clear karwa sakti hai! Apna study material yahan upload karo aur dusron ki safalta ka hissa bano. 💖
-                </div>
-                
-                <button class="ug-action-btn" onclick="window.open('https://youtube.com/@madxprince', '_blank')" style="width: 100%; padding: 14px; background: linear-gradient(135deg, #ffffff, #d4d4d8); border: 1px solid #ffffff; border-radius: 12px; color: #000000; font-family: 'Poppins', sans-serif; font-size: 14px; font-weight: 800; letter-spacing: 0.5px; cursor: pointer; display: flex; justify-content: center; align-items: center; gap: 8px;">
-                    <svg viewBox="0 0 24 24" style="width: 16px; height: 16px; stroke: #000000; stroke-width: 2.5; fill: none; stroke-linecap: round; stroke-linejoin: round; filter: drop-shadow(0 0 2px rgba(0,0,0,0.5));">
+                <button class="ug-action-btn" onclick="window.open('https://youtube.com/@madxprince', '_blank')">
+                    <svg class="upload-icon" viewBox="0 0 24 24" style="width: 20px; height: 20px; stroke: #000000; stroke-width: 2.5; fill: none; stroke-linecap: round; stroke-linejoin: round; filter: drop-shadow(0 0 2px rgba(0,0,0,0.5));">
                         <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
                         <polyline points="17 8 12 3 7 8"></polyline>
                         <line x1="12" y1="3" x2="12" y2="15"></line>
@@ -755,7 +863,6 @@
     </div>
 
     <!-- CLOUDFLARE R2 UPLOAD LOADER UI -->
-    <!-- Fully hardcoded inline styling to prevent ANY layout break -->
     <div id="r2UploadOverlay" style="display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.95); z-index: 9999999; justify-content: center; align-items: center; backdrop-filter: blur(10px); padding: 20px; flex-direction: column;">
         <div style="width: 100%; max-width: 450px; text-align: center; font-family: 'Poppins', sans-serif;">
             <div style="border: 3px dashed rgba(255,255,255,0.6); border-radius: 20px; padding: 50px 20px; margin-bottom: 40px; position: relative;">
@@ -786,31 +893,7 @@
         </div>
     </div>
 
-    <!-- CONTEXT MENU FOR CHATS (Telegram Style) -->
-    <div class="context-overlay" id="contextOverlay">
-        <div class="context-menu" id="contextMenu">
-            <div class="cm-reactions">
-                <div class="cm-emoji" onclick="addReactionFromMenu('❤️')">❤️</div>
-                <div class="cm-emoji" onclick="addReactionFromMenu('👍')">👍</div>
-                <div class="cm-emoji" onclick="addReactionFromMenu('🥰')">🥰</div>
-                <div class="cm-emoji" onclick="addReactionFromMenu('🤯')">🤯</div>
-                <div class="cm-emoji" onclick="addReactionFromMenu('🫡')">🫡</div>
-                <div class="cm-emoji" onclick="addReactionFromMenu('💯')">💯</div>
-                <div class="cm-emoji" onclick="addReactionFromMenu('🔥')">🔥</div>
-                <div class="cm-emoji" onclick="addReactionFromMenu('🇮🇳')">🇮🇳</div>
-                <div class="cm-emoji" onclick="addReactionFromMenu('😇')">😇</div>
-                <div class="cm-emoji" onclick="addReactionFromMenu('🎉')">🎉</div>
-            </div>
-            <div class="cm-options">
-                <div class="cm-item" onclick="copyText()"><i class="far fa-copy"></i> Copy</div>
-                <div class="cm-item" onclick="copyLink()"><i class="fas fa-link"></i> Copy Link</div>
-                <div class="cm-item" onclick="forwardPost()"><i class="fas fa-share"></i> Forward</div>
-                <div class="cm-item" onclick="reportPost()"><i class="fas fa-exclamation-circle"></i> Report</div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Script for Dynamic Headers Logic & Particles -->
+    <!-- Script for Dynamic Headers Logic -->
     <script>
         function updateHeaderForTab(tab) {
             const titleEl = document.getElementById('dynamic-header-title');
@@ -819,45 +902,14 @@
             if(tab === 'home') {
                 titleEl.innerText = 'SPIDY BOOK HUB';
                 iconsEl.style.display = 'flex';
-                document.getElementById('tab-home').style.display = 'flex';
-                document.getElementById('tab-upload').style.display = 'none';
-                document.getElementById('tab-about').style.display = 'none';
             } else if(tab === 'upload') {
                 titleEl.innerText = 'UPLOAD BOOKS & NOTES';
                 iconsEl.style.display = 'none';
-                document.getElementById('tab-home').style.display = 'none';
-                document.getElementById('tab-upload').style.display = 'block';
-                document.getElementById('tab-about').style.display = 'none';
             } else if(tab === 'about') {
-                titleEl.innerText = 'MY PROFILE';
+                titleEl.innerText = 'DEVELOPER PROFILE';
                 iconsEl.style.display = 'none';
-                document.getElementById('tab-home').style.display = 'none';
-                document.getElementById('tab-upload').style.display = 'none';
-                document.getElementById('tab-about').style.display = 'flex';
             }
         }
-
-        function createParticles(containerId) {
-            const container = document.getElementById(containerId);
-            if(container) {
-                for (let i = 0; i < 35; i++) {
-                    let particle = document.createElement('div');
-                    particle.classList.add('particle');
-                    let size = Math.random() * 2.2 + 1.8; 
-                    let posX = Math.random() * 100; 
-                    let delay = Math.random() * 12; 
-                    let duration = Math.random() * 10 + 8; 
-                    particle.style.width = size + 'px'; 
-                    particle.style.height = size + 'px';
-                    particle.style.left = posX + '%'; 
-                    particle.style.animationDelay = `-${delay}s`;
-                    particle.style.animationDuration = duration + 's';
-                    container.appendChild(particle);
-                }
-            }
-        }
-        createParticles('particles');
-        createParticles('tokenParticles');
     </script>
 
     <!-- App Logic JS -->
