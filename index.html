@@ -17,13 +17,6 @@
     <meta property="og:description" content="Study material ke liye idhar-udhar bhatakna chhodo! Ab milega saara content bilkul FREE. Aaj hi download karein!">
     <meta property="og:image" content="https://i.postimg.cc/fygCB079/file-00000000d51c720780078a0d21adc0f6.png">
 
-    <!-- Twitter -->
-    <meta property="twitter:card" content="summary_large_image">
-    <meta property="twitter:url" content="https://spidy-book-dbe32.firebaseapp.com/">
-    <meta property="twitter:title" content="SPIDY BOOK HUB - Free Books & Premium Notes">
-    <meta property="twitter:description" content="Study material ke liye idhar-udhar bhatakna chhodo! Ab milega saara content bilkul FREE.">
-    <meta property="twitter:image" content="https://i.postimg.cc/fygCB079/file-00000000d51c720780078a0d21adc0f6.png">
-
     <!-- Fonts & Icons -->
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@500;600;700;800;900&family=Inter:wght@400;500;600;700;800;900&family=Poppins:ital,wght@0,400;0,500;0,600;0,700;0,800;0,900;1,500;1,600&display=swap" rel="stylesheet">
@@ -213,7 +206,6 @@
                         </div>
                     </div>
                     
-                    <!-- INFINITE SCROLL LOADER -->
                     <div id="infinite-loader" style="display: none; flex-direction: column; align-items: center; justify-content: center; width: 100%; padding: 20px 0; margin-bottom: 20px;">
                         <i class="fas fa-spinner fa-spin" style="font-size: 26px; color: #10b981;"></i>
                         <span style="color: #a1a1aa; font-size: 11px; font-weight: 700; letter-spacing: 1px; margin-top: 10px;">LOADING MORE BOOKS...</span>
@@ -223,7 +215,7 @@
                     <div class="nav-scroll-spacer"></div>
                 </div>
 
-                <!-- TAB 2: UPLOAD (Integrated Tutorial Guide + Book Publisher) -->
+                <!-- TAB 2: UPLOAD (Vault Panel) -->
                 <div id="tab-upload" class="app-tab" style="display: none; padding: 0;">
                     <div class="adm-tabs-container" style="padding: 15px 12px 0px; background: #000000; border-bottom: 1px solid rgba(255,255,255,0.08); width: 100%; box-sizing: border-box;">
                         <div class="adm-tabs" style="display: flex; gap: 10px; padding-bottom: 12px; margin-bottom: 0;">
@@ -234,39 +226,7 @@
 
                     <div class="adm-content-area" style="padding: 20px 15px 0;">
                         <div id="sectionAddBook" class="adm-section active">
-                            
-                            <!-- 🌟 INLINE PROFESSIONAL UPLOAD GUIDE CARD 🌟 -->
-                            <div class="ug-card-inline">
-                                <img src="https://i.postimg.cc/1XYDWd3M/file-0000000038f87208b99601cc409d2e5c.png" alt="Book Upload Banner" class="ug-banner">
-                                <div class="ug-body">
-                                    <h2 class="ug-title">
-                                        <span class="ug-blink-dot"></span>
-                                        📢 Book Upload Kaise Karein?
-                                        <span class="ug-blink-dot"></span>
-                                    </h2>
-                                    
-                                    <!-- White Glowing Box -->
-                                    <div class="ug-text">
-                                        Kya aapko book upload karne mein pareshani ho rahi hai? Hamara step-by-step tutorial dekhein aur aasani se apni books platform par live karein.
-                                    </div>
-
-                                    <!-- Green Glowing Box -->
-                                    <div class="ug-quote-green">
-                                        💡 <span class="highlight">Aapki share ki hui ek book</span> kisi student ka exam clear karwa sakti hai! Apna study material yahan upload karo aur dusron ki safalta ka hissa bano. 💖
-                                    </div>
-                                    
-                                    <button class="ug-action-btn" type="button" onclick="window.open('https://youtube.com/@madxprince', '_blank')">
-                                        <svg class="upload-icon" viewBox="0 0 24 24" style="width: 16px; height: 16px; stroke: #000000; stroke-width: 2.5; fill: none; stroke-linecap: round; stroke-linejoin: round; filter: drop-shadow(0 0 2px rgba(0,0,0,0.5));">
-                                            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
-                                            <polyline points="17 8 12 3 7 8"></polyline>
-                                            <line x1="12" y1="3" x2="12" y2="15"></line>
-                                        </svg>
-                                        Watch Tutorial Now
-                                    </button>
-                                </div>
-                            </div>
-
-                            <form id="addBookForm" class="seamless-form-container" style="margin-top: 25px;">
+                            <form id="addBookForm" class="seamless-form-container">
                                 
                                 <div class="seamless-header" style="display: flex; align-items: center; gap: 15px; margin-bottom: 25px; padding-bottom: 15px; border-bottom: 1px dashed rgba(255,255,255,0.15);">
                                     <div class="icon-wrapper" style="width: 44px; height: 44px; background: rgba(124, 58, 237, 0.15); border: 1px solid rgba(124, 58, 237, 0.3); border-radius: 12px; display: flex; justify-content: center; align-items: center; color: #c084fc; font-size: 18px; box-shadow: 0 0 15px rgba(124, 58, 237, 0.2); flex-shrink: 0;">
@@ -345,21 +305,19 @@
                     <div class="nav-scroll-spacer"></div>
                 </div>
 
-                <!-- TAB 3: MY PROFILE (Replaced Developer Tab with Particles & Real Stats) -->
+                <!-- TAB 3: MY PROFILE (Full Screen Profile without top header & watermark) -->
                 <div id="tab-profile" class="app-tab" style="display: none; padding: 0; position: relative;">
-                    <!-- Particle Animation Layer -->
                     <div class="premium-bg">
                         <div class="grid-overlay"></div>
                         <div class="particles-container" id="profileParticles"></div>
                     </div>
 
                     <div class="dev-scroll-area">
-                        <!-- Hero Banner, Socials & Right Avatar -->
+                        <!-- Hero Banner, Socials & Avatar -->
                         <div class="dev-hero-banner" id="profileTabBanner">
                             <div class="banner-fade-bottom"></div>
                             
                             <div class="hero-content-wrapper">
-                                <!-- 4 Social Community Buttons -->
                                 <div class="social-bar-left">
                                     <a href="https://github.com/MADxPRINCE" target="_blank" class="hero-soc-btn"><i class="fab fa-github"></i></a>
                                     <a href="https://t.me/MultiverseBooks" target="_blank" class="hero-soc-btn"><i class="fab fa-telegram-plane"></i></a>
@@ -367,7 +325,6 @@
                                     <a href="https://youtube.com/@madxprince" target="_blank" class="hero-soc-btn"><i class="fab fa-youtube"></i></a>
                                 </div>
 
-                                <!-- Avatar & Shield -->
                                 <div class="profile-avatar-container">
                                     <div class="dev-profile-img-wrapper">
                                         <img id="tabProfileAvatar" src="https://i.postimg.cc/D0BF1b77/file-000000000e847207a64f6711d825a859.png" class="dev-profile-img" alt="Profile">
@@ -379,13 +336,13 @@
                             </div>
                         </div>
 
-                        <!-- User Name & Email -->
+                        <!-- User Info -->
                         <div class="premium-bio-section">
                             <div class="bio-greeting" id="tabProfileName">Guest User</div>
                             <div class="bio-email" id="tabProfileEmail">Please Login</div>
                         </div>
 
-                        <!-- 4 Stat Cards (Read, Save, Credits, Rank) -->
+                        <!-- Stat Cards (Read, Save, Credits, Rank) -->
                         <div class="stats-container">
                             <div class="stat-card card-read">
                                 <div class="icon-box"><i class="fas fa-book-open"></i></div>
@@ -419,10 +376,6 @@
                                 </div>
                             </div>
                         </div>
-
-                        <div style="margin-top: auto; width: 100%; padding: 25px 10px 10px; background: transparent; border-top: 1px solid rgba(255,255,255,0.08); display: flex; justify-content: center; align-items: center; font-size: clamp(8px, 2.5vw, 10px); font-weight: 800; color: #a1a1aa; letter-spacing: 0.5px; flex-shrink: 0; box-sizing: border-box; text-align: center;">
-                            © 2026 SPIDY BOOK HUB <span style="color: #3f3f46; margin: 0 6px;">|</span> MADE WITH <i class="fas fa-heart" style="color: #ff4757; margin: 0 3px;"></i> BY MADxPRINCE
-                        </div>
                     </div>
                     <div class="nav-scroll-spacer"></div>
                 </div>
@@ -433,15 +386,15 @@
             <nav class="bottom-nav-bar">
                 <div class="bottom-nav-item active" id="nav-home" onclick="updateHeaderForTab('home')">
                     <div class="nav-icon-pill"><i class="fas fa-home"></i></div>
-                    <span class="nav-label">𝐇𝐨𝐦𝐞</span>
+                    <span class="nav-label">Home</span>
                 </div>
                 <div class="bottom-nav-item" id="nav-upload" onclick="updateHeaderForTab('upload')">
                     <div class="nav-icon-pill"><i class="fas fa-cloud-upload-alt"></i></div>
-                    <span class="nav-label">𝐔𝐩𝐥𝐨𝐚𝐝</span>
+                    <span class="nav-label">Upload</span>
                 </div>
                 <div class="bottom-nav-item" id="nav-profile" onclick="updateHeaderForTab('profile')">
-                    <div class="nav-icon-pill"><i class="fas fa-user-circle"></i></div>
-                    <span class="nav-label">𝐌𝐞</span>
+                    <div class="nav-icon-pill"><i class="fas fa-user-tie"></i></div>
+                    <span class="nav-label">Me</span>
                 </div>
             </nav>
 
@@ -638,6 +591,7 @@
                     </div>
                 </div>
 
+                <!-- Chat Body with Premium Dual-Ring Loader -->
                 <div class="chat-body" id="chatBody">
                     <div class="empty-loading">
                         <div class="orbit-spinner">
@@ -815,6 +769,39 @@
         </div>
     </div>
 
+    <!-- 🌟 HOW TO UPLOAD BOOK MODAL POPUP 🌟 -->
+    <div class="ug-overlay hidden" id="uploadPopup">
+        <div class="ug-card">
+            <button class="ug-close-btn" id="closeUploadPopupBtn" type="button">✕</button>
+            <img src="https://i.postimg.cc/1XYDWd3M/file-0000000038f87208b99601cc409d2e5c.png" alt="Book Upload Banner" class="ug-banner">
+            
+            <div class="ug-body">
+                <h2 class="ug-title">
+                    <span class="ug-blink-dot"></span>
+                    📢 Book Upload Kaise Karein?
+                    <span class="ug-blink-dot"></span>
+                </h2>
+                
+                <div class="ug-text">
+                    Kya aapko book upload karne mein pareshani ho rahi hai? Hamara step-by-step tutorial dekhein aur aasani se apni books platform par live karein.
+                </div>
+
+                <div class="ug-quote-green">
+                    💡 <span class="highlight">Aapki share ki hui ek book</span> kisi student ka exam clear karwa sakti hai! Apna study material yahan upload karo aur dusron ki safalta ka hissa bano. 💖
+                </div>
+                
+                <button class="ug-action-btn" type="button" onclick="window.open('https://youtube.com/@madxprince', '_blank')">
+                    <svg class="upload-icon" viewBox="0 0 24 24" style="width: 16px; height: 16px; stroke: #000000; stroke-width: 2.5; fill: none; stroke-linecap: round; stroke-linejoin: round; filter: drop-shadow(0 0 2px rgba(0,0,0,0.5));">
+                        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                        <polyline points="17 8 12 3 7 8"></polyline>
+                        <line x1="12" y1="3" x2="12" y2="15"></line>
+                    </svg>
+                    Watch Tutorial Now
+                </button>
+            </div>
+        </div>
+    </div>
+
     <!-- NOTIFICATION POST CONTEXT MENU -->
     <div class="context-overlay" id="contextOverlay">
         <div class="context-menu" id="contextMenu">
@@ -875,21 +862,24 @@
         </div>
     </div>
 
-    <!-- Script for Dynamic Header Titles & Icons -->
+    <!-- Dynamic Header Controller Script -->
     <script>
         function updateHeaderForTab(tab) {
+            const headerEl = document.getElementById('main-header');
             const titleEl = document.getElementById('dynamic-header-title');
             const iconsEl = document.getElementById('dynamic-header-icons');
             
-            if(tab === 'home') {
-                titleEl.innerText = 'SPIDY BOOK HUB';
-                iconsEl.style.display = 'flex';
-            } else if(tab === 'upload') {
-                titleEl.innerText = 'UPLOAD BOOKS & NOTES';
-                iconsEl.style.display = 'none';
-            } else if(tab === 'profile') {
-                titleEl.innerText = 'MY PROFILE';
-                iconsEl.style.display = 'none';
+            if (tab === 'profile') {
+                headerEl.style.display = 'none';
+            } else {
+                headerEl.style.display = 'flex';
+                if (tab === 'home') {
+                    titleEl.innerText = 'SPIDY BOOK HUB';
+                    iconsEl.style.display = 'flex';
+                } else if (tab === 'upload') {
+                    titleEl.innerText = 'UPLOAD BOOKS & NOTES';
+                    iconsEl.style.display = 'none';
+                }
             }
         }
     </script>
