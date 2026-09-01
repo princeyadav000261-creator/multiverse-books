@@ -178,8 +178,8 @@ main::-webkit-scrollbar { display: none; }
     border-radius: 20px;
     overflow: hidden;
     position: relative;
-    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.7), inset 0 0 20px rgba(255, 255, 255, 0.05);
-    border: 1px solid rgba(255, 255, 255, 0.18);
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.8), 0 0 20px rgba(255, 255, 255, 0.08);
+    border: 1px solid rgba(255, 255, 255, 0.22);
     flex-shrink: 0;
     background-color: #0d0d12;
 }
@@ -209,37 +209,77 @@ main::-webkit-scrollbar { display: none; }
     pointer-events: none;
 }
 
-/* Dots Indicator */
+/* 🌟 PROMO ARROWS: 100% TRANSPARENT CIRCLE & CRISP ICONS 🌟 */
+.promo-arrow-btn {
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    background: transparent !important;
+    border: 1px solid rgba(255, 255, 255, 0.45);
+    color: #ffffff;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-size: 12px;
+    cursor: pointer;
+    z-index: 20;
+    outline: none;
+    transition: all 0.2s ease;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.5);
+}
+
+.promo-arrow-btn:hover {
+    border-color: #ffffff;
+    transform: translateY(-50%) scale(1.1);
+    box-shadow: 0 0 12px rgba(255, 255, 255, 0.6);
+}
+
+.promo-arrow-btn:active {
+    transform: translateY(-50%) scale(0.9);
+}
+
+.arrow-prev {
+    left: 10px;
+}
+
+.arrow-next {
+    right: 10px;
+}
+
+/* 🌟 MINIMAL FLOATING DOTS (CARD REMOVED COMPLETELY) 🌟 */
 .promo-dots-wrapper {
     position: absolute;
-    bottom: 10px;
+    bottom: 12px;
     left: 50%;
     transform: translateX(-50%);
     display: flex;
     align-items: center;
     gap: 7px;
     z-index: 10;
-    background: rgba(0, 0, 0, 0.55);
-    padding: 4px 10px;
-    border-radius: 20px;
-    backdrop-filter: blur(6px);
-    border: 1px solid rgba(255, 255, 255, 0.15);
+    background: transparent !important;
+    border: none !important;
+    box-shadow: none !important;
+    padding: 0;
 }
 
 .promo-dot {
-    width: 6px;
-    height: 6px;
+    width: 7px;
+    height: 7px;
     border-radius: 50%;
     background: rgba(255, 255, 255, 0.35);
-    transition: all 0.3s ease;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     cursor: pointer;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.6);
 }
 
 .promo-dot.active {
-    width: 20px;
+    width: 22px;
     border-radius: 10px;
     background: #ffffff;
-    box-shadow: 0 0 10px rgba(255, 255, 255, 0.8);
+    box-shadow: 0 0 10px rgba(255, 255, 255, 0.9), 0 2px 6px rgba(0, 0, 0, 0.8);
 }
 
 .section-header-title { font-size: 1.1rem; font-weight: 800; color: #fff; letter-spacing: 0.5px; text-transform: uppercase; display: flex; align-items: center; gap: 8px; }
