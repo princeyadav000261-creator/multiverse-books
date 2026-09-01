@@ -151,7 +151,8 @@ function initPromoCarousel() {
 
     // Dot Click Handler
     dots.forEach((dot, index) => {
-        dot.addEventListener('click', () => {
+        dot.addEventListener('click', (e) => {
+            e.stopPropagation();
             goToSlide(index);
             startAutoSlide();
         });
@@ -160,6 +161,7 @@ function initPromoCarousel() {
     // Arrow Buttons Handler
     if (prevBtn) {
         prevBtn.addEventListener('click', (e) => {
+            e.preventDefault();
             e.stopPropagation();
             currentPromoIndex = (currentPromoIndex - 1 + totalSlides) % totalSlides;
             goToSlide(currentPromoIndex);
@@ -169,6 +171,7 @@ function initPromoCarousel() {
 
     if (nextBtn) {
         nextBtn.addEventListener('click', (e) => {
+            e.preventDefault();
             e.stopPropagation();
             currentPromoIndex = (currentPromoIndex + 1) % totalSlides;
             goToSlide(currentPromoIndex);
