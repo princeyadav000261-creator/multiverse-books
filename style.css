@@ -189,6 +189,7 @@ main::-webkit-scrollbar { display: none; }
     width: 100%;
     height: 100%;
     transition: transform 0.45s cubic-bezier(0.4, 0, 0.2, 1);
+    touch-action: pan-y;
 }
 
 .promo-slide {
@@ -209,7 +210,7 @@ main::-webkit-scrollbar { display: none; }
     pointer-events: none;
 }
 
-/* 🌟 PROMO ARROWS: 100% TRANSPARENT CIRCLE & CRISP ICONS 🌟 */
+/* 🌟 PROMO ARROWS: 100% TRANSPARENT, NO GLOW, PURE CLICKABLE 🌟 */
 .promo-arrow-btn {
     position: absolute;
     top: 50%;
@@ -218,27 +219,29 @@ main::-webkit-scrollbar { display: none; }
     height: 32px;
     border-radius: 50%;
     background: transparent !important;
-    border: 1px solid rgba(255, 255, 255, 0.45);
+    border: 1.5px solid rgba(255, 255, 255, 0.5) !important;
     color: #ffffff;
     display: flex;
     justify-content: center;
     align-items: center;
     font-size: 12px;
     cursor: pointer;
-    z-index: 20;
+    z-index: 30;
     outline: none;
-    transition: all 0.2s ease;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.5);
+    transition: transform 0.15s ease, opacity 0.15s ease;
+    box-shadow: none !important;
+    backdrop-filter: none !important;
+    pointer-events: auto;
 }
 
 .promo-arrow-btn:hover {
-    border-color: #ffffff;
-    transform: translateY(-50%) scale(1.1);
-    box-shadow: 0 0 12px rgba(255, 255, 255, 0.6);
+    border-color: rgba(255, 255, 255, 0.9) !important;
+    box-shadow: none !important;
 }
 
 .promo-arrow-btn:active {
-    transform: translateY(-50%) scale(0.9);
+    transform: translateY(-50%) scale(0.88);
+    opacity: 0.7;
 }
 
 .arrow-prev {
@@ -258,11 +261,12 @@ main::-webkit-scrollbar { display: none; }
     display: flex;
     align-items: center;
     gap: 7px;
-    z-index: 10;
+    z-index: 25;
     background: transparent !important;
     border: none !important;
     box-shadow: none !important;
     padding: 0;
+    pointer-events: auto;
 }
 
 .promo-dot {
@@ -272,14 +276,13 @@ main::-webkit-scrollbar { display: none; }
     background: rgba(255, 255, 255, 0.35);
     transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     cursor: pointer;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.6);
 }
 
 .promo-dot.active {
     width: 22px;
     border-radius: 10px;
     background: #ffffff;
-    box-shadow: 0 0 10px rgba(255, 255, 255, 0.9), 0 2px 6px rgba(0, 0, 0, 0.8);
+    box-shadow: 0 0 10px rgba(255, 255, 255, 0.9);
 }
 
 .section-header-title { font-size: 1.1rem; font-weight: 800; color: #fff; letter-spacing: 0.5px; text-transform: uppercase; display: flex; align-items: center; gap: 8px; }
