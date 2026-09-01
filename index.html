@@ -152,6 +152,7 @@
                     <div class="menu-section">
                         <div class="section-title">MAIN MENU</div>
                         <a href="#" class="menu-item active" id="menu-home-side" onclick="updateHeaderForTab('home')"><i class="fas fa-home"></i><span>Home</span></a>
+                        <a href="https://t.me/SpidyBookHub_Bot" target="_blank" class="menu-item normal" id="menu-contact"><i class="fas fa-envelope"></i><span>Contact</span></a>
                         <a href="#" class="menu-item normal" id="menu-bookmarks"><i class="far fa-bookmark"></i><span>Bookmarks</span></a>
                         <a href="#" class="menu-item normal" id="menu-dmca"><i class="fas fa-shield-halved"></i><span>DMCA Request</span></a>
                     </div>
@@ -304,9 +305,7 @@
                     <div class="nav-scroll-spacer"></div>
                 </div>
 
-                <!-- ============================================== -->
-                <!-- 🌟 TAB 3: ME (MY PROFILE - REPLACED DEVELOPER TAB) 🌟 -->
-                <!-- ============================================== -->
+                <!-- 🌟 TAB 3: ME (MY PROFILE) 🌟 -->
                 <div id="tab-about" class="app-tab" style="display: none; padding: 0; position: relative; overflow: hidden;">
                     
                     <!-- PREMIUM GRID & PARTICLES ANIMATION IN ME TAB -->
@@ -450,9 +449,7 @@
                 </div>
             </div>
 
-            <!-- ============================================== -->
-            <!-- 🌟 DOWNLOAD MODAL (NEW DESIGN) 🌟 -->
-            <!-- ============================================== -->
+            <!-- DOWNLOAD MODAL -->
             <div class="download-modal" id="downloadModal" style="display: none; flex-direction: column;">
                 
                 <div class="modal-header-fixed">
@@ -493,12 +490,10 @@
                         
                         <!-- ACTION BUTTONS -->
                         <div class="action-buttons-wrapper">
-                            <!-- Read Online Button -->
                             <button id="dlReadOnlineBtn" class="dl-secondary-btn disable-long-press">
                                 <i class="fas fa-book-open-reader"></i> Read Online
                             </button>
                             
-                            <!-- Download PDF Button -->
                             <button id="dlPdfLinkBtn" class="dl-main-btn disable-long-press">
                                 <i class="fas fa-download"></i> Download PDF
                                 
@@ -584,8 +579,8 @@
                             <div class="section-header-title" style="margin-bottom: 0;"><i class="fas fa-bookmark" style="color: #3b82f6;"></i> Your Favorites 💖 </div>
                         </div>
                         <div class="book-container" id="savedBooksContainer"></div>
-                        <div id="no-saved-msg" style="display: none; padding-bottom: 20px; justify-content: center; height: 100%;">
-                            <div class="no-results-card" style="margin-top: 40px;">
+                        <div id="no-saved-msg" style="display: none; padding-bottom: 20px; justify-content: center;">
+                            <div class="no-results-card" style="margin-top: 20px;">
                                 <div class="no-results-icon"><i class="far fa-bookmark"></i></div>
                                 <h2 class="no-results-title">NO SAVED BOOKS</h2>
                                 <p class="no-results-desc">You haven't bookmarked any books yet. Click the bookmark icon on any book to save it here!</p>
@@ -649,7 +644,7 @@
                         <div class="dmca-section">
                             <h2 class="dmca-section-title"><span class="dmca-mini-icon icon-contact"><i class="fas fa-envelope"></i></span>Contact Information</h2>
                             <a href="https://t.me/SpidyBookHub_Bot" target="_blank" class="dmca-contact-link"><i class="fab fa-telegram-plane"></i> Spidy Book Hub Support</a>
-                            <p style="margin-top: 15px; font-weight bold; color: #a1a1aa; font-size: 0.75rem;">⏱ Review Time: 24–48 Hours</p>
+                            <p style="margin-top: 15px; font-weight: bold; color: #a1a1aa; font-size: 0.75rem;">⏱ Review Time: 24–48 Hours</p>
                         </div>
                         <div class="dmca-section">
                             <h2 class="dmca-section-title"><span class="dmca-mini-icon icon-notice"><i class="fas fa-shield-alt"></i></span>Important Notice</h2>
@@ -667,9 +662,7 @@
                 </div>
             </div>
 
-            <!-- ============================================== -->
-            <!-- 🌟 TOKEN VERIFICATION OVERLAY 🌟 -->
-            <!-- ============================================== -->
+            <!-- TOKEN VERIFICATION OVERLAY -->
             <div id="tokenModalOverlay" class="modal-overlay-token" style="display: none;">
                 <div class="premium-bg">
                     <div class="grid-overlay"></div>
@@ -735,9 +728,7 @@
                 </div>
             </div>
 
-            <!-- ============================================== -->
-            <!-- 🌟 SECURE PDF VIEWER OVERLAY 🌟 -->
-            <!-- ============================================== -->
+            <!-- SECURE PDF VIEWER OVERLAY -->
             <div id="pdfViewerOverlay" class="pdf-viewer-overlay" style="display:none;">
                 <div class="pdf-viewer-header">
                     <h3 id="pdfViewerTitle" class="pdf-viewer-title">Reading Book...</h3>
@@ -748,9 +739,7 @@
                 </div>
             </div>
 
-            <!-- ============================================== -->
-            <!-- 🌟 REPORT ISSUE MODAL 🌟 -->
-            <!-- ============================================== -->
+            <!-- REPORT ISSUE MODAL -->
             <div class="report-modal-overlay" id="reportModalOverlay">
                 <div class="report-modal-box">
                     <div class="rm-header">
@@ -789,36 +778,27 @@
     <div id="toast"></div>
     <div id="customToast"></div>
 
-    <!-- ============================================== -->
-    <!-- 🌟 NEW FULL PREMIUM UPLOAD TUTORIAL POPUP 🌟 -->
-    <!-- ============================================== -->
+    <!-- UPLOAD TUTORIAL POPUP -->
     <div class="ug-overlay hidden" id="uploadPopup">
         <div class="ug-card">
-            <!-- Close Button -->
             <button class="ug-close-btn" id="closeUploadPopupBtn">✕</button>
-            
-            <!-- Banner Image -->
             <img src="https://i.postimg.cc/1XYDWd3M/file-0000000038f87208b99601cc409d2e5c.png" alt="Book Upload Banner" class="ug-banner">
             
             <div class="ug-body">
-                <!-- Title -->
                 <h2 class="ug-title">
                     <span class="ug-blink-dot"></span>
                     📢 Book Upload Kaise Karein?
                     <span class="ug-blink-dot"></span>
                 </h2>
                 
-                <!-- White Premium Box -->
                 <div class="ug-text">
                     Kya aapko book upload karne mein pareshani ho rahi hai? Hamara step-by-step tutorial dekhein aur aasani se apni books platform par live karein.
                 </div>
 
-                <!-- Green Premium Box -->
                 <div class="ug-quote-green">
                     💡 <span class="highlight">Aapki share ki hui ek book</span> kisi student ka exam clear karwa sakti hai! Apna study material yahan upload karo aur dusron ki safalta ka hissa bano. 💖
                 </div>
                 
-                <!-- Action Button -->
                 <button class="ug-action-btn" onclick="window.open('https://youtube.com/@madxprince', '_blank')">
                     <svg class="upload-icon" viewBox="0 0 24 24" style="width: 16px; height: 16px; stroke: #000000; stroke-width: 2.5; fill: none; stroke-linecap: round; stroke-linejoin: round; filter: drop-shadow(0 0 2px rgba(0,0,0,0.5));">
                         <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
@@ -865,18 +845,20 @@
     <!-- Header Update Logic Script -->
     <script>
         function updateHeaderForTab(tab) {
+            const headerEl = document.getElementById('main-header');
             const titleEl = document.getElementById('dynamic-header-title');
             const iconsEl = document.getElementById('dynamic-header-icons');
             
             if(tab === 'home') {
+                headerEl.style.display = 'flex';
                 titleEl.innerText = 'SPIDY BOOK HUB';
                 iconsEl.style.display = 'flex';
             } else if(tab === 'upload') {
-                titleEl.innerText = 'UPLOAD BOOKS & NOTES';
+                headerEl.style.display = 'flex';
+                titleEl.innerText = 'UPLOAD BOOKS';
                 iconsEl.style.display = 'none';
             } else if(tab === 'about') {
-                titleEl.innerText = 'MY PROFILE';
-                iconsEl.style.display = 'none';
+                headerEl.style.display = 'none'; // Profile tab par header completely hide hoga
             }
         }
     </script>
