@@ -115,7 +115,7 @@ function initParticles(containerId) {
 }
 
 // ==========================================
-// 🌟 1918x820 PROMO CAROUSEL LOGIC 🌟
+// 🌟 PROMO CAROUSEL LOGIC WITH ARROWS & MINIMAL DOTS 🌟
 // ==========================================
 let currentPromoIndex = 0;
 let promoAutoSlideInterval;
@@ -123,6 +123,8 @@ let promoAutoSlideInterval;
 function initPromoCarousel() {
     const track = document.getElementById('promoCarouselTrack');
     const dots = document.querySelectorAll('.promo-dot');
+    const prevBtn = document.getElementById('promoPrevBtn');
+    const nextBtn = document.getElementById('promoNextBtn');
     const totalSlides = dots.length;
 
     if (!track || totalSlides === 0) return;
@@ -147,12 +149,32 @@ function initPromoCarousel() {
         }, 4000);
     }
 
+    // Dot Click Handler
     dots.forEach((dot, index) => {
         dot.addEventListener('click', () => {
             goToSlide(index);
             startAutoSlide();
         });
     });
+
+    // Arrow Buttons Handler
+    if (prevBtn) {
+        prevBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            currentPromoIndex = (currentPromoIndex - 1 + totalSlides) % totalSlides;
+            goToSlide(currentPromoIndex);
+            startAutoSlide();
+        });
+    }
+
+    if (nextBtn) {
+        nextBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            currentPromoIndex = (currentPromoIndex + 1) % totalSlides;
+            goToSlide(currentPromoIndex);
+            startAutoSlide();
+        });
+    }
 
     // Touch Swipe Support for Mobile
     let startX = 0;
