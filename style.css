@@ -517,8 +517,8 @@ main::-webkit-scrollbar { display: none; }
 .profile-shield { position: absolute; bottom: -2px; right: 0px; width: 32px; height: 32px; border: 3px solid #000000; border-radius: 50%; display: flex; justify-content: center; align-items: center; color: #ffffff; font-size: 13px; background: linear-gradient(135deg, #38bdf8, #3b82f6); box-shadow: 0 4px 10px rgba(59, 130, 246, 0.5); z-index: 10; }
 
 .premium-bio-section { padding: 0 20px; margin-top: 85px; margin-bottom: 25px; display: flex; flex-direction: column; align-items: center; width: 100%; text-align: center; }
-.bio-greeting { font-size: 1.6rem; font-weight: 900; font-family: 'Plus Jakarta Sans', sans-serif; color: #ffffff; letter-spacing: 0.5px; text-shadow: 0 2px 10px rgba(0,0,0,0.8); }
-.bio-email { font-size: 0.95rem; color: #a1a1aa; font-weight: 400; margin-top: 4px; font-family: 'Inter', sans-serif; letter-spacing: 0.5px; }
+.bio-greeting { font-size: 1.4rem; font-weight: 900; font-family: 'Plus Jakarta Sans', sans-serif; color: #ffffff; letter-spacing: 0.5px; text-shadow: 0 2px 10px rgba(0,0,0,0.8); }
+.bio-email { font-size: 0.95rem; color: #a1a1aa; font-weight: 800; margin-top: 4px; font-family: 'Inter', sans-serif; letter-spacing: 0.5px; }
 
 /* Uniform Glow-Tinted Stats Cards */
 .stats-container { padding: 0 20px 20px; display: grid; grid-template-columns: repeat(2, 1fr); gap: 15px; width: 100%; box-sizing: border-box; }
