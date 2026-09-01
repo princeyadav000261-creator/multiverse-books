@@ -175,16 +175,29 @@
                 
                 <!-- TAB 1: HOME -->
                 <div id="tab-home" class="app-tab active">
-                    <section class="quote-card">
-                        <div class="welcome-badge">
-                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" width="14" height="14" style="margin-right: 5px; margin-top: -2px;">
-                                <path fill-rule="evenodd" d="M9 4.5a.75.75 0 0 1 .721.544l.813 2.846a3.75 3.75 0 0 0 2.522 2.522l2.846.813a.75.75 0 0 1 0 1.45l-2.846.813a3.75 3.75 0 0 0-2.522 2.522l-.813 2.846a.75.75 0 0 1-1.442 0l-.813-2.846a3.75 3.75 0 0 0-2.522-2.522l-2.846-.813a.75.75 0 0 1 0-1.45l2.846-.813a3.75 3.75 0 0 0 2.522-2.522l.813-2.846A.75.75 0 0 1 9 4.5ZM18 1.5a.75.75 0 0 1 .728.568l.258 1.036c.236.94.97 1.674 1.91 1.91l1.036.258a.75.75 0 0 1 0 1.456l-1.036.258c-.94.236-1.674.97-1.91 1.91l-.258 1.036a.75.75 0 0 1-1.456 0l-.258-1.036a2.625 2.625 0 0 0-1.91-1.91l-1.036-.258a.75.75 0 0 1 0-1.456l1.036-.258a2.625 2.625 0 0 0 1.91-1.91l.258-1.036A.75.75 0 0 1 18 1.5ZM16.5 15a.75.75 0 0 1 .712.513l.394 1.183c.15.447.5.799.948.948l1.183.395a.75.75 0 0 1 0 1.422l-1.183.395c-.447.15-.799.5-.948.948l-.395 1.183a.75.75 0 0 1-1.422 0l-.395-1.183a1.5 1.5 0 0 0-.948-.948l-1.183-.395a.75.75 0 0 1 0-1.422l1.183-.395c.447-.15.799-.5.948-.948l.395-1.183A.75.75 0 0 1 16.5 15Z" clip-rule="evenodd" />
-                            </svg>
-                            WELCOME BACK
+                    
+                    <!-- 🌟 1918x820 PREMIUM PROMOTIONAL BANNER CAROUSEL 🌟 -->
+                    <div class="promo-carousel-container" id="promoCarouselContainer">
+                        <div class="promo-carousel-track" id="promoCarouselTrack">
+                            
+                            <!-- Slide 1 -->
+                            <a href="https://t.me/MultiverseBooks" target="_blank" class="promo-slide">
+                                <img src="https://i.postimg.cc/Pq0JLj3C/file-0000000027dc82119d3731d4bfe9bccf.png" alt="Promo Banner 1" class="promo-banner-img" draggable="false">
+                            </a>
+
+                            <!-- Slide 2 -->
+                            <a href="https://whatsapp.com/channel/0029Vb6NBZx1yT2GByTTVf2A" target="_blank" class="promo-slide">
+                                <img src="https://i.postimg.cc/XJFJdzmh/file-00000000ef2082118bdd64524b657f4c.png" alt="Promo Banner 2" class="promo-banner-img" draggable="false">
+                            </a>
+
                         </div>
-                        <div class="quote-text" id="daily-quote-text"><i class="fas fa-quote-left" style="color: rgba(255,255,255,0.3); margin-right:5px;"></i> Loading...</div>
-                        <div class="quote-author" id="daily-quote-author"></div>
-                    </section>
+
+                        <!-- Dynamic Progress Dots Indicator -->
+                        <div class="promo-dots-wrapper" id="promoDotsWrapper">
+                            <span class="promo-dot active" data-slide="0"></span>
+                            <span class="promo-dot" data-slide="1"></span>
+                        </div>
+                    </div>
 
                     <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
                         <div class="section-header-title" style="margin-bottom: 0;"><i class="fas fa-book-open" style="color: #10b981;"></i> Trending Books 🔥 </div>
@@ -855,10 +868,10 @@
                 iconsEl.style.display = 'flex';
             } else if(tab === 'upload') {
                 headerEl.style.display = 'flex';
-                titleEl.innerText = 'UPLOAD BOOKS';
+                titleEl.innerText = 'UPLOAD BOOKS & NOTES';
                 iconsEl.style.display = 'none';
             } else if(tab === 'about') {
-                headerEl.style.display = 'none'; // Profile tab par header completely hide hoga
+                headerEl.style.display = 'none';
             }
         }
     </script>
