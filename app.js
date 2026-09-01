@@ -43,11 +43,11 @@ const auth = getAuth(app);
 const provider = new GoogleAuthProvider();
 const analytics = getAnalytics(app); 
 
-// R2 Public Image Domain
+// R2 Public Image CDN Domain
 const R2_PUBLIC_IMAGE_URL = "https://your-cloudflare-public-domain.r2.dev"; 
 
 // ==========================================
-// GLOBAL VARIABLES & STATE
+// 2. GLOBAL STATE VARIABLES
 // ==========================================
 let booksData = [];
 let mainFilteredData = []; 
@@ -74,11 +74,10 @@ let isFirstNotiLoad = true;
 let unreadNotiCount = 0;
 
 // User Time Spent / Active Session Tracker
-let sessionStartTime = Date.now();
 let totalActiveSeconds = 0;
 
 // ==========================================
-// UTILITY FUNCTIONS & TOAST
+// 3. UTILITIES & TOAST NOTIFICATIONS
 // ==========================================
 function sanitizeHTML(str) {
     if (typeof str !== 'string') return str;
@@ -119,7 +118,7 @@ function generateDeviceFingerprint() {
     return Math.abs(hash).toString(16);
 }
 
-// Particle Generator for Tab Profile
+// Profile Background Particles
 function initProfileParticles() {
     const container = document.getElementById('profileParticles');
     if (!container || container.children.length > 0) return;
@@ -140,7 +139,7 @@ function initProfileParticles() {
 }
 
 // ==========================================
-// POPUPS LOGIC
+// 4. COMMUNITY POPUPS LOGIC
 // ==========================================
 let popupsInitialized = false;
 function initPremiumPopups() {
@@ -174,7 +173,7 @@ function initPremiumPopups() {
 }
 
 // ==========================================
-// INITIAL LOADER & DEEP LINKING
+// 5. INITIAL SYSTEM LOADER & DEEP LINKING
 // ==========================================
 const urlParamsCheck = new URLSearchParams(window.location.search);
 let isDeepLinkLoad = urlParamsCheck.has('book'); 
@@ -250,9 +249,7 @@ function tryTransition() {
     }
 }
 
-// ==========================================
-// QUOTE GENERATOR
-// ==========================================
+// Daily Quotes
 const quotes = [
     { text: "The only way to do great work is to love what you do.", author: "Steve Jobs" },
     { text: "In the middle of difficulty lies opportunity.", author: "Albert Einstein" },
@@ -268,7 +265,7 @@ document.getElementById('daily-quote-text').innerHTML = `<i class="fas fa-quote-
 document.getElementById('daily-quote-author').innerText = `— ${sanitizeHTML(quotes[currentQuoteIndex].author)}`;
 
 // ==========================================
-// 🚀 READ LIMIT, CREDITS & DYNAMIC RANK SYSTEM
+// 6. READ LIMITS, CREDITS & DYNAMIC RANK
 // ==========================================
 function updateLiveCreditsUI(recentReadsCount) {
     const creditsEl = document.getElementById('tabProfileCredits');
@@ -283,7 +280,7 @@ function updateLiveCreditsUI(recentReadsCount) {
     creditsEl.innerText = remainingCredits;
 }
 
-// Clean Saved Books (Filter out deleted books)
+// Clean Saved Books (Filter out deleted books in real time)
 function getSanitizedSavedBooks() {
     const validSlugs = new Set(booksData.map(b => b.slug));
     const cleanList = savedBooks.filter(slug => validSlugs.has(slug));
@@ -294,7 +291,7 @@ function getSanitizedSavedBooks() {
     return cleanList;
 }
 
-// Calculate Accurate Unique Rank Based on User Time Spent / Total Activity
+// Calculate Strict & Unique Rank without duplicate values
 async function calculateUserRank(currentUid) {
     try {
         const usersRef = collection(db, "users");
@@ -305,7 +302,7 @@ async function calculateUserRank(currentUid) {
             allUsers.push({ id: docSnap.id, ...docSnap.data() });
         });
 
-        // Sorting: High activeTime -> High lifetimeDownloads -> Oldest joined
+        // Hierarchy: Most Active Time -> High Lifetime Reads -> Earliest Joined -> Unique ID
         allUsers.sort((a, b) => {
             let timeA = parseInt(a.timeSpentSeconds) || 0;
             let timeB = parseInt(b.timeSpentSeconds) || 0;
@@ -348,7 +345,7 @@ async function calculateUserRank(currentUid) {
     }
 }
 
-// Sync Time Spent to Firestore periodically
+// Active Time Periodic Heartbeat
 setInterval(async () => {
     if (isUserLoggedIn && auth.currentUser) {
         totalActiveSeconds += 10;
@@ -360,7 +357,7 @@ setInterval(async () => {
 }, 10000);
 
 // ==========================================
-// AUTH STATE & FIRESTORE LISTENERS
+// 7. AUTH STATE & REAL-TIME LISTENERS
 // ==========================================
 onAuthStateChanged(auth, async (user) => {
     if (user) {
@@ -372,11 +369,9 @@ onAuthStateChanged(auth, async (user) => {
         CURRENT_USER_EMAIL = user.email;
         CURRENT_USER_PHOTO = user.photoURL ? user.photoURL : "https://i.postimg.cc/D0BF1b77/file-000000000e847207a64f6711d825a859.png";
 
-        // Update Sidebar
         document.getElementById('sidebarProfileName').innerText = sanitizeHTML(CURRENT_USER_NAME);
         document.getElementById('sidebarProfileImg').src = CURRENT_USER_PHOTO;
 
-        // Update Tab Profile
         document.getElementById('tabProfileName').innerText = sanitizeHTML(CURRENT_USER_NAME);
         document.getElementById('tabProfileEmail').innerText = sanitizeHTML(CURRENT_USER_EMAIL);
         document.getElementById('tabProfileAvatar').src = CURRENT_USER_PHOTO;
@@ -439,7 +434,7 @@ onAuthStateChanged(auth, async (user) => {
             calculateUserRank(user.uid);
 
         } catch (error) { 
-            console.error("User initialization failed:", error); 
+            console.error("User verification failed:", error); 
             IS_SUPER_ADMIN = false; 
         }
     } else {
@@ -507,9 +502,7 @@ onAuthStateChanged(auth, async (user) => {
         tryTransition();
     });
 
-    // ==========================================
-    // 🌟 REALTIME CHANNEL NOTIFICATIONS LISTENER 🌟
-    // ==========================================
+    // 🌟 REAL-TIME CHANNEL NOTIFICATIONS LISTENER 🌟
     const qPosts = query(collection(db, "channel_posts"), orderBy("createdAt", "asc"));
     onSnapshot(qPosts, (snapshot) => {
         const dataArr = [];
@@ -552,7 +545,7 @@ onAuthStateChanged(auth, async (user) => {
 });
 
 // ==========================================
-// CHANNEL NOTIFICATIONS RENDER & ACTIONS
+// 8. CHANNEL FEED PARSER & REACTIONS
 // ==========================================
 function stripMarkdown(text) {
     if (!text) return "";
@@ -726,8 +719,11 @@ function renderChannelFeed(posts, shouldAutoScroll = false) {
         chatBody.appendChild(bubble);
     });
 
+    // Auto Scroll directly to latest message
     if (shouldAutoScroll) {
-        setTimeout(() => { chatBody.scrollTop = chatBody.scrollHeight; }, 60);
+        setTimeout(() => { 
+            chatBody.scrollTop = chatBody.scrollHeight; 
+        }, 80);
     } else {
         chatBody.scrollTop = prevScrollTop;
     }
@@ -872,7 +868,7 @@ document.getElementById('closeNotiBtn')?.addEventListener('click', () => {
 });
 
 // ==========================================
-// PROMPTS COPY
+// 9. PROMPTS COPY
 // ==========================================
 document.getElementById('promptsContainer').addEventListener('click', (e) => {
     const copyBtn = e.target.closest('.telegram-copy-btn');
@@ -895,7 +891,7 @@ document.getElementById('promptsContainer').addEventListener('click', (e) => {
 });
 
 // ==========================================
-// LOGIN & LOGOUT SYSTEM
+// 10. LOGIN & LOGOUT SYSTEM
 // ==========================================
 function closeLoginOverlayLocal() {
     const loginOverlay = document.getElementById('loginOverlay');
@@ -985,7 +981,7 @@ if (confirmLogoutBtn) {
 }
 
 // ==========================================
-// ADVANCED DUAL FILTER SYSTEM
+// 11. ADVANCED DUAL FILTER SYSTEM
 // ==========================================
 const EXAM_CATEGORY_MAP = {
     "Ssc": ["SSC", "CGL", "CHSL", "MTS", "CPO", "GD", "STENOGRAPHER", "SELECTION POST"],
@@ -1107,7 +1103,7 @@ document.getElementById('closeAuthorFilterBtn').addEventListener('click', () => 
 });
 
 // ==========================================
-// RENDERING BOOKS UI & INFINITE SCROLL
+// 12. RENDERING BOOKS UI & INFINITE SCROLL
 // ==========================================
 function getBatchSize() { 
     let w = window.innerWidth; 
@@ -1206,17 +1202,25 @@ document.getElementById('savedBooksContainer').addEventListener('click', (e) => 
 });
 
 // ==========================================
-// NAVIGATION & OVERLAYS
+// 13. NAVIGATION & STEP-BY-STEP BACK LOGIC
 // ==========================================
 document.getElementById('open-search').addEventListener('click', () => { 
     history.pushState({ popup: 'search' }, ''); 
     document.getElementById('search-box').classList.add('active'); 
     setTimeout(() => { searchInputEl.focus(); }, 300); 
 });
+
 document.getElementById('open-noti').addEventListener('click', () => { 
     history.pushState({ popup: 'noti' }, ''); 
-    document.getElementById('noti-panel').classList.add('active'); 
+    const notiPanel = document.getElementById('noti-panel');
+    notiPanel.classList.add('active'); 
     document.querySelector('.blink-dot').style.display = 'none'; 
+    
+    // Auto scroll directly to latest notifications
+    setTimeout(() => {
+        const chatBody = document.getElementById('chatBody');
+        if (chatBody) chatBody.scrollTop = chatBody.scrollHeight;
+    }, 100);
 });
 
 const sidebar = document.getElementById('sidebar'); 
@@ -1230,7 +1234,7 @@ sidebarOverlay.addEventListener('click', () => { history.back(); });
 
 document.getElementById('menu-dmca').addEventListener('click', (e) => { 
     e.preventDefault(); 
-    history.replaceState({ popup: 'dmca' }, ''); 
+    history.pushState({ popup: 'dmca' }, ''); 
     document.getElementById('dmca-panel').classList.add('active'); 
     sidebar.classList.remove('active'); 
     sidebarOverlay.classList.remove('active'); 
@@ -1239,7 +1243,7 @@ document.getElementById('close-dmca-btn').addEventListener('click', () => { hist
 
 document.getElementById('menu-bookmarks').addEventListener('click', (e) => { 
     e.preventDefault(); 
-    history.replaceState({ popup: 'bookmarks' }, ''); 
+    history.pushState({ popup: 'bookmarks' }, ''); 
     document.getElementById('bookmarks-panel').classList.add('active'); 
     sidebar.classList.remove('active'); 
     sidebarOverlay.classList.remove('active'); 
@@ -1271,13 +1275,15 @@ function closeAllPanels() {
     document.getElementById('search-box').classList.remove('active'); 
 }
 
-// Bottom Bar Switching
+// Bottom Navigation Switching
 document.getElementById('nav-home').addEventListener('click', () => { 
     setNavActive('nav-home'); 
     closeAllPanels(); 
     switchTab('tab-home'); 
     window.history.replaceState({}, '', window.location.pathname); 
 });
+
+// Upload Tab + How to Upload Modal Popup Trigger
 document.getElementById('nav-upload').addEventListener('click', () => {
     if(!isUserLoggedIn) { 
         document.getElementById('loginOverlay').style.display = 'flex'; 
@@ -1288,7 +1294,20 @@ document.getElementById('nav-upload').addEventListener('click', () => {
     setNavActive('nav-upload'); 
     closeAllPanels(); 
     switchTab('tab-upload'); 
+    
+    // Smoothly show Tutorial Popup
+    setTimeout(() => { 
+        const upPopup = document.getElementById('uploadPopup');
+        if (upPopup) upPopup.classList.remove('hidden');
+    }, 250);
 });
+
+// Close Upload Popup
+document.getElementById('closeUploadPopupBtn').addEventListener('click', () => {
+    document.getElementById('uploadPopup').classList.add('hidden');
+});
+
+// Profile / Me Tab
 document.getElementById('nav-profile').addEventListener('click', () => { 
     setNavActive('nav-profile'); 
     closeAllPanels(); 
@@ -1298,16 +1317,66 @@ document.getElementById('nav-profile').addEventListener('click', () => {
     }
 });
 
+// 🌟 STEP-BY-STEP PHYSICAL BACK BUTTON HANDLER 🌟
 window.addEventListener('popstate', (e) => {
+    let closedAnyModal = false;
+
+    // 1. Close Upload Popup if open
+    const uploadPopup = document.getElementById('uploadPopup');
+    if (uploadPopup && !uploadPopup.classList.contains('hidden')) {
+        uploadPopup.classList.add('hidden');
+        closedAnyModal = true;
+    }
+
+    // 2. Close Token Modal if open
+    const tokenModal = document.getElementById('tokenModalOverlay');
+    if (tokenModal && tokenModal.style.display !== 'none') {
+        tokenModal.style.display = 'none';
+        closedAnyModal = true;
+    }
+
+    // 3. Close PDF Viewer if open
+    const pdfViewer = document.getElementById('pdfViewerOverlay');
+    if (pdfViewer && pdfViewer.style.display !== 'none') {
+        pdfViewer.style.display = 'none';
+        document.getElementById('pdfIframe').src = "";
+        closedAnyModal = true;
+    }
+
+    // 4. Close Report Modal if open
+    const reportModal = document.getElementById('reportModalOverlay');
+    if (reportModal && reportModal.classList.contains('active')) {
+        reportModal.classList.remove('active');
+        closedAnyModal = true;
+    }
+
+    // 5. Close Context Menu if open
+    const cmOverlay = document.getElementById('contextOverlay');
+    if (cmOverlay && cmOverlay.classList.contains('show')) {
+        cmOverlay.classList.remove('show');
+        closedAnyModal = true;
+    }
+
+    // 6. Close Filter Bottom Sheet
+    const filterOverlay = document.getElementById('filterBottomOverlay');
+    if (filterOverlay && filterOverlay.classList.contains('active')) {
+        filterOverlay.classList.remove('active');
+        closedAnyModal = true;
+    }
+
     closeAllPanels(); 
     applyMasterFilter();
+
     const sBook = new URLSearchParams(window.location.search).get('book');
-    if(sBook) { openDownloadPageLocal(sBook, true); } 
-    else { document.getElementById("downloadModal").style.display = "none"; }
+    if(sBook) { 
+        openDownloadPageLocal(sBook, true); 
+    } else { 
+        document.getElementById("downloadModal").style.display = "none"; 
+    }
 });
 
 // ==========================================
-// SECURE READ ONLINE (API PROXY) & DOWNLOAD LOCK
+// 14. SECURE PDF VIEWER & DOWNLOAD SYSTEM
 // ==========================================
 const detectTokenFromUrl = new URLSearchParams(window.location.search).get('t');
 if (detectTokenFromUrl) {
@@ -1472,7 +1541,7 @@ document.getElementById('shareBookBtn').addEventListener('click', () => {
 });
 
 // ==========================================
-// REPORT ISSUE MODAL LOGIC
+// 15. REPORT BROKEN LINK
 // ==========================================
 document.getElementById('reportLinkBtn').addEventListener('click', () => {
     document.getElementById('reportModalOverlay').classList.add('active');
@@ -1535,7 +1604,7 @@ submitReportBtn.addEventListener('click', async () => {
 });
 
 // ==========================================
-// TOKEN MODAL BUTTON LOGIC
+// 16. TOKEN VERIFICATION
 // ==========================================
 const particleContainer = document.getElementById('particles');
 if(particleContainer) {
@@ -1630,7 +1699,7 @@ document.getElementById('verifyBtn').addEventListener('click', async () => {
 });
 
 // ==========================================
-// R2 UPLOAD & BOOK PUBLISHING
+// 17. CLOUDFLARE R2 UPLOAD & BOOK PUBLISH
 // ==========================================
 ['fileCoverGallery', 'fileCoverBrowse'].forEach(id => {
     document.getElementById(id).addEventListener('change', function(e) {
