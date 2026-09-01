@@ -169,17 +169,78 @@ main::-webkit-scrollbar { display: none; }
 .bottom-nav-item.active .nav-label { color: #ffffff; }
 
 /* ========================================= */
-/* HOME TAB COMPONENTS                       */
+/* 🌟 1918x820 PROMOTIONAL BANNER CAROUSEL 🌟 */
 /* ========================================= */
-.quote-card { background: linear-gradient(135deg, rgba(255, 255, 255, 0.08) 0%, rgba(255, 255, 255, 0.02) 100%); backdrop-filter: blur(20px); border: 1px solid rgba(255, 255, 255, 0.25); border-top: 1px solid rgba(255, 255, 255, 0.4); border-left: 1px solid rgba(255, 255, 255, 0.3); border-radius: 24px; padding: 26px 22px; margin-bottom: 25px; position: relative; overflow: hidden; box-shadow: 0 15px 35px rgba(0, 0, 0, 0.7), 0 0 25px rgba(255, 255, 255, 0.12), inset 0 0 20px rgba(255, 255, 255, 0.05); flex-shrink: 0; transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1); }
-.quote-card:hover { transform: translateY(-4px); box-shadow: 0 20px 40px rgba(0, 0, 0, 0.8), 0 0 35px rgba(255, 255, 255, 0.22), inset 0 0 25px rgba(255, 255, 255, 0.08); }
-.quote-card::before { content: ''; position: absolute; top: -30%; left: -30%; width: 160%; height: 160%; background: radial-gradient(circle, rgba(255, 255, 255, 0.12) 0%, transparent 60%); pointer-events: none; z-index: 0; animation: rotateGlow 12s linear infinite; }
-@keyframes rotateGlow { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
-.quote-card > * { position: relative; z-index: 1; }
+.promo-carousel-container {
+    width: 100%;
+    aspect-ratio: 1918 / 820;
+    margin-bottom: 22px;
+    border-radius: 20px;
+    overflow: hidden;
+    position: relative;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.7), inset 0 0 20px rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.18);
+    flex-shrink: 0;
+    background-color: #0d0d12;
+}
 
-.welcome-badge { display: inline-flex; align-items: center; gap: 6px; background: rgba(255, 255, 255, 0.15); color: #ffffff; border: 1px solid rgba(255, 255, 255, 0.4); font-size: 0.75rem; font-weight: 700; padding: 6px 14px; border-radius: 20px; margin-bottom: 16px; text-transform: uppercase; letter-spacing: 1px; box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3); backdrop-filter: blur(4px); }
-.quote-text { font-size: 1.15rem; font-style: italic; font-weight: 600; line-height: 1.6; color: #f4f4f5; margin-bottom: 15px; text-shadow: 0 2px 5px rgba(0, 0, 0, 0.8); }
-.quote-author { font-size: 0.9rem; color: #a1a1aa; text-align: right; font-weight: 600; letter-spacing: 0.5px; }
+.promo-carousel-track {
+    display: flex;
+    width: 100%;
+    height: 100%;
+    transition: transform 0.45s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.promo-slide {
+    flex: 0 0 100%;
+    width: 100%;
+    height: 100%;
+    position: relative;
+    display: block;
+    text-decoration: none;
+    -webkit-tap-highlight-color: transparent;
+}
+
+.promo-banner-img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+    pointer-events: none;
+}
+
+/* Dots Indicator */
+.promo-dots-wrapper {
+    position: absolute;
+    bottom: 10px;
+    left: 50%;
+    transform: translateX(-50%);
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    z-index: 10;
+    background: rgba(0, 0, 0, 0.55);
+    padding: 4px 10px;
+    border-radius: 20px;
+    backdrop-filter: blur(6px);
+    border: 1px solid rgba(255, 255, 255, 0.15);
+}
+
+.promo-dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.35);
+    transition: all 0.3s ease;
+    cursor: pointer;
+}
+
+.promo-dot.active {
+    width: 20px;
+    border-radius: 10px;
+    background: #ffffff;
+    box-shadow: 0 0 10px rgba(255, 255, 255, 0.8);
+}
 
 .section-header-title { font-size: 1.1rem; font-weight: 800; color: #fff; letter-spacing: 0.5px; text-transform: uppercase; display: flex; align-items: center; gap: 8px; }
 
@@ -377,7 +438,7 @@ main::-webkit-scrollbar { display: none; }
 .noti-card-desc { font-size: 0.8rem; color: var(--text-secondary); }
 
 /* ========================================= */
-/* 🌟 ME TAB / PROFILE NEW STYLES 🌟         */
+/* ME TAB / PROFILE STYLES                   */
 /* ========================================= */
 .dev-scroll-area { flex: 1; width: 100%; overflow-y: auto; overflow-x: hidden; padding: 0px; display: flex; flex-direction: column; background-color: transparent; -webkit-overflow-scrolling: touch; transform: translateZ(0); will-change: transform; overscroll-behavior-y: contain; overscroll-behavior-x: none; }
 .dev-scroll-area::-webkit-scrollbar { display: none; }
@@ -725,7 +786,7 @@ select.adm-input { appearance: none; -webkit-appearance: none; padding-right: 40
 .btn-confirm-logout:active { transform: scale(0.95); box-shadow: 0 2px 5px rgba(239, 68, 68, 0.4); }
 
 /* ========================================= */
-/* 🌟 NEW: UG UPLOAD POPUP (TUTORIAL MODAL)🌟 */
+/* UG UPLOAD POPUP (TUTORIAL MODAL)          */
 /* ========================================= */
 .ug-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.85); backdrop-filter: blur(5px); display: flex; justify-content: center; align-items: center; z-index: 9999999; opacity: 1; transition: opacity 0.4s ease; padding: 15px; }
 .ug-overlay.hidden { opacity: 0; pointer-events: none; }
