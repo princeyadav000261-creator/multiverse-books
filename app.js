@@ -1,6 +1,27 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
-import { getFirestore, collection, addDoc, doc, updateDoc, onSnapshot, query, orderBy, setDoc, getDoc, increment, getDocs } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
-import { getAuth, signInWithEmailAndPassword, GoogleAuthProvider, signInWithPopup, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js";
+import { 
+    getFirestore, 
+    collection, 
+    addDoc, 
+    doc, 
+    updateDoc, 
+    onSnapshot, 
+    query, 
+    orderBy, 
+    setDoc, 
+    getDoc, 
+    runTransaction, 
+    Timestamp, 
+    getDocs 
+} from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
+import { 
+    getAuth, 
+    signInWithEmailAndPassword, 
+    GoogleAuthProvider, 
+    signInWithPopup, 
+    onAuthStateChanged, 
+    signOut 
+} from "https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js";
 import { getAnalytics } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-analytics.js";
 
 // ==========================================
@@ -22,14 +43,11 @@ const auth = getAuth(app);
 const provider = new GoogleAuthProvider();
 const analytics = getAnalytics(app); 
 
-// ==========================================
-// 2. R2 PUBLIC URL (For Cover Images Only)
-// ==========================================
-// YAHAN APNA CLOUDFLARE R2 PUBLIC DOMAIN DAALO (jaise: https://pub-xyz.r2.dev)
+// R2 Public Image Domain
 const R2_PUBLIC_IMAGE_URL = "https://your-cloudflare-public-domain.r2.dev"; 
 
 // ==========================================
-// GLOBAL VARIABLES
+// GLOBAL VARIABLES & STATE
 // ==========================================
 let booksData = [];
 let mainFilteredData = []; 
@@ -41,16 +59,26 @@ let activeBookTitle = "";
 let IS_SUPER_ADMIN = false;
 let isUserLoggedIn = false; 
 
-let CURRENT_ADMIN_NAME = "USER";
-let CURRENT_ADMIN_EMAIL = "";
-let CURRENT_ADMIN_PHOTO = "https://i.postimg.cc/D0BF1b77/file-000000000e847207a64f6711d825a859.png";
+let CURRENT_USER_NAME = "Guest User";
+let CURRENT_USER_EMAIL = "";
+let CURRENT_USER_PHOTO = "https://i.postimg.cc/D0BF1b77/file-000000000e847207a64f6711d825a859.png";
 
 let savedBooks = JSON.parse(localStorage.getItem('spidy_saved_books')) || [];
 let selectedCoverFile = null;
 let selectedPdfFile = null;
 
+// Channel Notifications State
+let liveChannelPosts = [];
+let activeContextPost = null;
+let isFirstNotiLoad = true;
+let unreadNotiCount = 0;
+
+// User Time Spent / Active Session Tracker
+let sessionStartTime = Date.now();
+let totalActiveSeconds = 0;
+
 // ==========================================
-// UTILITY FUNCTIONS & PREMIUM TOAST NOTIFICATIONS
+// UTILITY FUNCTIONS & TOAST
 // ==========================================
 function sanitizeHTML(str) {
     if (typeof str !== 'string') return str;
@@ -66,20 +94,16 @@ function showToast(message, type = 'success') {
     if(!toast) return; 
     
     clearTimeout(globalToastTimeout);
-    
     toast.innerHTML = type === 'success' 
         ? `<i class="fas fa-circle-check" style="color: #10b981; font-size: 16px;"></i> ${sanitizeHTML(message)}`
         : `<i class="fas fa-circle-exclamation" style="color: #ef4444; font-size: 16px;"></i> ${sanitizeHTML(message)}`;
     
     toast.style.borderLeft = type === 'success' ? '4px solid #10b981' : '4px solid #ef4444';
-
     toast.classList.remove('show');
     void toast.offsetWidth; 
     toast.classList.add('show');
 
-    globalToastTimeout = setTimeout(() => {
-        toast.classList.remove('show');
-    }, 2000);
+    globalToastTimeout = setTimeout(() => { toast.classList.remove('show'); }, 2000);
 }
 
 function generateDeviceFingerprint() {
@@ -95,11 +119,30 @@ function generateDeviceFingerprint() {
     return Math.abs(hash).toString(16);
 }
 
+// Particle Generator for Tab Profile
+function initProfileParticles() {
+    const container = document.getElementById('profileParticles');
+    if (!container || container.children.length > 0) return;
+    for (let i = 0; i < 30; i++) {
+        let p = document.createElement('div');
+        p.classList.add('particle');
+        let size = Math.random() * 2.2 + 1.8; 
+        let posX = Math.random() * 100; 
+        let delay = Math.random() * 12; 
+        let duration = Math.random() * 10 + 8; 
+        p.style.width = size + 'px'; 
+        p.style.height = size + 'px';
+        p.style.left = posX + '%'; 
+        p.style.animationDelay = `-${delay}s`;
+        p.style.animationDuration = duration + 's';
+        container.appendChild(p);
+    }
+}
+
 // ==========================================
-// 🌟 PREMIUM DUAL POPUPS LOGIC 🌟
+// POPUPS LOGIC
 // ==========================================
 let popupsInitialized = false;
-
 function initPremiumPopups() {
     if(popupsInitialized) return; 
     popupsInitialized = true;
@@ -183,10 +226,12 @@ function tryTransition() {
 
                 setTimeout(() => {
                     document.getElementById('mainAppWrapper').style.display = 'block';
+                    initProfileParticles();
 
                     if (isDeepLinkLoad && pendingBookSlug) {
-                        if (isUserLoggedIn) { openDownloadPageLocal(pendingBookSlug, true); } 
-                        else {
+                        if (isUserLoggedIn) { 
+                            openDownloadPageLocal(pendingBookSlug, true); 
+                        } else {
                             const loginOverlay = document.getElementById('loginOverlay');
                             loginOverlay.style.display = 'flex';
                             setTimeout(() => loginOverlay.style.opacity = '1', 10);
@@ -223,32 +268,118 @@ document.getElementById('daily-quote-text').innerHTML = `<i class="fas fa-quote-
 document.getElementById('daily-quote-author').innerText = `— ${sanitizeHTML(quotes[currentQuoteIndex].author)}`;
 
 // ==========================================
-// 🚀 CREDITS SYSTEM (20 DOWNLOADS PER 24 HRS)
+// 🚀 READ LIMIT, CREDITS & DYNAMIC RANK SYSTEM
 // ==========================================
-function updateLiveCredits(recentDownloadsCount) {
+function updateLiveCreditsUI(recentReadsCount) {
+    const creditsEl = document.getElementById('tabProfileCredits');
+    if (!creditsEl) return;
+    
     if (IS_SUPER_ADMIN) {
-        document.getElementById('profile-credits').innerHTML = `<span style="font-size: 24px;">&infin;</span>`; 
+        creditsEl.innerHTML = `<span style="font-size: 24px;">&infin;</span>`; 
         return;
     }
-    let remainingCredits = 20 - recentDownloadsCount;
+    let remainingCredits = 20 - recentReadsCount;
     if (remainingCredits < 0) remainingCredits = 0;
-    document.getElementById('profile-credits').innerText = remainingCredits;
+    creditsEl.innerText = remainingCredits;
 }
 
+// Clean Saved Books (Filter out deleted books)
+function getSanitizedSavedBooks() {
+    const validSlugs = new Set(booksData.map(b => b.slug));
+    const cleanList = savedBooks.filter(slug => validSlugs.has(slug));
+    if (cleanList.length !== savedBooks.length) {
+        savedBooks = cleanList;
+        localStorage.setItem('spidy_saved_books', JSON.stringify(savedBooks));
+    }
+    return cleanList;
+}
+
+// Calculate Accurate Unique Rank Based on User Time Spent / Total Activity
+async function calculateUserRank(currentUid) {
+    try {
+        const usersRef = collection(db, "users");
+        const querySnapshot = await getDocs(usersRef);
+        let allUsers = [];
+        
+        querySnapshot.forEach((docSnap) => {
+            allUsers.push({ id: docSnap.id, ...docSnap.data() });
+        });
+
+        // Sorting: High activeTime -> High lifetimeDownloads -> Oldest joined
+        allUsers.sort((a, b) => {
+            let timeA = parseInt(a.timeSpentSeconds) || 0;
+            let timeB = parseInt(b.timeSpentSeconds) || 0;
+            if (timeB !== timeA) return timeB - timeA;
+
+            let downA = parseInt(a.lifetimeDownloads) || 0;
+            let downB = parseInt(b.lifetimeDownloads) || 0;
+            if (downB !== downA) return downB - downA;
+
+            let joinA = parseInt(a.createdAt) || 9999999999999;
+            let joinB = parseInt(b.createdAt) || 9999999999999;
+            if (joinA !== joinB) return joinA - joinB;
+
+            return a.id.localeCompare(b.id);
+        });
+
+        let rank = 1;
+        for (let i = 0; i < allUsers.length; i++) {
+            if (allUsers[i].id === currentUid) {
+                rank = i + 1;
+                break;
+            }
+        }
+
+        const rankElement = document.getElementById('tabProfileRank');
+        if (rankElement) {
+            if (rank === 1) {
+                rankElement.style.color = "#fbbf24";
+                rankElement.innerHTML = `<i class="fas fa-crown"></i> #1`;
+            } else if (rank <= 3) {
+                rankElement.style.color = rank === 2 ? "#9ca3af" : "#b45309";
+                rankElement.innerText = "#" + rank;
+            } else {
+                rankElement.style.color = "#ffffff";
+                rankElement.innerText = "#" + rank;
+            }
+        }
+    } catch (e) {
+        console.error("Rank calculation error:", e);
+    }
+}
+
+// Sync Time Spent to Firestore periodically
+setInterval(async () => {
+    if (isUserLoggedIn && auth.currentUser) {
+        totalActiveSeconds += 10;
+        try {
+            const userRef = doc(db, "users", auth.currentUser.uid);
+            await setDoc(userRef, { timeSpentSeconds: totalActiveSeconds }, { merge: true });
+        } catch (e) {}
+    }
+}, 10000);
+
+// ==========================================
+// AUTH STATE & FIRESTORE LISTENERS
+// ==========================================
 onAuthStateChanged(auth, async (user) => {
     if (user) {
         isUserLoggedIn = true;
         localStorage.setItem('isUserLoggedIn', 'true');
 
         let dName = user.displayName || user.email.split('@')[0];
-        document.getElementById('sidebarProfileName').innerText = sanitizeHTML(dName);
-        
-        const sidebarAvatar = document.getElementById('sidebarProfileImg');
-        CURRENT_ADMIN_PHOTO = user.photoURL ? user.photoURL : "https://i.postimg.cc/D0BF1b77/file-000000000e847207a64f6711d825a859.png";
-        sidebarAvatar.src = CURRENT_ADMIN_PHOTO;
-        
-        CURRENT_ADMIN_NAME = dName;
-        CURRENT_ADMIN_EMAIL = user.email;
+        CURRENT_USER_NAME = dName;
+        CURRENT_USER_EMAIL = user.email;
+        CURRENT_USER_PHOTO = user.photoURL ? user.photoURL : "https://i.postimg.cc/D0BF1b77/file-000000000e847207a64f6711d825a859.png";
+
+        // Update Sidebar
+        document.getElementById('sidebarProfileName').innerText = sanitizeHTML(CURRENT_USER_NAME);
+        document.getElementById('sidebarProfileImg').src = CURRENT_USER_PHOTO;
+
+        // Update Tab Profile
+        document.getElementById('tabProfileName').innerText = sanitizeHTML(CURRENT_USER_NAME);
+        document.getElementById('tabProfileEmail').innerText = sanitizeHTML(CURRENT_USER_EMAIL);
+        document.getElementById('tabProfileAvatar').src = CURRENT_USER_PHOTO;
 
         try {
             const userRef = doc(db, "users", user.uid);
@@ -264,16 +395,28 @@ onAuthStateChanged(auth, async (user) => {
             } else {
                 IS_SUPER_ADMIN = false;
                 document.getElementById('sidebarRoleText').innerText = "Verified User";
-                switchAdminTabLocal('add');
             }
 
+            let validSaved = getSanitizedSavedBooks();
+            document.getElementById('tabProfileSave').innerText = validSaved.length;
+
             if (!userSnap.exists()) {
-                await setDoc(userRef, { email: user.email, name: dName, photo: user.photoURL || "", recentDownloads: [], lifetimeDownloads: 0, createdAt: new Date().getTime() }, { merge: true });
-                updateLiveCredits(0); 
+                await setDoc(userRef, { 
+                    email: user.email, 
+                    name: dName, 
+                    photo: user.photoURL || "", 
+                    recentDownloads: [], 
+                    lifetimeDownloads: 0, 
+                    timeSpentSeconds: 0,
+                    createdAt: Date.now() 
+                }, { merge: true });
+                updateLiveCreditsUI(0);
+                document.getElementById('tabProfileRead').innerText = 0;
             } else {
                 let data = userSnap.data();
+                totalActiveSeconds = data.timeSpentSeconds || 0;
                 let now = Date.now();
-                let validDownloads = [];
+                let validReads = [];
                 let accessedSlugs = new Set();
 
                 (data.recentDownloads || []).forEach(item => {
@@ -281,59 +424,456 @@ onAuthStateChanged(auth, async (user) => {
                     let slug = typeof item === 'number' ? null : item.slug;
 
                     if (now - time < 24 * 60 * 60 * 1000) {
-                        validDownloads.push(item);
+                        validReads.push(item);
                         if(slug) accessedSlugs.add(slug);
                     }
                 });
 
-                let legacyCount = validDownloads.filter(i => typeof i === 'number').length;
+                let legacyCount = validReads.filter(i => typeof i === 'number').length;
                 let totalRecentCount = accessedSlugs.size + legacyCount;
-                updateLiveCredits(totalRecentCount);
+                updateLiveCreditsUI(totalRecentCount);
+
+                document.getElementById('tabProfileRead').innerText = data.lifetimeDownloads || 0;
             }
 
-        } catch (error) { console.error("Verification failed:", error); IS_SUPER_ADMIN = false; }
+            calculateUserRank(user.uid);
+
+        } catch (error) { 
+            console.error("User initialization failed:", error); 
+            IS_SUPER_ADMIN = false; 
+        }
     } else {
-        isUserLoggedIn = false; IS_SUPER_ADMIN = false; localStorage.removeItem('isUserLoggedIn');
+        isUserLoggedIn = false; 
+        IS_SUPER_ADMIN = false; 
+        localStorage.removeItem('isUserLoggedIn');
+        
         document.getElementById('sidebarProfileName').innerText = "Guest User";
         document.getElementById('sidebarRoleText').innerText = "Please Login";
         document.getElementById('sidebarProfileImg').src = "https://i.postimg.cc/D0BF1b77/file-000000000e847207a64f6711d825a859.png";
-        document.getElementById('profile-credits').innerText = "--";
+        
+        document.getElementById('tabProfileName').innerText = "Guest User";
+        document.getElementById('tabProfileEmail').innerText = "Please Login";
+        document.getElementById('tabProfileAvatar').src = "https://i.postimg.cc/D0BF1b77/file-000000000e847207a64f6711d825a859.png";
+        document.getElementById('tabProfileCredits').innerText = "--";
+        document.getElementById('tabProfileRead').innerText = "0";
+        document.getElementById('tabProfileSave').innerText = "0";
+        document.getElementById('tabProfileRank').innerText = "#--";
     }
 
-    isAppReady.auth = true; tryTransition();
+    isAppReady.auth = true; 
+    tryTransition();
 
     // PROMPTS LISTENER
     onSnapshot(query(collection(db, "prompts"), orderBy("createdAt", "asc")), (snapshot) => {
         const container = document.getElementById('promptsContainer');
         container.innerHTML = '';
-        if(snapshot.empty) { container.innerHTML = `<div style="text-align:center; padding:20px; color:#a1a1aa; font-weight:800;">No prompts available yet.</div>`; return; }
-        snapshot.forEach(doc => {
-            const data = doc.data(); const id = doc.id;
+        if(snapshot.empty) { 
+            container.innerHTML = `<div style="text-align:center; padding:20px; color:#a1a1aa; font-weight:800;">No prompts available yet.</div>`; 
+            return; 
+        }
+        snapshot.forEach(docSnap => {
+            const data = docSnap.data(); 
+            const id = docSnap.id;
             const safeText = sanitizeHTML(data.text);
             const safeInstruction = data.instruction ? sanitizeHTML(data.instruction).replace(/\n/g, "<br>") : "";
             const safeTitle = sanitizeHTML(data.title);
             let instructionHTML = '';
-            if(safeInstruction) { instructionHTML = `<div style="color: #ffffff; font-weight: 600; font-size: 14px; margin-bottom: 8px; margin-left: 2px; line-height: 1.5; font-family: 'Inter', sans-serif;">${safeInstruction}</div>`; }
+            if(safeInstruction) { 
+                instructionHTML = `<div style="color: #ffffff; font-weight: 600; font-size: 14px; margin-bottom: 8px; margin-left: 2px; line-height: 1.5; font-family: 'Inter', sans-serif;">${safeInstruction}</div>`; 
+            }
             container.innerHTML += `<div class="telegram-prompt-wrapper">${instructionHTML}<div class="telegram-prompt-card"><div class="telegram-prompt-header" style="display:flex; align-items:center;">${safeTitle}</div><div class="telegram-prompt-body">${safeText}</div><div class="telegram-prompt-footer"><button class="telegram-copy-btn" data-text="${encodeURIComponent(data.text)}" id="copy-btn-${id}"><i class="far fa-copy"></i> COPY CODE</button></div></div></div>`;
         });
     });
 
     // BOOKS LISTENER
-    const q = query(collection(db, "books"), orderBy("createdAt", "desc"));
-    onSnapshot(q, (snapshot) => {
+    const qBooks = query(collection(db, "books"), orderBy("createdAt", "desc"));
+    onSnapshot(qBooks, (snapshot) => {
         booksData = [];
-        snapshot.forEach((doc) => {
-            let data = doc.data(); data.id = doc.id;
+        snapshot.forEach((docSnap) => {
+            let data = docSnap.data(); 
+            data.id = docSnap.id;
             data.slug = data.title.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)+/g, '');
             booksData.push(data);
         });
         mainFilteredData = [...booksData]; 
-        updateDynamicFilters(); applyMasterFilter(); generateNotifications();
         
-        isAppReady.data = true; tryTransition();
+        let validSaved = getSanitizedSavedBooks();
+        document.getElementById('tabProfileSave').innerText = validSaved.length;
+
+        updateDynamicFilters(); 
+        applyMasterFilter();
+        
+        isAppReady.data = true; 
+        tryTransition();
+    });
+
+    // ==========================================
+    // 🌟 REALTIME CHANNEL NOTIFICATIONS LISTENER 🌟
+    // ==========================================
+    const qPosts = query(collection(db, "channel_posts"), orderBy("createdAt", "asc"));
+    onSnapshot(qPosts, (snapshot) => {
+        const dataArr = [];
+        snapshot.forEach(docSnap => {
+            dataArr.push({ id: docSnap.id, ...docSnap.data() });
+        });
+
+        const countChanged = liveChannelPosts.length !== dataArr.length;
+        const prevCount = liveChannelPosts.length;
+        liveChannelPosts = dataArr;
+
+        const chatBody = document.getElementById('chatBody');
+        const scrollDownWrapper = document.getElementById('scrollDownWrapper');
+        const unreadBadge = document.getElementById('unreadBadge');
+
+        if (isFirstNotiLoad) {
+            renderChannelFeed(liveChannelPosts, true);
+            isFirstNotiLoad = false;
+        } else if (countChanged) {
+            const distanceFromBottom = chatBody.scrollHeight - chatBody.scrollTop - chatBody.clientHeight;
+            if (distanceFromBottom > 120 && liveChannelPosts.length > prevCount) {
+                unreadNotiCount += (liveChannelPosts.length - prevCount);
+                unreadBadge.innerText = unreadNotiCount > 99 ? '99+' : unreadNotiCount;
+                unreadBadge.classList.add('active');
+                scrollDownWrapper.classList.add('show');
+                renderChannelFeed(liveChannelPosts, false);
+            } else {
+                renderChannelFeed(liveChannelPosts, true);
+            }
+        } else {
+            liveChannelPosts.forEach(p => updateChannelReactionDOM(p.id));
+        }
+    }, (err) => {
+        console.error("Channel Firestore Error:", err);
+        const chatBody = document.getElementById('chatBody');
+        if (chatBody) {
+            chatBody.innerHTML = `<div class="empty-loading" style="color:#ef4444;"><i class="fas fa-triangle-exclamation" style="font-size:24px;"></i>Failed to load messages.</div>`;
+        }
     });
 });
 
+// ==========================================
+// CHANNEL NOTIFICATIONS RENDER & ACTIONS
+// ==========================================
+function stripMarkdown(text) {
+    if (!text) return "";
+    return text.replace(/\[([^\]]+)\]\([^)]+\)/g, '$1').replace(/[*_~`>]/g, '').replace(/\n+/g, ' ').trim();
+}
+
+function parseMarkdown(rawText) {
+    if (!rawText) return "";
+    let safe = typeof DOMPurify !== 'undefined' ? DOMPurify.sanitize(rawText) : sanitizeHTML(rawText);
+
+    safe = safe.replace(/(^|\n)(&gt;|>)\s*(.+?)(?=(\n\n|\n(?!&gt;|>)|$))/gs, function(match, prefix, qTag, content) {
+        let cleanContent = content.replace(/(^|\n)(&gt;|>)\s*/g, '$1');
+        return prefix + `<div class="wa-markdown-quote">${cleanContent}</div>`;
+    });
+
+    safe = safe.replace(/\*([^\*]+)\*/g, '<b>$1</b>');
+    safe = safe.replace(/_([^_]+)_/g, '<i>$1</i>');
+    safe = safe.replace(/~([^~]+)~/g, '<del>$1</del>');
+    safe = safe.replace(/\[([^\]]+)\]\((https?:\/\/[^\s)]+)\)/g, '<a href="$2" target="_blank" rel="noopener noreferrer">$1</a>');
+    return safe.replace(/\n/g, '<br>');
+}
+
+function formatReactionCount(num) {
+    if (!num || num <= 0) return '0';
+    if (num >= 1000000) return (num / 1000000).toFixed(1) + 'M';
+    if (num >= 1000) return (num / 1000).toFixed(1) + 'K';
+    return num.toString();
+}
+
+function formatViewsCount(num) {
+    if (!num) return '0';
+    if (num >= 1000000) return (num / 1000000).toFixed(1) + 'M';
+    if (num >= 1000) return (num / 1000).toFixed(1) + 'K';
+    return num.toString();
+}
+
+function normalizeDate(timestamp) {
+    if (!timestamp) return new Date();
+    if (timestamp instanceof Timestamp) return timestamp.toDate();
+    if (timestamp instanceof Date) return timestamp;
+    if (typeof timestamp === 'number') return new Date(timestamp);
+    return new Date(timestamp);
+}
+
+function getUserReaction(postId) {
+    return localStorage.getItem(`reaction_${postId}`);
+}
+
+function setUserReaction(postId, emoji) {
+    if (emoji) localStorage.setItem(`reaction_${postId}`, emoji);
+    else localStorage.removeItem(`reaction_${postId}`);
+}
+
+function buildReactionsHTML(reactionsObj, userSelectedEmoji) {
+    if (!reactionsObj) return '';
+    const sortedReactions = Object.entries(reactionsObj)
+        .filter(([_, count]) => count > 0)
+        .sort((a, b) => b[1] - a[1]);
+
+    let pillsHTML = '';
+    sortedReactions.forEach(([emoji, count]) => {
+        const isActive = userSelectedEmoji === emoji ? 'active' : '';
+        pillsHTML += `
+            <div class="reaction-pill ${isActive}" data-emoji="${emoji}">
+                <span class="emoji">${emoji}</span>
+                <span class="count">${formatReactionCount(count)}</span>
+            </div>`;
+    });
+    return pillsHTML;
+}
+
+function updateChannelReactionDOM(postId) {
+    const post = liveChannelPosts.find(p => p.id === postId);
+    const bubble = document.getElementById(`post_${postId}`);
+    if (!post || !bubble) return;
+
+    const userSelectedEmoji = getUserReaction(postId);
+    const reactionsContainer = bubble.querySelector('.inline-reactions');
+    if (reactionsContainer) {
+        reactionsContainer.innerHTML = buildReactionsHTML(post.reactions, userSelectedEmoji);
+        reactionsContainer.querySelectorAll('.reaction-pill').forEach(pill => {
+            pill.addEventListener('click', (e) => {
+                e.stopPropagation();
+                applyPostReaction(postId, pill.dataset.emoji);
+            });
+        });
+    }
+}
+
+function renderChannelFeed(posts, shouldAutoScroll = false) {
+    const chatBody = document.getElementById('chatBody');
+    if (!chatBody) return;
+
+    if (!posts || posts.length === 0) {
+        chatBody.innerHTML = `
+            <div class="empty-loading">
+                <i class="fas fa-bullhorn" style="font-size:26px; color:#9ca3af; opacity:0.6;"></i>
+                No official updates posted yet.
+            </div>`;
+        return;
+    }
+
+    const prevScrollTop = chatBody.scrollTop;
+    chatBody.innerHTML = '';
+    let lastDateStr = '';
+
+    posts.forEach(post => {
+        const dateObj = normalizeDate(post.createdAt);
+        const dateStr = dateObj.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
+
+        if (dateStr !== lastDateStr) {
+            const divider = document.createElement('div');
+            divider.className = 'date-divider';
+            divider.innerText = dateStr;
+            chatBody.appendChild(divider);
+            lastDateStr = dateStr;
+        }
+
+        const userSelectedEmoji = getUserReaction(post.id);
+        const bubble = document.createElement('div');
+        bubble.className = 'message-bubble';
+        bubble.id = `post_${post.id}`;
+        bubble.dataset.postId = post.id;
+
+        let imageHTML = post.imageUrl 
+            ? `<img src="${sanitizeHTML(post.imageUrl)}" loading="lazy" class="msg-image" alt="Post Image">` 
+            : '';
+
+        let quoteHTML = '';
+        if(post.quote) {
+            const targetId = post.quote.targetPostId || '';
+            const cleanAuthor = sanitizeHTML(post.quote.author || 'Spidy Book Hub Official');
+            const cleanSnippet = sanitizeHTML(stripMarkdown(post.quote.text || ''));
+            quoteHTML = `
+            <div class="msg-quote" onclick="event.stopPropagation(); window.scrollToPostTarget('${targetId}')">
+                 <div class="quote-author">${cleanAuthor}</div>
+                 <div class="quote-text">${cleanSnippet}</div>
+            </div>`;
+        }
+
+        const reactionPillsHTML = buildReactionsHTML(post.reactions, userSelectedEmoji);
+        const timeStr = dateObj.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true });
+
+        bubble.innerHTML = `
+            ${quoteHTML}
+            ${imageHTML}
+            <div class="msg-text">${parseMarkdown(post.text)}</div>
+            <div class="post-footer">
+                <div class="inline-reactions">${reactionPillsHTML}</div>
+                <div class="msg-meta">
+                    <i class="fas fa-eye"></i> ${formatViewsCount(post.views || 1)} &nbsp; ${timeStr}
+                </div>
+            </div>
+        `;
+
+        bubble.querySelectorAll('.reaction-pill').forEach(pill => {
+            pill.addEventListener('click', (e) => {
+                e.stopPropagation();
+                applyPostReaction(post.id, pill.dataset.emoji);
+            });
+        });
+
+        bubble.addEventListener('click', (e) => {
+            if (e.target.tagName === 'A') return;
+            activeContextPost = post;
+            const overlay = document.getElementById('contextOverlay');
+            if (overlay) overlay.classList.add('show');
+            if (navigator.vibrate) navigator.vibrate(20);
+        });
+
+        chatBody.appendChild(bubble);
+    });
+
+    if (shouldAutoScroll) {
+        setTimeout(() => { chatBody.scrollTop = chatBody.scrollHeight; }, 60);
+    } else {
+        chatBody.scrollTop = prevScrollTop;
+    }
+}
+
+async function applyPostReaction(postId, newEmoji) {
+    const currentActive = getUserReaction(postId);
+    if (currentActive === newEmoji) return;
+
+    const postIndex = liveChannelPosts.findIndex(p => p.id === postId);
+    if (postIndex !== -1) {
+        const target = { ...liveChannelPosts[postIndex] };
+        target.reactions = { ...(target.reactions || {}) };
+
+        if (currentActive && target.reactions[currentActive]) {
+            target.reactions[currentActive] = Math.max(0, target.reactions[currentActive] - 1);
+            if (target.reactions[currentActive] === 0) delete target.reactions[currentActive];
+        }
+
+        target.reactions[newEmoji] = (target.reactions[newEmoji] || 0) + 1;
+        setUserReaction(postId, newEmoji);
+
+        liveChannelPosts[postIndex] = target;
+        updateChannelReactionDOM(postId);
+        if (navigator.vibrate) navigator.vibrate(15);
+    }
+
+    try {
+        const postRef = doc(db, "channel_posts", postId);
+        await runTransaction(db, async (transaction) => {
+            const postDoc = await transaction.get(postRef);
+            if (!postDoc.exists()) return;
+
+            const data = postDoc.data();
+            const reactions = data.reactions || {};
+
+            if (currentActive && reactions[currentActive]) {
+                reactions[currentActive] = Math.max(0, reactions[currentActive] - 1);
+                if (reactions[currentActive] === 0) delete reactions[currentActive];
+            }
+
+            reactions[newEmoji] = (reactions[newEmoji] || 0) + 1;
+            transaction.update(postRef, { reactions });
+        });
+    } catch (e) {
+        console.error("Reaction Sync Error:", e);
+    }
+}
+
+window.scrollToPostTarget = function(postId) {
+    if(!postId) return;
+    const target = document.getElementById(`post_${postId}`);
+    if(target) {
+        target.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        target.classList.add('highlight-post');
+        setTimeout(() => target.classList.remove('highlight-post'), 1800);
+    } else {
+        showToast("Original message not found", "error");
+    }
+};
+
+// Context Menu Event Listeners
+const contextOverlay = document.getElementById('contextOverlay');
+if (contextOverlay) {
+    contextOverlay.addEventListener('click', (e) => {
+        if (e.target === contextOverlay) contextOverlay.classList.remove('show');
+    });
+}
+
+document.querySelectorAll('.cm-emoji').forEach(el => {
+    el.addEventListener('click', () => {
+        if (!activeContextPost) return;
+        applyPostReaction(activeContextPost.id, el.dataset.emoji);
+        if (contextOverlay) contextOverlay.classList.remove('show');
+        activeContextPost = null;
+    });
+});
+
+document.getElementById('cmCopyText')?.addEventListener('click', () => {
+    if (!activeContextPost) return;
+    navigator.clipboard.writeText(stripMarkdown(activeContextPost.text));
+    showToast("Text Copied!", "success");
+    if (contextOverlay) contextOverlay.classList.remove('show');
+});
+
+document.getElementById('cmCopyLink')?.addEventListener('click', () => {
+    if (!activeContextPost) return;
+    const url = `${window.location.origin}${window.location.pathname}#/post/${activeContextPost.id}`;
+    navigator.clipboard.writeText(url);
+    showToast("Link Copied!", "success");
+    if (contextOverlay) contextOverlay.classList.remove('show');
+});
+
+document.getElementById('cmForwardPost')?.addEventListener('click', () => {
+    if (!activeContextPost) return;
+    const url = `${window.location.origin}${window.location.pathname}#/post/${activeContextPost.id}`;
+    const cleanText = stripMarkdown(activeContextPost.text);
+    if (navigator.share) {
+        navigator.share({ title: 'Spidy Book Hub Official', text: cleanText, url: url }).catch(() => {});
+    } else {
+        navigator.clipboard.writeText(url);
+        showToast("Link Copied for Share!", "success");
+    }
+    if (contextOverlay) contextOverlay.classList.remove('show');
+});
+
+document.getElementById('cmReportPost')?.addEventListener('click', () => {
+    showToast("Post reported successfully!", "success");
+    if (contextOverlay) contextOverlay.classList.remove('show');
+});
+
+// Chat Scroll & Unread Badge Handlers
+const notiChatBody = document.getElementById('chatBody');
+const notiScrollWrapper = document.getElementById('scrollDownWrapper');
+const notiUnreadBadge = document.getElementById('unreadBadge');
+
+if (notiChatBody) {
+    notiChatBody.addEventListener('scroll', () => {
+        const distanceFromBottom = notiChatBody.scrollHeight - notiChatBody.scrollTop - notiChatBody.clientHeight;
+        if (distanceFromBottom > 120) {
+            notiScrollWrapper.classList.add('show');
+        } else {
+            notiScrollWrapper.classList.remove('show');
+            unreadNotiCount = 0;
+            notiUnreadBadge.innerText = '0';
+            notiUnreadBadge.classList.remove('active');
+        }
+    });
+}
+
+document.getElementById('scrollDownBtn')?.addEventListener('click', () => {
+    unreadNotiCount = 0;
+    notiUnreadBadge.innerText = '0';
+    notiUnreadBadge.classList.remove('active');
+    if (notiChatBody) {
+        notiChatBody.scrollTo({ top: notiChatBody.scrollHeight, behavior: 'smooth' });
+    }
+});
+
+document.getElementById('closeNotiBtn')?.addEventListener('click', () => {
+    history.back();
+});
+
+// ==========================================
+// PROMPTS COPY
+// ==========================================
 document.getElementById('promptsContainer').addEventListener('click', (e) => {
     const copyBtn = e.target.closest('.telegram-copy-btn');
     if (copyBtn) {
@@ -371,9 +911,17 @@ function closeLoginOverlayLocal() {
 }
 document.getElementById('closeLoginBtn').addEventListener('click', closeLoginOverlayLocal);
 document.getElementById('toggleEye').addEventListener('click', () => {
-    const passInput = document.getElementById('loginPassword'); const eyeIcon = document.getElementById('toggleEye');
-    if (passInput.type === 'password') { passInput.type = 'text'; eyeIcon.classList.replace('fa-eye', 'fa-eye-slash'); eyeIcon.style.color = '#00d2ff'; } 
-    else { passInput.type = 'password'; eyeIcon.classList.replace('fa-eye-slash', 'fa-eye'); eyeIcon.style.color = '#a1a1aa'; }
+    const passInput = document.getElementById('loginPassword'); 
+    const eyeIcon = document.getElementById('toggleEye');
+    if (passInput.type === 'password') { 
+        passInput.type = 'text'; 
+        eyeIcon.classList.replace('fa-eye', 'fa-eye-slash'); 
+        eyeIcon.style.color = '#00d2ff'; 
+    } else { 
+        passInput.type = 'password'; 
+        eyeIcon.classList.replace('fa-eye-slash', 'fa-eye'); 
+        eyeIcon.style.color = '#a1a1aa'; 
+    }
 });
 
 document.getElementById('loginForm').addEventListener('submit', async (e) => {
@@ -385,12 +933,18 @@ document.getElementById('loginForm').addEventListener('submit', async (e) => {
     btn.innerHTML = `<span style="display:flex; align-items:center; gap:8px;"><div class="premium-loader"></div> Authenticating...</span>`;
     try { 
         await signInWithEmailAndPassword(auth, email, pass); 
-        e.target.reset(); showToast("Login Successful!", "success"); btn.innerHTML = originalContent; closeLoginOverlayLocal();
+        e.target.reset(); 
+        showToast("Login Successful!", "success"); 
+        btn.innerHTML = originalContent; 
+        closeLoginOverlayLocal();
         if (isDeepLinkLoad && pendingBookSlug) {
             document.getElementById('mainAppWrapper').style.display = 'block';
             setTimeout(() => { openDownloadPageLocal(pendingBookSlug, true); }, 300);
         }
-    } catch(err) { showToast("Failed: Invalid Credentials!", "error"); btn.innerHTML = originalContent; } 
+    } catch(err) { 
+        showToast("Failed: Invalid Credentials!", "error"); 
+        btn.innerHTML = originalContent; 
+    } 
 });
 
 document.getElementById('googleSignInBtn').addEventListener('click', async () => { 
@@ -399,12 +953,17 @@ document.getElementById('googleSignInBtn').addEventListener('click', async () =>
     btn.innerHTML = `<span style="display:flex; align-items:center; gap:8px;"><div class="premium-loader"></div> Connecting...</span>`;
     try { 
         await signInWithPopup(auth, provider); 
-        showToast("Google Login Successful!", "success"); btn.innerHTML = originalContent; closeLoginOverlayLocal();
+        showToast("Google Login Successful!", "success"); 
+        btn.innerHTML = originalContent; 
+        closeLoginOverlayLocal();
         if (isDeepLinkLoad && pendingBookSlug) {
             document.getElementById('mainAppWrapper').style.display = 'block';
             setTimeout(() => { openDownloadPageLocal(pendingBookSlug, true); }, 300);
         }
-    } catch(err) { showToast("Failed: Google Sign-In Error.", "error"); btn.innerHTML = originalContent; } 
+    } catch(err) { 
+        showToast("Failed: Google Sign-In Error.", "error"); 
+        btn.innerHTML = originalContent; 
+    } 
 });
 
 const logoutBtn = document.getElementById('admin-logout-btn');
@@ -451,7 +1010,10 @@ function updateDynamicFilters() {
         let matchedMainCategory = false;
         for (let mainCategory in EXAM_CATEGORY_MAP) {
             let keywords = EXAM_CATEGORY_MAP[mainCategory];
-            if (keywords.some(keyword => bookExamsString.includes(keyword))) { activeCategories.add(mainCategory); matchedMainCategory = true; }
+            if (keywords.some(keyword => bookExamsString.includes(keyword))) { 
+                activeCategories.add(mainCategory); 
+                matchedMainCategory = true; 
+            }
         }
         if (!matchedMainCategory) {
             book.exams.split(',').forEach(exam => {
@@ -464,29 +1026,35 @@ function updateDynamicFilters() {
     const sortedCategories = Array.from(activeCategories).sort();
     const catGrid = document.getElementById('categoryFilterGrid'); 
     let html = `<div class="f-pill ${currentSelectedCategory === 'All' ? 'active' : ''}" data-category="All">All</div>`;
-    sortedCategories.forEach(category => { html += `<div class="f-pill ${category === currentSelectedCategory ? 'active' : ''}" data-category="${sanitizeHTML(category)}">${sanitizeHTML(category)}</div>`; });
+    sortedCategories.forEach(category => { 
+        html += `<div class="f-pill ${category === currentSelectedCategory ? 'active' : ''}" data-category="${sanitizeHTML(category)}">${sanitizeHTML(category)}</div>`; 
+    });
     catGrid.innerHTML = html;
 }
 
 document.getElementById('categoryFilterGrid').addEventListener('click', (e) => {
     if(e.target.classList.contains('f-pill')) {
         document.querySelectorAll('#categoryFilterGrid .f-pill').forEach(el => el.classList.remove('active'));
-        e.target.classList.add('active'); currentSelectedCategory = e.target.getAttribute('data-category');
+        e.target.classList.add('active'); 
+        currentSelectedCategory = e.target.getAttribute('data-category');
     }
 });
 
 document.getElementById('languageFilterGrid').addEventListener('click', (e) => {
     if(e.target.classList.contains('f-pill')) {
         document.querySelectorAll('#languageFilterGrid .f-pill').forEach(el => el.classList.remove('active'));
-        e.target.classList.add('active'); currentSelectedLanguage = e.target.getAttribute('data-lang');
+        e.target.classList.add('active'); 
+        currentSelectedLanguage = e.target.getAttribute('data-lang');
     }
 });
 
-document.getElementById('applyFiltersBtn').addEventListener('click', () => { document.getElementById('filterBottomOverlay').classList.remove('active'); applyMasterFilter(); });
+document.getElementById('applyFiltersBtn').addEventListener('click', () => { 
+    document.getElementById('filterBottomOverlay').classList.remove('active'); 
+    applyMasterFilter(); 
+});
 
 function applyMasterFilter() {
     const searchInputRaw = document.getElementById('app-search-input').value.trim();
-    const searchStr = searchInputRaw.toLowerCase();
     let normalizedSearch = searchInputRaw.toLowerCase().replace(/[^a-z0-9\s]/g, '');
     let searchTokens = normalizedSearch.split(/\s+/).filter(token => token.length > 0);
 
@@ -506,35 +1074,56 @@ function applyMasterFilter() {
         return matchesCategory && matchesLanguage && matchesSearch;
     });
     
-    loadedCount = 0; const infiniteLoader = document.getElementById('infinite-loader');
+    loadedCount = 0; 
+    const infiniteLoader = document.getElementById('infinite-loader');
     if(mainFilteredData.length > 0) { 
         document.getElementById('no-results-msg').style.display = 'none'; 
         if(infiniteLoader) infiniteLoader.style.display = mainFilteredData.length > getBatchSize() ? 'flex' : 'none';
         renderBooksUI(0, getBatchSize(), mainFilteredData); 
     } else { 
-        document.getElementById("bookContainer").innerHTML = ""; document.getElementById('no-results-msg').style.display = 'flex'; 
+        document.getElementById("bookContainer").innerHTML = ""; 
+        document.getElementById('no-results-msg').style.display = 'flex'; 
         if(infiniteLoader) infiniteLoader.style.display = 'none';
     }
 }
 
-const searchInputEl = document.getElementById('app-search-input'); let searchTimeout;
-searchInputEl.addEventListener('input', () => { clearTimeout(searchTimeout); searchTimeout = setTimeout(() => { applyMasterFilter(); }, 300); });
-document.getElementById('close-search').addEventListener('click', () => { searchInputEl.value = ''; applyMasterFilter(); document.getElementById('search-box').classList.remove('active'); if (history.state && history.state.popup === 'search') { history.back(); }});
-document.getElementById('openAuthorFilterBtn').addEventListener('click', () => { document.getElementById('filterBottomOverlay').classList.add('active'); });
-document.getElementById('closeAuthorFilterBtn').addEventListener('click', () => { document.getElementById('filterBottomOverlay').classList.remove('active'); });
+const searchInputEl = document.getElementById('app-search-input'); 
+let searchTimeout;
+searchInputEl.addEventListener('input', () => { 
+    clearTimeout(searchTimeout); 
+    searchTimeout = setTimeout(() => { applyMasterFilter(); }, 300); 
+});
+document.getElementById('close-search').addEventListener('click', () => { 
+    searchInputEl.value = ''; 
+    applyMasterFilter(); 
+    document.getElementById('search-box').classList.remove('active'); 
+    if (history.state && history.state.popup === 'search') { history.back(); }
+});
+document.getElementById('openAuthorFilterBtn').addEventListener('click', () => { 
+    document.getElementById('filterBottomOverlay').classList.add('active'); 
+});
+document.getElementById('closeAuthorFilterBtn').addEventListener('click', () => { 
+    document.getElementById('filterBottomOverlay').classList.remove('active'); 
+});
 
 // ==========================================
-// RENDERING UI & INFINITE SCROLL
+// RENDERING BOOKS UI & INFINITE SCROLL
 // ==========================================
-function getBatchSize() { let w = window.innerWidth; return (w >= 1200 ? 5 : w >= 900 ? 4 : w >= 600 ? 3 : 2) * 4; }
+function getBatchSize() { 
+    let w = window.innerWidth; 
+    return (w >= 1200 ? 5 : w >= 900 ? 4 : w >= 600 ? 3 : 2) * 4; 
+}
 
 const infiniteScrollObserver = new IntersectionObserver((entries) => {
     entries.forEach(entry => {
         if (entry.isIntersecting && loadedCount < mainFilteredData.length && !isLoadingMore && document.getElementById('no-results-msg').style.display !== 'flex') {
-            isLoadingMore = true; if(document.getElementById('infinite-loader')) document.getElementById('infinite-loader').style.display = 'flex';
+            isLoadingMore = true; 
+            if(document.getElementById('infinite-loader')) document.getElementById('infinite-loader').style.display = 'flex';
             setTimeout(() => {
                 renderBooksUI(loadedCount, getBatchSize(), mainFilteredData);
-                if (loadedCount >= mainFilteredData.length && document.getElementById('infinite-loader')) document.getElementById('infinite-loader').style.display = 'none'; 
+                if (loadedCount >= mainFilteredData.length && document.getElementById('infinite-loader')) {
+                    document.getElementById('infinite-loader').style.display = 'none'; 
+                }
                 isLoadingMore = false;
             }, 500);
         }
@@ -556,7 +1145,8 @@ function renderBooksUI(startIndex, count, customData = null) {
         let bookmarkIcon = isSaved ? 'fas fa-bookmark' : 'far fa-bookmark';
         htmlChunk += `<div class="book-card" data-slug="${book.slug}"><div class="card-img-wrapper"><div class="badge-free">FREE</div><div class="bookmark-btn" data-action="bookmark"><i class="${bookmarkIcon}"></i></div><img src="${book.image}" loading="lazy" class="book-image" oncontextmenu="return false;" draggable="false"></div><div class="book-details"><div class="book-title">${sanitizeHTML(book.title)}</div><div class="book-author">${sanitizeHTML(book.author)}</div><div class="tags-container"><span class="book-tag tag-year">${sanitizeHTML(book.year)}</span><span class="book-tag ${langClass}">${sanitizeHTML(book.lang)}</span></div></div></div>`;
     }
-    container.insertAdjacentHTML('beforeend', htmlChunk); loadedCount = endIndex;
+    container.insertAdjacentHTML('beforeend', htmlChunk); 
+    loadedCount = endIndex;
 }
 
 document.getElementById('bookContainer').addEventListener('click', (e) => {
@@ -564,23 +1154,41 @@ document.getElementById('bookContainer').addEventListener('click', (e) => {
     if(card) {
         const slug = card.getAttribute('data-slug');
         const bookmarkBtn = e.target.closest('.bookmark-btn');
-        if(bookmarkBtn) toggleBookmarkLocal(bookmarkBtn.querySelector('i'), slug); else openDownloadPageLocal(slug);
+        if(bookmarkBtn) toggleBookmarkLocal(bookmarkBtn.querySelector('i'), slug); 
+        else openDownloadPageLocal(slug);
     }
 });
 
 function toggleBookmarkLocal(iconElement, slug) {
     const index = savedBooks.indexOf(slug);
-    if (index === -1) { savedBooks.push(slug); iconElement.className = "fas fa-bookmark"; } 
-    else { savedBooks.splice(index, 1); iconElement.className = "far fa-bookmark"; }
+    if (index === -1) { 
+        savedBooks.push(slug); 
+        iconElement.className = "fas fa-bookmark"; 
+    } else { 
+        savedBooks.splice(index, 1); 
+        iconElement.className = "far fa-bookmark"; 
+    }
     localStorage.setItem('spidy_saved_books', JSON.stringify(savedBooks));
+    
+    let validSaved = getSanitizedSavedBooks();
+    document.getElementById('tabProfileSave').innerText = validSaved.length;
+
     if(document.getElementById('bookmarks-panel').classList.contains('active')) renderSavedBooksUI(); 
 }
 
 function renderSavedBooksUI() {
-    const container = document.getElementById("savedBooksContainer"); const noMsg = document.getElementById("no-saved-msg");
-    const savedBooksData = booksData.filter(book => savedBooks.includes(book.slug));
-    if (savedBooksData.length === 0) { container.innerHTML = ""; noMsg.style.display = "flex"; return; }
-    noMsg.style.display = "none"; let htmlChunk = "";
+    const container = document.getElementById("savedBooksContainer"); 
+    const noMsg = document.getElementById("no-saved-msg");
+    const validSaved = getSanitizedSavedBooks();
+    const savedBooksData = booksData.filter(book => validSaved.includes(book.slug));
+    
+    if (savedBooksData.length === 0) { 
+        container.innerHTML = ""; 
+        noMsg.style.display = "flex"; 
+        return; 
+    }
+    noMsg.style.display = "none"; 
+    let htmlChunk = "";
     savedBooksData.forEach(book => {
         let langClass = book.lang.toLowerCase() === 'hindi' ? 'tag-lang-hindi' : 'tag-lang-english';
         htmlChunk += `<div class="book-card" data-slug="${book.slug}"><div class="card-img-wrapper"><div class="badge-free">FREE</div><div class="bookmark-btn" data-action="bookmark"><i class="fas fa-bookmark"></i></div><img src="${book.image}" loading="lazy" class="book-image" oncontextmenu="return false;" draggable="false"></div><div class="book-details"><div class="book-title">${sanitizeHTML(book.title)}</div><div class="book-author">${sanitizeHTML(book.author)}</div><div class="tags-container"><span class="book-tag tag-year">${sanitizeHTML(book.year)}</span><span class="book-tag ${langClass}">${sanitizeHTML(book.lang)}</span></div></div></div>`;
@@ -592,113 +1200,115 @@ document.getElementById('savedBooksContainer').addEventListener('click', (e) => 
     if(card) {
         const slug = card.getAttribute('data-slug');
         const bookmarkBtn = e.target.closest('.bookmark-btn');
-        if(bookmarkBtn) toggleBookmarkLocal(bookmarkBtn.querySelector('i'), slug); else openDownloadPageLocal(slug); 
+        if(bookmarkBtn) toggleBookmarkLocal(bookmarkBtn.querySelector('i'), slug); 
+        else openDownloadPageLocal(slug); 
     }
-});
-
-function generateNotifications() {
-    const notiContainer = document.getElementById('dynamic-noti-container'); notiContainer.innerHTML = ''; 
-    booksData.slice(0, 45).forEach((book) => {
-        let dateStr = "00/00/0000";
-        if (book.dateAdded) { dateStr = sanitizeHTML(book.dateAdded); } 
-        else if (book.createdAt) { const d = new Date(book.createdAt); dateStr = `${String(d.getDate()).padStart(2, '0')}/${String(d.getMonth()+1).padStart(2, '0')}/${d.getFullYear()}`; }
-        notiContainer.innerHTML += `<div class="noti-card-dynamic" data-slug="${book.slug}" style="cursor:pointer;"><img src="${book.image}" loading="lazy" class="noti-card-img"><div class="noti-card-content"><div class="noti-card-title">${sanitizeHTML(book.title)} Book Added ✅</div><div class="noti-card-desc">New book is now available.</div><div style="font-size: 10px; color: #10b981; margin-top: 2px; font-weight: 700; display: flex; align-items: center; gap: 4px;"><i class="far fa-calendar-alt"></i> Added: ${dateStr}</div></div></div>`;
-    });
-}
-document.getElementById('dynamic-noti-container').addEventListener('click', (e) => {
-    const card = e.target.closest('.noti-card-dynamic'); if(card) openDownloadPageLocal(card.getAttribute('data-slug'));
 });
 
 // ==========================================
 // NAVIGATION & OVERLAYS
 // ==========================================
-document.getElementById('sidebarHeader').addEventListener('click', async () => {
-    if(!isUserLoggedIn || !auth.currentUser) {
-        document.getElementById('sidebar').classList.remove('active'); document.getElementById('sidebar-overlay').classList.remove('active');
-        document.getElementById('loginOverlay').style.display = 'flex'; setTimeout(() => document.getElementById('loginOverlay').style.opacity = '1', 10); return;
-    }
-    document.getElementById('sidebar').classList.remove('active'); document.getElementById('sidebar-overlay').classList.remove('active');
-    document.getElementById('profile-name-ui').innerText = sanitizeHTML(CURRENT_ADMIN_NAME);
-    document.getElementById('profile-email-ui').innerText = auth.currentUser.email || "No Email linked"; document.getElementById('profile-email-ui').style.display = 'block';
-    document.getElementById('profile-avatar-ui').src = CURRENT_ADMIN_PHOTO;
-    document.getElementById('profile-saved').innerText = savedBooks.length;
-    document.getElementById('my-profile-panel').classList.add('active'); history.pushState({ popup: 'profile' }, '');
-
-    try {
-        const userRef = doc(db, "users", auth.currentUser.uid); const userSnap = await getDoc(userRef);
-        if (userSnap.exists()) {
-            const data = userSnap.data(); 
-            let now = Date.now();
-            let validDownloads = [];
-            let accessedSlugs = new Set();
-            (data.recentDownloads || []).forEach(item => {
-                let time = typeof item === 'number' ? item : item.time;
-                let slug = typeof item === 'number' ? null : item.slug;
-                if (now - time < 24 * 60 * 60 * 1000) {
-                    validDownloads.push(item);
-                    if(slug) accessedSlugs.add(slug);
-                }
-            });
-            let legacyCount = validDownloads.filter(i => typeof i === 'number').length;
-            updateLiveCredits(accessedSlugs.size + legacyCount);
-
-            document.getElementById('profile-downloads').innerText = data.lifetimeDownloads || 0;
-        }
-
-        const usersRef = collection(db, "users"); const querySnapshot = await getDocs(usersRef); let allUsers = [];
-        querySnapshot.forEach((docSnap) => { allUsers.push({ id: docSnap.id, ...docSnap.data() }); });
-        
-        allUsers.sort((a, b) => {
-            let upA = parseInt(a.totalUploads) || 0; let upB = parseInt(b.totalUploads) || 0;
-            if (upB !== upA) return upB - upA; 
-            let tA = parseInt(a.createdAt) || 9999999999999; let tB = parseInt(b.createdAt) || 9999999999999;
-            if (tA !== tB) return tA - tB; return a.id.localeCompare(b.id);
-        });
-
-        let rank = 1; for (let i = 0; i < allUsers.length; i++) { if (allUsers[i].id === auth.currentUser.uid) { rank = i + 1; break; } }
-        const rankElement = document.getElementById('profile-rank');
-        if (rank === 1) { rankElement.style.color = "#fbbf24"; rankElement.innerHTML = `<i class="fas fa-crown"></i> #1`; } 
-        else if (rank <= 3) { rankElement.style.color = rank===2?"#9ca3af":"#b45309"; rankElement.innerText = "#" + rank; } 
-        else { rankElement.style.color = ""; rankElement.innerText = "#" + rank; }
-    } catch (error) { showToast("Error loading profile data", "error"); }
+document.getElementById('open-search').addEventListener('click', () => { 
+    history.pushState({ popup: 'search' }, ''); 
+    document.getElementById('search-box').classList.add('active'); 
+    setTimeout(() => { searchInputEl.focus(); }, 300); 
+});
+document.getElementById('open-noti').addEventListener('click', () => { 
+    history.pushState({ popup: 'noti' }, ''); 
+    document.getElementById('noti-panel').classList.add('active'); 
+    document.querySelector('.blink-dot').style.display = 'none'; 
 });
 
-document.getElementById('closeProfileBtn').addEventListener('click', () => { if (history.state && history.state.popup === 'profile') { history.back(); } else { document.getElementById('my-profile-panel').classList.remove('active'); }});
-document.getElementById('open-search').addEventListener('click', () => { history.pushState({ popup: 'search' }, ''); document.getElementById('search-box').classList.add('active'); setTimeout(() => { searchInputEl.focus(); }, 300); });
-document.getElementById('open-noti').addEventListener('click', () => { history.pushState({ popup: 'noti' }, ''); document.getElementById('noti-panel').classList.add('active'); document.querySelector('.blink-dot').style.display = 'none'; });
-
-const sidebar = document.getElementById('sidebar'); const sidebarOverlay = document.getElementById('sidebar-overlay');
-document.getElementById('open-menu').addEventListener('click', () => { history.pushState({ popup: 'sidebar' }, ''); sidebar.classList.add('active'); sidebarOverlay.classList.add('active'); });
+const sidebar = document.getElementById('sidebar'); 
+const sidebarOverlay = document.getElementById('sidebar-overlay');
+document.getElementById('open-menu').addEventListener('click', () => { 
+    history.pushState({ popup: 'sidebar' }, ''); 
+    sidebar.classList.add('active'); 
+    sidebarOverlay.classList.add('active'); 
+});
 sidebarOverlay.addEventListener('click', () => { history.back(); });
-document.getElementById('menu-dmca').addEventListener('click', (e) => { e.preventDefault(); history.replaceState({ popup: 'dmca' }, ''); document.getElementById('dmca-panel').classList.add('active'); sidebar.classList.remove('active'); sidebarOverlay.classList.remove('active'); });
+
+document.getElementById('menu-dmca').addEventListener('click', (e) => { 
+    e.preventDefault(); 
+    history.replaceState({ popup: 'dmca' }, ''); 
+    document.getElementById('dmca-panel').classList.add('active'); 
+    sidebar.classList.remove('active'); 
+    sidebarOverlay.classList.remove('active'); 
+});
 document.getElementById('close-dmca-btn').addEventListener('click', () => { history.back(); });
-document.getElementById('menu-bookmarks').addEventListener('click', (e) => { e.preventDefault(); history.replaceState({ popup: 'bookmarks' }, ''); document.getElementById('bookmarks-panel').classList.add('active'); sidebar.classList.remove('active'); sidebarOverlay.classList.remove('active'); renderSavedBooksUI(); });
+
+document.getElementById('menu-bookmarks').addEventListener('click', (e) => { 
+    e.preventDefault(); 
+    history.replaceState({ popup: 'bookmarks' }, ''); 
+    document.getElementById('bookmarks-panel').classList.add('active'); 
+    sidebar.classList.remove('active'); 
+    sidebarOverlay.classList.remove('active'); 
+    renderSavedBooksUI(); 
+});
 document.getElementById('close-bookmarks-btn').addEventListener('click', () => { history.back(); });
 
-function switchTab(tabId) { document.querySelectorAll('.app-tab').forEach(tab => { tab.style.display = 'none'; tab.classList.remove('active'); }); const target = document.getElementById(tabId); if(target) { target.style.display = 'flex'; setTimeout(() => target.classList.add('active'), 10); } }
-function setNavActive(id) { document.querySelectorAll('.bottom-nav-item').forEach(el => el.classList.remove('active')); document.getElementById(id).classList.add('active'); }
-function closeAllPanels() { document.getElementById('noti-panel').classList.remove('active'); document.getElementById('sidebar').classList.remove('active'); document.getElementById('sidebar-overlay').classList.remove('active'); document.getElementById('dmca-panel').classList.remove('active'); document.getElementById('bookmarks-panel').classList.remove('active'); document.getElementById('search-box').classList.remove('active'); document.getElementById('my-profile-panel').classList.remove('active'); }
+function switchTab(tabId) { 
+    document.querySelectorAll('.app-tab').forEach(tab => { 
+        tab.style.display = 'none'; 
+        tab.classList.remove('active'); 
+    }); 
+    const target = document.getElementById(tabId); 
+    if(target) { 
+        target.style.display = 'flex'; 
+        setTimeout(() => target.classList.add('active'), 10); 
+    } 
+}
+function setNavActive(id) { 
+    document.querySelectorAll('.bottom-nav-item').forEach(el => el.classList.remove('active')); 
+    document.getElementById(id).classList.add('active'); 
+}
+function closeAllPanels() { 
+    document.getElementById('noti-panel').classList.remove('active'); 
+    document.getElementById('sidebar').classList.remove('active'); 
+    document.getElementById('sidebar-overlay').classList.remove('active'); 
+    document.getElementById('dmca-panel').classList.remove('active'); 
+    document.getElementById('bookmarks-panel').classList.remove('active'); 
+    document.getElementById('search-box').classList.remove('active'); 
+}
 
-document.getElementById('nav-home').addEventListener('click', () => { setNavActive('nav-home'); closeAllPanels(); switchTab('tab-home'); window.history.replaceState({}, '', window.location.pathname); });
-document.getElementById('nav-upload').addEventListener('click', () => {
-    if(!isUserLoggedIn) { document.getElementById('loginOverlay').style.display = 'flex'; setTimeout(() => document.getElementById('loginOverlay').style.opacity = '1', 10); setNavActive('nav-home'); return; }
-    setNavActive('nav-upload'); closeAllPanels(); switchTab('tab-upload'); setTimeout(() => { document.getElementById('uploadPopup').classList.remove('hidden'); }, 300);
+// Bottom Bar Switching
+document.getElementById('nav-home').addEventListener('click', () => { 
+    setNavActive('nav-home'); 
+    closeAllPanels(); 
+    switchTab('tab-home'); 
+    window.history.replaceState({}, '', window.location.pathname); 
 });
-document.getElementById('nav-dev').addEventListener('click', () => { setNavActive('nav-dev'); closeAllPanels(); switchTab('tab-about'); });
-document.getElementById('closeUploadPopupBtn').addEventListener('click', () => { document.getElementById('uploadPopup').classList.add('hidden'); });
+document.getElementById('nav-upload').addEventListener('click', () => {
+    if(!isUserLoggedIn) { 
+        document.getElementById('loginOverlay').style.display = 'flex'; 
+        setTimeout(() => document.getElementById('loginOverlay').style.opacity = '1', 10); 
+        setNavActive('nav-home'); 
+        return; 
+    }
+    setNavActive('nav-upload'); 
+    closeAllPanels(); 
+    switchTab('tab-upload'); 
+});
+document.getElementById('nav-profile').addEventListener('click', () => { 
+    setNavActive('nav-profile'); 
+    closeAllPanels(); 
+    switchTab('tab-profile'); 
+    if (isUserLoggedIn && auth.currentUser) {
+        calculateUserRank(auth.currentUser.uid);
+    }
+});
 
 window.addEventListener('popstate', (e) => {
-    closeAllPanels(); applyMasterFilter();
+    closeAllPanels(); 
+    applyMasterFilter();
     const sBook = new URLSearchParams(window.location.search).get('book');
-    if(sBook) { openDownloadPageLocal(sBook, true); } else { document.getElementById("downloadModal").style.display = "none"; }
+    if(sBook) { openDownloadPageLocal(sBook, true); } 
+    else { document.getElementById("downloadModal").style.display = "none"; }
 });
 
-
 // ==========================================
-// 🌟 SECURE READ ONLINE (API PROXY) & DOWNLOAD LOCK 🌟
+// SECURE READ ONLINE (API PROXY) & DOWNLOAD LOCK
 // ==========================================
-
-// URL Token Check
 const detectTokenFromUrl = new URLSearchParams(window.location.search).get('t');
 if (detectTokenFromUrl) {
     document.getElementById('tokenInput').value = detectTokenFromUrl;
@@ -708,38 +1318,36 @@ if (detectTokenFromUrl) {
 
 function openDownloadPageLocal(slug, skipPushState = false) {
     if(!isUserLoggedIn) {
-        document.getElementById('loginOverlay').style.display = 'flex'; setTimeout(() => document.getElementById('loginOverlay').style.opacity = '1', 10); return;
+        document.getElementById('loginOverlay').style.display = 'flex'; 
+        setTimeout(() => document.getElementById('loginOverlay').style.opacity = '1', 10); 
+        return;
     }
-    const book = booksData.find(b => b.slug === slug); if(!book) return;
+    const book = booksData.find(b => b.slug === slug); 
+    if(!book) return;
     document.getElementById("downloadModal").style.display = "flex";
     
     const previewImg = document.getElementById("dlPreviewImage");
-    previewImg.classList.add("image-loading-skeleton"); previewImg.src = book.image; 
+    previewImg.classList.add("image-loading-skeleton"); 
+    previewImg.src = book.image; 
     previewImg.onload = () => { previewImg.classList.remove("image-loading-skeleton"); };
 
     document.getElementById("dlBookTitle").innerText = sanitizeHTML(book.title); 
     document.getElementById("dlBookAuthor").innerText = sanitizeHTML(book.author);
     
-    // ----------------------------------------------------
-    // 1. DOWNLOAD PDF BUTTON (LOCKED COMPLETELY)
-    // ----------------------------------------------------
     const dlPdfBtn = document.getElementById("dlPdfLinkBtn");
     dlPdfBtn.style.pointerEvents = "none"; 
-    dlPdfBtn.onclick = function(e) { 
-        e.preventDefault();
-        return false;
-    };
+    dlPdfBtn.onclick = function(e) { e.preventDefault(); return false; };
 
-    // ----------------------------------------------------
-    // 2. READ ONLINE (SECURE PROXY VIEWER)
-    // ----------------------------------------------------
     document.getElementById("dlReadOnlineBtn").onclick = async function() {
-        if(!isUserLoggedIn || !auth.currentUser) { document.getElementById('loginOverlay').style.display = 'flex'; setTimeout(() => document.getElementById('loginOverlay').style.opacity = '1', 10); return; }
+        if(!isUserLoggedIn || !auth.currentUser) { 
+            document.getElementById('loginOverlay').style.display = 'flex'; 
+            setTimeout(() => document.getElementById('loginOverlay').style.opacity = '1', 10); 
+            return; 
+        }
         
         const btn = document.getElementById("dlReadOnlineBtn"); 
         const originalText = btn.innerHTML; 
 
-        // 🔥 CHECK STRICT FINGERPRINT TOKEN 🔥
         const savedData = localStorage.getItem('spidy_secure_session');
         let hasValidToken = false;
 
@@ -761,25 +1369,16 @@ function openDownloadPageLocal(slug, skipPushState = false) {
         btn.disabled = true;
 
         try {
-            // Get Firebase Auth Token securely
             const userToken = await auth.currentUser.getIdToken(true);
-
-            // Fetch Secure Proxy Link from our Vercel Backend
             const response = await fetch('/api/get-book', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ 
-                    bookId: book.id, 
-                    bookSlug: book.slug, 
-                    userToken: userToken 
-                })
+                body: JSON.stringify({ bookId: book.id, bookSlug: book.slug, userToken: userToken })
             });
 
             const data = await response.json();
 
             if (response.ok && data.success) {
-                
-                // Fetch updated user data to refresh live credits accurately on frontend
                 const userRef = doc(db, "users", auth.currentUser.uid);
                 const userSnap = await getDoc(userRef);
                 if(userSnap.exists()){
@@ -795,69 +1394,85 @@ function openDownloadPageLocal(slug, skipPushState = false) {
                             else legacyCount++;
                         }
                     });
-                    updateLiveCredits(accessedSlugs.size + legacyCount);
+                    updateLiveCreditsUI(accessedSlugs.size + legacyCount);
+                    document.getElementById('tabProfileRead').innerText = userData.lifetimeDownloads || 0;
                 }
 
-                // Open PDF Securely
                 const pdfViewer = document.getElementById('pdfViewerOverlay');
                 const iframe = document.getElementById('pdfIframe');
                 const title = document.getElementById('pdfViewerTitle');
                 
                 title.innerText = sanitizeHTML(book.title);
-                
-                // 🔥 URL mein API Proxy hai jisme `?key=xxx` pehle se hai, toh hum aage `&` layenge
                 iframe.src = data.pdfLink + "&toolbar=0&navpanes=0&scrollbar=0"; 
                 pdfViewer.style.display = 'flex';
 
             } else {
                 if (response.status === 401 || (data.error && data.error.includes('Unauthorized'))) {
-                    localStorage.removeItem('spidy_secure_session'); // Clear expired session
+                    localStorage.removeItem('spidy_secure_session');
                     document.getElementById('tokenModalOverlay').style.display = 'flex';
                 } else {
                     showToast(data.error || "Failed to load book securely.", "error");
                 }
             }
 
-            btn.innerHTML = originalText; btn.disabled = false;
+            btn.innerHTML = originalText; 
+            btn.disabled = false;
 
         } catch (error) { 
             showToast("Network Error: Could not load the book.", "error"); 
-            btn.innerHTML = originalText; btn.disabled = false; 
+            btn.innerHTML = originalText; 
+            btn.disabled = false; 
         }
     };
 
-    // Close PDF Viewer
     document.getElementById("closePdfViewerBtn").onclick = function() {
         document.getElementById('pdfViewerOverlay').style.display = 'none';
         document.getElementById('pdfIframe').src = ""; 
     };
 
-    // Prevent Right Click on PDF Container
     document.getElementById("pdfContainer").addEventListener('contextmenu', event => event.preventDefault());
 
     let examsArray = (book.exams || "General").split(',').map(item => sanitizeHTML(item.trim()));
     document.getElementById("dlModalTags").innerHTML = examsArray.map(exam => `<div class="dl-modal-tag">${exam}</div>`).join('');
-    activeBookSlug = book.slug; activeBookTitle = book.title;
+    activeBookSlug = book.slug; 
+    activeBookTitle = book.title;
     if (!skipPushState) { history.pushState({ popup: 'book' }, '', '?book=' + book.slug); }
 }
 
 document.getElementById('closeDlBtn').addEventListener('click', closeDownloadPageLocal);
 function closeDownloadPageLocal() {
     if (history.state && history.state.popup === 'book') { history.back(); } 
-    else { document.getElementById("downloadModal").style.display = "none"; window.history.replaceState({}, '', window.location.pathname); }
+    else { 
+        document.getElementById("downloadModal").style.display = "none"; 
+        window.history.replaceState({}, '', window.location.pathname); 
+    }
     if(isDeepLinkLoad) {
-        isDeepLinkLoad = false; const loader = document.getElementById("loaderScreen"); loader.style.display = "flex"; loader.style.opacity = "1"; updateLoaderUI(100);
-        setTimeout(() => { loader.style.opacity = "0"; setTimeout(() => { loader.style.display = "none"; initPremiumPopups(); }, 300); }, 1500); 
+        isDeepLinkLoad = false; 
+        const loader = document.getElementById("loaderScreen"); 
+        loader.style.display = "flex"; 
+        loader.style.opacity = "1"; 
+        updateLoaderUI(100);
+        setTimeout(() => { 
+            loader.style.opacity = "0"; 
+            setTimeout(() => { 
+                loader.style.display = "none"; 
+                initPremiumPopups(); 
+            }, 300); 
+        }, 1500); 
     }
 }
 document.getElementById('shareBookBtn').addEventListener('click', () => {
     const shareUrl = window.location.origin + window.location.pathname + "?book=" + activeBookSlug;
-    if (navigator.share) navigator.share({ title: activeBookTitle, text: "Read this book online", url: shareUrl }); else { navigator.clipboard.writeText(shareUrl); showToast("Link Copied!", "success"); }
+    if (navigator.share) {
+        navigator.share({ title: activeBookTitle, text: "Read this book online", url: shareUrl }); 
+    } else { 
+        navigator.clipboard.writeText(shareUrl); 
+        showToast("Link Copied!", "success"); 
+    }
 });
 
-
 // ==========================================
-// 🌟 REPORT ISSUE MODAL LOGIC 🌟
+// REPORT ISSUE MODAL LOGIC
 // ==========================================
 document.getElementById('reportLinkBtn').addEventListener('click', () => {
     document.getElementById('reportModalOverlay').classList.add('active');
@@ -920,7 +1535,7 @@ submitReportBtn.addEventListener('click', async () => {
 });
 
 // ==========================================
-// 🌟 TOKEN MODAL BUTTON LOGICS (STRICT 24 HOURS) 🌟
+// TOKEN MODAL BUTTON LOGIC
 // ==========================================
 const particleContainer = document.getElementById('particles');
 if(particleContainer) {
@@ -931,8 +1546,10 @@ if(particleContainer) {
         let posX = Math.random() * 100; 
         let delay = Math.random() * 12; 
         let duration = Math.random() * 10 + 8; 
-        particle.style.width = size + 'px'; particle.style.height = size + 'px';
-        particle.style.left = posX + '%'; particle.style.animationDelay = `-${delay}s`;
+        particle.style.width = size + 'px'; 
+        particle.style.height = size + 'px';
+        particle.style.left = posX + '%'; 
+        particle.style.animationDelay = `-${delay}s`;
         particle.style.animationDuration = duration + 's';
         particleContainer.appendChild(particle);
     }
@@ -973,7 +1590,6 @@ document.getElementById('verifyBtn').addEventListener('click', async () => {
     }
 
     btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Verifying...';
-
     const currentFingerprint = generateDeviceFingerprint();
 
     try {
@@ -1014,19 +1630,21 @@ document.getElementById('verifyBtn').addEventListener('click', async () => {
 });
 
 // ==========================================
-// 🌟 SECURE CLOUDFLARE R2 UPLOAD LOGIC 🌟
+// R2 UPLOAD & BOOK PUBLISHING
 // ==========================================
 ['fileCoverGallery', 'fileCoverBrowse'].forEach(id => {
     document.getElementById(id).addEventListener('change', function(e) {
         if(e.target.files.length > 0) {
-            selectedCoverFile = e.target.files[0]; e.target.closest('.uc-actions').querySelector('p').innerText = "Selected: " + selectedCoverFile.name;
+            selectedCoverFile = e.target.files[0]; 
+            e.target.closest('.uc-actions').querySelector('p').innerText = "Selected: " + selectedCoverFile.name;
         }
     });
 });
 ['filePdfGallery', 'filePdfBrowse'].forEach(id => {
     document.getElementById(id).addEventListener('change', function(e) {
         if(e.target.files.length > 0) {
-            selectedPdfFile = e.target.files[0]; e.target.closest('.uc-actions').querySelector('p').innerText = "Selected: " + selectedPdfFile.name;
+            selectedPdfFile = e.target.files[0]; 
+            e.target.closest('.uc-actions').querySelector('p').innerText = "Selected: " + selectedPdfFile.name;
         }
     });
 });
@@ -1040,13 +1658,21 @@ async function uploadFileToR2(file, type) {
         const icon = document.getElementById('r2UploadIcon');
         const title = document.getElementById('r2UploadTitle');
 
-        if(type === 'image') { icon.className = "fas fa-image"; title.innerText = "Upload Cover Image"; statusText.innerText = "Generating Secure Link..."; } 
-        else { icon.className = "fas fa-file-pdf"; title.innerText = "Upload PDF File"; statusText.innerText = "Generating Secure Link..."; }
+        if(type === 'image') { 
+            icon.className = "fas fa-image"; 
+            title.innerText = "Upload Cover Image"; 
+            statusText.innerText = "Generating Secure Link..."; 
+        } else { 
+            icon.className = "fas fa-file-pdf"; 
+            title.innerText = "Upload PDF File"; 
+            statusText.innerText = "Generating Secure Link..."; 
+        }
 
-        r2Overlay.style.display = 'flex'; progressBar.style.width = '0%'; progressText.innerText = '0%';
+        r2Overlay.style.display = 'flex'; 
+        progressBar.style.width = '0%'; 
+        progressText.innerText = '0%';
 
         try {
-            // Step 1: Request Presigned URL from Backend
             const userToken = await auth.currentUser.getIdToken(true);
             const authResponse = await fetch('/api/generate-upload-url', {
                 method: 'POST',
@@ -1057,7 +1683,6 @@ async function uploadFileToR2(file, type) {
 
             if (!authResponse.ok) throw new Error(authData.error || "Permission Denied");
 
-            // Step 2: Upload direct to Cloudflare R2
             statusText.innerText = "Securely transferring to Cloudflare R2...";
             
             const xhr = new XMLHttpRequest(); 
@@ -1065,21 +1690,27 @@ async function uploadFileToR2(file, type) {
             xhr.setRequestHeader("Content-Type", file.type); 
 
             xhr.upload.addEventListener("progress", (e) => {
-                if (e.lengthComputable) { let p = Math.round((e.loaded / e.total) * 100); progressBar.style.width = p + '%'; progressText.innerText = p + '%'; }
+                if (e.lengthComputable) { 
+                    let p = Math.round((e.loaded / e.total) * 100); 
+                    progressBar.style.width = p + '%'; 
+                    progressText.innerText = p + '%'; 
+                }
             });
 
             xhr.onload = function() {
                 if (xhr.status >= 200 && xhr.status < 300) {
                     setTimeout(() => { r2Overlay.style.display = 'none'; }, 500); 
-                    
                     if (type === 'image') resolve(`${R2_PUBLIC_IMAGE_URL}/${authData.fileKey}`);
                     else resolve(authData.fileKey); 
-
                 } else { 
-                    r2Overlay.style.display = 'none'; reject("Upload Failed"); 
+                    r2Overlay.style.display = 'none'; 
+                    reject("Upload Failed"); 
                 }
             };
-            xhr.onerror = function() { r2Overlay.style.display = 'none'; reject("Network Error"); }; 
+            xhr.onerror = function() { 
+                r2Overlay.style.display = 'none'; 
+                reject("Network Error"); 
+            }; 
             xhr.send(file);
 
         } catch (error) {
@@ -1089,13 +1720,15 @@ async function uploadFileToR2(file, type) {
     });
 }
 
-// FINAL BOOK PUBLISHING
 document.getElementById('addBookForm').addEventListener('submit', async (e) => {
-    e.preventDefault(); const btn = document.getElementById('publishBtn'); const originalText = btn.innerHTML;
+    e.preventDefault(); 
+    const btn = document.getElementById('publishBtn'); 
+    const originalText = btn.innerHTML;
     if (!selectedCoverFile) { showToast("Please select a Cover Image!", "error"); return; }
     if (!selectedPdfFile) { showToast("Please select a PDF file!", "error"); return; }
 
-    btn.innerHTML = `<span class="btn-text" style="display: flex; align-items: center; justify-content: center; gap: 10px;"><div class="premium-loader" style="border-color:#000;"></div> Publishing...</span>`; btn.disabled = true;
+    btn.innerHTML = `<span class="btn-text" style="display: flex; align-items: center; justify-content: center; gap: 10px;"><div class="premium-loader" style="border-color:#000;"></div> Publishing...</span>`; 
+    btn.disabled = true;
 
     try {
         let coverR2Url = await uploadFileToR2(selectedCoverFile, 'image'); 
@@ -1115,19 +1748,37 @@ document.getElementById('addBookForm').addEventListener('submit', async (e) => {
         };
         await addDoc(collection(db, "books"), newBook); 
         
-        showToast("Book Published Successfully!", "success"); e.target.reset(); selectedCoverFile = null; selectedPdfFile = null;
+        showToast("Book Published Successfully!", "success"); 
+        e.target.reset(); 
+        selectedCoverFile = null; 
+        selectedPdfFile = null;
         document.querySelectorAll('.uc-actions p').forEach(p => p.innerText = "Drag & Drop File");
     } catch (error) { 
-        if(error.message && error.message.includes("Missing or insufficient permissions")) showToast("Failed: Firebase Security Rules Blocked Save!", "error"); 
-        else showToast("Failed: " + error, "error"); 
-    } finally { btn.innerHTML = originalText; btn.disabled = false; }
+        if(error.message && error.message.includes("Missing or insufficient permissions")) {
+            showToast("Failed: Firebase Security Rules Blocked Save!", "error"); 
+        } else {
+            showToast("Failed: " + error, "error"); 
+        }
+    } finally { 
+        btn.innerHTML = originalText; 
+        btn.disabled = false; 
+    }
 });
 
 document.querySelectorAll('.adm-tab-btn').forEach(btn => {
-    btn.addEventListener('click', (e) => { let tab = btn.id === 'admTabPrompt' ? 'prompt' : 'add'; switchAdminTabLocal(tab); });
+    btn.addEventListener('click', () => { 
+        let tab = btn.id === 'admTabPrompt' ? 'prompt' : 'add'; 
+        switchAdminTabLocal(tab); 
+    });
 });
 function switchAdminTabLocal(tabName) {
-    document.querySelectorAll('.adm-section').forEach(el => el.classList.remove('active')); document.querySelectorAll('.adm-tab-btn').forEach(el => el.classList.remove('active'));
-    if(tabName === 'add') { document.getElementById('sectionAddBook').classList.add('active'); document.getElementById('admTabAdd').classList.add('active'); }
-    else if(tabName === 'prompt') { document.getElementById('sectionPrompt').classList.add('active'); document.getElementById('admTabPrompt').classList.add('active'); }
-  }
+    document.querySelectorAll('.adm-section').forEach(el => el.classList.remove('active')); 
+    document.querySelectorAll('.adm-tab-btn').forEach(el => el.classList.remove('active'));
+    if(tabName === 'add') { 
+        document.getElementById('sectionAddBook').classList.add('active'); 
+        document.getElementById('admTabAdd').classList.add('active'); 
+    } else if(tabName === 'prompt') { 
+        document.getElementById('sectionPrompt').classList.add('active'); 
+        document.getElementById('admTabPrompt').classList.add('active'); 
+    }
+}
