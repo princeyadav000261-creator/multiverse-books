@@ -176,10 +176,18 @@
                 <!-- TAB 1: HOME -->
                 <div id="tab-home" class="app-tab active">
                     
-                    <!-- 🌟 1918x820 PREMIUM PROMOTIONAL BANNER CAROUSEL 🌟 -->
+                    <!-- 🌟 1918x820 PROMOTIONAL BANNER CAROUSEL WITH ARROWS 🌟 -->
                     <div class="promo-carousel-container" id="promoCarouselContainer">
+                        
+                        <!-- Navigation Arrows -->
+                        <button class="promo-arrow-btn arrow-prev" id="promoPrevBtn" aria-label="Previous Slide">
+                            <i class="fas fa-chevron-left"></i>
+                        </button>
+                        <button class="promo-arrow-btn arrow-next" id="promoNextBtn" aria-label="Next Slide">
+                            <i class="fas fa-chevron-right"></i>
+                        </button>
+
                         <div class="promo-carousel-track" id="promoCarouselTrack">
-                            
                             <!-- Slide 1 -->
                             <a href="https://t.me/MultiverseBooks" target="_blank" class="promo-slide">
                                 <img src="https://i.postimg.cc/Pq0JLj3C/file-0000000027dc82119d3731d4bfe9bccf.png" alt="Promo Banner 1" class="promo-banner-img" draggable="false">
@@ -189,10 +197,9 @@
                             <a href="https://whatsapp.com/channel/0029Vb6NBZx1yT2GByTTVf2A" target="_blank" class="promo-slide">
                                 <img src="https://i.postimg.cc/XJFJdzmh/file-00000000ef2082118bdd64524b657f4c.png" alt="Promo Banner 2" class="promo-banner-img" draggable="false">
                             </a>
-
                         </div>
 
-                        <!-- Dynamic Progress Dots Indicator -->
+                        <!-- Minimal Direct Floating Dots (Card Background Removed) -->
                         <div class="promo-dots-wrapper" id="promoDotsWrapper">
                             <span class="promo-dot active" data-slide="0"></span>
                             <span class="promo-dot" data-slide="1"></span>
@@ -334,8 +341,8 @@
                         <div class="dev-hero-banner" id="profileBanner">
                             <div class="banner-fade-bottom"></div>
                             
-                            <!-- Logout Button directly on Profile -->
-                            <button class="dev-back-btn" id="admin-logout-btn" title="Log Out" style="position: absolute; top: 15px; right: 15px; left: auto; background: rgba(239, 68, 68, 0.15); color: #ef4444; border: 1px solid rgba(239, 68, 68, 0.3); z-index: 100; box-shadow: 0 0 10px rgba(239, 68, 68, 0.4); width: 38px; height: 38px; border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer;">
+                            <!-- 🌟 LOGOUT BUTTON: POSITIONED ON TOP-LEFT 🌟 -->
+                            <button class="dev-back-btn" id="admin-logout-btn" title="Log Out" style="position: absolute; top: 15px; left: 15px; right: auto; background: rgba(239, 68, 68, 0.15); color: #ef4444; border: 1px solid rgba(239, 68, 68, 0.3); z-index: 100; box-shadow: 0 0 10px rgba(239, 68, 68, 0.4); width: 38px; height: 38px; border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer;">
                                 <i class="fas fa-power-off"></i>
                             </button>
 
