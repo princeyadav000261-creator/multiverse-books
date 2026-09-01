@@ -115,6 +115,72 @@ function initParticles(containerId) {
 }
 
 // ==========================================
+// 🌟 1918x820 PROMO CAROUSEL LOGIC 🌟
+// ==========================================
+let currentPromoIndex = 0;
+let promoAutoSlideInterval;
+
+function initPromoCarousel() {
+    const track = document.getElementById('promoCarouselTrack');
+    const dots = document.querySelectorAll('.promo-dot');
+    const totalSlides = dots.length;
+
+    if (!track || totalSlides === 0) return;
+
+    function goToSlide(index) {
+        currentPromoIndex = index;
+        track.style.transform = `translateX(-${currentPromoIndex * 100}%)`;
+        dots.forEach((dot, idx) => {
+            if (idx === currentPromoIndex) {
+                dot.classList.add('active');
+            } else {
+                dot.classList.remove('active');
+            }
+        });
+    }
+
+    function startAutoSlide() {
+        clearInterval(promoAutoSlideInterval);
+        promoAutoSlideInterval = setInterval(() => {
+            currentPromoIndex = (currentPromoIndex + 1) % totalSlides;
+            goToSlide(currentPromoIndex);
+        }, 4000);
+    }
+
+    dots.forEach((dot, index) => {
+        dot.addEventListener('click', () => {
+            goToSlide(index);
+            startAutoSlide();
+        });
+    });
+
+    // Touch Swipe Support for Mobile
+    let startX = 0;
+    let endX = 0;
+    track.addEventListener('touchstart', (e) => {
+        startX = e.touches[0].clientX;
+        clearInterval(promoAutoSlideInterval);
+    }, { passive: true });
+
+    track.addEventListener('touchend', (e) => {
+        endX = e.changedTouches[0].clientX;
+        let diff = startX - endX;
+        if (Math.abs(diff) > 40) {
+            if (diff > 0) {
+                currentPromoIndex = (currentPromoIndex + 1) % totalSlides;
+            } else {
+                currentPromoIndex = (currentPromoIndex - 1 + totalSlides) % totalSlides;
+            }
+            goToSlide(currentPromoIndex);
+        }
+        startAutoSlide();
+    }, { passive: true });
+
+    goToSlide(0);
+    startAutoSlide();
+}
+
+// ==========================================
 // 🌟 PREMIUM DUAL POPUPS LOGIC 🌟
 // ==========================================
 let popupsInitialized = false;
@@ -199,6 +265,7 @@ function tryTransition() {
 
                 setTimeout(() => {
                     document.getElementById('mainAppWrapper').style.display = 'block';
+                    initPromoCarousel();
 
                     if (isDeepLinkLoad && pendingBookSlug) {
                         if (isUserLoggedIn) { openDownloadPageLocal(pendingBookSlug, true); } 
@@ -222,23 +289,6 @@ function tryTransition() {
 }
 
 // ==========================================
-// QUOTE GENERATOR
-// ==========================================
-const quotes = [
-    { text: "The only way to do great work is to love what you do.", author: "Steve Jobs" },
-    { text: "In the middle of difficulty lies opportunity.", author: "Albert Einstein" },
-    { text: "Be the change that you wish to see in the world.", author: "Mahatma Gandhi" },
-    { text: "Whatever you are, be a good one.", author: "Abraham Lincoln" },
-    { text: "Action is the foundational key to all success.", author: "Pablo Picasso" },
-    { text: "Tough times never last, but tough people do.", author: "Robert H. Schuller" },
-    { text: "If you're going through hell, keep going.", author: "Winston Churchill" }
-];
-const todayDays = Math.floor(Date.now() / (1000 * 60 * 60 * 24));
-const currentQuoteIndex = todayDays % quotes.length;
-document.getElementById('daily-quote-text').innerHTML = `<i class="fas fa-quote-left" style="color: rgba(255,255,255,0.3); margin-right:5px;"></i> ${sanitizeHTML(quotes[currentQuoteIndex].text)}`;
-document.getElementById('daily-quote-author').innerText = `— ${sanitizeHTML(quotes[currentQuoteIndex].author)}`;
-
-// ==========================================
 // 🚀 CREDITS & ADVANCED SYNC SYSTEM
 // ==========================================
 function updateLiveCredits(recentDownloadsCount) {
@@ -251,7 +301,7 @@ function updateLiveCredits(recentDownloadsCount) {
     document.getElementById('profile-credits').innerText = remainingCredits;
 }
 
-// Sanitize Saved Bookmarks (Only genuine existing books count)
+// Sanitize Saved Bookmarks (Only existing database books count)
 function syncAndSanitizeBookmarks() {
     if (!booksData || booksData.length === 0) return;
     const existingSlugs = new Set(booksData.map(b => b.slug));
@@ -294,7 +344,6 @@ async function syncProfileAndRankUI() {
             document.getElementById('profile-downloads').innerText = data.lifetimeDownloads || 0;
         }
 
-        // Fetch all users for ranking calculation
         const usersRef = collection(db, "users");
         const querySnapshot = await getDocs(usersRef);
         let allUsers = [];
@@ -302,7 +351,7 @@ async function syncProfileAndRankUI() {
             allUsers.push({ id: docSnap.id, ...docSnap.data() });
         });
         
-        // Fair Sort: Lifetime reads desc, then account creation time asc, then unique ID (No repeating rank)
+        // Fair Sort: Lifetime reads desc, then account creation time asc, then unique ID
         allUsers.sort((a, b) => {
             let readsA = parseInt(a.lifetimeDownloads) || 0;
             let readsB = parseInt(b.lifetimeDownloads) || 0;
