@@ -46,9 +46,10 @@ let activeBookTitle = "";
 let IS_SUPER_ADMIN = false;
 let isUserLoggedIn = false; 
 
+const DEFAULT_AVATAR = "https://i.postimg.cc/D0BF1b77/file-000000000e847207a64f6711d825a859.png";
 let CURRENT_ADMIN_NAME = "Guest User";
 let CURRENT_ADMIN_EMAIL = "";
-let CURRENT_ADMIN_PHOTO = "https://i.postimg.cc/D0BF1b77/file-000000000e847207a64f6711d825a859.png";
+let CURRENT_ADMIN_PHOTO = DEFAULT_AVATAR;
 
 let savedBooks = JSON.parse(localStorage.getItem('spidy_saved_books')) || [];
 let selectedCoverFile = null;
@@ -408,8 +409,18 @@ async function syncProfileAndRankUI() {
     if (!auth.currentUser) return;
     
     document.getElementById('profile-name-ui').innerText = sanitizeHTML(CURRENT_ADMIN_NAME);
-    document.getElementById('profile-email-ui').innerText = auth.currentUser.email || "No Email linked";
-    document.getElementById('profile-avatar-ui').src = CURRENT_ADMIN_PHOTO;
+    const emailEl = document.getElementById('profile-email-ui');
+    if (emailEl) {
+        emailEl.innerText = auth.currentUser.email || "No Email linked";
+        emailEl.style.fontWeight = "600";
+    }
+    
+    // Set actual Google / Firebase Profile avatar
+    const avatarEl = document.getElementById('profile-avatar-ui');
+    if (avatarEl) {
+        avatarEl.src = CURRENT_ADMIN_PHOTO;
+        avatarEl.onerror = () => { avatarEl.src = DEFAULT_AVATAR; };
+    }
     
     syncAndSanitizeBookmarks();
 
@@ -488,6 +499,19 @@ const scrollDownWrapper = document.getElementById('scrollDownWrapper');
 const scrollDownBtn = document.getElementById('scrollDownBtn');
 const unreadBadge = document.getElementById('unreadBadge');
 const closeNotiBtn = document.getElementById('close-noti-btn');
+
+function renderChannelLoader() {
+    if (!chatBody) return;
+    chatBody.innerHTML = `
+        <div class="empty-loading" id="channelLoader">
+            <div class="orbit-spinner">
+                <div class="orbit-ring"></div>
+                <div class="orbit-inner-ring"></div>
+                <div class="orbit-core"></div>
+            </div>
+            Connecting to live updates...
+        </div>`;
+}
 
 function getUserReaction(postId) {
     return localStorage.getItem(`reaction_${postId}`);
@@ -574,7 +598,7 @@ function updateReactionInDOM(postId) {
     }
 }
 
-// 🔒 LOGGED-IN USERS UNIQUE 1-VIEW TRACKER (PER POST)
+// 🔒 LOGGED-IN USERS UNIQUE 1-VIEW TRACKER
 async function registerUniqueView(postId) {
     if (!auth.currentUser) return; 
     const uid = auth.currentUser.uid;
@@ -599,7 +623,6 @@ async function registerUniqueView(postId) {
     }
 }
 
-// Intersection Observer for automatically triggering views on scroll
 const postViewObserver = new IntersectionObserver((entries) => {
     entries.forEach(entry => {
         if (entry.isIntersecting) {
@@ -806,8 +829,13 @@ onAuthStateChanged(auth, async (user) => {
         let dName = user.displayName || user.email.split('@')[0];
         document.getElementById('sidebarProfileName').innerText = sanitizeHTML(dName);
         
-        CURRENT_ADMIN_PHOTO = user.photoURL ? user.photoURL : "https://i.postimg.cc/D0BF1b77/file-000000000e847207a64f6711d825a859.png";
-        document.getElementById('sidebarProfileImg').src = CURRENT_ADMIN_PHOTO;
+        // Exact Google Account DP
+        CURRENT_ADMIN_PHOTO = user.photoURL ? user.photoURL : DEFAULT_AVATAR;
+        const sidebarAvatar = document.getElementById('sidebarProfileImg');
+        if (sidebarAvatar) {
+            sidebarAvatar.src = CURRENT_ADMIN_PHOTO;
+            sidebarAvatar.onerror = () => { sidebarAvatar.src = DEFAULT_AVATAR; };
+        }
         
         CURRENT_ADMIN_NAME = dName;
         CURRENT_ADMIN_EMAIL = user.email;
@@ -843,7 +871,6 @@ onAuthStateChanged(auth, async (user) => {
 
             syncProfileAndRankUI();
 
-            // Trigger view registration for visible posts on login
             document.querySelectorAll('.message-bubble').forEach(bubble => {
                 if (bubble.dataset.postId) registerUniqueView(bubble.dataset.postId);
             });
@@ -858,9 +885,20 @@ onAuthStateChanged(auth, async (user) => {
         localStorage.removeItem('isUserLoggedIn');
         document.getElementById('sidebarProfileName').innerText = "SPIDY BOOK HUB";
         document.getElementById('sidebarRoleText').innerText = "Please Login";
-        document.getElementById('sidebarProfileImg').src = "https://i.postimg.cc/D0BF1b77/file-000000000e847207a64f6711d825a859.png";
+        
+        CURRENT_ADMIN_PHOTO = DEFAULT_AVATAR;
+        const sidebarAvatar = document.getElementById('sidebarProfileImg');
+        if (sidebarAvatar) sidebarAvatar.src = DEFAULT_AVATAR;
+
         document.getElementById('profile-name-ui').innerText = "Guest User";
-        document.getElementById('profile-email-ui').innerText = "Please login to sync progress";
+        const emailEl = document.getElementById('profile-email-ui');
+        if (emailEl) {
+            emailEl.innerText = "Please login to sync progress";
+            emailEl.style.fontWeight = "600";
+        }
+        const avatarEl = document.getElementById('profile-avatar-ui');
+        if (avatarEl) avatarEl.src = DEFAULT_AVATAR;
+
         document.getElementById('profile-credits').innerText = "--";
         document.getElementById('profile-downloads').innerText = "0";
         document.getElementById('profile-saved').innerText = "0";
@@ -912,7 +950,8 @@ onAuthStateChanged(auth, async (user) => {
         tryTransition();
     });
 
-    // REALTIME CHANNEL POSTS LISTENER
+    // 🌟 REALTIME CHANNEL POSTS LISTENER WITH DYNAMIC RED DOT BLINK 🌟
+    renderChannelLoader();
     const channelQuery = query(collection(db, "channel_posts"), orderBy("createdAt", "asc"));
     onSnapshot(channelQuery, (snapshot) => {
         const dataArr = [];
@@ -924,10 +963,19 @@ onAuthStateChanged(auth, async (user) => {
         const prevCount = livePosts.length;
         livePosts = dataArr;
 
+        const notiPanel = document.getElementById('noti-panel');
+        const isNotiPanelOpen = notiPanel && notiPanel.classList.contains('active');
+        const blinkDot = document.querySelector('.blink-dot');
+
         if (isInitialChannelLoad) {
             renderChannelFeed(livePosts, true);
             isInitialChannelLoad = false;
         } else if (countChanged) {
+            // Naya notification aane par red dot blink trigger
+            if (!isNotiPanelOpen && blinkDot && livePosts.length > prevCount) {
+                blinkDot.style.display = 'block';
+            }
+
             const distanceFromBottom = chatBody.scrollHeight - chatBody.scrollTop - chatBody.clientHeight;
             
             if (distanceFromBottom > 120 && livePosts.length > prevCount) {
@@ -1306,7 +1354,11 @@ document.getElementById('open-search').addEventListener('click', () => {
 document.getElementById('open-noti').addEventListener('click', () => { 
     history.pushState({ popup: 'noti' }, ''); 
     document.getElementById('noti-panel').classList.add('active'); 
-    document.querySelector('.blink-dot').style.display = 'none'; 
+    
+    // Panel khulne par red dot hide hoga
+    const blinkDot = document.querySelector('.blink-dot');
+    if (blinkDot) blinkDot.style.display = 'none'; 
+    
     scrollToBottomSmooth();
 });
 
@@ -1884,4 +1936,3 @@ function switchAdminTabLocal(tabName) {
         document.getElementById('admTabPrompt').classList.add('active'); 
     }
 }
-
