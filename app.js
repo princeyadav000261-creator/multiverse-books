@@ -72,7 +72,7 @@ function sanitizeHTML(str) {
     });
 }
 
-// 🌟 FORMAT NAME: FIRST LETTER BOLD SERIF + REST SMALL-CAPS 🌟
+// 🌟 FORMAT NAME: ZERO GAP BETWEEN FIRST SERIF LETTER & REST LETTERS 🌟
 function formatNameSerifSmallCaps(nameStr) {
     if (!nameStr) return "";
     const words = nameStr.trim().split(/\s+/);
@@ -80,8 +80,8 @@ function formatNameSerifSmallCaps(nameStr) {
         if (word.length === 0) return "";
         const firstLetter = word.charAt(0).toUpperCase();
         const restLetters = word.slice(1).toLowerCase();
-        return `<span style="font-family: 'Times New Roman', Times, serif; font-weight: 800; font-size: 1.15em; letter-spacing: 0.5px;">${firstLetter}</span><span style="font-family: 'Times New Roman', Times, serif; font-variant: small-caps; font-weight: 700; letter-spacing: 1px; font-size: 0.95em;">${restLetters}</span>`;
-    }).join(' ');
+        return `<span style="display:inline-flex;align-items:baseline;margin:0 5px 0 0;letter-spacing:0;"><span style="font-family:'Times New Roman',Times,serif;font-weight:900;font-size:1.18em;line-height:1;margin:0;padding:0;">${firstLetter}</span><span style="font-family:'Times New Roman',Times,serif;font-variant:small-caps;font-weight:700;font-size:0.95em;letter-spacing:0.8px;line-height:1;margin:0;padding:0;">${restLetters}</span></span>`;
+    }).join('');
 }
 
 function stripMarkdown(text) {
@@ -420,7 +420,7 @@ function syncAndSanitizeBookmarks() {
 async function syncProfileAndRankUI() {
     if (!auth.currentUser) return;
     
-    // Format Name: Bold Serif First Letter + Small-Caps for rest
+    // Format Name: Bold Serif First Letter + Small-Caps (No gap between letters)
     const formattedNameHTML = formatNameSerifSmallCaps(CURRENT_ADMIN_NAME);
     const profileNameEl = document.getElementById('profile-name-ui');
     if (profileNameEl) {
@@ -433,7 +433,6 @@ async function syncProfileAndRankUI() {
         emailEl.style.fontWeight = "600";
     }
     
-    // Set actual Google / Firebase Profile avatar
     const avatarEl = document.getElementById('profile-avatar-ui');
     if (avatarEl) {
         avatarEl.src = CURRENT_ADMIN_PHOTO;
@@ -847,7 +846,6 @@ onAuthStateChanged(auth, async (user) => {
         let dName = user.displayName || user.email.split('@')[0];
         document.getElementById('sidebarProfileName').innerText = sanitizeHTML(dName);
         
-        // Exact Google Account DP
         CURRENT_ADMIN_PHOTO = user.photoURL ? user.photoURL : DEFAULT_AVATAR;
         const sidebarAvatar = document.getElementById('sidebarProfileImg');
         if (sidebarAvatar) {
@@ -1164,7 +1162,6 @@ let currentSelectedLanguage = "All";
 function updateDynamicFilters() {
     const activeCategories = new Set();
     
-    // Core default categories always accessible
     activeCategories.add("Class 10th");
     activeCategories.add("Class 11th");
     activeCategories.add("Class 12th");
@@ -1189,7 +1186,6 @@ function updateDynamicFilters() {
     });
 
     const sortedCategories = Array.from(activeCategories).sort((a, b) => {
-        // Keep school classes organized at the top
         const priority = { "Class 10th": 1, "Class 11th": 2, "Class 12th": 3 };
         if (priority[a] && priority[b]) return priority[a] - priority[b];
         if (priority[a]) return -1;
