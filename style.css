@@ -1152,7 +1152,7 @@ select.adm-input { appearance: none; -webkit-appearance: none; padding-right: 40
 /* Filter Section Labels: Bold Serif */
 .f-section-label {
     font-family: 'Times New Roman', Times, Georgia, serif !important;
-    font-size: 13px !important;
+    font-size: 11px !important;
     font-weight: 800 !important;
     color: #d4d4d8 !important;
     letter-spacing: 0.8px;
@@ -1165,7 +1165,7 @@ select.adm-input { appearance: none; -webkit-appearance: none; padding-right: 40
     display: block; width: 100%; height: 46px; line-height: 24px; text-align: center; padding: 10px 12px; 
     background: #18181b; border: 1px solid #27272a; border-radius: 12px; color: #a1a1aa; 
     font-family: 'Times New Roman', Times, Georgia, serif !important;
-    font-weight: 700 !important; font-size: 1.05rem; cursor: pointer; transition: all 0.2s ease; 
+    font-weight: 700 !important; font-size: 0.9rem; cursor: pointer; transition: all 0.2s ease; 
     white-space: nowrap; overflow: hidden; text-overflow: ellipsis; user-select: none; 
     letter-spacing: 0.3px;
 }
