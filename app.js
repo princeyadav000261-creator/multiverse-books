@@ -1142,9 +1142,9 @@ if (confirmLogoutBtn) {
 // 🌟 ADVANCED DUAL FILTER (WITH CLASS 10TH, 11TH, 12TH) 🌟
 // ==========================================
 const EXAM_CATEGORY_MAP = {
-    "Class 10th": ["CLASS 10", "CLASS 10TH", "10TH", "MATRIC", "CBSE 10", "ICSE 10", "BOARD 10"],
-    "Class 11th": ["CLASS 11", "CLASS 11TH", "11TH", "CBSE 11", "ISC 11"],
-    "Class 12th": ["CLASS 12", "CLASS 12TH", "12TH", "INTER", "INTERMEDIATE", "CBSE 12", "ISC 12", "BOARD 12"],
+    "10th": ["CLASS 10", "CLASS 10TH", "10TH", "MATRIC", "CBSE 10", "ICSE 10", "BOARD 10"],
+    "11th": ["CLASS 11", "CLASS 11TH", "11TH", "CBSE 11", "ISC 11"],
+    "12th": ["CLASS 12", "CLASS 12TH", "12TH", "INTER", "INTERMEDIATE", "CBSE 12", "ISC 12", "BOARD 12"],
     "Ssc": ["SSC", "CGL", "CHSL", "MTS", "CPO", "GD", "STENOGRAPHER", "SELECTION POST"],
     "Railway": ["RAILWAY", "RRB", "NTPC", "GROUP D", "ALP", "TECHNICIAN", "RPF"],
     "Defence": ["NDA", "CDS", "AFCAT", "NAVY", "ARMY", "AIRFORCE", "AGNIVEER"],
@@ -1162,9 +1162,9 @@ let currentSelectedLanguage = "All";
 function updateDynamicFilters() {
     const activeCategories = new Set();
     
-    activeCategories.add("Class 10th");
-    activeCategories.add("Class 11th");
-    activeCategories.add("Class 12th");
+    activeCategories.add("10th");
+    activeCategories.add("11th");
+    activeCategories.add("12th");
 
     booksData.forEach(book => {
         if(!book.exams) return;
