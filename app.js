@@ -72,6 +72,18 @@ function sanitizeHTML(str) {
     });
 }
 
+// 🌟 FORMAT NAME: FIRST LETTER BOLD SERIF + REST SMALL-CAPS 🌟
+function formatNameSerifSmallCaps(nameStr) {
+    if (!nameStr) return "";
+    const words = nameStr.trim().split(/\s+/);
+    return words.map(word => {
+        if (word.length === 0) return "";
+        const firstLetter = word.charAt(0).toUpperCase();
+        const restLetters = word.slice(1).toLowerCase();
+        return `<span style="font-family: 'Times New Roman', Times, serif; font-weight: 800; font-size: 1.15em; letter-spacing: 0.5px;">${firstLetter}</span><span style="font-family: 'Times New Roman', Times, serif; font-variant: small-caps; font-weight: 700; letter-spacing: 1px; font-size: 0.95em;">${restLetters}</span>`;
+    }).join(' ');
+}
+
 function stripMarkdown(text) {
     if (!text) return "";
     return text
@@ -408,7 +420,13 @@ function syncAndSanitizeBookmarks() {
 async function syncProfileAndRankUI() {
     if (!auth.currentUser) return;
     
-    document.getElementById('profile-name-ui').innerText = sanitizeHTML(CURRENT_ADMIN_NAME);
+    // Format Name: Bold Serif First Letter + Small-Caps for rest
+    const formattedNameHTML = formatNameSerifSmallCaps(CURRENT_ADMIN_NAME);
+    const profileNameEl = document.getElementById('profile-name-ui');
+    if (profileNameEl) {
+        profileNameEl.innerHTML = formattedNameHTML;
+    }
+    
     const emailEl = document.getElementById('profile-email-ui');
     if (emailEl) {
         emailEl.innerText = auth.currentUser.email || "No Email linked";
@@ -890,7 +908,9 @@ onAuthStateChanged(auth, async (user) => {
         const sidebarAvatar = document.getElementById('sidebarProfileImg');
         if (sidebarAvatar) sidebarAvatar.src = DEFAULT_AVATAR;
 
-        document.getElementById('profile-name-ui').innerText = "Guest User";
+        const profileNameEl = document.getElementById('profile-name-ui');
+        if (profileNameEl) profileNameEl.innerHTML = formatNameSerifSmallCaps("Guest User");
+
         const emailEl = document.getElementById('profile-email-ui');
         if (emailEl) {
             emailEl.innerText = "Please login to sync progress";
@@ -971,7 +991,6 @@ onAuthStateChanged(auth, async (user) => {
             renderChannelFeed(livePosts, true);
             isInitialChannelLoad = false;
         } else if (countChanged) {
-            // Naya notification aane par red dot blink trigger
             if (!isNotiPanelOpen && blinkDot && livePosts.length > prevCount) {
                 blinkDot.style.display = 'block';
             }
@@ -1122,9 +1141,12 @@ if (confirmLogoutBtn) {
 }
 
 // ==========================================
-// ADVANCED DUAL FILTER SYSTEM
+// 🌟 ADVANCED DUAL FILTER (WITH CLASS 10TH, 11TH, 12TH) 🌟
 // ==========================================
 const EXAM_CATEGORY_MAP = {
+    "Class 10th": ["CLASS 10", "CLASS 10TH", "10TH", "MATRIC", "CBSE 10", "ICSE 10", "BOARD 10"],
+    "Class 11th": ["CLASS 11", "CLASS 11TH", "11TH", "CBSE 11", "ISC 11"],
+    "Class 12th": ["CLASS 12", "CLASS 12TH", "12TH", "INTER", "INTERMEDIATE", "CBSE 12", "ISC 12", "BOARD 12"],
     "Ssc": ["SSC", "CGL", "CHSL", "MTS", "CPO", "GD", "STENOGRAPHER", "SELECTION POST"],
     "Railway": ["RAILWAY", "RRB", "NTPC", "GROUP D", "ALP", "TECHNICIAN", "RPF"],
     "Defence": ["NDA", "CDS", "AFCAT", "NAVY", "ARMY", "AIRFORCE", "AGNIVEER"],
@@ -1141,6 +1163,12 @@ let currentSelectedLanguage = "All";
 
 function updateDynamicFilters() {
     const activeCategories = new Set();
+    
+    // Core default categories always accessible
+    activeCategories.add("Class 10th");
+    activeCategories.add("Class 11th");
+    activeCategories.add("Class 12th");
+
     booksData.forEach(book => {
         if(!book.exams) return;
         let bookExamsString = book.exams.toUpperCase();
@@ -1160,7 +1188,15 @@ function updateDynamicFilters() {
         }
     });
 
-    const sortedCategories = Array.from(activeCategories).sort();
+    const sortedCategories = Array.from(activeCategories).sort((a, b) => {
+        // Keep school classes organized at the top
+        const priority = { "Class 10th": 1, "Class 11th": 2, "Class 12th": 3 };
+        if (priority[a] && priority[b]) return priority[a] - priority[b];
+        if (priority[a]) return -1;
+        if (priority[b]) return 1;
+        return a.localeCompare(b);
+    });
+
     const catGrid = document.getElementById('categoryFilterGrid'); 
     let html = `<div class="f-pill ${currentSelectedCategory === 'All' ? 'active' : ''}" data-category="All">All</div>`;
     sortedCategories.forEach(category => { 
@@ -1355,7 +1391,6 @@ document.getElementById('open-noti').addEventListener('click', () => {
     history.pushState({ popup: 'noti' }, ''); 
     document.getElementById('noti-panel').classList.add('active'); 
     
-    // Panel khulne par red dot hide hoga
     const blinkDot = document.querySelector('.blink-dot');
     if (blinkDot) blinkDot.style.display = 'none'; 
     
