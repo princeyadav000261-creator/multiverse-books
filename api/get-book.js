@@ -1,39 +1,64 @@
 const admin = require('firebase-admin');
 const crypto = require('crypto');
 
+// Firebase Admin Initialize (Sirf ek baar)
 if (!admin.apps.length) {
+  try {
     admin.initializeApp({
-        credential: admin.credential.cert({
-            projectId: process.env.FIREBASE_PROJECT_ID,
-            clientEmail: process.env.FIREBASE_CLIENT_EMAIL,
-            privateKey: process.env.FIREBASE_PRIVATE_KEY ? process.env.FIREBASE_PRIVATE_KEY.replace(/\\n/g, '\n') : undefined,
-        }),
+      credential: admin.credential.cert({
+        projectId: process.env.FIREBASE_PROJECT_ID,
+        clientEmail: process.env.FIREBASE_CLIENT_EMAIL,
+        privateKey: process.env.FIREBASE_PRIVATE_KEY 
+          ? process.env.FIREBASE_PRIVATE_KEY.replace(/\\n/g, '\n') 
+          : undefined,
+      }),
     });
+  } catch (initErr) {
+    console.error("Firebase Admin Init Error:", initErr);
+  }
 }
 const db = admin.firestore();
 
 module.exports = async function handler(req, res) {
-  if (req.method !== 'POST') return res.status(405).json({ error: 'Method Not Allowed' });
+  // Sirf POST request allow karein
+  if (req.method !== 'POST') {
+    return res.status(405).json({ error: 'Method Not Allowed' });
+  }
 
   const { bookId, userToken, bookSlug } = req.body;
   if (!bookId || !userToken || !bookSlug) {
-    return res.status(400).json({ error: 'Missing parameters' });
+    return res.status(400).json({ error: 'Missing parameters: bookId, userToken, or bookSlug' });
+  }
+
+  let uid = null;
+  let userEmail = "";
+
+  // 1. Verify User Token
+  try {
+    const decodedToken = await admin.auth().verifyIdToken(userToken);
+    uid = decodedToken.uid;
+    userEmail = (decodedToken.email || "").toLowerCase().trim();
+  } catch (authErr) {
+    console.error("Token verification failed:", authErr.message);
+    return res.status(401).json({ error: 'Session Expired! Please re-login.' });
   }
 
   try {
-    const decodedToken = await admin.auth().verifyIdToken(userToken);
-    const uid = decodedToken.uid;
+    // 2. Admin Check
+    let isSuperAdmin = false;
+    if (userEmail) {
+      const adminDoc = await db.collection('admins').doc(userEmail).get();
+      isSuperAdmin = adminDoc.exists;
+    }
 
-    const adminDoc = await db.collection('admins').doc(decodedToken.email.toLowerCase()).get();
-    const isSuperAdmin = adminDoc.exists;
-
+    // 3. User Daily Limit Check (24 Hours)
     const userRef = db.collection('users').doc(uid);
     const userSnap = await userRef.get();
     let recentDownloadsArr = [];
     let now = Date.now();
     let accessedSlugs = new Set();
 
-    if (userSnap.exists()) {
+    if (userSnap.exists) {
       let userData = userSnap.data();
       let rawDownloads = userData.recentDownloads || [];
 
@@ -47,36 +72,50 @@ module.exports = async function handler(req, res) {
       });
 
       let totalRecentCount = accessedSlugs.size + recentDownloadsArr.filter(i => typeof i === 'number').length;
-      
+
+      // Super Admin ke liye limit bypass rahegi
       if (totalRecentCount >= 20 && !accessedSlugs.has(bookSlug) && !isSuperAdmin) {
-        return res.status(403).json({ error: 'Limit Reached! You can only open 20 new books in 24 hours.' });
+        return res.status(403).json({ error: 'Daily limit reached! Max 20 books in 24 hours.' });
       }
     }
 
+    // User session update
     recentDownloadsArr.push({ slug: bookSlug, time: now });
     await userRef.set({
       recentDownloads: recentDownloadsArr,
       lifetimeDownloads: admin.firestore.FieldValue.increment(1)
     }, { merge: true });
 
+    // 4. Book Data fetch
     const bookDoc = await db.collection('books').doc(bookId).get();
-    if (!bookDoc.exists) return res.status(404).json({ error: 'Book not found' });
+    if (!bookDoc.exists) {
+      return res.status(404).json({ error: 'Book not found in database!' });
+    }
 
     const fileKey = bookDoc.data().pdfLink;
-    const secret = process.env.SECURE_SECRET;
-    const workerBaseUrl = process.env.WORKER_URL;
+    if (!fileKey) {
+      return res.status(404).json({ error: 'PDF file link missing for this book!' });
+    }
 
-    // Fixed: Expiry parameter completely removed from HMAC logic
+    // 5. Cloudflare Worker URL (Expiry check permanently removed)
+    const secret = process.env.SECURE_SECRET || "SPIDY_DEFAULT_SECRET_KEY_99";
+    const workerBaseUrl = (process.env.WORKER_URL || "").replace(/\/+$/, "");
+
+    if (!workerBaseUrl) {
+      return res.status(500).json({ error: 'WORKER_URL is missing in environment variables!' });
+    }
+
+    // Static lifetime signature (Never expires)
     const dataToSign = `${fileKey}-${secret}`;
     const signature = crypto.createHmac('sha256', secret).update(dataToSign).digest('hex');
 
-    // Secure Worker URL without time limit
+    // Secure Worker Link
     const secureWorkerUrl = `${workerBaseUrl}/?file=${encodeURIComponent(fileKey)}&sig=${signature}`;
 
-    res.status(200).json({ success: true, pdfLink: secureWorkerUrl });
+    return res.status(200).json({ success: true, pdfLink: secureWorkerUrl });
 
   } catch (error) {
-    console.error("Auth Error:", error);
-    return res.status(500).json({ error: 'Server Security Verification Failed!' });
+    console.error("Backend Error:", error);
+    return res.status(500).json({ error: 'Server Error: ' + (error.message || 'Verification Failed') });
   }
 };
