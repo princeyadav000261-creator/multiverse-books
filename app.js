@@ -73,7 +73,6 @@ function sanitizeHTML(str) {
     });
 }
 
-// 🌟 GOOGLE PROFILE IMAGE HD QUALITY UPGRADE 🌟
 function getHighQualityAvatar(url) {
     if (!url) return DEFAULT_AVATAR;
     if (url.includes('googleusercontent.com')) {
@@ -82,7 +81,6 @@ function getHighQualityAvatar(url) {
     return url;
 }
 
-// FORMAT NAME: ZERO GAP BETWEEN FIRST SERIF LETTER & REST LETTERS
 function formatNameSerifSmallCaps(nameStr) {
     if (!nameStr) return "";
     const words = nameStr.trim().split(/\s+/);
@@ -868,7 +866,6 @@ onAuthStateChanged(auth, async (user) => {
         let dName = user.displayName || user.email.split('@')[0];
         document.getElementById('sidebarProfileName').innerText = sanitizeHTML(dName);
         
-        // Crisp HD Avatar Conversion
         CURRENT_ADMIN_PHOTO = getHighQualityAvatar(user.photoURL);
         const sidebarAvatar = document.getElementById('sidebarProfileImg');
         if (sidebarAvatar) {
@@ -1161,36 +1158,38 @@ if (confirmLogoutBtn) {
 }
 
 // =======================================================
-// 🌟 STRICT CURATED EXAM CATEGORIES (NO DYNAMIC OVERFLOW) 🌟
+// 🌟 EXACT FILTER LIST WITH GENERAL READING (ZERO EMPTY GAPS) 🌟
 // =======================================================
 const FIXED_EXAM_LIST = [
-    "Class 10th",
-    "Class 11th",
-    "Class 12th",
-    "SSC",
+    "10th",
+    "11th",
+    "12th",
+    "Ssc",
     "Railway",
     "Defence",
     "Banking",
     "Teaching",
-    "UPSC",
+    "Upsc",
     "Police",
-    "JEE",
-    "NEET"
+    "Jee",
+    "Neet",
+    "General Reading"
 ];
 
 const EXAM_CATEGORY_MAP = {
-    "Class 10th": ["CLASS 10", "CLASS 10TH", "10TH", "MATRIC", "CBSE 10", "ICSE 10", "BOARD 10"],
-    "Class 11th": ["CLASS 11", "CLASS 11TH", "11TH", "CBSE 11", "ISC 11"],
-    "Class 12th": ["CLASS 12", "CLASS 12TH", "12TH", "INTER", "INTERMEDIATE", "CBSE 12", "ISC 12", "BOARD 12"],
-    "SSC": ["SSC", "CGL", "CHSL", "MTS", "CPO", "GD", "STENOGRAPHER", "SELECTION POST"],
+    "10th": ["CLASS 10", "CLASS 10TH", "10TH", "MATRIC", "CBSE 10", "ICSE 10", "BOARD 10"],
+    "11th": ["CLASS 11", "CLASS 11TH", "11TH", "CBSE 11", "ISC 11"],
+    "12th": ["CLASS 12", "CLASS 12TH", "12TH", "INTER", "INTERMEDIATE", "CBSE 12", "ISC 12", "BOARD 12"],
+    "Ssc": ["SSC", "CGL", "CHSL", "MTS", "CPO", "GD", "STENOGRAPHER", "SELECTION POST"],
     "Railway": ["RAILWAY", "RRB", "NTPC", "GROUP D", "ALP", "TECHNICIAN", "RPF"],
     "Defence": ["NDA", "CDS", "AFCAT", "NAVY", "ARMY", "AIRFORCE", "AGNIVEER"],
     "Banking": ["BANK", "IBPS", "SBI", "PO", "CLERK", "RBI", "LIC"],
     "Teaching": ["CTET", "STET", "UPTET", "KVS", "NVS", "BPSC TRE", "DSSSB"],
-    "UPSC": ["UPSC", "BPSC", "UPPSC", "MPPSC", "STATE PSC", "PCS", "CIVIL SERVICES"],
+    "Upsc": ["UPSC", "BPSC", "UPPSC", "MPPSC", "STATE PSC", "PCS", "CIVIL SERVICES"],
     "Police": ["POLICE", "UP POLICE", "DELHI POLICE", "BIHAR POLICE", "SI", "CONSTABLE", "DAROGA"],
-    "JEE": ["JEE", "IIT", "MAINS", "ADVANCED", "BITSAT"],
-    "NEET": ["NEET", "MEDICAL", "AIIMS"]
+    "Jee": ["JEE", "IIT", "MAINS", "ADVANCED", "BITSAT"],
+    "Neet": ["NEET", "MEDICAL", "AIIMS"],
+    "General Reading": ["GENERAL", "NOVEL", "STORY", "MAGAZINE", "SELF HELP", "READING", "HISTORY", "MOTIVATION"]
 };
 
 let currentSelectedCategory = "All";
@@ -1235,7 +1234,7 @@ function normalizeTextForSearch(str) {
     if (!str) return '';
     return str.toString()
         .toLowerCase()
-        .replace(/[^a-z0-9]/g, '') // remove spaces, punctuation, symbols
+        .replace(/[^a-z0-9]/g, '')
         .trim();
 }
 
@@ -1263,10 +1262,7 @@ function applyMasterFilter() {
             const rawCombined = `${book.title || ''} ${book.author || ''} ${book.exams || ''}`.toLowerCase();
             const normalizedTarget = normalizeTextForSearch(rawCombined);
 
-            // 1. Direct Space-insensitive match (e.g. "neetusingh" matches "Neetu Singh")
             const isNoSpaceMatch = normalizedTarget.includes(cleanSearchNoSpaces);
-
-            // 2. Tokenized match (all words present anywhere)
             const isTokenMatch = searchWords.length > 0 && searchWords.every(word => rawCombined.includes(word));
 
             matchesSearch = isNoSpaceMatch || isTokenMatch;
@@ -1422,7 +1418,6 @@ document.getElementById('open-noti').addEventListener('click', () => {
     const blinkDot = document.querySelector('.blink-dot');
     if (blinkDot) blinkDot.style.display = 'none'; 
     
-    // Smooth loader-to-bottom transition
     if (livePosts.length > 0) {
         renderChannelFeed(livePosts, true);
     } else {
@@ -1602,7 +1597,7 @@ function openDownloadPageLocal(slug, skipPushState = false) {
              return; 
         }
         
-        btn.innerHTML = `<i class="fas fa-spinner fa-spin"></i> Getting Secure Access...`; 
+        btn.innerHTML = `<i class="fas fa-spinner fa-spin"></i> Opening...`; 
         btn.disabled = true;
 
         try {
