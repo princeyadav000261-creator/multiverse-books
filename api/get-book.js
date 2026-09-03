@@ -1,7 +1,6 @@
 const admin = require('firebase-admin');
-const crypto = require('crypto'); // Built-in Node.js module
+const crypto = require('crypto');
 
-// Firebase Admin Initialize (Sirf ek baar)
 if (!admin.apps.length) {
     admin.initializeApp({
         credential: admin.credential.cert({
@@ -49,7 +48,6 @@ module.exports = async function handler(req, res) {
 
       let totalRecentCount = accessedSlugs.size + recentDownloadsArr.filter(i => typeof i === 'number').length;
       
-      // Limit Check
       if (totalRecentCount >= 20 && !accessedSlugs.has(bookSlug) && !isSuperAdmin) {
         return res.status(403).json({ error: 'Limit Reached! You can only open 20 new books in 24 hours.' });
       }
@@ -64,18 +62,16 @@ module.exports = async function handler(req, res) {
     const bookDoc = await db.collection('books').doc(bookId).get();
     if (!bookDoc.exists) return res.status(404).json({ error: 'Book not found' });
 
-    // 🔥 THE ENGINEERING MAGIC: Generate Secure URL for Cloudflare Worker 🔥
     const fileKey = bookDoc.data().pdfLink;
-    const expiry = Date.now() + (2 * 60 * 60 * 1000); // 2 hours expiration
-    const secret = process.env.SECURE_SECRET; // Vercel & CF shared secret
-    const workerBaseUrl = process.env.WORKER_URL; // e.g., https://spidy-vault...
+    const secret = process.env.SECURE_SECRET;
+    const workerBaseUrl = process.env.WORKER_URL;
 
-    // Creating HMAC-SHA256 Signature
-    const dataToSign = `${fileKey}-${expiry}`;
+    // Fixed: Expiry parameter completely removed from HMAC logic
+    const dataToSign = `${fileKey}-${secret}`;
     const signature = crypto.createHmac('sha256', secret).update(dataToSign).digest('hex');
 
-    // Final URL (Maksed and Secure)
-    const secureWorkerUrl = `${workerBaseUrl}/?file=${encodeURIComponent(fileKey)}&exp=${expiry}&sig=${signature}`;
+    // Secure Worker URL without time limit
+    const secureWorkerUrl = `${workerBaseUrl}/?file=${encodeURIComponent(fileKey)}&sig=${signature}`;
 
     res.status(200).json({ success: true, pdfLink: secureWorkerUrl });
 
