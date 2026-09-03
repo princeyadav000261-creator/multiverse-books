@@ -1,7 +1,7 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
 import { 
     getFirestore, collection, addDoc, doc, updateDoc, onSnapshot, 
-    query, orderBy, setDoc, getDoc, increment, getDocs, runTransaction, Timestamp 
+    query, orderBy, setDoc, getDoc, increment, getDocs, runTransaction, Timestamp, limit 
 } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
 import { 
     getAuth, signInWithEmailAndPassword, GoogleAuthProvider, 
@@ -60,6 +60,7 @@ let livePosts = [];
 let activePost = null;
 let isInitialChannelLoad = true;
 let unreadPostsCount = 0;
+let isChannelDataReady = false;
 
 // ==========================================
 // UTILITY FUNCTIONS & TOAST NOTIFICATIONS
@@ -72,7 +73,16 @@ function sanitizeHTML(str) {
     });
 }
 
-// 🌟 FORMAT NAME: ZERO GAP BETWEEN FIRST SERIF LETTER & REST LETTERS 🌟
+// 🌟 GOOGLE PROFILE IMAGE HD QUALITY UPGRADE 🌟
+function getHighQualityAvatar(url) {
+    if (!url) return DEFAULT_AVATAR;
+    if (url.includes('googleusercontent.com')) {
+        return url.replace(/=s\d+(-c)?/g, '=s400-c');
+    }
+    return url;
+}
+
+// FORMAT NAME: ZERO GAP BETWEEN FIRST SERIF LETTER & REST LETTERS
 function formatNameSerifSmallCaps(nameStr) {
     if (!nameStr) return "";
     const words = nameStr.trim().split(/\s+/);
@@ -420,7 +430,6 @@ function syncAndSanitizeBookmarks() {
 async function syncProfileAndRankUI() {
     if (!auth.currentUser) return;
     
-    // Format Name: Bold Serif First Letter + Small-Caps (No gap between letters)
     const formattedNameHTML = formatNameSerifSmallCaps(CURRENT_ADMIN_NAME);
     const profileNameEl = document.getElementById('profile-name-ui');
     if (profileNameEl) {
@@ -464,35 +473,28 @@ async function syncProfileAndRankUI() {
             document.getElementById('profile-downloads').innerText = data.lifetimeDownloads || 0;
         }
 
-        const usersRef = collection(db, "users");
-        const querySnapshot = await getDocs(usersRef);
+        const topUsersQuery = query(collection(db, "users"), orderBy("lifetimeDownloads", "desc"), limit(100));
+        const querySnapshot = await getDocs(topUsersQuery);
         let allUsers = [];
         querySnapshot.forEach((docSnap) => {
             allUsers.push({ id: docSnap.id, ...docSnap.data() });
         });
         
-        allUsers.sort((a, b) => {
-            let readsA = parseInt(a.lifetimeDownloads) || 0;
-            let readsB = parseInt(b.lifetimeDownloads) || 0;
-            if (readsB !== readsA) return readsB - readsA;
-            
-            let timeA = parseInt(a.createdAt) || 9999999999999;
-            let timeB = parseInt(b.createdAt) || 9999999999999;
-            if (timeA !== timeB) return timeA - timeB;
-            
-            return a.id.localeCompare(b.id);
-        });
-
         let rank = 1;
+        let found = false;
         for (let i = 0; i < allUsers.length; i++) {
             if (allUsers[i].id === auth.currentUser.uid) {
                 rank = i + 1;
+                found = true;
                 break;
             }
         }
 
         const rankElement = document.getElementById('profile-rank');
-        if (rank === 1) {
+        if (!found) {
+            rankElement.style.color = "#ffffff";
+            rankElement.innerText = "#100+";
+        } else if (rank === 1) {
             rankElement.style.color = "#fbbf24";
             rankElement.innerHTML = `<i class="fas fa-crown"></i> #1`;
         } else if (rank <= 3) {
@@ -508,7 +510,7 @@ async function syncProfileAndRankUI() {
 }
 
 // =======================================================
-// 🌟 OFFICIAL CHANNEL NOTIFICATIONS / UPDATES SYSTEM 🌟
+// 🌟 ADVANCED SMOOTH NOTIFICATION CHANNEL & LOADER 🌟
 // =======================================================
 const chatBody = document.getElementById('chatBody');
 const contextOverlay = document.getElementById('contextOverlay');
@@ -520,7 +522,7 @@ const closeNotiBtn = document.getElementById('close-noti-btn');
 function renderChannelLoader() {
     if (!chatBody) return;
     chatBody.innerHTML = `
-        <div class="empty-loading" id="channelLoader">
+        <div class="empty-loading" id="channelLoader" style="opacity: 1; transition: opacity 0.3s ease;">
             <div class="orbit-spinner">
                 <div class="orbit-ring"></div>
                 <div class="orbit-inner-ring"></div>
@@ -539,10 +541,21 @@ function setUserReaction(postId, emoji) {
     else localStorage.removeItem(`reaction_${postId}`);
 }
 
+function scrollToBottomInstant() {
+    unreadPostsCount = 0;
+    if (unreadBadge) {
+        unreadBadge.innerText = '0';
+        unreadBadge.classList.remove('active');
+    }
+    chatBody.scrollTop = chatBody.scrollHeight;
+}
+
 function scrollToBottomSmooth() {
     unreadPostsCount = 0;
-    unreadBadge.innerText = '0';
-    unreadBadge.classList.remove('active');
+    if (unreadBadge) {
+        unreadBadge.innerText = '0';
+        unreadBadge.classList.remove('active');
+    }
     chatBody.scrollTo({
         top: chatBody.scrollHeight,
         behavior: 'smooth'
@@ -615,7 +628,6 @@ function updateReactionInDOM(postId) {
     }
 }
 
-// 🔒 LOGGED-IN USERS UNIQUE 1-VIEW TRACKER
 async function registerUniqueView(postId) {
     if (!auth.currentUser) return; 
     const uid = auth.currentUser.uid;
@@ -649,7 +661,7 @@ const postViewObserver = new IntersectionObserver((entries) => {
     });
 }, { threshold: 0.5 });
 
-function renderChannelFeed(posts, shouldAutoScroll = false) {
+function renderChannelFeed(posts, isInitialOrPanelOpen = false) {
     if (!chatBody) return;
 
     if (!posts || posts.length === 0) {
@@ -658,11 +670,11 @@ function renderChannelFeed(posts, shouldAutoScroll = false) {
                 <i class="fas fa-bullhorn" style="font-size:26px; color:var(--text-secondary); opacity:0.6;"></i>
                 No channel updates posted yet.
             </div>`;
+        isChannelDataReady = true;
         return;
     }
 
-    const prevScrollTop = chatBody.scrollTop;
-    chatBody.innerHTML = '';
+    const fragment = document.createDocumentFragment();
     let lastDateStr = '';
 
     posts.forEach(post => {
@@ -673,7 +685,7 @@ function renderChannelFeed(posts, shouldAutoScroll = false) {
             const divider = document.createElement('div');
             divider.className = 'date-divider';
             divider.innerText = dateStr;
-            chatBody.appendChild(divider);
+            fragment.appendChild(divider);
             lastDateStr = dateStr;
         }
 
@@ -727,15 +739,25 @@ function renderChannelFeed(posts, shouldAutoScroll = false) {
             if (navigator.vibrate) navigator.vibrate(20);
         });
 
-        chatBody.appendChild(bubble);
+        fragment.appendChild(bubble);
         postViewObserver.observe(bubble);
     });
 
-    if (shouldAutoScroll) {
-        setTimeout(() => {
+    if (isInitialOrPanelOpen) {
+        chatBody.style.visibility = 'hidden';
+        chatBody.innerHTML = '';
+        chatBody.appendChild(fragment);
+        chatBody.scrollTop = chatBody.scrollHeight;
+        
+        requestAnimationFrame(() => {
             chatBody.scrollTop = chatBody.scrollHeight;
-        }, 60);
+            chatBody.style.visibility = 'visible';
+            isChannelDataReady = true;
+        });
     } else {
+        const prevScrollTop = chatBody.scrollTop;
+        chatBody.innerHTML = '';
+        chatBody.appendChild(fragment);
         chatBody.scrollTop = prevScrollTop;
     }
 }
@@ -846,7 +868,8 @@ onAuthStateChanged(auth, async (user) => {
         let dName = user.displayName || user.email.split('@')[0];
         document.getElementById('sidebarProfileName').innerText = sanitizeHTML(dName);
         
-        CURRENT_ADMIN_PHOTO = user.photoURL ? user.photoURL : DEFAULT_AVATAR;
+        // Crisp HD Avatar Conversion
+        CURRENT_ADMIN_PHOTO = getHighQualityAvatar(user.photoURL);
         const sidebarAvatar = document.getElementById('sidebarProfileImg');
         if (sidebarAvatar) {
             sidebarAvatar.src = CURRENT_ADMIN_PHOTO;
@@ -877,7 +900,7 @@ onAuthStateChanged(auth, async (user) => {
                 await setDoc(userRef, { 
                     email: user.email, 
                     name: dName, 
-                    photo: user.photoURL || "", 
+                    photo: CURRENT_ADMIN_PHOTO, 
                     recentDownloads: [], 
                     lifetimeDownloads: 0, 
                     createdAt: new Date().getTime() 
@@ -961,14 +984,14 @@ onAuthStateChanged(auth, async (user) => {
         });
         mainFilteredData = [...booksData]; 
         syncAndSanitizeBookmarks();
-        updateDynamicFilters(); 
+        renderStaticFilterPills(); 
         applyMasterFilter(); 
         
         isAppReady.data = true; 
         tryTransition();
     });
 
-    // 🌟 REALTIME CHANNEL POSTS LISTENER WITH DYNAMIC RED DOT BLINK 🌟
+    // CHANNEL UPDATES LISTENER
     renderChannelLoader();
     const channelQuery = query(collection(db, "channel_posts"), orderBy("createdAt", "asc"));
     onSnapshot(channelQuery, (snapshot) => {
@@ -977,7 +1000,6 @@ onAuthStateChanged(auth, async (user) => {
             dataArr.push({ id: docSnap.id, ...docSnap.data() });
         });
 
-        const countChanged = livePosts.length !== dataArr.length;
         const prevCount = livePosts.length;
         livePosts = dataArr;
 
@@ -988,7 +1010,7 @@ onAuthStateChanged(auth, async (user) => {
         if (isInitialChannelLoad) {
             renderChannelFeed(livePosts, true);
             isInitialChannelLoad = false;
-        } else if (countChanged) {
+        } else if (livePosts.length !== prevCount) {
             if (!isNotiPanelOpen && blinkDot && livePosts.length > prevCount) {
                 blinkDot.style.display = 'block';
             }
@@ -1138,70 +1160,54 @@ if (confirmLogoutBtn) {
     });
 }
 
-// ==========================================
-// 🌟 ADVANCED DUAL FILTER (WITH CLASS 10TH, 11TH, 12TH) 🌟
-// ==========================================
+// =======================================================
+// 🌟 STRICT CURATED EXAM CATEGORIES (NO DYNAMIC OVERFLOW) 🌟
+// =======================================================
+const FIXED_EXAM_LIST = [
+    "Class 10th",
+    "Class 11th",
+    "Class 12th",
+    "SSC",
+    "Railway",
+    "Defence",
+    "Banking",
+    "Teaching",
+    "UPSC",
+    "Police",
+    "JEE",
+    "NEET"
+];
+
 const EXAM_CATEGORY_MAP = {
-    "10th": ["CLASS 10", "CLASS 10TH", "10TH", "MATRIC", "CBSE 10", "ICSE 10", "BOARD 10"],
-    "11th": ["CLASS 11", "CLASS 11TH", "11TH", "CBSE 11", "ISC 11"],
-    "12th": ["CLASS 12", "CLASS 12TH", "12TH", "INTER", "INTERMEDIATE", "CBSE 12", "ISC 12", "BOARD 12"],
-    "Ssc": ["SSC", "CGL", "CHSL", "MTS", "CPO", "GD", "STENOGRAPHER", "SELECTION POST"],
+    "Class 10th": ["CLASS 10", "CLASS 10TH", "10TH", "MATRIC", "CBSE 10", "ICSE 10", "BOARD 10"],
+    "Class 11th": ["CLASS 11", "CLASS 11TH", "11TH", "CBSE 11", "ISC 11"],
+    "Class 12th": ["CLASS 12", "CLASS 12TH", "12TH", "INTER", "INTERMEDIATE", "CBSE 12", "ISC 12", "BOARD 12"],
+    "SSC": ["SSC", "CGL", "CHSL", "MTS", "CPO", "GD", "STENOGRAPHER", "SELECTION POST"],
     "Railway": ["RAILWAY", "RRB", "NTPC", "GROUP D", "ALP", "TECHNICIAN", "RPF"],
     "Defence": ["NDA", "CDS", "AFCAT", "NAVY", "ARMY", "AIRFORCE", "AGNIVEER"],
     "Banking": ["BANK", "IBPS", "SBI", "PO", "CLERK", "RBI", "LIC"],
     "Teaching": ["CTET", "STET", "UPTET", "KVS", "NVS", "BPSC TRE", "DSSSB"],
-    "Upsc": ["UPSC", "BPSC", "UPPSC", "MPPSC", "STATE PSC", "PCS", "CIVIL SERVICES"],
+    "UPSC": ["UPSC", "BPSC", "UPPSC", "MPPSC", "STATE PSC", "PCS", "CIVIL SERVICES"],
     "Police": ["POLICE", "UP POLICE", "DELHI POLICE", "BIHAR POLICE", "SI", "CONSTABLE", "DAROGA"],
-    "Jee": ["JEE", "IIT", "MAINS", "ADVANCED", "BITSAT"],
-    "Neet": ["NEET", "MEDICAL", "AIIMS"]
+    "JEE": ["JEE", "IIT", "MAINS", "ADVANCED", "BITSAT"],
+    "NEET": ["NEET", "MEDICAL", "AIIMS"]
 };
 
 let currentSelectedCategory = "All";
 let currentSelectedLanguage = "All";
 
-function updateDynamicFilters() {
-    const activeCategories = new Set();
-    
-    activeCategories.add("10th");
-    activeCategories.add("11th");
-    activeCategories.add("12th");
-
-    booksData.forEach(book => {
-        if(!book.exams) return;
-        let bookExamsString = book.exams.toUpperCase();
-        let matchedMainCategory = false;
-        for (let mainCategory in EXAM_CATEGORY_MAP) {
-            let keywords = EXAM_CATEGORY_MAP[mainCategory];
-            if (keywords.some(keyword => bookExamsString.includes(keyword))) { 
-                activeCategories.add(mainCategory); 
-                matchedMainCategory = true; 
-            }
-        }
-        if (!matchedMainCategory) {
-            book.exams.split(',').forEach(exam => {
-                let cleanExam = exam.trim();
-                if (cleanExam.length > 0) activeCategories.add(cleanExam.charAt(0).toUpperCase() + cleanExam.slice(1).toLowerCase());
-            });
-        }
-    });
-
-    const sortedCategories = Array.from(activeCategories).sort((a, b) => {
-        const priority = { "Class 10th": 1, "Class 11th": 2, "Class 12th": 3 };
-        if (priority[a] && priority[b]) return priority[a] - priority[b];
-        if (priority[a]) return -1;
-        if (priority[b]) return 1;
-        return a.localeCompare(b);
-    });
-
+function renderStaticFilterPills() {
     const catGrid = document.getElementById('categoryFilterGrid'); 
+    if(!catGrid) return;
+    
     let html = `<div class="f-pill ${currentSelectedCategory === 'All' ? 'active' : ''}" data-category="All">All</div>`;
-    sortedCategories.forEach(category => { 
-        html += `<div class="f-pill ${category === currentSelectedCategory ? 'active' : ''}" data-category="${sanitizeHTML(category)}">${sanitizeHTML(category)}</div>`; 
+    FIXED_EXAM_LIST.forEach(category => { 
+        html += `<div class="f-pill ${category === currentSelectedCategory ? 'active' : ''}" data-category="${category}">${category}</div>`; 
     });
     catGrid.innerHTML = html;
 }
 
-document.getElementById('categoryFilterGrid').addEventListener('click', (e) => {
+document.getElementById('categoryFilterGrid')?.addEventListener('click', (e) => {
     if(e.target.classList.contains('f-pill')) {
         document.querySelectorAll('#categoryFilterGrid .f-pill').forEach(el => el.classList.remove('active'));
         e.target.classList.add('active'); 
@@ -1209,7 +1215,7 @@ document.getElementById('categoryFilterGrid').addEventListener('click', (e) => {
     }
 });
 
-document.getElementById('languageFilterGrid').addEventListener('click', (e) => {
+document.getElementById('languageFilterGrid')?.addEventListener('click', (e) => {
     if(e.target.classList.contains('f-pill')) {
         document.querySelectorAll('#languageFilterGrid .f-pill').forEach(el => el.classList.remove('active'));
         e.target.classList.add('active'); 
@@ -1217,29 +1223,55 @@ document.getElementById('languageFilterGrid').addEventListener('click', (e) => {
     }
 });
 
-document.getElementById('applyFiltersBtn').addEventListener('click', () => { 
+document.getElementById('applyFiltersBtn')?.addEventListener('click', () => { 
     document.getElementById('filterBottomOverlay').classList.remove('active'); 
     applyMasterFilter(); 
 });
 
+// =======================================================
+// 🌟 ADVANCED PRO-LEVEL FUZZY & SPACE-INSENSITIVE SEARCH 🌟
+// =======================================================
+function normalizeTextForSearch(str) {
+    if (!str) return '';
+    return str.toString()
+        .toLowerCase()
+        .replace(/[^a-z0-9]/g, '') // remove spaces, punctuation, symbols
+        .trim();
+}
+
 function applyMasterFilter() {
     const searchInputRaw = document.getElementById('app-search-input').value.trim();
-    let normalizedSearch = searchInputRaw.toLowerCase().replace(/[^a-z0-9\s]/g, '');
-    let searchTokens = normalizedSearch.split(/\s+/).filter(token => token.length > 0);
+    const rawLower = searchInputRaw.toLowerCase();
+    const cleanSearchNoSpaces = normalizeTextForSearch(searchInputRaw);
+    const searchWords = rawLower.split(/\s+/).filter(w => w.length > 0);
 
     mainFilteredData = booksData.filter(book => {
+        // Category Filter
         let matchesCategory = true;
         if (currentSelectedCategory !== "All") {
             let bookExamsString = (book.exams || "").toUpperCase();
             let keywordsToCheck = EXAM_CATEGORY_MAP[currentSelectedCategory] || [currentSelectedCategory.toUpperCase()];
             matchesCategory = keywordsToCheck.some(keyword => bookExamsString.includes(keyword));
         }
+
+        // Language Filter
         let matchesLanguage = currentSelectedLanguage === "All" || (book.lang || "").toLowerCase().trim() === currentSelectedLanguage.toLowerCase().trim();
+
+        // Advanced Search Algorithm
         let matchesSearch = true;
         if (searchInputRaw.length > 0) {
-            let textToSearch = (book.title + " " + (book.author || "") + " " + (book.exams || "")).toLowerCase().replace(/[^a-z0-9\s]/g, '');
-            if (searchTokens.length > 0) matchesSearch = searchTokens.every(token => textToSearch.includes(token)); 
+            const rawCombined = `${book.title || ''} ${book.author || ''} ${book.exams || ''}`.toLowerCase();
+            const normalizedTarget = normalizeTextForSearch(rawCombined);
+
+            // 1. Direct Space-insensitive match (e.g. "neetusingh" matches "Neetu Singh")
+            const isNoSpaceMatch = normalizedTarget.includes(cleanSearchNoSpaces);
+
+            // 2. Tokenized match (all words present anywhere)
+            const isTokenMatch = searchWords.length > 0 && searchWords.every(word => rawCombined.includes(word));
+
+            matchesSearch = isNoSpaceMatch || isTokenMatch;
         }
+
         return matchesCategory && matchesLanguage && matchesSearch;
     });
     
@@ -1260,7 +1292,7 @@ const searchInputEl = document.getElementById('app-search-input');
 let searchTimeout;
 searchInputEl.addEventListener('input', () => { 
     clearTimeout(searchTimeout); 
-    searchTimeout = setTimeout(() => { applyMasterFilter(); }, 300); 
+    searchTimeout = setTimeout(() => { applyMasterFilter(); }, 250); 
 });
 document.getElementById('close-search').addEventListener('click', () => { 
     searchInputEl.value = ''; 
@@ -1390,7 +1422,12 @@ document.getElementById('open-noti').addEventListener('click', () => {
     const blinkDot = document.querySelector('.blink-dot');
     if (blinkDot) blinkDot.style.display = 'none'; 
     
-    scrollToBottomSmooth();
+    // Smooth loader-to-bottom transition
+    if (livePosts.length > 0) {
+        renderChannelFeed(livePosts, true);
+    } else {
+        renderChannelLoader();
+    }
 });
 
 if (closeNotiBtn) {
@@ -1531,10 +1568,10 @@ function openDownloadPageLocal(slug, skipPushState = false) {
     document.getElementById("dlBookAuthor").innerText = sanitizeHTML(book.author);
     
     const dlPdfBtn = document.getElementById("dlPdfLinkBtn");
-    dlPdfBtn.style.pointerEvents = "none"; 
+    dlPdfBtn.style.pointerEvents = "auto"; 
     dlPdfBtn.onclick = function(e) { 
         e.preventDefault(); 
-        return false; 
+        showToast("Direct PDF download feature coming soon!", "error");
     };
 
     document.getElementById("dlReadOnlineBtn").onclick = async function() {
