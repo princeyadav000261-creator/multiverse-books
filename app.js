@@ -29,12 +29,11 @@ const provider = new GoogleAuthProvider();
 const analytics = getAnalytics(app); 
 
 // ==========================================
-// 2. SECURE CLOUDFLARE PROXY BASE URL
-// (Yahan apna Worker custom domain ya worker URL dalein)
+// 2. SECURE CLOUDFLARE PROXY BASE URL (ADDED)
 // ==========================================
-const PROXY_STREAM_URL = "https://cdn.yourdomain.com/stream?file="; 
+const PROXY_STREAM_URL = "https://spidy-proxy.spidybookhub-backend.workers.dev/stream?file="; 
 
-// Helper function: Agar pure URL ho to waise hi load kare, key ho to proxy se connect kare
+// Helper function: Key ko secure proxy URL mein convert karega
 function getSecureAssetUrl(fileKeyOrUrl) {
     if (!fileKeyOrUrl) return "";
     if (fileKeyOrUrl.startsWith("http://") || fileKeyOrUrl.startsWith("https://")) {
@@ -518,7 +517,7 @@ async function syncProfileAndRankUI() {
 }
 
 // =======================================================
-// 🌟 ADVANCED SMOOTH NOTIFICATION CHANNEL & LOADER 🌟
+// 🌟 ADVANCED NOTIFICATION CHANNEL & LOADER 🌟
 // =======================================================
 const chatBody = document.getElementById('chatBody');
 const contextOverlay = document.getElementById('contextOverlay');
@@ -1334,7 +1333,7 @@ function renderBooksUI(startIndex, count, customData = null) {
         let isSaved = savedBooks.includes(book.slug);
         let bookmarkIcon = isSaved ? 'fas fa-bookmark' : 'far fa-bookmark';
         
-        // SECURE COVER IMAGE URL VIA PROXY
+        // SECURE COVER VIA PROXY
         const secureCoverUrl = getSecureAssetUrl(book.image);
 
         htmlChunk += `<div class="book-card" data-slug="${book.slug}"><div class="card-img-wrapper"><div class="badge-free">FREE</div><div class="bookmark-btn" data-action="bookmark"><i class="${bookmarkIcon}"></i></div><img src="${secureCoverUrl}" loading="lazy" class="book-image" oncontextmenu="return false;" draggable="false"></div><div class="book-details"><div class="book-title">${sanitizeHTML(book.title)}</div><div class="book-author">${sanitizeHTML(book.author)}</div><div class="tags-container"><span class="book-tag tag-year">${sanitizeHTML(book.year)}</span><span class="book-tag ${langClass}">${sanitizeHTML(book.lang)}</span></div></div></div>`;
@@ -1628,7 +1627,7 @@ function openDownloadPageLocal(slug, skipPushState = false) {
                 
                 title.innerText = sanitizeHTML(book.title);
                 
-                // SECURE WORKER STREAMING URL EMBED
+                // SECURE PROXY STREAMING EMBED
                 const secureStreamUrl = getSecureAssetUrl(data.pdfLink);
                 iframe.src = secureStreamUrl + "#toolbar=0&navpanes=0&scrollbar=0"; 
                 pdfViewer.style.display = 'flex';
@@ -1846,7 +1845,7 @@ document.getElementById('verifyBtn').addEventListener('click', async () => {
 });
 
 // ==========================================
-// CLOUDFLARE R2 UPLOADS (ALAG COVERS & PDFS PREFIXES)
+// CLOUDFLARE R2 UPLOADS
 // ==========================================
 ['fileCoverGallery', 'fileCoverBrowse'].forEach(id => {
     document.getElementById(id).addEventListener('change', function(e) {
@@ -1874,7 +1873,6 @@ async function uploadFileToR2(file, type) {
         const icon = document.getElementById('r2UploadIcon');
         const title = document.getElementById('r2UploadTitle');
 
-        // Folder separation: covers/ ya pdfs/
         const folderPrefix = type === 'image' ? 'covers' : 'pdfs';
         const uniqueFileName = `${folderPrefix}/${Date.now()}_${file.name.replace(/[^a-zA-Z0-9._-]/g, '')}`;
 
@@ -1924,7 +1922,6 @@ async function uploadFileToR2(file, type) {
             xhr.onload = function() {
                 if (xhr.status >= 200 && xhr.status < 300) {
                     setTimeout(() => { r2Overlay.style.display = 'none'; }, 500); 
-                    // Sirf relative storage key wapas karega (covers/... ya pdfs/...)
                     resolve(authData.fileKey || uniqueFileName);
                 } else { 
                     r2Overlay.style.display = 'none'; 
@@ -1957,7 +1954,6 @@ document.getElementById('addBookForm').addEventListener('submit', async (e) => {
     btn.disabled = true;
 
     try {
-        // Dono files ek hi bucket me alag folder me upload hongi
         let coverKey = await uploadFileToR2(selectedCoverFile, 'image'); 
         let pdfKey = await uploadFileToR2(selectedPdfFile, 'pdf');
         
@@ -1967,8 +1963,8 @@ document.getElementById('addBookForm').addEventListener('submit', async (e) => {
             year: document.getElementById('inYear').value, 
             lang: document.getElementById('inLang').value, 
             exams: document.getElementById('inExams').value, 
-            image: coverKey, // Database me sirf key save hogi (e.g. covers/123.png)
-            pdfLink: pdfKey, // Database me sirf key save hogi (e.g. pdfs/123.pdf)
+            image: coverKey, 
+            pdfLink: pdfKey, 
             dateAdded: new Date().toLocaleDateString('en-GB').toUpperCase(), 
             createdAt: new Date().getTime(), 
             uploaderUid: auth.currentUser.uid 
@@ -2010,4 +2006,3 @@ function switchAdminTabLocal(tabName) {
         document.getElementById('admTabPrompt').classList.add('active'); 
     }
 }
-
