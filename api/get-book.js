@@ -20,7 +20,19 @@ if (!admin.apps.length) {
 const db = admin.firestore();
 
 module.exports = async function handler(req, res) {
-  // Sirf POST request allow karein
+  // CORS Headers lagayein
+  res.setHeader('Access-Control-Allow-Credentials', true);
+  res.setHeader('Access-Control-Allow-Origin', '*');
+  res.setHeader('Access-Control-Allow-Methods', 'GET,OPTIONS,PATCH,DELETE,POST,PUT');
+  res.setHeader(
+    'Access-Control-Allow-Headers',
+    'X-CSRF-Token, X-Requested-With, Accept, Accept-Version, Content-Length, Content-MD5, Content-Type, Date, X-Api-Version'
+  );
+
+  if (req.method === 'OPTIONS') {
+    return res.status(200).end();
+  }
+
   if (req.method !== 'POST') {
     return res.status(405).json({ error: 'Method Not Allowed' });
   }
@@ -97,22 +109,17 @@ module.exports = async function handler(req, res) {
       return res.status(404).json({ error: 'PDF file link missing for this book!' });
     }
 
-    // 5. Cloudflare Worker URL (Expiry check permanently removed)
-    const secret = process.env.SECURE_SECRET || "SPIDY_DEFAULT_SECRET_KEY_99";
-    const workerBaseUrl = (process.env.WORKER_URL || "").replace(/\/+$/, "");
+    // 5. Cloudflare Worker URL
+    const workerBaseUrl = (process.env.WORKER_URL || "https://spidy-proxy.spidybookhub-backend.workers.dev").replace(/\/+$/, "");
 
-    if (!workerBaseUrl) {
-      return res.status(500).json({ error: 'WORKER_URL is missing in environment variables!' });
-    }
+    // Direct clean worker proxy link
+    const secureWorkerUrl = `${workerBaseUrl}/stream?file=${encodeURIComponent(fileKey)}`;
 
-    // Static lifetime signature (Never expires)
-    const dataToSign = `${fileKey}-${secret}`;
-    const signature = crypto.createHmac('sha256', secret).update(dataToSign).digest('hex');
-
-    // Secure Worker Link
-    const secureWorkerUrl = `${workerBaseUrl}/?file=${encodeURIComponent(fileKey)}&sig=${signature}`;
-
-    return res.status(200).json({ success: true, pdfLink: secureWorkerUrl });
+    return res.status(200).json({ 
+      success: true, 
+      pdfLink: secureWorkerUrl,
+      rawKey: fileKey 
+    });
 
   } catch (error) {
     console.error("Backend Error:", error);
