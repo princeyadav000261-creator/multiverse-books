@@ -29,9 +29,19 @@ const provider = new GoogleAuthProvider();
 const analytics = getAnalytics(app); 
 
 // ==========================================
-// 2. R2 PUBLIC URL (For Cover Images Only)
+// 2. SECURE CLOUDFLARE PROXY BASE URL
+// (Yahan apna Worker custom domain ya worker URL dalein)
 // ==========================================
-const R2_PUBLIC_IMAGE_URL = "https://your-cloudflare-public-domain.r2.dev"; 
+const PROXY_STREAM_URL = "https://cdn.yourdomain.com/stream?file="; 
+
+// Helper function: Agar pure URL ho to waise hi load kare, key ho to proxy se connect kare
+function getSecureAssetUrl(fileKeyOrUrl) {
+    if (!fileKeyOrUrl) return "";
+    if (fileKeyOrUrl.startsWith("http://") || fileKeyOrUrl.startsWith("https://")) {
+        return fileKeyOrUrl;
+    }
+    return `${PROXY_STREAM_URL}${encodeURIComponent(fileKeyOrUrl)}`;
+}
 
 // ==========================================
 // GLOBAL VARIABLES
@@ -1158,22 +1168,11 @@ if (confirmLogoutBtn) {
 }
 
 // =======================================================
-// 🌟 EXACT FILTER LIST WITH GENERAL READING (ZERO EMPTY GAPS) 🌟
+// 🌟 EXACT FILTER LIST WITH GENERAL READING 🌟
 // =======================================================
 const FIXED_EXAM_LIST = [
-    "10th",
-    "11th",
-    "12th",
-    "Ssc",
-    "Railway",
-    "Defence",
-    "Banking",
-    "Teaching",
-    "Upsc",
-    "Police",
-    "Jee",
-    "Neet",
-    "General Reading"
+    "10th", "11th", "12th", "Ssc", "Railway", "Defence", 
+    "Banking", "Teaching", "Upsc", "Police", "Jee", "Neet", "General Reading"
 ];
 
 const EXAM_CATEGORY_MAP = {
@@ -1228,14 +1227,11 @@ document.getElementById('applyFiltersBtn')?.addEventListener('click', () => {
 });
 
 // =======================================================
-// 🌟 ADVANCED PRO-LEVEL FUZZY & SPACE-INSENSITIVE SEARCH 🌟
+// 🌟 ADVANCED PRO-LEVEL SEARCH 🌟
 // =======================================================
 function normalizeTextForSearch(str) {
     if (!str) return '';
-    return str.toString()
-        .toLowerCase()
-        .replace(/[^a-z0-9]/g, '')
-        .trim();
+    return str.toString().toLowerCase().replace(/[^a-z0-9]/g, '').trim();
 }
 
 function applyMasterFilter() {
@@ -1245,7 +1241,6 @@ function applyMasterFilter() {
     const searchWords = rawLower.split(/\s+/).filter(w => w.length > 0);
 
     mainFilteredData = booksData.filter(book => {
-        // Category Filter
         let matchesCategory = true;
         if (currentSelectedCategory !== "All") {
             let bookExamsString = (book.exams || "").toUpperCase();
@@ -1253,10 +1248,8 @@ function applyMasterFilter() {
             matchesCategory = keywordsToCheck.some(keyword => bookExamsString.includes(keyword));
         }
 
-        // Language Filter
         let matchesLanguage = currentSelectedLanguage === "All" || (book.lang || "").toLowerCase().trim() === currentSelectedLanguage.toLowerCase().trim();
 
-        // Advanced Search Algorithm
         let matchesSearch = true;
         if (searchInputRaw.length > 0) {
             const rawCombined = `${book.title || ''} ${book.author || ''} ${book.exams || ''}`.toLowerCase();
@@ -1340,7 +1333,11 @@ function renderBooksUI(startIndex, count, customData = null) {
         let langClass = book.lang.toLowerCase() === 'hindi' ? 'tag-lang-hindi' : 'tag-lang-english';
         let isSaved = savedBooks.includes(book.slug);
         let bookmarkIcon = isSaved ? 'fas fa-bookmark' : 'far fa-bookmark';
-        htmlChunk += `<div class="book-card" data-slug="${book.slug}"><div class="card-img-wrapper"><div class="badge-free">FREE</div><div class="bookmark-btn" data-action="bookmark"><i class="${bookmarkIcon}"></i></div><img src="${book.image}" loading="lazy" class="book-image" oncontextmenu="return false;" draggable="false"></div><div class="book-details"><div class="book-title">${sanitizeHTML(book.title)}</div><div class="book-author">${sanitizeHTML(book.author)}</div><div class="tags-container"><span class="book-tag tag-year">${sanitizeHTML(book.year)}</span><span class="book-tag ${langClass}">${sanitizeHTML(book.lang)}</span></div></div></div>`;
+        
+        // SECURE COVER IMAGE URL VIA PROXY
+        const secureCoverUrl = getSecureAssetUrl(book.image);
+
+        htmlChunk += `<div class="book-card" data-slug="${book.slug}"><div class="card-img-wrapper"><div class="badge-free">FREE</div><div class="bookmark-btn" data-action="bookmark"><i class="${bookmarkIcon}"></i></div><img src="${secureCoverUrl}" loading="lazy" class="book-image" oncontextmenu="return false;" draggable="false"></div><div class="book-details"><div class="book-title">${sanitizeHTML(book.title)}</div><div class="book-author">${sanitizeHTML(book.author)}</div><div class="tags-container"><span class="book-tag tag-year">${sanitizeHTML(book.year)}</span><span class="book-tag ${langClass}">${sanitizeHTML(book.lang)}</span></div></div></div>`;
     }
     container.insertAdjacentHTML('beforeend', htmlChunk); 
     loadedCount = endIndex;
@@ -1387,7 +1384,9 @@ function renderSavedBooksUI() {
     let htmlChunk = "";
     savedBooksData.forEach(book => {
         let langClass = book.lang.toLowerCase() === 'hindi' ? 'tag-lang-hindi' : 'tag-lang-english';
-        htmlChunk += `<div class="book-card" data-slug="${book.slug}"><div class="card-img-wrapper"><div class="badge-free">FREE</div><div class="bookmark-btn" data-action="bookmark"><i class="fas fa-bookmark"></i></div><img src="${book.image}" loading="lazy" class="book-image" oncontextmenu="return false;" draggable="false"></div><div class="book-details"><div class="book-title">${sanitizeHTML(book.title)}</div><div class="book-author">${sanitizeHTML(book.author)}</div><div class="tags-container"><span class="book-tag tag-year">${sanitizeHTML(book.year)}</span><span class="book-tag ${langClass}">${sanitizeHTML(book.lang)}</span></div></div></div>`;
+        const secureCoverUrl = getSecureAssetUrl(book.image);
+
+        htmlChunk += `<div class="book-card" data-slug="${book.slug}"><div class="card-img-wrapper"><div class="badge-free">FREE</div><div class="bookmark-btn" data-action="bookmark"><i class="fas fa-bookmark"></i></div><img src="${secureCoverUrl}" loading="lazy" class="book-image" oncontextmenu="return false;" draggable="false"></div><div class="book-details"><div class="book-title">${sanitizeHTML(book.title)}</div><div class="book-author">${sanitizeHTML(book.author)}</div><div class="tags-container"><span class="book-tag tag-year">${sanitizeHTML(book.year)}</span><span class="book-tag ${langClass}">${sanitizeHTML(book.lang)}</span></div></div></div>`;
     });
     container.innerHTML = htmlChunk;
 }
@@ -1556,7 +1555,7 @@ function openDownloadPageLocal(slug, skipPushState = false) {
     
     const previewImg = document.getElementById("dlPreviewImage");
     previewImg.classList.add("image-loading-skeleton"); 
-    previewImg.src = book.image; 
+    previewImg.src = getSecureAssetUrl(book.image); 
     previewImg.onload = () => { previewImg.classList.remove("image-loading-skeleton"); };
 
     document.getElementById("dlBookTitle").innerText = sanitizeHTML(book.title); 
@@ -1628,7 +1627,10 @@ function openDownloadPageLocal(slug, skipPushState = false) {
                 const title = document.getElementById('pdfViewerTitle');
                 
                 title.innerText = sanitizeHTML(book.title);
-                iframe.src = data.pdfLink + "&toolbar=0&navpanes=0&scrollbar=0"; 
+                
+                // SECURE WORKER STREAMING URL EMBED
+                const secureStreamUrl = getSecureAssetUrl(data.pdfLink);
+                iframe.src = secureStreamUrl + "#toolbar=0&navpanes=0&scrollbar=0"; 
                 pdfViewer.style.display = 'flex';
 
             } else {
@@ -1844,7 +1846,7 @@ document.getElementById('verifyBtn').addEventListener('click', async () => {
 });
 
 // ==========================================
-// CLOUDFLARE R2 UPLOADS
+// CLOUDFLARE R2 UPLOADS (ALAG COVERS & PDFS PREFIXES)
 // ==========================================
 ['fileCoverGallery', 'fileCoverBrowse'].forEach(id => {
     document.getElementById(id).addEventListener('change', function(e) {
@@ -1872,6 +1874,10 @@ async function uploadFileToR2(file, type) {
         const icon = document.getElementById('r2UploadIcon');
         const title = document.getElementById('r2UploadTitle');
 
+        // Folder separation: covers/ ya pdfs/
+        const folderPrefix = type === 'image' ? 'covers' : 'pdfs';
+        const uniqueFileName = `${folderPrefix}/${Date.now()}_${file.name.replace(/[^a-zA-Z0-9._-]/g, '')}`;
+
         if(type === 'image') { 
             icon.className = "fas fa-image"; 
             title.innerText = "Upload Cover Image"; 
@@ -1891,7 +1897,11 @@ async function uploadFileToR2(file, type) {
             const authResponse = await fetch('/api/generate-upload-url', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ fileName: file.name, fileType: file.type, userToken: userToken })
+                body: JSON.stringify({ 
+                    fileName: uniqueFileName, 
+                    fileType: file.type, 
+                    userToken: userToken 
+                })
             });
             const authData = await authResponse.json();
 
@@ -1914,8 +1924,8 @@ async function uploadFileToR2(file, type) {
             xhr.onload = function() {
                 if (xhr.status >= 200 && xhr.status < 300) {
                     setTimeout(() => { r2Overlay.style.display = 'none'; }, 500); 
-                    if (type === 'image') resolve(`${R2_PUBLIC_IMAGE_URL}/${authData.fileKey}`);
-                    else resolve(authData.fileKey); 
+                    // Sirf relative storage key wapas karega (covers/... ya pdfs/...)
+                    resolve(authData.fileKey || uniqueFileName);
                 } else { 
                     r2Overlay.style.display = 'none'; 
                     reject("Upload Failed"); 
@@ -1947,8 +1957,9 @@ document.getElementById('addBookForm').addEventListener('submit', async (e) => {
     btn.disabled = true;
 
     try {
-        let coverR2Url = await uploadFileToR2(selectedCoverFile, 'image'); 
-        let pdfR2Key = await uploadFileToR2(selectedPdfFile, 'pdf');
+        // Dono files ek hi bucket me alag folder me upload hongi
+        let coverKey = await uploadFileToR2(selectedCoverFile, 'image'); 
+        let pdfKey = await uploadFileToR2(selectedPdfFile, 'pdf');
         
         const newBook = { 
             title: document.getElementById('inTitle').value, 
@@ -1956,8 +1967,8 @@ document.getElementById('addBookForm').addEventListener('submit', async (e) => {
             year: document.getElementById('inYear').value, 
             lang: document.getElementById('inLang').value, 
             exams: document.getElementById('inExams').value, 
-            image: coverR2Url, 
-            pdfLink: pdfR2Key, 
+            image: coverKey, // Database me sirf key save hogi (e.g. covers/123.png)
+            pdfLink: pdfKey, // Database me sirf key save hogi (e.g. pdfs/123.pdf)
             dateAdded: new Date().toLocaleDateString('en-GB').toUpperCase(), 
             createdAt: new Date().getTime(), 
             uploaderUid: auth.currentUser.uid 
@@ -1999,3 +2010,4 @@ function switchAdminTabLocal(tabName) {
         document.getElementById('admTabPrompt').classList.add('active'); 
     }
 }
+
