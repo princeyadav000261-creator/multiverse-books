@@ -29,17 +29,18 @@ const provider = new GoogleAuthProvider();
 const analytics = getAnalytics(app); 
 
 // ==========================================
-// 2. SECURE CLOUDFLARE PROXY BASE URL (ADDED)
+// 2. SECURE CLOUDFLARE PROXY BASE URL
 // ==========================================
 const PROXY_STREAM_URL = "https://spidy-proxy.spidybookhub-backend.workers.dev/stream?file="; 
 
-// Helper function: Key ko secure proxy URL mein convert karega
+// Helper function: Image aur assets ke liye secure link generate karega
 function getSecureAssetUrl(fileKeyOrUrl) {
-    if (!fileKeyOrUrl) return "";
+    if (!fileKeyOrUrl) return DEFAULT_AVATAR;
     if (fileKeyOrUrl.startsWith("http://") || fileKeyOrUrl.startsWith("https://")) {
         return fileKeyOrUrl;
     }
-    return `${PROXY_STREAM_URL}${encodeURIComponent(fileKeyOrUrl)}`;
+    const cleanKey = fileKeyOrUrl.replace(/^\/+/, '');
+    return `${PROXY_STREAM_URL}${cleanKey}`;
 }
 
 // ==========================================
@@ -1226,7 +1227,7 @@ document.getElementById('applyFiltersBtn')?.addEventListener('click', () => {
 });
 
 // =======================================================
-// 🌟 ADVANCED PRO-LEVEL SEARCH 🌟
+// 🌟 ADVANCED SEARCH ALGORITHM 🌟
 // =======================================================
 function normalizeTextForSearch(str) {
     if (!str) return '';
@@ -1333,10 +1334,10 @@ function renderBooksUI(startIndex, count, customData = null) {
         let isSaved = savedBooks.includes(book.slug);
         let bookmarkIcon = isSaved ? 'fas fa-bookmark' : 'far fa-bookmark';
         
-        // SECURE COVER VIA PROXY
+        // SECURE ASSET URL
         const secureCoverUrl = getSecureAssetUrl(book.image);
 
-        htmlChunk += `<div class="book-card" data-slug="${book.slug}"><div class="card-img-wrapper"><div class="badge-free">FREE</div><div class="bookmark-btn" data-action="bookmark"><i class="${bookmarkIcon}"></i></div><img src="${secureCoverUrl}" loading="lazy" class="book-image" oncontextmenu="return false;" draggable="false"></div><div class="book-details"><div class="book-title">${sanitizeHTML(book.title)}</div><div class="book-author">${sanitizeHTML(book.author)}</div><div class="tags-container"><span class="book-tag tag-year">${sanitizeHTML(book.year)}</span><span class="book-tag ${langClass}">${sanitizeHTML(book.lang)}</span></div></div></div>`;
+        htmlChunk += `<div class="book-card" data-slug="${book.slug}"><div class="card-img-wrapper"><div class="badge-free">FREE</div><div class="bookmark-btn" data-action="bookmark"><i class="${bookmarkIcon}"></i></div><img src="${secureCoverUrl}" loading="lazy" class="book-image" onerror="this.src='${DEFAULT_AVATAR}'" oncontextmenu="return false;" draggable="false"></div><div class="book-details"><div class="book-title">${sanitizeHTML(book.title)}</div><div class="book-author">${sanitizeHTML(book.author)}</div><div class="tags-container"><span class="book-tag tag-year">${sanitizeHTML(book.year)}</span><span class="book-tag ${langClass}">${sanitizeHTML(book.lang)}</span></div></div></div>`;
     }
     container.insertAdjacentHTML('beforeend', htmlChunk); 
     loadedCount = endIndex;
@@ -1385,7 +1386,7 @@ function renderSavedBooksUI() {
         let langClass = book.lang.toLowerCase() === 'hindi' ? 'tag-lang-hindi' : 'tag-lang-english';
         const secureCoverUrl = getSecureAssetUrl(book.image);
 
-        htmlChunk += `<div class="book-card" data-slug="${book.slug}"><div class="card-img-wrapper"><div class="badge-free">FREE</div><div class="bookmark-btn" data-action="bookmark"><i class="fas fa-bookmark"></i></div><img src="${secureCoverUrl}" loading="lazy" class="book-image" oncontextmenu="return false;" draggable="false"></div><div class="book-details"><div class="book-title">${sanitizeHTML(book.title)}</div><div class="book-author">${sanitizeHTML(book.author)}</div><div class="tags-container"><span class="book-tag tag-year">${sanitizeHTML(book.year)}</span><span class="book-tag ${langClass}">${sanitizeHTML(book.lang)}</span></div></div></div>`;
+        htmlChunk += `<div class="book-card" data-slug="${book.slug}"><div class="card-img-wrapper"><div class="badge-free">FREE</div><div class="bookmark-btn" data-action="bookmark"><i class="fas fa-bookmark"></i></div><img src="${secureCoverUrl}" loading="lazy" class="book-image" onerror="this.src='${DEFAULT_AVATAR}'" oncontextmenu="return false;" draggable="false"></div><div class="book-details"><div class="book-title">${sanitizeHTML(book.title)}</div><div class="book-author">${sanitizeHTML(book.author)}</div><div class="tags-container"><span class="book-tag tag-year">${sanitizeHTML(book.year)}</span><span class="book-tag ${langClass}">${sanitizeHTML(book.lang)}</span></div></div></div>`;
     });
     container.innerHTML = htmlChunk;
 }
@@ -1531,7 +1532,7 @@ window.addEventListener('popstate', () => {
 });
 
 // ==========================================
-// SECURE READ ONLINE (API PROXY)
+// SECURE READ ONLINE (API PROXY & UNIVERSAL VIEWER)
 // ==========================================
 const detectTokenFromUrl = new URLSearchParams(window.location.search).get('t');
 if (detectTokenFromUrl) {
@@ -1555,6 +1556,7 @@ function openDownloadPageLocal(slug, skipPushState = false) {
     const previewImg = document.getElementById("dlPreviewImage");
     previewImg.classList.add("image-loading-skeleton"); 
     previewImg.src = getSecureAssetUrl(book.image); 
+    previewImg.onerror = () => { previewImg.src = DEFAULT_AVATAR; };
     previewImg.onload = () => { previewImg.classList.remove("image-loading-skeleton"); };
 
     document.getElementById("dlBookTitle").innerText = sanitizeHTML(book.title); 
@@ -1627,9 +1629,14 @@ function openDownloadPageLocal(slug, skipPushState = false) {
                 
                 title.innerText = sanitizeHTML(book.title);
                 
-                // SECURE PROXY STREAMING EMBED
-                const secureStreamUrl = getSecureAssetUrl(data.pdfLink);
-                iframe.src = secureStreamUrl + "#toolbar=0&navpanes=0&scrollbar=0"; 
+                // Pure Worker Stream URL
+                const rawPdfUrl = data.pdfLink;
+
+                // MOBILE CHROME FIX: Mozilla PDF.js universal web viewer embed
+                // Isse mobile Chrome par 'refused to connect' sad-face error nahi aayega
+                const universalPdfViewerUrl = `https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/web/viewer.html?file=${encodeURIComponent(rawPdfUrl)}`;
+
+                iframe.src = universalPdfViewerUrl; 
                 pdfViewer.style.display = 'flex';
 
             } else {
