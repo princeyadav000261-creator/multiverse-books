@@ -1526,7 +1526,7 @@ window.addEventListener('popstate', () => {
 });
 
 // ==========================================
-// SECURE READ ONLINE (MODAL DATA & PDF.JS VIEWER)
+// SECURE READ ONLINE (MODAL DATA & DIRECT VIEWER)
 // ==========================================
 const detectTokenFromUrl = new URLSearchParams(window.location.search).get('t');
 if (detectTokenFromUrl) {
@@ -1556,7 +1556,6 @@ function openDownloadPageLocal(slug, skipPushState = false) {
     document.getElementById("dlBookTitle").innerText = sanitizeHTML(book.title); 
     document.getElementById("dlBookAuthor").innerText = sanitizeHTML(book.author);
 
-    // DYNAMIC FILE SIZE & FORMAT UPDATE (Exact Element by ID)
     const fileSizeSub = document.getElementById('dlFileSize');
     if (fileSizeSub) {
         const formatText = book.fileFormat || "PDF";
@@ -1564,7 +1563,6 @@ function openDownloadPageLocal(slug, skipPushState = false) {
         fileSizeSub.innerText = `${sizeText}${formatText} Document`;
     }
 
-    // DYNAMIC TOTAL PAGES UPDATE (Exact Element by ID)
     const totalPagesSub = document.getElementById('dlTotalPages');
     if (totalPagesSub) {
         totalPagesSub.innerText = book.totalPages ? `${book.totalPages} Pages Included` : "Complete Book Included";
@@ -1637,11 +1635,8 @@ function openDownloadPageLocal(slug, skipPushState = false) {
                 
                 title.innerText = sanitizeHTML(book.title);
                 
-                const rawPdfUrl = data.pdfLink;
-                const directPdfUrl = rawPdfUrl.startsWith('http') ? rawPdfUrl : `${PROXY_STREAM_URL}${rawPdfUrl.replace(/^\/+/, '')}`;
-
-                // Pure Mozilla PDF.js Viewer
-                iframe.src = `https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/web/viewer.html?file=${encodeURIComponent(directPdfUrl)}`; 
+                // Direct PDF URL render (No double encoding, no iframe block)
+                iframe.src = data.pdfLink; 
                 pdfViewer.style.display = 'flex';
 
             } else {
