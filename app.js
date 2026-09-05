@@ -520,7 +520,7 @@ async function syncProfileAndRankUI() {
 
 // =======================================================
 // CHANNEL UPDATES & NOTIFICATIONS
-// =======================================================
+// ==========================================
 const chatBody = document.getElementById('chatBody');
 const contextOverlay = document.getElementById('contextOverlay');
 const scrollDownWrapper = document.getElementById('scrollDownWrapper');
@@ -1497,7 +1497,7 @@ document.getElementById('nav-upload').addEventListener('click', () => {
     setNavActive('nav-upload'); 
     closeAllPanels(); 
     switchTab('tab-upload'); 
-    setTimeout(() => { document.getElementById('uploadPopup').classList.remove('hidden'); }, 300);
+    setTimeout(() => { document.getElementById('uploadPopup')?.classList.remove('hidden'); }, 300);
 });
 
 document.getElementById('nav-dev').addEventListener('click', () => { 
@@ -1513,20 +1513,119 @@ document.getElementById('nav-dev').addEventListener('click', () => {
     syncProfileAndRankUI();
 });
 
-document.getElementById('closeUploadPopupBtn').addEventListener('click', () => { 
-    document.getElementById('uploadPopup').classList.add('hidden'); 
-});
-
 window.addEventListener('popstate', () => {
     closeAllPanels(); 
     applyMasterFilter();
     const sBook = new URLSearchParams(window.location.search).get('book');
     if(sBook) { openDownloadPageLocal(sBook, true); } 
-    else { document.getElementById("downloadModal").style.display = "none"; }
+    else { 
+        document.getElementById("downloadModal").style.display = "none";
+        document.getElementById("pdfViewerOverlay").style.display = "none";
+        document.getElementById('pdfScrollContainer').innerHTML = '';
+    }
 });
 
+// =========================================================
+// CANVAS-BASED IN-APP PDF RENDER ENGINE (NO POPUPS/NO IFRAME)
+// =========================================================
+let currentRenderTask = null;
+
+async function renderPdfInModal(pdfUrl) {
+    const scrollContainer = document.getElementById('pdfScrollContainer');
+    scrollContainer.innerHTML = `
+        <div id="pdfLoadingStatus" style="color: #38bdf8; margin-top: 50px; font-size: 15px; font-weight: 600; text-align: center;">
+            <i class="fas fa-spinner fa-spin" style="font-size: 26px; margin-bottom: 12px; display: block;"></i>
+            Loading book inside Spidy Book Hub...
+        </div>`;
+
+    try {
+        const loadingTask = window.pdfjsLib.getDocument({
+            url: pdfUrl,
+            cMapUrl: 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/cmaps/',
+            cMapPacked: true
+        });
+
+        const pdf = await loadingTask.promise;
+        scrollContainer.innerHTML = '';
+
+        // Mobile screen width optimization
+        const screenWidth = window.innerWidth;
+        const targetWidth = Math.min(screenWidth - 20, 720);
+
+        // First 8 pages instant render for high speed
+        const initialBatch = Math.min(pdf.numPages, 8);
+
+        for (let pageNum = 1; pageNum <= initialBatch; pageNum++) {
+            const page = await pdf.getPage(pageNum);
+            const originalViewport = page.getViewport({ scale: 1 });
+            const calculatedScale = targetWidth / originalViewport.width;
+            const viewport = page.getViewport({ scale: calculatedScale });
+
+            const canvas = document.createElement('canvas');
+            const context = canvas.getContext('2d');
+            canvas.height = viewport.height;
+            canvas.width = viewport.width;
+            canvas.style.width = `${targetWidth}px`;
+            canvas.style.maxWidth = "100%";
+            canvas.style.display = "block";
+            canvas.style.margin = "0 auto 15px auto";
+            canvas.style.borderRadius = "8px";
+            canvas.style.boxShadow = "0 6px 20px rgba(0,0,0,0.6)";
+
+            scrollContainer.appendChild(canvas);
+
+            await page.render({
+                canvasContext: context,
+                viewport: viewport
+            }).promise;
+        }
+
+        // Remaining pages background render
+        if (pdf.numPages > 8) {
+            (async () => {
+                for (let pageNum = 9; pageNum <= pdf.numPages; pageNum++) {
+                    if (document.getElementById('pdfViewerOverlay').style.display === 'none') break;
+                    
+                    const page = await pdf.getPage(pageNum);
+                    const originalViewport = page.getViewport({ scale: 1 });
+                    const calculatedScale = targetWidth / originalViewport.width;
+                    const viewport = page.getViewport({ scale: calculatedScale });
+
+                    const canvas = document.createElement('canvas');
+                    const context = canvas.getContext('2d');
+                    canvas.height = viewport.height;
+                    canvas.width = viewport.width;
+                    canvas.style.width = `${targetWidth}px`;
+                    canvas.style.maxWidth = "100%";
+                    canvas.style.display = "block";
+                    canvas.style.margin = "0 auto 15px auto";
+                    canvas.style.borderRadius = "8px";
+                    canvas.style.boxShadow = "0 6px 20px rgba(0,0,0,0.6)";
+
+                    scrollContainer.appendChild(canvas);
+
+                    await page.render({
+                        canvasContext: context,
+                        viewport: viewport
+                    }).promise;
+                }
+            })();
+        }
+
+    } catch (err) {
+        console.error("PDF Rendering Failed:", err);
+        scrollContainer.innerHTML = `
+            <div style="color: #ef4444; margin-top: 50px; text-align: center; padding: 25px;">
+                <i class="fas fa-triangle-exclamation" style="font-size: 32px; margin-bottom: 12px; display: block;"></i>
+                <strong>Failed to load book pages</strong>
+                <p style="font-size: 13px; color: #a1a1aa; margin: 10px 0 20px 0;">The network interrupted the download process.</p>
+                <a href="${pdfUrl}" target="_blank" style="color: #00d2ff; background: rgba(0,210,255,0.15); padding: 10px 20px; border-radius: 8px; text-decoration: none; font-weight: 600;">Open Direct Stream</a>
+            </div>`;
+    }
+}
+
 // ==========================================
-// SECURE READ ONLINE (MODAL DATA & DIRECT VIEWER)
+// SECURE READ ONLINE (MODAL DATA & TRIGGER)
 // ==========================================
 const detectTokenFromUrl = new URLSearchParams(window.location.search).get('t');
 if (detectTokenFromUrl) {
@@ -1630,14 +1729,13 @@ function openDownloadPageLocal(slug, skipPushState = false) {
                 syncProfileAndRankUI();
 
                 const pdfViewer = document.getElementById('pdfViewerOverlay');
-                const iframe = document.getElementById('pdfIframe');
                 const title = document.getElementById('pdfViewerTitle');
                 
                 title.innerText = sanitizeHTML(book.title);
                 
-                // Direct PDF URL render (No double encoding, no iframe block)
-                iframe.src = data.pdfLink; 
+                // Pure Canvas In-App Reader: No external browser tabs, no iframe Open buttons
                 pdfViewer.style.display = 'flex';
+                renderPdfInModal(data.pdfLink);
 
             } else {
                 if (response.status === 401 || (data.error && data.error.includes('Unauthorized'))) {
@@ -1661,7 +1759,7 @@ function openDownloadPageLocal(slug, skipPushState = false) {
 
     document.getElementById("closePdfViewerBtn").onclick = function() {
         document.getElementById('pdfViewerOverlay').style.display = 'none';
-        document.getElementById('pdfIframe').src = ""; 
+        document.getElementById('pdfScrollContainer').innerHTML = ''; 
     };
 
     document.getElementById("pdfContainer").addEventListener('contextmenu', event => event.preventDefault());
