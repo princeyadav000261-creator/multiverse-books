@@ -31,6 +31,15 @@
     <!-- DOMPurify for Channel Notifications Security -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/dompurify/3.0.9/purify.min.js"></script>
 
+    <!-- MOZILLA PDF.JS ENGINE (Auto Page Calculation & Mobile Viewer) -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+    <script>
+        // Initialize PDF.js worker
+        if (window.pdfjsLib) {
+            window.pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+        }
+    </script>
+
     <!-- Main CSS File -->
     <link rel="stylesheet" href="./style.css">
 </head>
@@ -179,10 +188,7 @@
                 <!-- TAB 1: HOME -->
                 <div id="tab-home" class="app-tab active">
                     
-                    <!-- 🌟 1918x820 PROMOTIONAL BANNER CAROUSEL WITH ARROWS 🌟 -->
                     <div class="promo-carousel-container" id="promoCarouselContainer">
-                        
-                        <!-- Navigation Arrows -->
                         <button class="promo-arrow-btn arrow-prev" id="promoPrevBtn" aria-label="Previous Slide">
                             <i class="fas fa-chevron-left"></i>
                         </button>
@@ -191,18 +197,14 @@
                         </button>
 
                         <div class="promo-carousel-track" id="promoCarouselTrack">
-                            <!-- Slide 1 -->
                             <a href="https://t.me/MultiverseBooks" target="_blank" class="promo-slide">
                                 <img src="https://i.postimg.cc/Pq0JLj3C/file-0000000027dc82119d3731d4bfe9bccf.png" alt="Promo Banner 1" class="promo-banner-img" draggable="false">
                             </a>
-
-                            <!-- Slide 2 -->
                             <a href="https://whatsapp.com/channel/0029Vb6NBZx1yT2GByTTVf2A" target="_blank" class="promo-slide">
                                 <img src="https://i.postimg.cc/XJFJdzmh/file-00000000ef2082118bdd64524b657f4c.png" alt="Promo Banner 2" class="promo-banner-img" draggable="false">
                             </a>
                         </div>
 
-                        <!-- Minimal Direct Floating Dots -->
                         <div class="promo-dots-wrapper" id="promoDotsWrapper">
                             <span class="promo-dot active" data-slide="0"></span>
                             <span class="promo-dot" data-slide="1"></span>
@@ -227,12 +229,10 @@
                         </div>
                     </div>
                     
-                    <!-- INFINITE SCROLL LOADER -->
                     <div id="infinite-loader" style="display: none; flex-direction: column; align-items: center; justify-content: center; width: 100%; padding: 20px 0; margin-bottom: 20px;">
                         <i class="fas fa-spinner fa-spin" style="font-size: 26px; color: #10b981;"></i>
                         <span style="color: #a1a1aa; font-size: 11px; font-weight: 700; letter-spacing: 1px; margin-top: 10px;">LOADING MORE BOOKS...</span>
                     </div>
-                    <!-- SCROLL SENTINEL -->
                     <div id="scroll-sentinel" style="height: 1px; width: 100%;"></div>
                     
                     <div class="nav-scroll-spacer"></div>
@@ -328,7 +328,7 @@
                     <div class="nav-scroll-spacer"></div>
                 </div>
 
-                <!-- 🌟 TAB 3: ME (MY PROFILE) 🌟 -->
+                <!-- TAB 3: ME (MY PROFILE) -->
                 <div id="tab-about" class="app-tab" style="display: none; padding: 0; position: relative; overflow: hidden;">
                     <div class="premium-bg">
                         <div class="grid-overlay"></div>
@@ -456,7 +456,7 @@
                 </div>
             </div>
 
-            <!-- DOWNLOAD MODAL -->
+            <!-- DOWNLOAD MODAL (FIXED IDS FOR SIZE & PAGES) -->
             <div class="download-modal" id="downloadModal" style="display: none; flex-direction: column;">
                 <div class="modal-header-fixed">
                     <div class="header-content-wrapper" style="display: flex; align-items: center; gap: 15px; flex-grow: 1;">
@@ -504,19 +504,21 @@
                             </button>
                         </div>
                         
+                        <!-- DYNAMIC FILE SIZE & FORMAT WITH ID -->
                         <div class="dl-box disable-long-press">
                             <i class="fas fa-weight-hanging icon" style="color: #10b981;"></i>
                             <div>
                                 <div class="dl-box-title">File Size & Format</div>
-                                <div class="dl-box-sub">High Quality PDF Document</div>
+                                <div class="dl-box-sub" id="dlFileSize">High Quality PDF Document</div>
                             </div>
                         </div>
 
+                        <!-- DYNAMIC TOTAL PAGES WITH ID -->
                         <div class="dl-box disable-long-press">
                             <i class="fas fa-file-lines icon" style="color: #3b82f6;"></i>
                             <div>
                                 <div class="dl-box-title">Total Pages</div>
-                                <div class="dl-box-sub">Complete Book Included</div>
+                                <div class="dl-box-sub" id="dlTotalPages">Complete Book Included</div>
                             </div>
                         </div>
                         
@@ -585,9 +587,8 @@
                 </div>
             </div>
 
-            <!-- 🌟 REPLACED: OFFICIAL NOTIFICATIONS / UPDATES CHANNEL PANEL 🌟 -->
+            <!-- OFFICIAL NOTIFICATIONS CHANNEL PANEL -->
             <div class="notifications-panel" id="noti-panel">
-                <!-- CHANNEL HEADER -->
                 <div class="noti-header-premium">
                     <div class="noti-header-left">
                         <div class="noti-logo-wrapper">
@@ -612,13 +613,11 @@
                         </div>
                     </div>
 
-                    <!-- Close/Back Action Button for Channel -->
                     <div class="header-back-btn" id="close-noti-btn" title="Back">
                         <i class="fas fa-arrow-right"></i>
                     </div>
                 </div>
 
-                <!-- CHANNEL CHAT FEED BODY -->
                 <div class="chat-body" id="chatBody">
                     <div class="empty-loading">
                         <div class="orbit-spinner">
@@ -630,7 +629,6 @@
                     </div>
                 </div>
 
-                <!-- SCROLL TO BOTTOM FLOATING CHEVRON BUTTON WITH UNREAD BADGE -->
                 <div class="scroll-down-wrapper" id="scrollDownWrapper">
                     <div class="scroll-down-btn" id="scrollDownBtn" title="Scroll to bottom">
                         <i class="fas fa-angles-down"></i>
@@ -638,7 +636,6 @@
                     <div class="unread-badge" id="unreadBadge">0</div>
                 </div>
 
-                <!-- FOOTER ADMIN NOTICE -->
                 <div class="admin-notice-bar" id="dynNotice">
                     <i class="fas fa-lock"></i> Only <span>admins</span> can send messages
                 </div>
@@ -804,7 +801,7 @@
         </div>
     </div>
 
-    <!-- NOTIFICATION CONTEXT MENU OVERLAY (EMOJIS, COPY, FORWARD, REPORT) -->
+    <!-- NOTIFICATION CONTEXT MENU OVERLAY -->
     <div class="context-overlay" id="contextOverlay">
         <div class="context-menu" id="contextMenu">
             <div class="cm-reactions">
