@@ -1638,11 +1638,10 @@ function openDownloadPageLocal(slug, skipPushState = false) {
                 title.innerText = sanitizeHTML(book.title);
                 
                 const rawPdfUrl = data.pdfLink;
+                const directPdfUrl = rawPdfUrl.startsWith('http') ? rawPdfUrl : `${PROXY_STREAM_URL}${rawPdfUrl.replace(/^\/+/, '')}`;
 
-                // OFFICIAL MOZILLA PDF.JS VIEWER (Fixes Google Docs "No preview available")
-                const universalPdfViewerUrl = `https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/web/viewer.html?file=${encodeURIComponent(rawPdfUrl)}`;
-
-                iframe.src = universalPdfViewerUrl; 
+                // Pure Mozilla PDF.js Viewer
+                iframe.src = `https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/web/viewer.html?file=${encodeURIComponent(directPdfUrl)}`; 
                 pdfViewer.style.display = 'flex';
 
             } else {
