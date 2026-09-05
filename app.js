@@ -9,6 +9,12 @@ import {
 } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js";
 import { getAnalytics } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-analytics.js";
 
+// PDF.js worker load for auto-page counting
+const pdfjsLib = window['pdfjs-dist/build/pdf'] || null;
+if (pdfjsLib) {
+    pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+}
+
 // ==========================================
 // 1. FIREBASE CONFIGURATION
 // ==========================================
@@ -33,7 +39,6 @@ const analytics = getAnalytics(app);
 // ==========================================
 const PROXY_STREAM_URL = "https://spidy-proxy.spidybookhub-backend.workers.dev/stream?file="; 
 
-// Helper function: Image aur assets ke liye secure link generate karega
 function getSecureAssetUrl(fileKeyOrUrl) {
     if (!fileKeyOrUrl) return DEFAULT_AVATAR;
     if (fileKeyOrUrl.startsWith("http://") || fileKeyOrUrl.startsWith("https://")) {
@@ -64,6 +69,8 @@ let CURRENT_ADMIN_PHOTO = DEFAULT_AVATAR;
 let savedBooks = JSON.parse(localStorage.getItem('spidy_saved_books')) || [];
 let selectedCoverFile = null;
 let selectedPdfFile = null;
+let detectedTotalPages = 0;
+let detectedFileSizeMB = "0 MB";
 
 // CHANNEL NOTIFICATIONS STATE
 let livePosts = [];
@@ -518,7 +525,7 @@ async function syncProfileAndRankUI() {
 }
 
 // =======================================================
-// 🌟 ADVANCED NOTIFICATION CHANNEL & LOADER 🌟
+// CHANNEL UPDATES & NOTIFICATIONS
 // =======================================================
 const chatBody = document.getElementById('chatBody');
 const contextOverlay = document.getElementById('contextOverlay');
@@ -1168,7 +1175,7 @@ if (confirmLogoutBtn) {
 }
 
 // =======================================================
-// 🌟 EXACT FILTER LIST WITH GENERAL READING 🌟
+// FILTERS
 // =======================================================
 const FIXED_EXAM_LIST = [
     "10th", "11th", "12th", "Ssc", "Railway", "Defence", 
@@ -1226,9 +1233,6 @@ document.getElementById('applyFiltersBtn')?.addEventListener('click', () => {
     applyMasterFilter(); 
 });
 
-// =======================================================
-// 🌟 ADVANCED SEARCH ALGORITHM 🌟
-// =======================================================
 function normalizeTextForSearch(str) {
     if (!str) return '';
     return str.toString().toLowerCase().replace(/[^a-z0-9]/g, '').trim();
@@ -1296,9 +1300,6 @@ document.getElementById('closeAuthorFilterBtn').addEventListener('click', () => 
     document.getElementById('filterBottomOverlay').classList.remove('active'); 
 });
 
-// ==========================================
-// RENDERING UI & INFINITE SCROLL
-// ==========================================
 function getBatchSize() { 
     let w = window.innerWidth; 
     return (w >= 1200 ? 5 : w >= 900 ? 4 : w >= 600 ? 3 : 2) * 4; 
@@ -1334,7 +1335,6 @@ function renderBooksUI(startIndex, count, customData = null) {
         let isSaved = savedBooks.includes(book.slug);
         let bookmarkIcon = isSaved ? 'fas fa-bookmark' : 'far fa-bookmark';
         
-        // SECURE ASSET URL
         const secureCoverUrl = getSecureAssetUrl(book.image);
 
         htmlChunk += `<div class="book-card" data-slug="${book.slug}"><div class="card-img-wrapper"><div class="badge-free">FREE</div><div class="bookmark-btn" data-action="bookmark"><i class="${bookmarkIcon}"></i></div><img src="${secureCoverUrl}" loading="lazy" class="book-image" onerror="this.src='${DEFAULT_AVATAR}'" oncontextmenu="return false;" draggable="false"></div><div class="book-details"><div class="book-title">${sanitizeHTML(book.title)}</div><div class="book-author">${sanitizeHTML(book.author)}</div><div class="tags-container"><span class="book-tag tag-year">${sanitizeHTML(book.year)}</span><span class="book-tag ${langClass}">${sanitizeHTML(book.lang)}</span></div></div></div>`;
@@ -1402,7 +1402,7 @@ document.getElementById('savedBooksContainer').addEventListener('click', (e) => 
 });
 
 // ==========================================
-// NAVIGATION & MODAL PANELS
+// NAVIGATION & MODALS
 // ==========================================
 document.getElementById('open-search').addEventListener('click', () => { 
     history.pushState({ popup: 'search' }, ''); 
@@ -1532,7 +1532,7 @@ window.addEventListener('popstate', () => {
 });
 
 // ==========================================
-// SECURE READ ONLINE (API PROXY & UNIVERSAL VIEWER)
+// SECURE READ ONLINE (AUTO SIZE & PAGES IN MODAL)
 // ==========================================
 const detectTokenFromUrl = new URLSearchParams(window.location.search).get('t');
 if (detectTokenFromUrl) {
@@ -1561,6 +1561,20 @@ function openDownloadPageLocal(slug, skipPushState = false) {
 
     document.getElementById("dlBookTitle").innerText = sanitizeHTML(book.title); 
     document.getElementById("dlBookAuthor").innerText = sanitizeHTML(book.author);
+
+    // DYNAMIC FILE SIZE & FORMAT UPDATE
+    const fileSizeSub = document.querySelector('.dl-info-item:nth-child(1) .dl-info-sub') || document.getElementById('dlFileSize');
+    if (fileSizeSub) {
+        const formatText = book.fileFormat || "PDF";
+        const sizeText = book.fileSize ? `${book.fileSize} • ` : "";
+        fileSizeSub.innerText = `${sizeText}${formatText} Document`;
+    }
+
+    // DYNAMIC TOTAL PAGES UPDATE
+    const totalPagesSub = document.querySelector('.dl-info-item:nth-child(2) .dl-info-sub') || document.getElementById('dlTotalPages');
+    if (totalPagesSub) {
+        totalPagesSub.innerText = book.totalPages ? `${book.totalPages} Pages Included` : "Complete Book Included";
+    }
     
     const dlPdfBtn = document.getElementById("dlPdfLinkBtn");
     dlPdfBtn.style.pointerEvents = "auto"; 
@@ -1629,12 +1643,10 @@ function openDownloadPageLocal(slug, skipPushState = false) {
                 
                 title.innerText = sanitizeHTML(book.title);
                 
-                // Pure Worker Stream URL
                 const rawPdfUrl = data.pdfLink;
 
-                // MOBILE CHROME FIX: Mozilla PDF.js universal web viewer embed
-                // Isse mobile Chrome par 'refused to connect' sad-face error nahi aayega
-                const universalPdfViewerUrl = `https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/web/viewer.html?file=${encodeURIComponent(rawPdfUrl)}`;
+                // UNIVERSAL VIEWER (Google Docs Engine ensures mobile Android Chrome compatibility)
+                const universalPdfViewerUrl = `https://docs.google.com/viewer?embedded=true&url=${encodeURIComponent(rawPdfUrl)}`;
 
                 iframe.src = universalPdfViewerUrl; 
                 pdfViewer.style.display = 'flex';
@@ -1789,6 +1801,7 @@ document.getElementById('getKeyBtn').addEventListener('click', () => {
     const originalContent = btn.innerHTML;
     btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Loading...';
     
+    // Redirect through shortlink with session tracking
     setTimeout(() => {
         window.location.href = "https://arolinks.com/6RTf5";
         btn.innerHTML = originalContent;
@@ -1852,7 +1865,7 @@ document.getElementById('verifyBtn').addEventListener('click', async () => {
 });
 
 // ==========================================
-// CLOUDFLARE R2 UPLOADS
+// UPLOADS & AUTOMATIC SIZE / PAGES CALCULATION
 // ==========================================
 ['fileCoverGallery', 'fileCoverBrowse'].forEach(id => {
     document.getElementById(id).addEventListener('change', function(e) {
@@ -1862,11 +1875,33 @@ document.getElementById('verifyBtn').addEventListener('click', async () => {
         }
     });
 });
+
 ['filePdfGallery', 'filePdfBrowse'].forEach(id => {
-    document.getElementById(id).addEventListener('change', function(e) {
+    document.getElementById(id).addEventListener('change', async function(e) {
         if(e.target.files.length > 0) {
             selectedPdfFile = e.target.files[0]; 
-            e.target.closest('.uc-actions').querySelector('p').innerText = "Selected: " + selectedPdfFile.name;
+            const statusP = e.target.closest('.uc-actions').querySelector('p');
+            statusP.innerText = `Analyzing: ${selectedPdfFile.name}...`;
+
+            // 1. Calculate File Size
+            const sizeInMB = (selectedPdfFile.size / (1024 * 1024)).toFixed(2);
+            detectedFileSizeMB = `${sizeInMB} MB`;
+
+            // 2. Extract Total Pages using PDF.js
+            try {
+                if (window.pdfjsLib) {
+                    const arrayBuffer = await selectedPdfFile.arrayBuffer();
+                    const loadingTask = window.pdfjsLib.getDocument({ data: arrayBuffer });
+                    const pdfDoc = await loadingTask.promise;
+                    detectedTotalPages = pdfDoc.numPages;
+                    statusP.innerText = `Selected: ${selectedPdfFile.name} (${detectedFileSizeMB} • ${detectedTotalPages} Pages)`;
+                } else {
+                    statusP.innerText = `Selected: ${selectedPdfFile.name} (${detectedFileSizeMB})`;
+                }
+            } catch (err) {
+                console.warn("Could not calculate pages:", err);
+                statusP.innerText = `Selected: ${selectedPdfFile.name} (${detectedFileSizeMB})`;
+            }
         }
     });
 });
@@ -1972,6 +2007,9 @@ document.getElementById('addBookForm').addEventListener('submit', async (e) => {
             exams: document.getElementById('inExams').value, 
             image: coverKey, 
             pdfLink: pdfKey, 
+            fileSize: detectedFileSizeMB || "10 MB",
+            fileFormat: "PDF",
+            totalPages: detectedTotalPages ? detectedTotalPages.toString() : "100+",
             dateAdded: new Date().toLocaleDateString('en-GB').toUpperCase(), 
             createdAt: new Date().getTime(), 
             uploaderUid: auth.currentUser.uid 
@@ -1982,6 +2020,8 @@ document.getElementById('addBookForm').addEventListener('submit', async (e) => {
         e.target.reset(); 
         selectedCoverFile = null; 
         selectedPdfFile = null;
+        detectedTotalPages = 0;
+        detectedFileSizeMB = "0 MB";
         document.querySelectorAll('.uc-actions p').forEach(p => p.innerText = "Drag & Drop File");
     } catch (error) { 
         if(error.message && error.message.includes("Missing or insufficient permissions")) {
