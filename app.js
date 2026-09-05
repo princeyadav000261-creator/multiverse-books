@@ -9,12 +9,6 @@ import {
 } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js";
 import { getAnalytics } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-analytics.js";
 
-// PDF.js worker load for auto-page counting
-const pdfjsLib = window['pdfjs-dist/build/pdf'] || null;
-if (pdfjsLib) {
-    pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
-}
-
 // ==========================================
 // 1. FIREBASE CONFIGURATION
 // ==========================================
@@ -1174,9 +1168,9 @@ if (confirmLogoutBtn) {
     });
 }
 
-// =======================================================
+// ==========================================
 // FILTERS
-// =======================================================
+// ==========================================
 const FIXED_EXAM_LIST = [
     "10th", "11th", "12th", "Ssc", "Railway", "Defence", 
     "Banking", "Teaching", "Upsc", "Police", "Jee", "Neet", "General Reading"
@@ -1532,7 +1526,7 @@ window.addEventListener('popstate', () => {
 });
 
 // ==========================================
-// SECURE READ ONLINE (AUTO SIZE & PAGES IN MODAL)
+// SECURE READ ONLINE (MODAL DATA & PDF.JS VIEWER)
 // ==========================================
 const detectTokenFromUrl = new URLSearchParams(window.location.search).get('t');
 if (detectTokenFromUrl) {
@@ -1562,16 +1556,16 @@ function openDownloadPageLocal(slug, skipPushState = false) {
     document.getElementById("dlBookTitle").innerText = sanitizeHTML(book.title); 
     document.getElementById("dlBookAuthor").innerText = sanitizeHTML(book.author);
 
-    // DYNAMIC FILE SIZE & FORMAT UPDATE
-    const fileSizeSub = document.querySelector('.dl-info-item:nth-child(1) .dl-info-sub') || document.getElementById('dlFileSize');
+    // DYNAMIC FILE SIZE & FORMAT UPDATE (Exact Element by ID)
+    const fileSizeSub = document.getElementById('dlFileSize');
     if (fileSizeSub) {
         const formatText = book.fileFormat || "PDF";
         const sizeText = book.fileSize ? `${book.fileSize} • ` : "";
         fileSizeSub.innerText = `${sizeText}${formatText} Document`;
     }
 
-    // DYNAMIC TOTAL PAGES UPDATE
-    const totalPagesSub = document.querySelector('.dl-info-item:nth-child(2) .dl-info-sub') || document.getElementById('dlTotalPages');
+    // DYNAMIC TOTAL PAGES UPDATE (Exact Element by ID)
+    const totalPagesSub = document.getElementById('dlTotalPages');
     if (totalPagesSub) {
         totalPagesSub.innerText = book.totalPages ? `${book.totalPages} Pages Included` : "Complete Book Included";
     }
@@ -1645,8 +1639,8 @@ function openDownloadPageLocal(slug, skipPushState = false) {
                 
                 const rawPdfUrl = data.pdfLink;
 
-                // UNIVERSAL VIEWER (Google Docs Engine ensures mobile Android Chrome compatibility)
-                const universalPdfViewerUrl = `https://docs.google.com/viewer?embedded=true&url=${encodeURIComponent(rawPdfUrl)}`;
+                // OFFICIAL MOZILLA PDF.JS VIEWER (Fixes Google Docs "No preview available")
+                const universalPdfViewerUrl = `https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/web/viewer.html?file=${encodeURIComponent(rawPdfUrl)}`;
 
                 iframe.src = universalPdfViewerUrl; 
                 pdfViewer.style.display = 'flex';
@@ -1801,7 +1795,6 @@ document.getElementById('getKeyBtn').addEventListener('click', () => {
     const originalContent = btn.innerHTML;
     btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Loading...';
     
-    // Redirect through shortlink with session tracking
     setTimeout(() => {
         window.location.href = "https://arolinks.com/6RTf5";
         btn.innerHTML = originalContent;
@@ -1883,7 +1876,7 @@ document.getElementById('verifyBtn').addEventListener('click', async () => {
             const statusP = e.target.closest('.uc-actions').querySelector('p');
             statusP.innerText = `Analyzing: ${selectedPdfFile.name}...`;
 
-            // 1. Calculate File Size
+            // 1. Calculate File Size in MB
             const sizeInMB = (selectedPdfFile.size / (1024 * 1024)).toFixed(2);
             detectedFileSizeMB = `${sizeInMB} MB`;
 
