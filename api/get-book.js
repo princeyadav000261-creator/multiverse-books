@@ -112,8 +112,9 @@ module.exports = async function handler(req, res) {
     // 5. Cloudflare Worker URL
     const workerBaseUrl = (process.env.WORKER_URL || "https://spidy-proxy.spidybookhub-backend.workers.dev").replace(/\/+$/, "");
 
-    // Direct clean worker proxy link
-    const secureWorkerUrl = `${workerBaseUrl}/stream?file=${encodeURIComponent(fileKey)}`;
+    // Path bina double encoding ke direct stream route mein bhejein
+    const cleanKey = fileKey.replace(/^\/+/, '');
+    const secureWorkerUrl = `${workerBaseUrl}/stream?file=${cleanKey}`;
 
     return res.status(200).json({ 
       success: true, 
