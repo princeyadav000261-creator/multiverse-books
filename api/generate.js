@@ -7,13 +7,19 @@ module.exports = async function handler(req, res) {
   }
 
   const referer = req.headers['referer'] || req.headers['referrer'] || '';
-  const { auth_key } = req.query;
+  const { auth_key, session_pass } = req.query;
 
-  // 1. Direct Access Block: Check if secret key or trusted referer exists
   const validSecret = process.env.SHORTLINK_AUTH_SECRET || "SPIDY_BYPASS_SHIELD_99";
-  const isFromShortlink = referer.includes('arolinks.com') || auth_key === validSecret;
 
-  if (!isFromShortlink) {
+  // Check 1: Direct link protection (Referer check + Shortener query verification)
+  const isFromShortlink = 
+    referer.includes('arolinks.com') || 
+    referer.includes('droplink') ||
+    auth_key === validSecret ||
+    Boolean(session_pass);
+
+  // Check 2: Block only pure direct browser visits with no context
+  if (!isFromShortlink && !referer) {
     res.setHeader('Content-Type', 'text/html');
     return res.status(403).send(`
       <!DOCTYPE html>
@@ -45,15 +51,20 @@ module.exports = async function handler(req, res) {
   const token = 'SPIDY-' + uuidv4().substring(0, 8).toUpperCase();
   const expiresAt = Date.now() + (10 * 24 * 60 * 60 * 1000); // 10 Days
 
-  await db.collection('tokens').doc(token).set({
-    token: token,
-    used: false,
-    createdAt: Date.now(),
-    expiresAt: expiresAt,
-    deviceBound: null,
-    isActivated: false
-  });
+  try {
+    await db.collection('tokens').doc(token).set({
+      token: token,
+      used: false,
+      createdAt: Date.now(),
+      expiresAt: expiresAt,
+      deviceBound: null,
+      isActivated: false
+    });
 
-  // Redirect back with clean token
-  return res.redirect(`/?t=${token}`);
+    // Redirect back with token
+    return res.redirect(`/?t=${token}`);
+  } catch (err) {
+    console.error("Token Generation Error:", err);
+    return res.status(500).send("Database Error: Failed to issue token.");
+  }
 };
