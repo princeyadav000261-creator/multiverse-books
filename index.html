@@ -755,14 +755,17 @@
                 </div>
             </div>
 
-            <!-- SECURE PDF VIEWER OVERLAY -->
-            <div id="pdfViewerOverlay" class="pdf-viewer-overlay" style="display:none;">
-                <div class="pdf-viewer-header">
-                    <h3 id="pdfViewerTitle" class="pdf-viewer-title">Reading Book...</h3>
-                    <button id="closePdfViewerBtn" class="pdf-viewer-close"><i class="fas fa-times"></i></button>
+            <!-- IN-APP DIRECT PDF VIEWER (CANVAS ENGINE: NO IFRAME, NO POPUPS, NO OPEN BUTTON) -->
+            <div id="pdfViewerOverlay" class="pdf-viewer-overlay" style="display:none; position:fixed; inset:0; background:#09090b; z-index:999999; flex-direction:column;">
+                <div class="pdf-viewer-header" style="display:flex; justify-content:space-between; align-items:center; padding:14px 20px; background:#18181b; border-bottom:1px solid rgba(255,255,255,0.08); flex-shrink:0;">
+                    <div style="display:flex; align-items:center; gap:10px; max-width:80%; overflow:hidden;">
+                        <i class="fas fa-book-open" style="color:#10b981; font-size:16px;"></i>
+                        <h3 id="pdfViewerTitle" class="pdf-viewer-title" style="color:#ffffff; font-size:15px; font-weight:700; margin:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">Reading Book...</h3>
+                    </div>
+                    <button id="closePdfViewerBtn" class="pdf-viewer-close" style="background:transparent; border:none; color:#a1a1aa; font-size:24px; cursor:pointer; padding:0 5px;"><i class="fas fa-times"></i></button>
                 </div>
-                <div id="pdfContainer" class="pdf-viewer-container">
-                    <iframe id="pdfIframe" src="" frameborder="0"></iframe>
+                <div id="pdfContainer" class="pdf-viewer-container" style="flex:1; overflow-y:auto; overflow-x:hidden; display:flex; flex-direction:column; align-items:center; padding:15px 10px; background:#000000; -webkit-overflow-scrolling:touch;">
+                    <div id="pdfScrollContainer" style="width:100%; display:flex; flex-direction:column; align-items:center;"></div>
                 </div>
             </div>
 
