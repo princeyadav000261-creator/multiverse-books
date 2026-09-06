@@ -2187,7 +2187,7 @@ document.getElementById('verifyBtn').addEventListener('click', async () => {
 });
 
 // ==========================================
-// UPLOADS & AUTOMATIC SIZE / PAGES CALCULATION
+// UPLOADS & FILE SELECTION TRACKING
 // ==========================================
 ['fileCoverGallery', 'fileCoverBrowse'].forEach(id => {
     document.getElementById(id).addEventListener('change', function(e) {
@@ -2226,31 +2226,13 @@ document.getElementById('verifyBtn').addEventListener('click', async () => {
     });
 });
 
-async function uploadFileToR2(file, type) {
+// =========================================================================
+// UNIFIED REAL-TIME UPLOAD PIPELINE CONTROLLER (LIVE PERCENT & STAGES)
+// =========================================================================
+function uploadSingleFileTracked(file, type, onProgress) {
     return new Promise(async (resolve, reject) => {
-        const r2Overlay = document.getElementById('r2UploadOverlay');
-        const progressBar = document.getElementById('r2ProgressBar');
-        const progressText = document.getElementById('r2ProgressText');
-        const statusText = document.getElementById('r2StatusText');
-        const icon = document.getElementById('r2UploadIcon');
-        const title = document.getElementById('r2UploadTitle');
-
         const folderPrefix = type === 'image' ? 'covers' : 'pdfs';
         const uniqueFileName = `${folderPrefix}/${Date.now()}_${file.name.replace(/[^a-zA-Z0-9._-]/g, '')}`;
-
-        if(type === 'image') { 
-            icon.className = "fas fa-image"; 
-            title.innerText = "Upload Cover Image"; 
-            statusText.innerText = "Generating Secure Link..."; 
-        } else { 
-            icon.className = "fas fa-file-pdf"; 
-            title.innerText = "Upload PDF File"; 
-            statusText.innerText = "Generating Secure Link..."; 
-        }
-
-        r2Overlay.style.display = 'flex'; 
-        progressBar.style.width = '0%'; 
-        progressText.innerText = '0%';
 
         try {
             const userToken = await auth.currentUser.getIdToken(true);
@@ -2267,60 +2249,141 @@ async function uploadFileToR2(file, type) {
 
             if (!authResponse.ok) throw new Error(authData.error || "Permission Denied");
 
-            statusText.innerText = "Securely transferring to Cloudflare R2...";
-            
             const xhr = new XMLHttpRequest(); 
             xhr.open("PUT", authData.uploadUrl, true); 
             xhr.setRequestHeader("Content-Type", file.type); 
 
             xhr.upload.addEventListener("progress", (e) => {
-                if (e.lengthComputable) { 
-                    let p = Math.round((e.loaded / e.total) * 100); 
-                    progressBar.style.width = p + '%'; 
-                    progressText.innerText = p + '%'; 
+                if (e.lengthComputable && onProgress) { 
+                    onProgress(e.loaded, e.total);
                 }
             });
 
             xhr.onload = function() {
                 if (xhr.status >= 200 && xhr.status < 300) {
-                    setTimeout(() => { r2Overlay.style.display = 'none'; }, 500); 
                     resolve(authData.fileKey || uniqueFileName);
                 } else { 
-                    r2Overlay.style.display = 'none'; 
-                    reject("Upload Failed"); 
+                    reject(new Error("Storage Upload Failed")); 
                 }
             };
             xhr.onerror = function() { 
-                r2Overlay.style.display = 'none'; 
-                reject("Network Error"); 
+                reject(new Error("Network Transmission Interrupted")); 
             }; 
             xhr.send(file);
 
         } catch (error) {
-            r2Overlay.style.display = 'none';
-            reject(error.message || "Upload Failed");
+            reject(error);
         }
     });
 }
 
-// PUBLISH BOOK FORM
+// REAL LIVE PUBLISH BOOK CONTROLLER
 document.getElementById('addBookForm').addEventListener('submit', async (e) => {
     e.preventDefault(); 
-    const btn = document.getElementById('publishBtn'); 
-    const originalText = btn.innerHTML;
     
     if (!selectedCoverFile) { showToast("Please select a Cover Image!", "error"); return; }
     if (!selectedPdfFile) { showToast("Please select a PDF file!", "error"); return; }
 
-    btn.innerHTML = `<span class="btn-text" style="display: flex; align-items: center; justify-content: center; gap: 10px;"><i class="fas fa-spinner fa-spin"></i> Publishing...</span>`; 
-    btn.disabled = true;
+    const pipelineOverlay = document.getElementById('uploadPipelineOverlay');
+    const dynamicTitle = document.getElementById('syncDynamicTitle');
+    const dynamicPdfSize = document.getElementById('syncDynamicPdfSize');
+    const percentDisplay = document.getElementById('syncPercentDisplay');
+    const transferredBytes = document.getElementById('syncTransferredBytes');
+    const speedVal = document.getElementById('syncSpeedVal');
+    const progressFill = document.getElementById('syncProgressFill');
+    const stageTitle = document.getElementById('syncStageTitle');
+    const stageSub = document.getElementById('syncStageSub');
+    const liveCoverImg = document.getElementById('syncLiveCoverImg');
+    const defaultCoverIcon = document.getElementById('syncDefaultCoverIcon');
+    const spinner = document.getElementById('syncStageSpinner');
+
+    // 1. Fill Initial Metadata in Pipeline UI
+    const inputTitle = document.getElementById('inTitle').value.trim() || selectedPdfFile.name;
+    dynamicTitle.innerText = inputTitle;
+    dynamicPdfSize.innerText = `PDF Size: ${(selectedPdfFile.size / (1024 * 1024)).toFixed(2)} MB`;
+
+    // Local Cover Preview
+    const coverReader = new FileReader();
+    coverReader.onload = function(evt) {
+        liveCoverImg.src = evt.target.result;
+        liveCoverImg.style.display = 'block';
+        defaultCoverIcon.style.display = 'none';
+    };
+    coverReader.readAsDataURL(selectedCoverFile);
+
+    // Initial Telemetry Setup
+    const totalBytesToUpload = selectedCoverFile.size + selectedPdfFile.size;
+    const totalMB = (totalBytesToUpload / (1024 * 1024)).toFixed(2);
+    
+    let coverLoaded = 0;
+    let pdfLoaded = 0;
+    let lastLoaded = 0;
+    let lastTime = Date.now();
+
+    percentDisplay.innerHTML = `0<span class="percent-symbol">%</span>`;
+    progressFill.style.width = `0%`;
+    transferredBytes.innerText = `0.0 MB / ${totalMB} MB`;
+    speedVal.innerText = `Connecting...`;
+    stageTitle.innerText = "Connecting to Cloud Storage...";
+    stageSub.innerText = "Allocating secure distribution channels";
+    pipelineOverlay.style.display = 'flex';
+
+    function updateTelemetry() {
+        const totalUploadedNow = coverLoaded + pdfLoaded;
+        const currentMB = (totalUploadedNow / (1024 * 1024)).toFixed(2);
+        const percent = Math.min(98, Math.floor((totalUploadedNow / totalBytesToUpload) * 98));
+
+        percentDisplay.innerHTML = `${percent}<span class="percent-symbol">%</span>`;
+        progressFill.style.width = `${percent}%`;
+        transferredBytes.innerText = `${currentMB} MB / ${totalMB} MB`;
+
+        // Real-time speed calculation
+        const now = Date.now();
+        const timeDiff = (now - lastTime) / 1000;
+        if (timeDiff >= 0.5) {
+            const bytesDiff = totalUploadedNow - lastLoaded;
+            const speedMBps = ((bytesDiff / (1024 * 1024)) / timeDiff).toFixed(1);
+            speedVal.innerText = `${speedMBps} MB/s`;
+            lastLoaded = totalUploadedNow;
+            lastTime = now;
+        }
+
+        if (percent < 30) {
+            stageTitle.innerText = "Transferring Cover Artwork...";
+            stageSub.innerText = "Optimizing image resolution for mobile readers";
+        } else if (percent < 85) {
+            stageTitle.innerText = "Uploading Manuscript Pages...";
+            stageSub.innerText = "Writing high-speed encrypted stream to Cloudflare R2";
+        } else {
+            stageTitle.innerText = "Finalizing Storage Nodes...";
+            stageSub.innerText = "Preparing document metadata & secure tokens";
+        }
+    }
 
     try {
-        let coverKey = await uploadFileToR2(selectedCoverFile, 'image'); 
-        let pdfKey = await uploadFileToR2(selectedPdfFile, 'pdf');
-        
+        // Upload Cover First
+        stageTitle.innerText = "Transferring Cover Image...";
+        const coverKey = await uploadSingleFileTracked(selectedCoverFile, 'image', (loaded) => {
+            coverLoaded = loaded;
+            updateTelemetry();
+        });
+
+        // Upload PDF Second
+        stageTitle.innerText = "Transferring PDF Manuscript...";
+        const pdfKey = await uploadSingleFileTracked(selectedPdfFile, 'pdf', (loaded) => {
+            pdfLoaded = loaded;
+            updateTelemetry();
+        });
+
+        // Save Book Document into Firestore
+        stageTitle.innerText = "Registering Book in Database...";
+        stageSub.innerText = "Writing catalog details to Firebase Firestore";
+        speedVal.innerText = "Syncing...";
+        percentDisplay.innerHTML = `99<span class="percent-symbol">%</span>`;
+        progressFill.style.width = `99%`;
+
         const newBook = { 
-            title: document.getElementById('inTitle').value, 
+            title: inputTitle, 
             author: document.getElementById('inAuthor').value, 
             year: document.getElementById('inYear').value, 
             lang: document.getElementById('inLang').value, 
@@ -2334,27 +2397,51 @@ document.getElementById('addBookForm').addEventListener('submit', async (e) => {
             createdAt: new Date().getTime(), 
             uploaderUid: auth.currentUser.uid 
         };
-        await addDoc(collection(db, "books"), newBook); 
+
+        await addDoc(collection(db, "books"), newBook);
+
+        // Upload Complete Feedback
+        percentDisplay.innerHTML = `100<span class="percent-symbol">%</span>`;
+        progressFill.style.width = `100%`;
+        transferredBytes.innerText = `${totalMB} MB / ${totalMB} MB`;
+        speedVal.innerText = "Completed";
+        stageTitle.innerText = "Book Published Successfully! ✨";
+        stageSub.innerText = "Live and ready for all readers";
         
-        showToast("Book Published Successfully!", "success"); 
-        e.target.reset(); 
-        selectedCoverFile = null; 
-        selectedPdfFile = null;
-        detectedTotalPages = 0;
-        detectedFileSizeMB = "0 MB";
-        document.querySelectorAll('.uc-actions p').forEach(p => p.innerText = "Drag & Drop File");
-    } catch (error) { 
-        if(error.message && error.message.includes("Missing or insufficient permissions")) {
+        if (spinner) {
+            spinner.style.border = "none";
+            spinner.style.background = "#10b981";
+            spinner.style.display = "flex";
+            spinner.style.alignItems = "center";
+            spinner.style.justifyContent = "center";
+            spinner.innerHTML = `<i class="fas fa-check" style="color:#000; font-size:10px;"></i>`;
+        }
+
+        // Wait, Clear Form, and Route to Home Tab
+        setTimeout(() => {
+            pipelineOverlay.style.display = 'none';
+            e.target.reset(); 
+            selectedCoverFile = null; 
+            selectedPdfFile = null;
+            detectedTotalPages = 0;
+            detectedFileSizeMB = "0 MB";
+            document.querySelectorAll('.uc-actions p').forEach(p => p.innerText = "Drag & Drop File");
+            
+            showToast("Book Published Successfully!", "success");
+            document.getElementById('nav-home').click();
+        }, 1200);
+
+    } catch (error) {
+        pipelineOverlay.style.display = 'none';
+        if (error.message && error.message.includes("Missing or insufficient permissions")) {
             showToast("Failed: Firebase Security Rules Blocked Save!", "error"); 
         } else {
-            showToast("Failed: " + error, "error"); 
+            showToast("Upload Error: " + error.message, "error"); 
         }
-    } finally { 
-        btn.innerHTML = originalText; 
-        btn.disabled = false; 
     }
 });
 
+// ADMIN SECTION TABS SWITCHER
 document.querySelectorAll('.adm-tab-btn').forEach(btn => {
     btn.addEventListener('click', () => { 
         let tab = btn.id === 'admTabPrompt' ? 'prompt' : 'add'; 
