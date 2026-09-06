@@ -73,7 +73,7 @@ let isInitialChannelLoad = true;
 let unreadPostsCount = 0;
 let isChannelDataReady = false;
 
-// PDF ENGINE & SEARCH STATE
+// PDF ENGINE & ADVANCED MULTILINGUAL SEARCH STATE
 let currentPdfDocument = null;
 let pdfTotalPagesCount = 0;
 let pdfTextCache = [];
@@ -223,6 +223,16 @@ function initParticles(containerId) {
         particle.style.animationDuration = duration + 's';
         container.appendChild(particle);
     }
+}
+
+// ADVANCED MULTILINGUAL UNICODE NORMALIZATION (HINDI & ENGLISH SMART SEARCH)
+function cleanUnicodeTextForSearch(str) {
+    if (!str) return "";
+    return str
+        .normalize("NFD")
+        .replace(/[\u200B-\u200D\uFEFF]/g, "") // Remove Zero-Width Joiners/Non-Joiners
+        .replace(/[^\p{L}\p{M}\p{N}]/gu, "")  // Remove punctuations, spaces, symbols
+        .toLowerCase();
 }
 
 // ==========================================
@@ -1173,7 +1183,7 @@ if (confirmLogoutBtn) {
 }
 
 // ==========================================
-// UPLOAD TUTORIAL POPUP (FIXED CLOSE HANDLER)
+// UPLOAD TUTORIAL POPUP CLOSE HANDLER
 // ==========================================
 const uploadPopup = document.getElementById('uploadPopup');
 const closeUploadPopupBtn = document.getElementById('closeUploadPopupBtn');
@@ -1552,6 +1562,8 @@ function cleanupPdfResources() {
     document.getElementById('pdfSearchBar').style.display = 'none';
     document.getElementById('pdfSearchInput').value = '';
     document.getElementById('pdfSearchCount').innerText = '0/0';
+    const badge = document.getElementById('pdfPageBadge');
+    if (badge) badge.style.display = 'none';
 }
 
 // =========================================================================
@@ -1586,21 +1598,33 @@ async function renderPdfInModal(pdfUrl) {
         const targetCssWidth = Math.min(screenWidth - 20, 720);
         const pixelRatio = window.devicePixelRatio || 2; 
 
+        // First 5 pages render
         const initialBatch = Math.min(pdf.numPages, 5);
-
         for (let pageNum = 1; pageNum <= initialBatch; pageNum++) {
             await renderSingleHdPage(pdf, pageNum, targetCssWidth, pixelRatio, scrollContainer);
         }
 
-        // Cache text and render remaining pages smoothly in background
+        // Book load hone par page counter badge show hoga
+        const pageBadge = document.getElementById('pdfPageBadge');
+        if (pageBadge) pageBadge.style.display = 'flex';
+
+        // Pre-cache text content for Hindi & English Search
         (async () => {
             for (let pageNum = 1; pageNum <= pdf.numPages; pageNum++) {
                 if (document.getElementById('pdfViewerOverlay').style.display === 'none') break;
 
                 const page = await pdf.getPage(pageNum);
                 const textContent = await page.getTextContent();
-                const combinedText = textContent.items.map(item => item.str).join(' ');
-                pdfTextCache[pageNum] = combinedText;
+                const rawItems = textContent.items.map(item => item.str);
+                
+                // Normal + Stripped for Hindi and English exact matching
+                const combinedRaw = rawItems.join(" ");
+                const combinedClean = cleanUnicodeTextForSearch(combinedRaw);
+                
+                pdfTextCache[pageNum] = {
+                    raw: combinedRaw,
+                    clean: combinedClean
+                };
 
                 if (pageNum > initialBatch) {
                     await renderSingleHdPage(pdf, pageNum, targetCssWidth, pixelRatio, scrollContainer);
@@ -1658,7 +1682,7 @@ async function renderSingleHdPage(pdf, pageNum, targetCssWidth, pixelRatio, cont
     await page.render(renderContext).promise;
 }
 
-// SCROLL TRACKER FOR FLOATING PAGE BADGE
+// SCROLL TRACKER FOR RIGHT-ATTACHED FLOATING PAGE BADGE
 function initPdfScrollTracker() {
     const container = document.getElementById('pdfContainer');
     const badge = document.getElementById('pdfCurrentPageNum');
@@ -1742,7 +1766,7 @@ async function jumpToPdfPage(pageNum) {
     }
 }
 
-// IN-DOCUMENT SEARCH CONTROLLER (LIKE CODE EDITOR)
+// SMART MULTILINGUAL IN-DOCUMENT SEARCH CONTROLLER (HINDI + ENGLISH)
 const pdfSearchToggleBtn = document.getElementById('pdfSearchToggleBtn');
 const pdfSearchBar = document.getElementById('pdfSearchBar');
 const pdfSearchCloseBtn = document.getElementById('pdfSearchCloseBtn');
@@ -1773,34 +1797,43 @@ pdfSearchInput.addEventListener('input', () => {
     clearTimeout(pdfSearchTimer);
     pdfSearchTimer = setTimeout(() => {
         executePdfTextSearch(pdfSearchInput.value.trim());
-    }, 300);
+    }, 250);
 });
 
 async function executePdfTextSearch(query) {
     searchMatches = [];
     currentSearchMatchIndex = -1;
 
-    if (!query || query.length < 2 || !currentPdfDocument) {
+    if (!query || query.length < 1 || !currentPdfDocument) {
         pdfSearchCount.innerText = '0/0';
         return;
     }
 
-    const lowerQuery = query.toLowerCase();
+    const cleanQuery = cleanUnicodeTextForSearch(query);
+    const lowerRawQuery = query.toLowerCase();
 
     for (let pageNum = 1; pageNum <= pdfTotalPagesCount; pageNum++) {
-        let text = pdfTextCache[pageNum];
-        if (!text) {
+        let cached = pdfTextCache[pageNum];
+        if (!cached) {
             try {
                 const page = await currentPdfDocument.getPage(pageNum);
                 const content = await page.getTextContent();
-                text = content.items.map(item => item.str).join(' ');
-                pdfTextCache[pageNum] = text;
+                const rawCombined = content.items.map(item => item.str).join(" ");
+                cached = {
+                    raw: rawCombined,
+                    clean: cleanUnicodeTextForSearch(rawCombined)
+                };
+                pdfTextCache[pageNum] = cached;
             } catch (e) {
                 continue;
             }
         }
 
-        if (text && text.toLowerCase().includes(lowerQuery)) {
+        // Multi-level Match: Exact raw match OR normalized unicode match (Hindi diacritics/no-space)
+        const matchFound = cached.raw.toLowerCase().includes(lowerRawQuery) || 
+                           (cleanQuery.length > 0 && cached.clean.includes(cleanQuery));
+
+        if (matchFound) {
             searchMatches.push(pageNum);
         }
     }
