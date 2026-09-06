@@ -73,6 +73,13 @@ let isInitialChannelLoad = true;
 let unreadPostsCount = 0;
 let isChannelDataReady = false;
 
+// PDF ENGINE & SEARCH STATE
+let currentPdfDocument = null;
+let pdfTotalPagesCount = 0;
+let pdfTextCache = [];
+let searchMatches = [];
+let currentSearchMatchIndex = -1;
+
 // ==========================================
 // UTILITY FUNCTIONS & TOAST NOTIFICATIONS
 // ==========================================
@@ -307,7 +314,7 @@ function initPromoCarousel() {
 }
 
 // ==========================================
-// PREMIUM DUAL POPUPS LOGIC
+// PREMIUM DUAL POPUPS LOGIC (MAYBE LATER ONLY)
 // ==========================================
 let popupsInitialized = false;
 function initPremiumPopups() {
@@ -324,9 +331,6 @@ function initPremiumPopups() {
 
     if(tgMaybeLaterBtn) tgMaybeLaterBtn.addEventListener('click', closeTgPopup);
     if(waMaybeLaterBtn) waMaybeLaterBtn.addEventListener('click', closeWaPopup);
-
-    if(telegramPopup) telegramPopup.addEventListener('click', (e) => { if (e.target === telegramPopup) closeTgPopup(); });
-    if(whatsappPopup) whatsappPopup.addEventListener('click', (e) => { if (e.target === whatsappPopup) closeWaPopup(); });
 
     setTimeout(() => {
         if(telegramPopup) telegramPopup.classList.remove('hide');
@@ -518,7 +522,7 @@ async function syncProfileAndRankUI() {
     }
 }
 
-// =======================================================
+// ==========================================
 // CHANNEL UPDATES & NOTIFICATIONS
 // ==========================================
 const chatBody = document.getElementById('chatBody');
@@ -1045,7 +1049,7 @@ onAuthStateChanged(auth, async (user) => {
     });
 });
 
-// Prompts copy handler
+// PROMPTS COPY HANDLER
 document.getElementById('promptsContainer')?.addEventListener('click', (e) => {
     const copyBtn = e.target.closest('.telegram-copy-btn');
     if (copyBtn) {
@@ -1165,6 +1169,20 @@ if (confirmLogoutBtn) {
         } catch (error) { 
             showToast("Error signing out!", "error"); 
         }
+    });
+}
+
+// ==========================================
+// UPLOAD TUTORIAL POPUP (FIXED CLOSE HANDLER)
+// ==========================================
+const uploadPopup = document.getElementById('uploadPopup');
+const closeUploadPopupBtn = document.getElementById('closeUploadPopupBtn');
+
+if (closeUploadPopupBtn && uploadPopup) {
+    closeUploadPopupBtn.addEventListener('click', (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        uploadPopup.classList.add('hidden');
     });
 }
 
@@ -1522,21 +1540,32 @@ window.addEventListener('popstate', () => {
         document.getElementById("downloadModal").style.display = "none";
         document.getElementById("pdfViewerOverlay").style.display = "none";
         document.getElementById('pdfScrollContainer').innerHTML = '';
+        cleanupPdfResources();
     }
 });
 
-// =========================================================
-// CANVAS-BASED IN-APP PDF RENDER ENGINE (NO POPUPS/NO IFRAME)
-// =========================================================
-let currentRenderTask = null;
+function cleanupPdfResources() {
+    currentPdfDocument = null;
+    pdfTextCache = [];
+    searchMatches = [];
+    currentSearchMatchIndex = -1;
+    document.getElementById('pdfSearchBar').style.display = 'none';
+    document.getElementById('pdfSearchInput').value = '';
+    document.getElementById('pdfSearchCount').innerText = '0/0';
+}
 
+// =========================================================================
+// HIGH-DEFINITION (RETINA HD) PDF RENDER ENGINE + REAL-TIME SEARCH + JUMP
+// =========================================================================
 async function renderPdfInModal(pdfUrl) {
     const scrollContainer = document.getElementById('pdfScrollContainer');
     scrollContainer.innerHTML = `
         <div id="pdfLoadingStatus" style="color: #38bdf8; margin-top: 50px; font-size: 15px; font-weight: 600; text-align: center;">
             <i class="fas fa-spinner fa-spin" style="font-size: 26px; margin-bottom: 12px; display: block;"></i>
-            Loading book inside Spidy Book Hub...
+            Loading book in Ultra-HD...
         </div>`;
+
+    cleanupPdfResources();
 
     try {
         const loadingTask = window.pdfjsLib.getDocument({
@@ -1546,71 +1575,40 @@ async function renderPdfInModal(pdfUrl) {
         });
 
         const pdf = await loadingTask.promise;
+        currentPdfDocument = pdf;
+        pdfTotalPagesCount = pdf.numPages;
         scrollContainer.innerHTML = '';
 
-        // Mobile screen width optimization
-        const screenWidth = window.innerWidth;
-        const targetWidth = Math.min(screenWidth - 20, 720);
+        document.getElementById('pdfCurrentPageNum').innerText = `1`;
+        document.getElementById('goToPageRange').innerText = `1 - ${pdfTotalPagesCount}`;
 
-        // First 8 pages instant render for high speed
-        const initialBatch = Math.min(pdf.numPages, 8);
+        const screenWidth = window.innerWidth;
+        const targetCssWidth = Math.min(screenWidth - 20, 720);
+        const pixelRatio = window.devicePixelRatio || 2; 
+
+        const initialBatch = Math.min(pdf.numPages, 5);
 
         for (let pageNum = 1; pageNum <= initialBatch; pageNum++) {
-            const page = await pdf.getPage(pageNum);
-            const originalViewport = page.getViewport({ scale: 1 });
-            const calculatedScale = targetWidth / originalViewport.width;
-            const viewport = page.getViewport({ scale: calculatedScale });
-
-            const canvas = document.createElement('canvas');
-            const context = canvas.getContext('2d');
-            canvas.height = viewport.height;
-            canvas.width = viewport.width;
-            canvas.style.width = `${targetWidth}px`;
-            canvas.style.maxWidth = "100%";
-            canvas.style.display = "block";
-            canvas.style.margin = "0 auto 15px auto";
-            canvas.style.borderRadius = "8px";
-            canvas.style.boxShadow = "0 6px 20px rgba(0,0,0,0.6)";
-
-            scrollContainer.appendChild(canvas);
-
-            await page.render({
-                canvasContext: context,
-                viewport: viewport
-            }).promise;
+            await renderSingleHdPage(pdf, pageNum, targetCssWidth, pixelRatio, scrollContainer);
         }
 
-        // Remaining pages background render
-        if (pdf.numPages > 8) {
-            (async () => {
-                for (let pageNum = 9; pageNum <= pdf.numPages; pageNum++) {
-                    if (document.getElementById('pdfViewerOverlay').style.display === 'none') break;
-                    
-                    const page = await pdf.getPage(pageNum);
-                    const originalViewport = page.getViewport({ scale: 1 });
-                    const calculatedScale = targetWidth / originalViewport.width;
-                    const viewport = page.getViewport({ scale: calculatedScale });
+        // Cache text and render remaining pages smoothly in background
+        (async () => {
+            for (let pageNum = 1; pageNum <= pdf.numPages; pageNum++) {
+                if (document.getElementById('pdfViewerOverlay').style.display === 'none') break;
 
-                    const canvas = document.createElement('canvas');
-                    const context = canvas.getContext('2d');
-                    canvas.height = viewport.height;
-                    canvas.width = viewport.width;
-                    canvas.style.width = `${targetWidth}px`;
-                    canvas.style.maxWidth = "100%";
-                    canvas.style.display = "block";
-                    canvas.style.margin = "0 auto 15px auto";
-                    canvas.style.borderRadius = "8px";
-                    canvas.style.boxShadow = "0 6px 20px rgba(0,0,0,0.6)";
+                const page = await pdf.getPage(pageNum);
+                const textContent = await page.getTextContent();
+                const combinedText = textContent.items.map(item => item.str).join(' ');
+                pdfTextCache[pageNum] = combinedText;
 
-                    scrollContainer.appendChild(canvas);
-
-                    await page.render({
-                        canvasContext: context,
-                        viewport: viewport
-                    }).promise;
+                if (pageNum > initialBatch) {
+                    await renderSingleHdPage(pdf, pageNum, targetCssWidth, pixelRatio, scrollContainer);
                 }
-            })();
-        }
+            }
+        })();
+
+        initPdfScrollTracker();
 
     } catch (err) {
         console.error("PDF Rendering Failed:", err);
@@ -1623,6 +1621,212 @@ async function renderPdfInModal(pdfUrl) {
             </div>`;
     }
 }
+
+async function renderSingleHdPage(pdf, pageNum, targetCssWidth, pixelRatio, container) {
+    if (document.getElementById(`page_wrapper_${pageNum}`)) return;
+
+    const page = await pdf.getPage(pageNum);
+    const unscaledViewport = page.getViewport({ scale: 1.0 });
+    const scale = targetCssWidth / unscaledViewport.width;
+    const viewport = page.getViewport({ scale: scale });
+
+    const wrapper = document.createElement('div');
+    wrapper.className = 'pdf-page-wrapper';
+    wrapper.id = `page_wrapper_${pageNum}`;
+    wrapper.dataset.pageNum = pageNum;
+    wrapper.style.width = `${targetCssWidth}px`;
+    wrapper.style.height = `${viewport.height}px`;
+
+    const canvas = document.createElement('canvas');
+    const context = canvas.getContext('2d', { alpha: false });
+    
+    // HD Retina Scaling
+    canvas.width = Math.floor(viewport.width * pixelRatio);
+    canvas.height = Math.floor(viewport.height * pixelRatio);
+    canvas.style.width = `${targetCssWidth}px`;
+    canvas.style.height = `${viewport.height}px`;
+
+    const renderContext = {
+        canvasContext: context,
+        viewport: viewport,
+        transform: [pixelRatio, 0, 0, pixelRatio, 0, 0]
+    };
+
+    wrapper.appendChild(canvas);
+    container.appendChild(wrapper);
+
+    await page.render(renderContext).promise;
+}
+
+// SCROLL TRACKER FOR FLOATING PAGE BADGE
+function initPdfScrollTracker() {
+    const container = document.getElementById('pdfContainer');
+    const badge = document.getElementById('pdfCurrentPageNum');
+
+    container.addEventListener('scroll', () => {
+        const wrappers = container.querySelectorAll('.pdf-page-wrapper');
+        const containerCenter = container.getBoundingClientRect().top + (container.clientHeight / 3);
+
+        for (let wrap of wrappers) {
+            const rect = wrap.getBoundingClientRect();
+            if (rect.top <= containerCenter && rect.bottom >= containerCenter) {
+                const pNum = wrap.dataset.pageNum;
+                if (badge.innerText !== pNum) {
+                    badge.innerText = pNum;
+                }
+                break;
+            }
+        }
+    }, { passive: true });
+}
+
+// "GO TO PAGE" MODAL LOGIC
+const pdfPageBadge = document.getElementById('pdfPageBadge');
+const goToPageModal = document.getElementById('goToPageModal');
+const cancelGoToPageBtn = document.getElementById('cancelGoToPageBtn');
+const confirmGoToPageBtn = document.getElementById('confirmGoToPageBtn');
+const goToPageInput = document.getElementById('goToPageInput');
+
+pdfPageBadge.addEventListener('click', () => {
+    goToPageInput.value = '';
+    goToPageModal.style.display = 'flex';
+    goToPageInput.focus();
+});
+
+cancelGoToPageBtn.addEventListener('click', () => {
+    goToPageModal.style.display = 'none';
+});
+
+goToPageModal.addEventListener('click', (e) => {
+    if (e.target === goToPageModal) goToPageModal.style.display = 'none';
+});
+
+confirmGoToPageBtn.addEventListener('click', () => {
+    executeGoToPage();
+});
+
+goToPageInput.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') executeGoToPage();
+});
+
+function executeGoToPage() {
+    const val = parseInt(goToPageInput.value.trim(), 10);
+    if (!isNaN(val) && val >= 1 && val <= pdfTotalPagesCount) {
+        goToPageModal.style.display = 'none';
+        jumpToPdfPage(val);
+    } else {
+        showToast(`Please enter a page between 1 and ${pdfTotalPagesCount}`, "error");
+    }
+}
+
+async function jumpToPdfPage(pageNum) {
+    let targetWrapper = document.getElementById(`page_wrapper_${pageNum}`);
+    
+    if (!targetWrapper && currentPdfDocument) {
+        const screenWidth = window.innerWidth;
+        const targetCssWidth = Math.min(screenWidth - 20, 720);
+        const pixelRatio = window.devicePixelRatio || 2;
+        const scrollContainer = document.getElementById('pdfScrollContainer');
+
+        for (let i = 1; i <= pageNum; i++) {
+            if (!document.getElementById(`page_wrapper_${i}`)) {
+                await renderSingleHdPage(currentPdfDocument, i, targetCssWidth, pixelRatio, scrollContainer);
+            }
+        }
+        targetWrapper = document.getElementById(`page_wrapper_${pageNum}`);
+    }
+
+    if (targetWrapper) {
+        targetWrapper.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        document.getElementById('pdfCurrentPageNum').innerText = pageNum.toString();
+    }
+}
+
+// IN-DOCUMENT SEARCH CONTROLLER (LIKE CODE EDITOR)
+const pdfSearchToggleBtn = document.getElementById('pdfSearchToggleBtn');
+const pdfSearchBar = document.getElementById('pdfSearchBar');
+const pdfSearchCloseBtn = document.getElementById('pdfSearchCloseBtn');
+const pdfSearchInput = document.getElementById('pdfSearchInput');
+const pdfSearchCount = document.getElementById('pdfSearchCount');
+const pdfSearchNextBtn = document.getElementById('pdfSearchNextBtn');
+const pdfSearchPrevBtn = document.getElementById('pdfSearchPrevBtn');
+
+pdfSearchToggleBtn.addEventListener('click', () => {
+    if (pdfSearchBar.style.display === 'flex') {
+        pdfSearchBar.style.display = 'none';
+    } else {
+        pdfSearchBar.style.display = 'flex';
+        pdfSearchInput.focus();
+    }
+});
+
+pdfSearchCloseBtn.addEventListener('click', () => {
+    pdfSearchBar.style.display = 'none';
+    pdfSearchInput.value = '';
+    searchMatches = [];
+    currentSearchMatchIndex = -1;
+    pdfSearchCount.innerText = '0/0';
+});
+
+let pdfSearchTimer;
+pdfSearchInput.addEventListener('input', () => {
+    clearTimeout(pdfSearchTimer);
+    pdfSearchTimer = setTimeout(() => {
+        executePdfTextSearch(pdfSearchInput.value.trim());
+    }, 300);
+});
+
+async function executePdfTextSearch(query) {
+    searchMatches = [];
+    currentSearchMatchIndex = -1;
+
+    if (!query || query.length < 2 || !currentPdfDocument) {
+        pdfSearchCount.innerText = '0/0';
+        return;
+    }
+
+    const lowerQuery = query.toLowerCase();
+
+    for (let pageNum = 1; pageNum <= pdfTotalPagesCount; pageNum++) {
+        let text = pdfTextCache[pageNum];
+        if (!text) {
+            try {
+                const page = await currentPdfDocument.getPage(pageNum);
+                const content = await page.getTextContent();
+                text = content.items.map(item => item.str).join(' ');
+                pdfTextCache[pageNum] = text;
+            } catch (e) {
+                continue;
+            }
+        }
+
+        if (text && text.toLowerCase().includes(lowerQuery)) {
+            searchMatches.push(pageNum);
+        }
+    }
+
+    if (searchMatches.length > 0) {
+        currentSearchMatchIndex = 0;
+        pdfSearchCount.innerText = `1/${searchMatches.length}`;
+        jumpToPdfPage(searchMatches[0]);
+    } else {
+        pdfSearchCount.innerText = '0/0';
+    }
+}
+
+pdfSearchNextBtn.addEventListener('click', () => {
+    if (searchMatches.length === 0) return;
+    currentSearchMatchIndex = (currentSearchMatchIndex + 1) % searchMatches.length;
+    pdfSearchCount.innerText = `${currentSearchMatchIndex + 1}/${searchMatches.length}`;
+    jumpToPdfPage(searchMatches[currentSearchMatchIndex]);
+});
+
+pdfSearchPrevBtn.addEventListener('click', () => {
+    if (searchMatches.length === 0) return;
+    currentSearchMatchIndex = (currentSearchMatchIndex - 1 + searchMatches.length) % searchMatches.length;
+    pdfSearchCount.innerText = `${currentSearchMatchIndex + 1}/${searchMatches.length}`;
+    jumpToPdfPage(searchMatches[currentSearchMatchIndex]);
+});
 
 // ==========================================
 // SECURE READ ONLINE (MODAL DATA & TRIGGER)
@@ -1733,7 +1937,6 @@ function openDownloadPageLocal(slug, skipPushState = false) {
                 
                 title.innerText = sanitizeHTML(book.title);
                 
-                // Pure Canvas In-App Reader: No external browser tabs, no iframe Open buttons
                 pdfViewer.style.display = 'flex';
                 renderPdfInModal(data.pdfLink);
 
@@ -1760,6 +1963,7 @@ function openDownloadPageLocal(slug, skipPushState = false) {
     document.getElementById("closePdfViewerBtn").onclick = function() {
         document.getElementById('pdfViewerOverlay').style.display = 'none';
         document.getElementById('pdfScrollContainer').innerHTML = ''; 
+        cleanupPdfResources();
     };
 
     document.getElementById("pdfContainer").addEventListener('contextmenu', event => event.preventDefault());
@@ -1968,11 +2172,9 @@ document.getElementById('verifyBtn').addEventListener('click', async () => {
             const statusP = e.target.closest('.uc-actions').querySelector('p');
             statusP.innerText = `Analyzing: ${selectedPdfFile.name}...`;
 
-            // 1. Calculate File Size in MB
             const sizeInMB = (selectedPdfFile.size / (1024 * 1024)).toFixed(2);
             detectedFileSizeMB = `${sizeInMB} MB`;
 
-            // 2. Extract Total Pages using PDF.js
             try {
                 if (window.pdfjsLib) {
                     const arrayBuffer = await selectedPdfFile.arrayBuffer();
@@ -2068,7 +2270,7 @@ async function uploadFileToR2(file, type) {
     });
 }
 
-// Publish Book Form
+// PUBLISH BOOK FORM
 document.getElementById('addBookForm').addEventListener('submit', async (e) => {
     e.preventDefault(); 
     const btn = document.getElementById('publishBtn'); 
